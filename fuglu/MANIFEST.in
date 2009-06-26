@@ -1,0 +1,7 @@
+include conf/*.dist
+include conf/*.cfg
+include conf/templates/*.dist
+include conf/rules/*.dist
+include scripts/init.d-centos/fuglu
+include scripts/fuglu_mrtg.sh
+
