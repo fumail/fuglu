@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# Startup script for fuglu
+#
+# chkconfig: 2345 65 38
+# description: Mail Content Scanner Interface
+# processname: fuglu
+# pidfile: /var/run/fuglu.pid
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# See how we were called.
+case "$1" in
+  start)
+        echo -n "Starting FuGlu Mail Content Scanner: "
+        daemon /usr/bin/fuglu
+        RETVAL=$?
+        echo
+        ;;
+  stop)
+        echo -n "Stopping FuGlu Mail Content Scanner: "
+        killproc fuglu
+        rm -f /var/run/fuglu.pid
+        RETVAL=$?
+        echo
+        ;;
+  status)
+        status fuglu
+        RETVAL=$?
+        ;;
+  restart)
+        $0 stop
+        $0 start
+        RETVAL=$?
+        ;;
+  reload)
+  		echo -n "Reloading fuglu config: "
+        killproc fuglu -HUP
+        RETVAL=$?
+        echo
+        ;;
+  		
+  *)
+        echo "Usage: fuglu {start|stop|status|restart}"
+        exit 1
+esac
+
+exit $RETVAL
