@@ -1,0 +1,151 @@
+#This is the configuration file for the fuglu content scanner
+#main fuglu configuration is in section [main], every plugin has its own section
+#after modifying this file, run fuglu --lint to check if it'll be happy with it
+
+
+####################### MAIN CONFIGURATION ###############################
+[main]
+#identifier can be any string that helps you identifying your config file
+#this helps making sure the correct config is loaded. this identifier will be printed out when fuglu is reloading its config
+#Default: dist
+identifier=dist
+
+#run as a daemon? (fork)
+#default: 1
+daemonize=1
+
+#run as user
+user=nobody
+#run as group
+group=nobody
+
+#where should fuglu search for additional plugins
+#default: empty
+plugindir=
+
+#what SCANNER plugins do we load, comma separated
+plugins=fuglu.plugins.archive.ArchivePlugin,fuglu.plugins.attachment.FiletypePlugin,fuglu.plugins.clamav.ClamavPlugin,fuglu.plugins.sa.SAPlugin
+#experimental plugins you may add here:
+#fuglu.plugins.fuheaders.HeaderPlugin
+
+#what PREPENDER plugins do we load, comma separated
+#prepender plugins are plugins run at the beginning which can have influence on the scanner plugins
+#like disable certain plugins based on special conditions
+# eg. skip SA for outgoing mail
+prependers=fuglu.plugins.p_debug.MessageDebugger,fuglu.plugins.p_skipper.PluginSkipper
+#experimental plugins you may add here:
+#
+
+#what APPENDER plugins do we load, comma separated
+#appender plugins are plugins run after the scanning plugins
+#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
+#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
+appenders=
+#experimental plugins you may add here:
+#
+
+
+#bindaddress
+bindaddress=127.0.0.1
+
+#incoming port(s) (postfix connects here)
+#you can use multiple comma separated ports here
+#f.ex. to separate incoming and outgoing mail
+incomingport=10025,10099,10888
+#10025: standard incoming mail
+#10099: outgoing mail
+#10888: debug port
+
+#outgoing port (what port does postfix listen for re-injects)
+outgoingport=10026
+
+#outgoing helo we should use
+outgoinghelo=change.me.in.fuglu.conf.local
+
+#temp dir where we can store messages
+tempdir=/tmp/
+
+#String to prepend to added headers
+prependaddedheaders=X-Fuglu-
+
+trashdir=/tmp/
+
+
+#Disable Bounces
+#if this is set to True/1/yes , no Bounces will be sent from Fuglu eg. after a blocked attachment has been detected
+#This may be used for debugging/testing
+disablebounces=0
+
+#write debug info header to every mail
+debuginfoheader=0
+
+
+#Statistics
+mrtgdir=/usr/local/fuglu/mrtg
+
+
+[performance]
+minthreads=2
+maxthreads=40
+
+
+####################### PLUGIN CONFIGURATION ###############################
+
+#Debug
+#The debug plugin allows debugging single mails sent to a specific port to be debugged to a logfile
+#Make sure the debugport is also set in the incomingport configuration option in the main section
+[debug]
+debugport=10888
+
+debugfile=/tmp/fuglu_debug.log
+
+#don't allow debugged messages to be bounced
+nobounce=True
+
+#don't re-inject debugged messages
+noreinject=True
+
+#Don't run appenders for debugged messages
+noappender=True
+
+
+#Spamassassin
+[SAPlugin]
+host=localhost
+port=783
+maxsize=256000
+spamheader=X-Spam-Status
+timeout=30
+retries=5
+#set to 0/no/false to disable spamassassin per user configs
+peruserconfig=1
+
+#Clam antivirus (clamd)
+[ClamavPlugin]
+host=localhost
+port=3310
+timeout=10
+#should match the "StreamMaxLength" config option in clamd.conf
+maxsize=22000000
+retries=3
+
+#Attachment 
+[FiletypePlugin]
+template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+rulesdir=/etc/fuglu/rules
+
+
+[HeaderPlugin]
+removeheaders=
+
+[ArchivePlugin]
+#Make a copy of incoming messages based on rules
+archiverules=/etc/fuglu/archive.regex
+archivedir=/tmp/archive
+#create a subdirectory of the destination domain within archivedir
+makedomainsubdir=1
+
+
+[PluginSkipper]
+#Skip plugins based on rules
+filterfile=/etc/fuglu/skipplugins.regex

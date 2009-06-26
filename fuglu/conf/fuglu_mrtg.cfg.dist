@@ -1,0 +1,75 @@
+Interval: 5
+WorkDir: /usr/local/fuglu/mrtg/output
+WriteExpires: yes
+Options[_]: growright,nopercent
+LogFormat: rrdtool
+
+#---------------------------------------------------------------
+
+Target[inout]: `cat /usr/local/fuglu/mrtg/inout`
+PageTop[inout]: <H1>Messages in/out</H1>
+Options[inout]: growright,nopercent
+Title[inout]: Messages in/out
+ShortLegend[inout]: msgs/s
+YLegend[inout]: messages
+LegendI[inout]: in
+Legend1[inout]: Incoming Messages
+Legend2[inout]: Messages re-injected
+LegendO[inout]: re-inject
+MaxBytes[inout]: 60000000
+
+Target[hamspam]: `cat /usr/local/fuglu/mrtg/hamspam`
+Options[hamspam]: growright,nopercent
+Title[hamspam]: Ham / Spam
+PageTop[hamspam]: <H1>Ham / Spam</H1>
+YLegend[hamspam]: messages/second
+ShortLegend[hamspam]: msgs/s
+LegendI[hamspam]: ham
+Legend1[hamspam]: Clean Messages (ham)
+LegendO[hamspam]: spam
+Legend2[hamspam]: Messages detected as spam
+MaxBytes[hamspam]: 600000
+AbsMax[hamspam]: 600000
+
+Target[scantime]: `cat /usr/local/fuglu/mrtg/scantime`
+Options[scantime]: growright,nopercent,gauge
+Title[scantime]: Scan Time
+PageTop[scantime]: <H1>Scan Time</H1>
+WithPeak[scantime]: ymwd
+YLegend[scantime]: sec
+ShortLegend[scantime]: sec
+Legend1[scantime]: Time needed to analyze message
+LegendI[scantime]: scantime
+LegendO[scantime]:
+Legend2[scantime]:
+Legend3[scantime]: Peak Scantime
+Legend4[scantime]:
+MaxBytes[scantime]: 600000
+AbsMax[scantime]: 600000
+
+
+Target[threads]: `cat /usr/local/fuglu/mrtg/threads`
+Options[threads]: growright,nopercent,gauge
+Title[threads]: Threads
+PageTop[threads]: <H1>Running Threads</H1>
+YLegend[threads]: threads
+ShortLegend[threads]: threads
+LegendO[threads]:
+Legend1[threads]: Number of running threads
+Legend2[threads]:
+LegendI[threads]: threads
+MaxBytes[threads]: 600000
+AbsMax[threads]: 600000
+
+
+Target[virus]: `cat /usr/local/fuglu/mrtg/virus`
+Options[virus]: growright,nopercent
+Title[virus]: virus
+PageTop[virus]: <H1>Virus</H1>
+YLegend[virus]: virus
+ShortLegend[virus]: virus
+#LegendO[virus]: virus
+LegendI[virus]: virus
+Legend1[virus]: Number of viri detected
+MaxBytes[virus]: 600000
+AbsMax[virus]: 600000

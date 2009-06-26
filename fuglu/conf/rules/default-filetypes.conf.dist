@@ -1,0 +1,8 @@
+allow	text		-		
+allow	\bscript	-		
+allow	archive		-			
+allow	postscript	-			
+deny	self-extract	No self-extracting archives
+deny	executable	No programs allowed
+deny	ELF		No programs allowed
+deny	Registry	No Windows Registry files allowed

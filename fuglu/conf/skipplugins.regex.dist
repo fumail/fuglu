@@ -1,0 +1,4 @@
+##########
+#Headername		Regex	Plugins to skip, comma separated, only classname
+
+@incomingport	1099	SAPlugin
