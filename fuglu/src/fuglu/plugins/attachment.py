@@ -224,9 +224,10 @@ class FiletypePlugin(ScannerPlugin):
                         # remove non ascii chars
                         asciirep="".join([x for x in object if ord(x) < 128])
                         self._logger().info('Mail contains blocked attachment name/type %s (delete, send bounce) '%object)
-                        suspect.tags['FiletypePlugin.errormessage']="%s: %s"%(asciirep,description)
+                        blockinfo="%s: %s"%(asciirep,description)
+                        suspect.tags['FiletypePlugin.errormessage']=blockinfo
                         bounce=Bounce(self.config)
-                        bounce.send_raw_template(suspect.from_address, self.blockedfiletemplate, suspect)
+                        bounce.send_raw_template(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
                         return DELETE
                     
                     if action=='delete':
@@ -313,7 +314,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         from ConfigParser import RawConfigParser        
         config=RawConfigParser()
         config.add_section('FiletypePlugin')
-        config.set('FiletypePlugin', 'template_blockedfile','/etc/fuglu/templates/blockedfile_en.tmpl')
+        config.set('FiletypePlugin', 'template_blockedfile','/etc/fuglu/templates/blockedfile.tmpl')
         config.set('FiletypePlugin', 'rulesdir','/etc/fuglu/rules')
         config.add_section('main')
         config.set('main','disablebounces','1')

@@ -16,11 +16,12 @@
 #
 
 import smtplib
-from mako.template import Template
-from mako.exceptions import RichTraceback
+from string import Template
 import traceback
 import logging
 import os
+import unittest
+
 
 class Bounce:
     """Send Mail (Bounces)"""
@@ -29,12 +30,26 @@ class Bounce:
         self.logger=logging.getLogger('fuglu.bouncer')
         self.config=config
     
-    def send_raw_template(self,recipient,templatefile,suspect):
+    
+    
+    def apply_template(self,templatecontent,suspect,values):
+        values['from_address']=suspect.from_address
+        values['to_address']=suspect.to_address
+        values['subject']=suspect.getMessageRep()['subject']
+        
+        template = Template(templatecontent)
+        
+        message= template.safe_substitute(values)
+        return message
+        
+    
+    def send_raw_template(self,recipient,templatefile,suspect,values):
         """Send a E-Mail Bounce Message
         
         recipient     -- Message recipient (bla@bla.com)
-        templatefile  -- Mako Template to use
-        suspect       -- The suspect to retreive the values from 
+        templatefile  -- Template to use
+        suspect      -- suspect that caused the bounce
+        values       -- Values to apply to the template
         
         If the suspect has the 'nobounce' tag set, the message will not be sent. The same happens
         if the global configuration 'disablebounces' is set.
@@ -46,23 +61,16 @@ class Bounce:
         if not os.path.exists(templatefile):
             self.logger.error('Template file does not exist: %s'%templatefile)
             return
+        
+        fp=open(templatefile)
+        filecontent=fp.read()
+        fp.close()
+        
         self.logger.debug('Sending bounce message to %s'%recipient)
         fromaddress="<>"
+        
+        message=self.apply_template(filecontent, suspect, values)
 
-        template = Template(filename=templatefile)
-        
-        message=None
-        try:
-            message= template.render(suspect=suspect)
-        except:
-            traceback = RichTraceback()
-            for (filename, lineno, function, line) in traceback.traceback:
-                self.logger.error( "File %s, line %s, in %s" % (filename, lineno, function))
-                self.logger.error( line, "\n")
-            self.logger.error( "%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
-        
-        if message==None:
-            return
         self._send(fromaddress, recipient, message)
     
     def _send(self,fromaddress,toaddress,message):
@@ -73,3 +81,30 @@ class Bounce:
         smtpServer.helo(self.config.get('main','outgoinghelo'))
         smtpServer.sendmail(fromaddress, recipient, message)
         smtpServer.quit()
+        
+        
+class TemplateTestcase(unittest.TestCase):
+    """Test Templates"""
+    def setUp(self):     
+        pass
+ 
+    def tearDown(self):
+        pass     
+
+    def test_hf(self):
+        """Test header filters"""
+        from fuglu.shared import Suspect
+
+        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','testdata/helloworld.eml')
+        suspect.tags['nobounce']=True
+        
+        reason="a three-headed monkey stole it"
+        
+        template="""Your message '${subject}' from ${from_address} to ${to_address} could not be delivered because ${reason}"""
+        
+        result=Bounce(None).apply_template(template, suspect, dict(reason=reason))
+        expected="""Your message 'Hello world!' from sender@unittests.fuglu.org to recipient@unittests.fuglu.org could not be delivered because a three-headed monkey stole it"""
+        self.assertEquals(result,expected),"Got unexpected template result: %s"%result
+        
+        
+        

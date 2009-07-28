@@ -71,6 +71,7 @@ plugdir=globalconfig.get('main', 'plugindir').strip()
 if plugdir!="":
     sys.path.insert(0,plugdir)
 modules=getModules()
+modules.insert(0,'fuglu.bounce')
 modules.insert(0,'fuglu.shared')
 modules.insert(0,'fuglu.core')
 
