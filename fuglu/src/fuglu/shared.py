@@ -18,7 +18,18 @@ import logging
 import os
 import time
 import socket
-import md5
+
+_HASHLIB=0
+_MD5=1
+
+MD5LIB=-1
+try:
+    import hashlib
+    MD5LIB=_HASHLIB
+except:
+    MD5LIB=_MD5
+    import md5
+    
 import random
 import email
 import re
@@ -92,7 +103,11 @@ class Suspect:
         should be sufficiently unique for the quarantine
         """
         uni="%s%s%s"%(HOSTNAME,time.time(),random.randint(1,10000))
-        id=md5.new(uni).hexdigest()
+        id=None
+        if MD5LIB==_HASHLIB:
+            id=hashlib.md5(uni).hexdigest()
+        else:
+            id=md5.new(uni).hexdigest()
         return id
     
     
