@@ -19,7 +19,7 @@
 #fuglu main startup file
 
 #update this one for new releases
-FUGLU_VERSION="0.3.4"
+FUGLU_VERSION="0.4.1svn"
 
 import ConfigParser
 from fuglu.daemon import DaemonStuff
@@ -82,6 +82,10 @@ debugmsg=False
 for arg in sys.argv:
     if arg=="--lint":
         lint=True
+        
+    if arg=="--version":
+        print "Fuglu Version %s"%FUGLU_VERSION
+        sys.exit(0)
     
 
 config=ConfigParser.ConfigParser()
