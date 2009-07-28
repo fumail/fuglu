@@ -10,7 +10,7 @@ setup(name = "fuglu",
     author_email = "oli@fuglu.org",
     package_dir={'':'src'},
     packages = ['fuglu','fuglu.plugins','fuglu.extensions'],
-    scripts = ["src/startscript/fuglu","src/tools/fuglu_debug"],
+    scripts = ["src/startscript/fuglu","src/tools/fuglu_debug","src/tools/fuglu_control"],
     long_description = """Fuglu Mail Content Scanner""" ,
     data_files=[
                 ('/etc/fuglu',glob.glob('conf/*.dist')),
@@ -18,4 +18,4 @@ setup(name = "fuglu",
                 ('/etc/fuglu/rules',glob.glob('conf/rules/*.dist')),
                 ('/etc/init.d',['scripts/init.d-centos/fuglu']),
                 ]
-) 
+)
