@@ -207,12 +207,21 @@ class SessionHandler:
         self.plugins=plugins
         self.appenders=appenders
         self.stats=Statskeeper()
+        self.workerthread=None
+    
+    
+    def set_threadinfo(self,status):
+        if self.workerthread!=None:
+            self.workerthread.threadinfo=status
+         
+    def handlesession(self,workerthread=None):
+        self.workerthread=workerthread
         
-    def handlesession(self):
         starttime=time.time()
         sess=None
         prependheader=self.config.get('main','prependaddedheaders')
         try:
+            self.set_threadinfo('receiving message')
             sess=SMTPSession(self.incomingsocket,self.config)
             success=sess.getincomingmail()
             if not success:
@@ -226,7 +235,7 @@ class SessionHandler:
             
             suspect=Suspect(fromaddr,toaddr,tempfilename)
             self.logger.debug("Message from %s to %s: %s bytes stored to %s"%(fromaddr,toaddr,suspect.size,tempfilename))
-            
+            self.set_threadinfo("Handling message %s"%suspect)
             #store incoming port to tag, could be used to disable plugins based on port
             try:
                 port=sess.socket.getsockname()[1]
@@ -265,7 +274,8 @@ class SessionHandler:
             #check if one of the plugins made a decision
             result=self.action
             
-
+            self.set_threadinfo("Finishing message %s"%suspect)
+            
             message_is_deferred=False
             if result==ACCEPT or result==DUNNO:
                 try:
@@ -393,6 +403,7 @@ class SessionHandler:
         for plugin in pluglist:
             try:
                 self.logger.debug('Running plugin %s'%plugin)
+                self.set_threadinfo("%s : Running Plugin %s"%(suspect,plugin))
                 suspect.debug('Running plugin %s'%str(plugin))
                 result=plugin.examine(suspect)
                 if result==None:
@@ -437,6 +448,7 @@ class SessionHandler:
         for plugin in self.prependers:
             try:
                 self.logger.debug('Running prepender %s'%plugin)
+                self.set_threadinfo("%s : Running Prepender %s"%(suspect,plugin))
                 result=plugin.pluginlist(suspect,plugcopy)
                 if result!=None:
                     plugcopyset=set(plugcopy)
@@ -463,6 +475,7 @@ class SessionHandler:
             try:
                 self.logger.debug('Running appender %s'%plugin)
                 suspect.debug('Running appender %s'%plugin)
+                self.set_threadinfo("%s : Running appender %s"%(suspect,plugin))
                 result=plugin.process(suspect,finaldecision)       
             except Exception,e:
                 exc=traceback.format_exc()

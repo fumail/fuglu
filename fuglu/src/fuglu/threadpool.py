@@ -41,11 +41,7 @@ class ThreadPool(threading.Thread):
         self.setDaemon(False)
         self.start()
         
-        
-        
-        
-        
-    
+
     def add_task(self,session):
         self.tasks.put(session)
     
@@ -99,7 +95,7 @@ class ThreadPool(threading.Thread):
             
             #log current stats
             if changed or time.time()-self.laststats>self.statinverval:
-                workerlist=",".join(map(repr,self.workers))
+                workerlist="\n%s"%'\n'.join(map(repr,self.workers))
                 self.logger.debug('queuesize=%s workload=%.2f workers=%s workerlist=%s'%(queuesize,workload,numthreads,workerlist))
                 self.laststats=time.time()
                 
@@ -138,15 +134,17 @@ class Worker(threading.Thread):
         self.logger.debug('thread init')
         self.noisy=False
         self.setDaemon(False)
+        self.threadinfo='created'
     
     def __repr__(self):
-        return self.workerid    
+        return "%s: %s"%(self.workerid,self.threadinfo)
        
     def run(self):
         self.logger.debug('thread start')
+        
         while self.stayalive:
             time.sleep(0.1)
-            
+            self.threadinfo='waiting for task'
             if self.noisy:
                 self.logger.debug('Getting new task...')
             sesshandler=self.pool.get_task()
@@ -158,11 +156,12 @@ class Worker(threading.Thread):
             if self.noisy:
                 self.logger.debug('Doing work')
             try:
-                sesshandler.handlesession()
+                sesshandler.handlesession(self)
             except Exception,e:
                 self.logger.error('Unhandled Exception : %s'%e)
+            self.threadinfo='task completed'
         
-        
+        self.threadinfo='ending'
         self.logger.debug('thread end')
         
 
@@ -170,8 +169,9 @@ if __name__=='__main__':
     logging.basicConfig(level=logging.DEBUG)
     
     class SessionMock(object):
-        def handlesession(self):
+        def handlesession(self,workerthread):
             print "handle a session..."
+            workerthread.threadinfo='having fun'
             time.sleep(4)
             print "handle done"
             
