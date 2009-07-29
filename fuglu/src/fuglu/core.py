@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: core.py 25 2009-05-18 11:07:26Z oli $
+# $Id $
 #
 
 BASENAME="fuglu" #project name (root logger etc)
-VERSION="$Id: core.py 25 2009-05-18 11:07:26Z oli $"
+VERSION="$Id$"
 CONFDIR="/etc/%s"%BASENAME
 import logging
 import sys
@@ -249,7 +249,7 @@ class SessionHandler:
             starttime=time.time()
             self.run_plugins(suspect,pluglist)
             
-            # Fuglu spam status
+            # Set fuglu spam status
             if suspect.is_spam():
                 suspect.addheader("%sSpamstatus"%prependheader, 'YES')
             else:
@@ -1104,7 +1104,6 @@ class ControlServer(object):
         
     def serve(self):
         threading.currentThread().name='ControlServer Thread'
-        #disable to debug... 
         controller=self.controller
         
         self.logger.info('Control/Info Server running on port %s'%self.port)
