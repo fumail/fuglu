@@ -807,7 +807,7 @@ class SMTPServer:
         #disable to debug... 
         use_multithreading=True
         controller=self.controller
-        threading.current_thread().name='SMTP Server on Port %s'%self.port
+        threading.currentThread().name='SMTP Server on Port %s'%self.port
         
         self.logger.info('SMTP Server running on port %s'%self.port)
         if use_multithreading:
@@ -1103,7 +1103,7 @@ class ControlServer(object):
         self._socket.close()
         
     def serve(self):
-        threading.current_thread().name='ControlServer Thread'
+        threading.currentThread().name='ControlServer Thread'
         #disable to debug... 
         controller=self.controller
         
