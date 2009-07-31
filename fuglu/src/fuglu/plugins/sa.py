@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: sa.py 14 2009-04-09 13:57:58Z oli $
+# $Id$
 #
 from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,Suspect
 import time

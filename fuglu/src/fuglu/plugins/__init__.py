@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: __init__.py 14 2009-04-09 13:57:58Z oli $
+# $Id$
 #
 __all__ = ['archive','attachment','clamav','sa','headers','p_debug','p_skipper']

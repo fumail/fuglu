@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: stubplugin.py 16 2009-04-15 12:23:02Z oli $
+# $Id$
 #
 """
 Stub Plugin

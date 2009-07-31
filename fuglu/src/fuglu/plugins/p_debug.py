@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: p_debug.py 17 2009-04-15 13:34:16Z oli $
+# $Id$
 #
 from fuglu.shared import PrependerPlugin,HeaderFilter
 import time

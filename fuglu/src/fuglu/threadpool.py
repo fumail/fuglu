@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: threadpool.py 7 2009-04-09 06:51:25Z oli $
+# $Id$
 #
 import threading
 import time

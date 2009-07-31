@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: clamav.py 22 2009-04-16 05:16:20Z oli $
+# $Id$
 #
 from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER
 import socket

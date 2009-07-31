@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: p_skipper.py 9 2009-04-09 07:35:16Z oli $
+# $Id$
 #
 from fuglu.shared import PrependerPlugin,HeaderFilter
 import time
