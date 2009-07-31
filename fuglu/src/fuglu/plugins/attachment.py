@@ -19,7 +19,6 @@ from fuglu.shared import ScannerPlugin,DELETE,DUNNO,Suspect
 from fuglu.bounce import Bounce
 #TODO import above doesn't work
 import time
-import magic
 import re
 import mimetypes
 import os
@@ -29,6 +28,13 @@ import unittest
 
 from threading import Lock
 
+MAGIC_AVAILABLE=False
+try:
+    import magic
+    MAGIC_AVAILABLE=True
+except ImportError:
+    pass
+    
 
 FUATT_NAMESCONFENDING="-filenames.conf"
 FUATT_CTYPESCONFENDING="-filetypes.conf"
@@ -177,8 +183,12 @@ class FiletypePlugin(ScannerPlugin):
     def __init__(self,config):
         ScannerPlugin.__init__(self,config)
         self.requiredvars=(('FiletypePlugin','template_blockedfile'),('FiletypePlugin','rulesdir'))
-        self.ms = magic.open(magic.MAGIC_MIME)
-        self.ms.load()
+        self.logger=self._logger()
+        if MAGIC_AVAILABLE:
+            self.ms = magic.open(magic.MAGIC_MIME)
+            self.ms.load()
+        else:
+            self.logger.warning('python-magic not available')
         self.rulescache=RulesCache(self.config.get('FiletypePlugin','rulesdir'))
         self.extremeverbosity=False
     
@@ -203,9 +213,7 @@ class FiletypePlugin(ScannerPlugin):
         type=self.ms.buffer(buffer)
         return type
     
-    
-    
-    
+
     def matchRules(self,ruleset,object,suspect):
         if ruleset==None:
             return DUNNO
@@ -287,25 +295,35 @@ class FiletypePlugin(ScannerPlugin):
             res=self.matchMultipleSets([user_names,domain_names,default_names], att_name,suspect)
             if res==DELETE:
                 return DELETE
-            
-            
+                        
             #go through content type rules
-            pl = i.get_payload(decode=True) 
-            contenttype_magic=self.getBuffertype(pl)
-            
+             
             
             res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_mime,suspect)
             if res==DELETE:
                 return DELETE
             
-            res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_magic,suspect)
-            if res==DELETE:
-                return DELETE
+            if MAGIC_AVAILABLE:
+                pl = i.get_payload(decode=True)
+                contenttype_magic=self.getBuffertype(pl)
+                res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_magic,suspect)
+                if res==DELETE:
+                    return DELETE
             
         return DUNNO
         
     def __str__(self):
         return "Attachment Blocker"
+    
+    def lint(self):
+        allok=(self.checkConfig() and self.lint_magic())
+        return allok
+    
+    def lint_magic(self):
+        if not MAGIC_AVAILABLE:
+            print "python-magic library not available. Will only do content-type checks, no real file analysis"
+            return False
+        return True
     
     
 class AttachmentPluginTestCase(unittest.TestCase):
