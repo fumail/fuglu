@@ -4,4 +4,4 @@ include conf/templates/*.dist
 include conf/rules/*.dist
 include scripts/init.d-centos/fuglu
 include scripts/fuglu_mrtg.sh
-
+include compareconfig.py
