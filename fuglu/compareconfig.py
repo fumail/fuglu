@@ -25,7 +25,7 @@ from fuglu.funkyconsole import FunkyConsole
 
 fc=FunkyConsole()
 
-fugluconfigfile='/etc/fuglu/fuglu2.conf'
+fugluconfigfile='/etc/fuglu/fuglu.conf'
 dconfdir='/etc/fuglu/conf.d'
 
 
