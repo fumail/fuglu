@@ -17,7 +17,6 @@
 import sys
 from fuglu.shared import ScannerPlugin,DELETE,DUNNO,Suspect
 from fuglu.bounce import Bounce
-#TODO import above doesn't work
 import time
 import re
 import mimetypes
