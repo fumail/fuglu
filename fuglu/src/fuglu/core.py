@@ -691,6 +691,13 @@ class MainController:
             except ConfigParser.NoOptionError:
                 print "Missing configuration value [%s] :: %s"%(section,config)
                 allOK=False
+        
+        outgoinghelocheck="change.me.in.fuglu.conf.local"       
+        if self.config.get('main','outgoinghelo')==outgoinghelocheck:
+            print "Your outgoing helo still says '%s' - you should change this option to a real fqdn "%outgoinghelocheck
+            allOK=False
+        
+            
         return allOK
     
     
