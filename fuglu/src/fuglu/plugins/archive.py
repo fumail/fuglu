@@ -24,7 +24,7 @@ class ArchivePlugin(ScannerPlugin):
     """Store mails to archive"""
     def __init__(self,config):
         ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('ArchivePlugin','archiverules'),('ArchivePlugin','archivedir'),('ArchivePlugin','makedomainsubdir'))
+        self.requiredvars=(('ArchivePlugin','archiverules'),('ArchivePlugin','archivedir'),('ArchivePlugin','makedomainsubdir'),('ArchivePlugin','storeunaltered'))
         self.headerfilter=None
         
         
@@ -67,8 +67,13 @@ class ArchivePlugin(ScannerPlugin):
             os.makedirs(finaldir,0755)
         
         filename="%s/%s"%(finaldir,suspect.id)
-        
-        shutil.copy(suspect.tempfile, filename)
+        if self.config.getboolean('ArchivePlugin','storeunaltered'):
+            shutil.copy(suspect.tempfile, filename)
+        else:
+            fp=fopen(filename,'w')
+            fp.write(suspect.getMessageRep().as_string())
+            fp.close()
+            
         self._logger().info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
         
         

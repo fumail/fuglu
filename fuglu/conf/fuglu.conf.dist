@@ -145,6 +145,9 @@ archivedir=/tmp/archive
 #create a subdirectory of the destination domain within archivedir
 makedomainsubdir=1
 
+#if true/1/yes: store original message
+#if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
+storeunaltered=1
 
 [PluginSkipper]
 #Skip plugins based on rules
