@@ -44,6 +44,14 @@ newconfig.read('conf/fuglu.conf.dist')
 
 newsections=newconfig.sections()
 
+#values that usually differ from the default
+excludelist=[
+             ('main','outgoinghelo'),
+             ('main','plugins'),
+             ('main','trashdir'),
+             ('ArchivePlugin','archivedir'),
+             ]
+
 for newsection in newsections:
     #print "Checking section %s"%newsection
     if not currentconfig.has_section(newsection):
@@ -66,10 +74,6 @@ for newsection in newsections:
              continue
         
         currentvalue=currentconfig.get(newsection,key)
-        if currentvalue!=defaultvalue:
+        if currentvalue!=defaultvalue and (newsection,key) not in excludelist:
             print "%s: option '%s' in section '%s'. your value '%s' differs from default '%s'"%(fc.strcolor('VALUE','yellow'),fc.strcolor(key,'cyan'),fc.strcolor(newsection,'cyan'),fc.strcolor(currentvalue,'cyan'),fc.strcolor(defaultvalue,'cyan'))
-             
-        
-    
-    
         
