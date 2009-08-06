@@ -68,7 +68,9 @@ tempdir=/tmp/
 #String to prepend to added headers
 prependaddedheaders=X-Fuglu-
 
-trashdir=/tmp/
+#If a plugin decides to delete a message, save a copy here
+#default empty, eg. do not save a backup copy
+trashdir=
 
 
 #Disable Bounces
