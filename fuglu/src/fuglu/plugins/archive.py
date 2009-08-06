@@ -24,9 +24,24 @@ class ArchivePlugin(ScannerPlugin):
     """Store mails to archive"""
     def __init__(self,config):
         ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('ArchivePlugin','archiverules'),('ArchivePlugin','archivedir'),('ArchivePlugin','makedomainsubdir'),('ArchivePlugin','storeunaltered'))
+        self.requiredvars=(('ArchivePlugin','archiverules'),('ArchivePlugin','archivedir'),('ArchivePlugin','makedomainsubdir'),('ArchivePlugin','storeoriginal'))
         self.headerfilter=None
+    
+    def lint(self):
+        allok=(self.checkConfig() and self.lint_dirs())
+        return allok
+    
+    def lint_dirs(self):
+        archivedir=self.config.get('ArchivePlugin', 'archivedir')
+        if archivedir=="":
+            print 'Archivedir is not specified'
+            return False
         
+        if not os.path.isdir(archivedir):
+            print "Archivedir '%s' does not exist or is not a directory"%(archivedir)
+            return False
+        
+        return True
         
     def examine(self,suspect):
         starttime=time.time()
@@ -67,7 +82,7 @@ class ArchivePlugin(ScannerPlugin):
             os.makedirs(finaldir,0755)
         
         filename="%s/%s"%(finaldir,suspect.id)
-        if self.config.getboolean('ArchivePlugin','storeunaltered'):
+        if self.config.getboolean('ArchivePlugin','storeoriginal'):
             shutil.copy(suspect.tempfile, filename)
         else:
             fp=fopen(filename,'w')
@@ -75,6 +90,7 @@ class ArchivePlugin(ScannerPlugin):
             fp.close()
             
         self._logger().info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
+        return filename
         
         
     
@@ -82,4 +98,53 @@ class ArchivePlugin(ScannerPlugin):
         return 'ArchivePlugin';
     
 
+#### UNIT TESTS
+
+class ArchiveTestcase(unittest.TestCase):
+    """Tests that all plugins should pass"""
+    def setUp(self):
+        import ConfigParser
+        import tempfile
+        self.tempfiles=[]
+        
+        config=ConfigParser.RawConfigParser()
+        config.add_section('main')
+        config.set('main', 'disablebounces', '1')
+        
+        config.add_section('ArchivePlugin')
+        config.set('ArchivePlugin', 'archivedir', '/tmp')
+        config.set('ArchivePlugin', 'mkdomainsubdirs', 0)
+        config.set('ArchivePlugin', 'storeoriginal', 1)
+        
+        tempfilename=tempfile.mktemp(suffix='archive', prefix='fuglu-unittest', dir='/tmp')
+        fp=open(tempfilename,'w')
+        fp.write('From unittests.fuglu.org')
+        self.tempfiles.append(tempfilename)
+        config.set('ArchivePlugin', 'archiverules', tempfilename)
+        
+        self.config=config
+        
+ 
+    def tearDown(self):
+        for tempfile in self.tempfiles:
+            os.remove(tempfile)       
+
+    def test_output(self):
+        from fuglu.shared import Suspect
+        import shutil
+        import tempfile
+        origmessage=fopen('testdata/helloworld.eml').read()
+        tempfilename=tempfile.mktemp(suffix='archive', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy('testdata/helloworld.eml',tempfilename)
+        self.tempfiles.append(tempfilename)
+        
+        candidate=ArchivePlugin(self.config)
+        suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
+        
+        filename=candidate.archive(suspect)
+        self.assertTrue(filename!=None and filename)
+        
+        
+        
+        
         
