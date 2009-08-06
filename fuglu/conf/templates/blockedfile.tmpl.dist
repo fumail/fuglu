@@ -1,0 +1,8 @@
+To: ${from_address}
+Subject: Blocked attachment
+
+Your message to ${to_address} contains a blocked attachment and has been deleted.
+
+${blockinfo}
+
+You may add this file to a zip archive (or similar) and send it again.
