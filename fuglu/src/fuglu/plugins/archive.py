@@ -85,7 +85,7 @@ class ArchivePlugin(ScannerPlugin):
         if self.config.getboolean('ArchivePlugin','storeoriginal'):
             shutil.copy(suspect.tempfile, filename)
         else:
-            fp=fopen(filename,'w')
+            fp=open(filename,'w')
             fp.write(suspect.getMessageRep().as_string())
             fp.close()
             
@@ -113,8 +113,8 @@ class ArchiveTestcase(unittest.TestCase):
         
         config.add_section('ArchivePlugin')
         config.set('ArchivePlugin', 'archivedir', '/tmp')
-        config.set('ArchivePlugin', 'mkdomainsubdirs', 0)
-        config.set('ArchivePlugin', 'storeoriginal', 1)
+        config.set('ArchivePlugin', 'makedomainsubdir', '0')
+        config.set('ArchivePlugin', 'storeoriginal', '1')
         
         tempfilename=tempfile.mktemp(suffix='archive', prefix='fuglu-unittest', dir='/tmp')
         fp=open(tempfilename,'w')
@@ -129,22 +129,56 @@ class ArchiveTestcase(unittest.TestCase):
         for tempfile in self.tempfiles:
             os.remove(tempfile)       
 
-    def test_output(self):
+    def test_original_message(self):
+        """Test if the original message gets archived correctly"""
         from fuglu.shared import Suspect
         import shutil
         import tempfile
-        origmessage=fopen('testdata/helloworld.eml').read()
+        
         tempfilename=tempfile.mktemp(suffix='archive', prefix='fuglu-unittest', dir='/tmp')
         shutil.copy('testdata/helloworld.eml',tempfilename)
         self.tempfiles.append(tempfilename)
         
+        #
+        self.config.set('ArchivePlugin', 'storeoriginal', '1')
         candidate=ArchivePlugin(self.config)
         suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
+        origmessage=suspect.getMessageRep().as_string()
+        #modify the mesg
+        suspect.getMessageRep()['X-Changed-Something']='Yes'
         
         filename=candidate.archive(suspect)
         self.assertTrue(filename!=None and filename)
         
+        self.tempfiles.append(filename)
         
+        archivedmessage=open(filename,'r').read()
         
+        self.assertEqual(origmessage.strip(),archivedmessage.strip()),'Archived message has been altered'
+    
+    def test_modified_message(self):
+        """Test if the modified message gets archived correctly"""
+        from fuglu.shared import Suspect
+        import shutil
+        import tempfile
         
+        tempfilename=tempfile.mktemp(suffix='archive', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy('testdata/helloworld.eml',tempfilename)
+        self.tempfiles.append(tempfilename)
+        
+        #
+        self.config.set('ArchivePlugin', 'storeoriginal', '0')
+        candidate=ArchivePlugin(self.config)
+        suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
+        origmessage=suspect.getMessageRep().as_string()
+        #modify the mesg
+        suspect.getMessageRep()['X-Changed-Something']='Yes'
+        
+        filename=candidate.archive(suspect)
+        self.assertTrue(filename!=None and filename)
+        
+        self.tempfiles.append(filename)
+        
+        archivedmessage=open(filename,'r').read()
+        self.assertNotEqual(origmessage.strip(),archivedmessage.strip()),'Archived message should have stored modified message' 
         
