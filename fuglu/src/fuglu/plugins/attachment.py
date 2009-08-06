@@ -328,21 +328,36 @@ class FiletypePlugin(ScannerPlugin):
 class AttachmentPluginTestCase(unittest.TestCase):
     """Testcases for the Attachment Checker Plugin"""
     def setUp(self):
-        from ConfigParser import RawConfigParser        
+        from ConfigParser import RawConfigParser
+        import tempfile
+        import shutil
+        
+        self.tempdir=tempfile.mkdtemp('attachtest', 'fuglu')
+        self.template='%s/blockedfile.tmpl'%self.tempdir
+        shutil.copy('../conf/templates/blockedfile.tmpl.dist',self.template)
+        shutil.copy('../conf/rules/default-filenames.conf.dist','%s/default-filenames.conf'%self.tempdir)
+        shutil.copy('../conf/rules/default-filetypes.conf.dist','%s/default-filetypes.conf'%self.tempdir)
         config=RawConfigParser()
         config.add_section('FiletypePlugin')
-        config.set('FiletypePlugin', 'template_blockedfile','/etc/fuglu/templates/blockedfile.tmpl')
-        config.set('FiletypePlugin', 'rulesdir','/etc/fuglu/rules')
+        config.set('FiletypePlugin', 'template_blockedfile',self.template)
+        config.set('FiletypePlugin', 'rulesdir',self.tempdir)
         config.add_section('main')
         config.set('main','disablebounces','1')
         self.candidate=FiletypePlugin(config)
-
-
+        
+        
+    def tearDown(self):
+        os.remove('%s/default-filenames.conf'%self.tempdir)
+        os.remove('%s/default-filetypes.conf'%self.tempdir)
+        os.remove(self.template)
+        os.rmdir(self.tempdir)
+        
     def test_hiddenbinary(self):
         """Test if hidden binaries get detected correctly"""
         import tempfile
         import shutil
         
+        #copy file rules
         tempfilename=tempfile.mktemp(suffix='virus', prefix='fuglu-unittest', dir='/tmp')
         shutil.copy('testdata/binaryattachment.eml',tempfilename)
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)   
