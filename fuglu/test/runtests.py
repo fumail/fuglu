@@ -4,9 +4,12 @@ import unittest
 import sys
 import logging
 import ConfigParser
+import os
 
 sys.path.insert(0,'../src')
-
+homedir=os.getenv("HOME")
+devdir='%s/fuglu-dev'%homedir
+sys.path.insert(0,devdir)
 
 #overwrite logger
 console = logging.StreamHandler()
@@ -30,7 +33,8 @@ rootlogger.addHandler(filelogger)
 
 #load config
 globalconfig=ConfigParser.ConfigParser()
-readconfig=globalconfig.read(['../conf/fuglu.conf.dist'])
+readconfig=globalconfig.read(['../conf/fuglu.conf.dist','%s/test.conf'%devdir])
+print readconfig
 
 def getModules():
     """returns all plugin modules"""
@@ -69,7 +73,7 @@ loader=unittest.TestLoader()
 alltests=unittest.TestSuite()
 plugdir=globalconfig.get('main', 'plugindir').strip()
 if plugdir!="":
-    sys.path.insert(0,plugdir)
+    sys.path.append(plugdir)
 modules=getModules()
 modules.insert(0,'fuglu.bounce')
 modules.insert(0,'fuglu.shared')
