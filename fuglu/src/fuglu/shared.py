@@ -38,11 +38,40 @@ import ConfigParser
 import datetime
 
 #constants
-DUNNO=0
-ACCEPT=1
-DELETE=2
-REJECT=3
-DEFER=4
+
+DUNNO=0 #go on
+ACCEPT=1 # accept message, no further tests
+DELETE=2 # blackhole, no further tests
+REJECT=3 # reject, no further tests
+DEFER=4 # defer, no further tests
+BOUNCE=5 # send a bounce out of fuglu (eg. the attachment plugin)
+
+ALLCODES={
+          'DUNNO':DUNNO,
+          'ACCEPT':ACCEPT,
+          'DELETE':DELETE,
+          'REJECT':REJECT,
+          'DEFER':DEFER,
+          'BOUNCE':BOUNCE,
+          }
+
+def actioncode_to_string(actioncode):
+    """Return the human readable string for this code"""
+    for key,val in ALLCODES.items():
+        if val==actioncode:
+            return key
+    return 'INVALID ACTION CODE %s'%actioncode
+
+def string_to_actioncode(actionstring):
+    """return the code for this action"""
+    #TODO: handle DEFAULTHIGHSPAMACTION
+    #TODO: handdle DEFAULTLOWSPAMACTION
+    #TODO: handle DEFAULTVIRUSACTION
+    
+    upper=actionstring.upper()
+    if not ALLCODES.has_key(upper):
+        return None
+    return ALLCODES[upper]
 
 HOSTNAME=socket.gethostname()
 
@@ -165,7 +194,11 @@ class Suspect:
         tagscopy=self.tags.copy()
         if tagscopy.has_key('SAPlugin.spamscore'):
             tagscopy['SAPlugin.spamscore']="%.2f"%tagscopy['SAPlugin.spamscore']
-            
+        
+        #remove bloat
+        if tagscopy.has_key('decisions'):
+            del tagscopy['decisions']
+        
         astring="Suspect %s: from=%s to=%s size=%s , spam=%s, virus=%s tags=%s"%(self.id,self.from_address, self.to_address,self.size,spamstring,virusstring,tagscopy)
         return astring
     
