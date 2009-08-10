@@ -208,7 +208,8 @@ class SessionHandler:
         self.appenders=appenders
         self.stats=Statskeeper()
         self.workerthread=None
-    
+        self.message=None
+        
     
     def set_threadinfo(self,status):
         if self.workerthread!=None:
@@ -296,10 +297,16 @@ class SessionHandler:
                 sess.endsession(250, "OK")
                 sess=None
             elif result==REJECT:
-                sess.endsession(550,'Rejected by content scanner')
+                retmesg="Rejected by content scanner"
+                if self.message!=None:
+                    retmesg=self.message
+                sess.endsession(550,retmesg)
             elif result==DEFER:
                 message_is_deferred=True
-                sess.endsession(421, 'Internal problem - message deferred')
+                retmesg= 'Internal problem - message deferred'
+                if self.message!=None:
+                    retmesg=self.message
+                sess.endsession(421,retmesg)
             else:
                 self.logger.error('Invalid Message action Code: %s. Using DEFER'%result)
                 message_is_deferred=True
@@ -405,7 +412,13 @@ class SessionHandler:
                 self.logger.debug('Running plugin %s'%plugin)
                 self.set_threadinfo("%s : Running Plugin %s"%(suspect,plugin))
                 suspect.debug('Running plugin %s'%str(plugin))
-                result=plugin.examine(suspect)
+                ans = plugin.examine(suspect)
+                message=None
+                if type(ans) is tuple:
+                    result,message=ans
+                else:
+                    result=ans
+                
                 if result==None:
                     result=DUNNO
 
@@ -428,11 +441,13 @@ class SessionHandler:
                     suspect.debug('Plugin REJECTS this message - no further tests')
                     self.logger.debug('Plugin says: REJECT. Skipping all other tests')
                     self.action=REJECT
+                    self.message=message
                     break
                 elif result==DEFER:
                     suspect.debug('Plugin DEFERS this message - no further tests')
                     self.logger.debug('Plugin says: DEFER. Skipping all other tests')
                     self.action=DEFER
+                    self.message=message
                     break
                 else:
                     self.logger.error('Invalid Message action Code: %s. Using DUNNO'%result)
