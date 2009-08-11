@@ -62,13 +62,28 @@ def actioncode_to_string(actioncode):
             return key
     return 'INVALID ACTION CODE %s'%actioncode
 
-def string_to_actioncode(actionstring):
+def string_to_actioncode(actionstring,config=None):
     """return the code for this action"""
-    #TODO: handle DEFAULTHIGHSPAMACTION
-    #TODO: handdle DEFAULTLOWSPAMACTION
-    #TODO: handle DEFAULTVIRUSACTION
-    
     upper=actionstring.upper()
+    if config!=None:
+       if upper=='DEFAULTHIGHSPAMACTION':
+           confval=config.get('spam','defaulthighspamaction').upper()
+           if not ALLCODES.has_key(confval):
+               return None
+           return ALLCODES[confval]
+       
+       if upper=='DEFAULTLOWSPAMACTION':
+           confval=config.get('spam','defaultlowspamaction').upper()
+           if not ALLCODES.has_key(confval):
+               return None
+           return ALLCODES[confval]
+       
+       if upper=='DEFAULTVIRUSACTION':
+           confval=config.get('virus','defaultvirusaction').upper()
+           if not ALLCODES.has_key(confval):
+               return None
+           return ALLCODES[confval]
+           
     if not ALLCODES.has_key(upper):
         return None
     return ALLCODES[upper]
@@ -419,5 +434,21 @@ class HeaderFilterTestCase(unittest.TestCase):
         
         (match,arg)=self.candidate.matches(suspect)
         self.failUnless(match,'Match should return True')
+
+class ActionCodeTestCase(unittest.TestCase):
+    def test_defaultcodes(self):
+        """test actioncode<->string conversion"""
+        conf=ConfigParser.ConfigParser()
+        conf.add_section('spam')
+        conf.add_section('virus')
+        conf.set('spam', 'defaultlowspamaction', 'REJEcT')
+        conf.set('spam','defaulthighspamaction','REjECT')
+        conf.set('virus','defaultvirusaction','rejeCt')
+        self.assertEqual(string_to_actioncode('defaultlowspamaction', conf),REJECT)
+        self.assertEqual(string_to_actioncode('defaulthighspamaction', conf),REJECT)
+        self.assertEqual(string_to_actioncode('defaultvirusaction', conf),REJECT)
+        self.assertEqual(string_to_actioncode('bounce'), BOUNCE)
+        self.assertEqual(string_to_actioncode('nonexistingstuff'), None)
+        self.assertEqual(actioncode_to_string(REJECT),'REJECT')
         
         
