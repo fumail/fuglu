@@ -25,7 +25,7 @@ class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
     def __init__(self,config):
         ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('SAPlugin','lowpamaction'),('SAPlugin','highspamaction'),('SAPlugin','highspamlevel'),('SAPlugin','peruserconfig'),('SAPlugin','host'),('SAPlugin','port'),('SAPlugin','maxsize'),('SAPlugin','spamheader'),('SAPlugin','timeout'),('SAPlugin','retries'))
+        self.requiredvars=(('SAPlugin','lowspamaction'),('SAPlugin','highspamaction'),('SAPlugin','highspamlevel'),('SAPlugin','peruserconfig'),('SAPlugin','host'),('SAPlugin','port'),('SAPlugin','maxsize'),('SAPlugin','spamheader'),('SAPlugin','timeout'),('SAPlugin','retries'))
         self.logger=self._logger()
         
     def lint(self):
