@@ -87,8 +87,33 @@ mrtgdir=/usr/local/fuglu/mrtg
 
 
 [performance]
+#minimum scanner threads
 minthreads=2
+
+#maximum scanner threads
 maxthreads=40
+
+[spam]
+#what tp do with messages that plugins think are spam but  not so sure  ("low spam")
+#in normal usage you probably never set this something other than DUNNO
+#this is a DEFAULT action, eg. anti spam plugins should take this if you didn't set 
+# a individual override
+defaultlowspamaction=DUNNO
+
+#what to do with messages if a plugin is sure it is spam ("high spam") 
+#in after-queue mode this is probably still DUNNO or maybe DELETE for courageous people
+#this is a DEFAULT action, eg. anti spam plugins should take this if you didn't set 
+# a individual override
+defaulthighspamaction=DUNNO
+
+
+[virus]
+#what to do with messages if a plugin detects a virus
+#in after-queue mode this should probably be DELETE
+#in pre-queue mode you could use REJECT
+#this is a DEFAULT action, eg. anti-virus plugins should take this if you didn't set 
+# a individual override
+defaultvirusaction=DELETE
 
 
 ####################### PLUGIN CONFIGURATION ###############################
@@ -113,14 +138,38 @@ noappender=True
 
 #Spamassassin
 [SAPlugin]
+#where is spamd
 host=localhost
 port=783
+
+#maximum size in bytes. larger messages will be skipped
 maxsize=256000
+
+#what header does sa set
 spamheader=X-Spam-Status
+
+#how long should we wait for an answer from sa
 timeout=30
+
+#how often should we try to connect to sa
 retries=5
+
 #set to 0/no/false to disable spamassassin per user configs
 peruserconfig=1
+
+#from what level on should we consider message as high spam
+highspamlevel=15
+
+#what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
+#normally you would use DEFAULTLOWSPAMACTION here, this will get the setting from [spam]::defaultlowspamaction
+#but you can override this here if you like
+lowspamaction=DEFAULTLOWSPAMACTION
+
+#what should we do with high spam 
+#normally you would use DEFAULTHIGHSPAMACTION here, this will get the setting from [spam]::defaulthighspamaction
+#but you can override this here if you like
+highspamaction=DEFAULTHIGHSPAMACTION
+
 
 #Clam antivirus (clamd)
 [ClamavPlugin]
@@ -130,12 +179,17 @@ timeout=10
 #should match the "StreamMaxLength" config option in clamd.conf
 maxsize=22000000
 retries=3
+virusaction=DEFAULTVIRUSACTION
 
 #Attachment 
 [FiletypePlugin]
 template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 rulesdir=/etc/fuglu/rules
-
+#what should the plugin do when a blocked attachment is detected
+#BOUNCE (default): send a bounce message out of fuglu
+#REJECT : reject the message (recommended in pre-queue mode)
+#DELETE : discard messages (not recommended)
+blockaction=BOUNCE
 
 [HeaderPlugin]
 removeheaders=
