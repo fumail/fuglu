@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,Suspect
+from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,REJECT,Suspect,string_to_actioncode
 import time
 from socket import *
 import email
@@ -25,10 +25,11 @@ class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
     def __init__(self,config):
         ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('SAPlugin','peruserconfig'),('SAPlugin','host'),('SAPlugin','port'),('SAPlugin','maxsize'),('SAPlugin','spamheader'),('SAPlugin','timeout'),('SAPlugin','retries'))
-
+        self.requiredvars=(('SAPlugin','lowpamaction'),('SAPlugin','highspamaction'),('SAPlugin','highspamlevel'),('SAPlugin','peruserconfig'),('SAPlugin','host'),('SAPlugin','port'),('SAPlugin','maxsize'),('SAPlugin','spamheader'),('SAPlugin','timeout'),('SAPlugin','retries'))
+        self.logger=self._logger()
+        
     def lint(self):
-        allok=(self.checkConfig() and self.lint_ping() and self.lint_spam())
+        allok=(self.checkConfig()  and self.lint_ping() and self.lint_spam())
         return allok
 
     def lint_ping(self):
@@ -39,7 +40,7 @@ class SAPlugin(ScannerPlugin):
         retries = self.config.getint('SAPlugin','retries')
         for i in range(0,retries):
             try:
-                self._logger().debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
+                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
                 s = socket(AF_INET, SOCK_STREAM)   
         
                 s.settimeout(timeout)
@@ -91,7 +92,7 @@ Subject: test scanner
     def examine(self,suspect):
         #check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip')==True:
-            self._logger().debug('Skipping SA Plugin (requested by previous plugin)')
+            self.logger.debug('Skipping SA Plugin (requested by previous plugin)')
             return
         
         spamsize=suspect.size
@@ -101,7 +102,7 @@ Subject: test scanner
         spamheadername=self.config.get('SAPlugin','spamheader')
         
         if spamsize>maxsize:
-            self._logger().info('Size Skip, %s > %s'%(spamsize,maxsize))
+            self.logger.info('Size Skip, %s > %s'%(spamsize,maxsize))
             suspect.debug('Too big for spamchecks. %s > %s'%(spamsize,maxsize))
             return
         
@@ -113,9 +114,10 @@ Subject: test scanner
         content=None
         if filtered==None:
             suspect.debug('SA Scan failed - please check error log')
-            self._logger().error('SA scan FAILED. Deferring message')
+            self.logger.error('SA scan FAILED. Deferring message')
             return DEFER
             
+            #TODO make config option 'problemaction'
             #this would acceppt the message
             #suspect.addheader('%sSA-SKIP'%self.config.get('main','prependaddedheaders'),'SA scan failed')
             #content=spam
@@ -132,7 +134,7 @@ Subject: test scanner
         
         spamscore=None
         if spamheader==None:
-            self._logger().warning('Did not find Header %s in returned message from SA'%spamheadername)
+            self.logger.warning('Did not find Header %s in returned message from SA'%spamheadername)
         else:
             if len(spamheader)>2 and spamheader.lower()[0:3]=='yes':
                 isspam=True
@@ -141,31 +143,37 @@ Subject: test scanner
             
             if m !=None:
                 spamscore=float(m.group(1))
-                self._logger().debug('Spamscore: %s'%spamscore)
+                self.logger.debug('Spamscore: %s'%spamscore)
                 suspect.debug('Spamscore: %s'%spamscore)
             else:
-                self._logger().warning('Could not extract spam score from header: %s'%spamheader)
+                self.logger.warning('Could not extract spam score from header: %s'%spamheader)
                 suspect.debug('Could not read spam score from header %s'%spamheader)
          
         
+        action=DUNNO
         if isspam:
-            self._logger().debug('Message is spam')
+            self.logger.debug('Message is spam')
             suspect.debug('Message is spam')
+            configaction=string_to_actioncode(self.config.get('SAPlugin','lowspamaction'),self.config)
+            if configaction!=None:
+                action=configaction
         else:
-            self._logger().debug('Message is not spam')
+            self.logger.debug('Message is not spam')
             suspect.debug('Message is not spam')   
-        
-        
         
             
         suspect.tags['spam']['SpamAssassin']=isspam
         if spamscore != None:
             suspect.tags['SAPlugin.spamscore']=spamscore
- 
+            if spamscore>=self.config.getint('SAPlugin','highspamlevel'):
+                configaction=string_to_actioncode(self.config.get('SAPlugin','highspamaction'),self.config)
+                if configaction!=None:
+                    action=configaction
+        
         endtime=time.time()
         difftime=endtime-starttime
         suspect.tags['SAPlugin.time']="%.4f"%difftime
-        return DUNNO
+        return action
         
     def safilter(self,messagecontent,user):
         """pass content to sa, return cleaned mail"""
@@ -177,7 +185,7 @@ Subject: test scanner
         spamsize=len(messagecontent)
         for i in range(0,retries):
             try:
-                self._logger().debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
+                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
                 s = socket(AF_INET, SOCK_STREAM)   
         
                 s.settimeout(timeout)
@@ -191,34 +199,34 @@ Subject: test scanner
                     s.sendall("\r\n")
                 s.sendall("\r\n")
                 s.sendall(messagecontent)
-                self._logger().debug('Sent %s bytes to spamd'%spamsize)
+                self.logger.debug('Sent %s bytes to spamd'%spamsize)
                 s.shutdown(1)
                 socketfile=s.makefile("rb")
                 line1_info=socketfile.readline()
-                self._logger().debug(line1_info)
+                self.logger.debug(line1_info)
                 line2_contentlength=socketfile.readline()
                 line3_empty=socketfile.readline()
                 content=socketfile.read()
-                self._logger().debug('Got %s message bytes from back from spamd'%len(content))
+                self.logger.debug('Got %s message bytes from back from spamd'%len(content))
                 answer=line1_info.strip().split()
                 if len(answer)!=3:
-                    self._logger().error("Got invalid status line from spamd: %s"%line1_info)
+                    self.logger.error("Got invalid status line from spamd: %s"%line1_info)
                     continue
                 
                 (version,number,status)=answer
                 if status!='EX_OK':
-                    self._logger().error("Got bad status from spamd: %s"%status)
+                    self.logger.error("Got bad status from spamd: %s"%status)
                     continue
                 
                 return content
             except timeout:
-                self._logger().error('SPAMD Socket timed out.')
+                self.logger.error('SPAMD Socket timed out.')
             except herror,h:
-                self._logger().error('SPAMD Herror encountered : %s'%str(h))
+                self.logger.error('SPAMD Herror encountered : %s'%str(h))
             except gaierror,g:
-                self._logger().error('SPAMD gaierror encountered: %s'%str(g))
+                self.logger.error('SPAMD gaierror encountered: %s'%str(g))
             except error,e:
-                self._logger().error('SPAMD socket error: %s'%str(e))
+                self.logger.error('SPAMD socket error: %s'%str(e))
             
             time.sleep(1)
         return None
@@ -239,6 +247,9 @@ class SAPluginTestCase(unittest.TestCase):
         config.set('SAPlugin', 'peruserconfig','0')
         config.set('SAPlugin', 'maxsize','500000')
         config.set('SAPlugin', 'spamheader','X-Spam-Status')
+        config.set('SAPlugin', 'lowspamaction','DUNNO')
+        config.set('SAPlugin', 'highspamaction','REJECT')
+        config.set('SAPlugin', 'highspamlevel','15')
         self.candidate=SAPlugin(config)
 
     def test_score(self):
@@ -251,6 +262,7 @@ Subject: test scanner
   XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
         suspect.setMessageRep(email.message_from_string(stream))
-        self.candidate.examine(suspect)
+        result=self.candidate.examine(suspect)
         score=int( suspect.get_tag('SAPlugin.spamscore'))
         self.failUnless(score>1000, "GTUBE mails should score > 1000")
+        self.failUnless(result==REJECT,'High spam should be rejected')
