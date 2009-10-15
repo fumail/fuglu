@@ -74,12 +74,12 @@ class Bounce:
         self._send(fromaddress, recipient, message)
     
     def _send(self,fromaddress,toaddress,message):
-        if self.config.get('main','disablebounces'):
+        if self.config.getboolean('main','disablebounces'):
             self.logger.warning('Bounces are disabled in config - not sending message to %s'%toaddress)
             return
         smtpServer = smtplib.SMTP('127.0.0.1',self.config.getint('main', 'outgoingport'))
         smtpServer.helo(self.config.get('main','outgoinghelo'))
-        smtpServer.sendmail(fromaddress, recipient, message)
+        smtpServer.sendmail(fromaddress, toaddress, message)
         smtpServer.quit()
         
         
