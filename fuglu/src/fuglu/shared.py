@@ -66,23 +66,23 @@ def string_to_actioncode(actionstring,config=None):
     """return the code for this action"""
     upper=actionstring.upper()
     if config!=None:
-       if upper=='DEFAULTHIGHSPAMACTION':
-           confval=config.get('spam','defaulthighspamaction').upper()
-           if not ALLCODES.has_key(confval):
-               return None
-           return ALLCODES[confval]
+        if upper=='DEFAULTHIGHSPAMACTION':
+            confval=config.get('spam','defaulthighspamaction').upper()
+            if not ALLCODES.has_key(confval):
+                return None
+            return ALLCODES[confval]
        
-       if upper=='DEFAULTLOWSPAMACTION':
-           confval=config.get('spam','defaultlowspamaction').upper()
-           if not ALLCODES.has_key(confval):
-               return None
-           return ALLCODES[confval]
+        if upper=='DEFAULTLOWSPAMACTION':
+            confval=config.get('spam','defaultlowspamaction').upper()
+            if not ALLCODES.has_key(confval):
+                return None
+            return ALLCODES[confval]
        
-       if upper=='DEFAULTVIRUSACTION':
-           confval=config.get('virus','defaultvirusaction').upper()
-           if not ALLCODES.has_key(confval):
-               return None
-           return ALLCODES[confval]
+        if upper=='DEFAULTVIRUSACTION':
+            confval=config.get('virus','defaultvirusaction').upper()
+            if not ALLCODES.has_key(confval):
+                return None
+            return ALLCODES[confval]
            
     if not ALLCODES.has_key(upper):
         return None
@@ -403,11 +403,11 @@ class HeaderFilter(object):
         return ret
        
     def filechanged(self):
-       statinfo=os.stat(self.filename)
-       ctime=statinfo.st_ctime
-       if ctime>self.lastreload:
-           return True
-       return False
+        statinfo=os.stat(self.filename)
+        ctime=statinfo.st_ctime
+        if ctime>self.lastreload:
+            return True
+        return False
     
     
   
