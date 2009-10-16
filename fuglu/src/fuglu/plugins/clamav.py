@@ -212,7 +212,7 @@ class ClamavPlugin(ScannerPlugin):
         result = s.recv(20000)
         print "Got Pong: %s"%result
         if result.strip()!='PONG':
-            print "Invalid PONG:"%sresult
+            print "Invalid PONG:"%result
         return True
     
     def lint_eicar(self):
