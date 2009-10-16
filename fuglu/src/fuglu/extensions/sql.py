@@ -33,9 +33,6 @@ except:
     STATUS="sqlalchemy not installed"
 
 
-import ConfigParser
-
-
 sessions={}
     
 def get_session(connectstring):
