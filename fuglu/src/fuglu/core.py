@@ -266,7 +266,8 @@ class SessionHandler:
                 debuginfo=str(suspect)
                 suspect.addheader("%sDebuginfo"%prependheader, debuginfo)
             
-            
+            #add suspect id for tracking
+            suspect.addheader('%sSuspect'%prependheader,suspect.id)
             
             #checks done.. print out suspect status
             self.logger.info(suspect)
@@ -282,7 +283,7 @@ class SessionHandler:
                 try:
                     injectanswer=self.re_inject(suspect)
                     self.stats.outcount+=1
-                    sess.endsession(250, "FUGLU REQUEUE: %s"%injectanswer)
+                    sess.endsession(250, "FUGLU REQUEUE(%s): %s"%(suspect.id,injectanswer))
                     sess=None
                 except KeyboardInterrupt, k:
                     sys.exit()
