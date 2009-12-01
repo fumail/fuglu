@@ -46,17 +46,17 @@ class Statskeeper( object ):
     __shared_state = {}
     
     def __init__(self):
-       self.__dict__ = self.__shared_state
-       if not hasattr(self, 'totalcount'):
-           self.totalcount=0
-           self.spamcount=0
-           self.hamcount=0
-           self.viruscount=0
-           self.incount=0
-           self.outcount=0
-           self.scantimes=[]
-           self.starttime=time.time()
-           self.lastscan=0
+        self.__dict__ = self.__shared_state
+        if not hasattr(self, 'totalcount'):
+            self.totalcount=0
+            self.spamcount=0
+            self.hamcount=0
+            self.viruscount=0
+            self.incount=0
+            self.outcount=0
+            self.scantimes=[]
+            self.starttime=time.time()
+            self.lastscan=0
            
     def uptime(self):
         """uptime since we started fuglu"""
