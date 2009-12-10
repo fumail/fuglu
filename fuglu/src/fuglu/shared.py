@@ -174,6 +174,10 @@ class Suspect:
         if not self.tags.has_key(key):
             return None
         return self.tags[key]
+    
+    def set_tag(self,key,value):
+        """Set a new tag"""
+        self.tags[key]=value
         
     def is_spam(self):
         """Returns True if ANY of the spam engines tagged this suspect as spam"""
