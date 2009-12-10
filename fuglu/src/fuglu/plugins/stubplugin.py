@@ -69,5 +69,5 @@ class StubPluginTestCase(unittest.TestCase):
         from fuglu.shared import Suspect
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         self.candidate.examine(suspect)
-        self.failIf(suspect.get_tag('StubPlugin.time')==None, "Examine didnt't run through")
+        self.failIf(suspect.get_tag('StubPlugin.time')==None, "Examine didn't run through")
         
