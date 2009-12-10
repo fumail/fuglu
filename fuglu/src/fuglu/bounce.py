@@ -43,7 +43,7 @@ class Bounce:
         return message
         
     
-    def send_raw_template(self,recipient,templatefile,suspect,values):
+    def send_template_file(self,recipient,templatefile,suspect,values):
         """Send a E-Mail Bounce Message
         
         recipient     -- Message recipient (bla@bla.com)
@@ -54,9 +54,6 @@ class Bounce:
         If the suspect has the 'nobounce' tag set, the message will not be sent. The same happens
         if the global configuration 'disablebounces' is set.
         """
-        if suspect.get_tag('nobounce'):
-            self.logger.info('Not sending bounce to %s - bounces disabled by plugin'%recipient)
-            return
         
         if not os.path.exists(templatefile):
             self.logger.error('Template file does not exist: %s'%templatefile)
@@ -65,12 +62,28 @@ class Bounce:
         fp=open(templatefile)
         filecontent=fp.read()
         fp.close()
+        self.send_template_string(recipient, filecontent, suspect, values)
         
+    
+    def send_template_string(self,recipient,templatecontent,suspect,values):
+        """Send a E-Mail Bounce Message
+        
+        recipient     -- Message recipient (bla@bla.com)
+        templatecontent  -- Template to use
+        suspect      -- suspect that caused the bounce
+        values       -- Values to apply to the template
+        
+        If the suspect has the 'nobounce' tag set, the message will not be sent. The same happens
+        if the global configuration 'disablebounces' is set.
+        """
+        if suspect.get_tag('nobounce'):
+            self.logger.info('Not sending bounce to %s - bounces disabled by plugin'%recipient)
+            return
+        
+        message=self.apply_template(templatecontent, suspect, values)
+
         self.logger.debug('Sending bounce message to %s'%recipient)
         fromaddress="<>"
-        
-        message=self.apply_template(filecontent, suspect, values)
-
         self._send(fromaddress, recipient, message)
     
     def _send(self,fromaddress,toaddress,message):

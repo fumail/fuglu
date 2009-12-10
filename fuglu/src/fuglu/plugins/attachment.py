@@ -234,7 +234,7 @@ class FiletypePlugin(ScannerPlugin):
                         blockinfo="%s: %s"%(asciirep,description)
                         suspect.tags['FiletypePlugin.errormessage']=blockinfo
                         bounce=Bounce(self.config)
-                        bounce.send_raw_template(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
+                        bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
                         return DELETE
                     
                     if action=='delete':
