@@ -32,20 +32,14 @@ except:
     modlogger.warning('sqlalchemy not installed, not enabling sql extension')
     STATUS="sqlalchemy not installed"
 
-
-sessions={}
     
 def get_session(connectstring):
     global sessions,ENABLED
     if not ENABLED:
         raise Exception,"sql extension not enabled"
-    
-    if sessions.has_key(connectstring):
-        return sessions[connectstring]
-    else:
-        engine = create_engine(connectstring)
-        maker = sessionmaker(autoflush=True, autocommit=True)
-        session = scoped_session(maker)
-        session.configure(bind=engine)
-        sessions[connectstring]=session
-        return session
+
+    engine = create_engine(connectstring)
+    maker = sessionmaker(autoflush=True, autocommit=True)
+    session = scoped_session(maker)
+    session.configure(bind=engine)
+    return session
