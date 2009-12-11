@@ -1022,7 +1022,7 @@ class SMTPSession:
             raise ValueError,"Could not parse address %s"%address
         end = string.find(address, '>')
         if end<0:
-           end=len(address)
+            end=len(address)
         retaddr=address[start:end]
         retaddr=retaddr.strip()
         return retaddr
