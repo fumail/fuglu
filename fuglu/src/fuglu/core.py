@@ -671,7 +671,7 @@ class MainController:
         trashdir=self.config.get('main','trashdir').strip()
         if trashdir!="":
             if not os.path.isdir(trashdir):
-              print fc.strcolor("Trashdir %s does not exist"%trashdir,'red')
+                print fc.strcolor("Trashdir %s does not exist"%trashdir,'red')
               
         
         allplugins=self.plugins+self.prependers+self.appenders
