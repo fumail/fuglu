@@ -1069,7 +1069,7 @@ class ControlSession(object):
         """list of all threads"""
         threads=threading.enumerate()
         workerlist="\n%s"%'\n*******\n'.join(map(repr,threads))
-        res="Total %s Scanner Threads\n%s"%(len(threads),workerlist)
+        res="Total %s Threads\n%s"%(len(threads),workerlist)
         return res
     
     def uptime(self,args):
