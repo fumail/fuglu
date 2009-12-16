@@ -9,7 +9,9 @@ import os
 sys.path.insert(0,'../src')
 homedir=os.getenv("HOME")
 devdir='%s/fuglu-dev'%homedir
-sys.path.insert(0,devdir)
+if os.path.exists(devdir):
+    print "Including plugins in %s"%devdir
+    sys.path.insert(0,devdir)
 
 #overwrite logger
 console = logging.StreamHandler()
