@@ -44,7 +44,6 @@ vacation_ignoreheaderregex={
     'x-spam-flag':'yes',
     'x-spam-status':'yes',
     'X-Spam-Flag2': 'yes',
-    'X-Bluewin-Spam-Score':'^100',
     'precedence':'(bulk|list|junk)',
     'x-precedence':'(bulk|list|junk)',
     'x-barracuda-spam-status':'yes',
