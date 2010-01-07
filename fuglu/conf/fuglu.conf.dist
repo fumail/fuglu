@@ -208,3 +208,8 @@ storeoriginal=1
 [PluginSkipper]
 #Skip plugins based on rules
 filterfile=/etc/fuglu/skipplugins.regex
+
+
+[VacationPlugin]
+dbconnectstring=sqlite:////usr/local/fuglu/vacation.db
+
