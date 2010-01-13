@@ -36,7 +36,7 @@ import re
 import unittest
 import ConfigParser
 import datetime
-
+from string import Template
 #constants
 
 DUNNO=0 #go on
@@ -87,6 +87,23 @@ def string_to_actioncode(actionstring,config=None):
     if not ALLCODES.has_key(upper):
         return None
     return ALLCODES[upper]
+
+
+def apply_template(templatecontent,suspect,values=None):
+    if values==None:
+        values={}
+
+    values['from_address']=suspect.from_address
+    values['to_address']=suspect.to_address
+    values['from_domain']=suspect.from_domain
+    values['to_domain']=suspect.to_domain
+    values['subject']=suspect.getMessageRep()['subject']
+    
+    template = Template(templatecontent)
+    
+    message= template.safe_substitute(values)
+    return message
+
 
 HOSTNAME=socket.gethostname()
 
@@ -425,7 +442,6 @@ class HeaderFilterTestCase(unittest.TestCase):
 
     def test_hf(self):
         """Test header filters"""
-        from fuglu.shared import Suspect
 
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','testdata/helloworld.eml')
         suspect.tags['testtag']='testvalue'
@@ -454,5 +470,27 @@ class ActionCodeTestCase(unittest.TestCase):
         self.assertEqual(string_to_actioncode('bounce'), BOUNCE)
         self.assertEqual(string_to_actioncode('nonexistingstuff'), None)
         self.assertEqual(actioncode_to_string(REJECT),'REJECT')
+
+
+class TemplateTestcase(unittest.TestCase):
+    """Test Templates"""
+    def setUp(self):     
+        pass
+ 
+    def tearDown(self):
+        pass     
+
+    def test_template(self):
+        """Test Basic Template function"""
+
+        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','testdata/helloworld.eml')
+        suspect.tags['nobounce']=True
         
+        reason="a three-headed monkey stole it"
+        
+        template="""Your message '${subject}' from ${from_address} to ${to_address} could not be delivered because ${reason}"""
+        
+        result=apply_template(template, suspect, dict(reason=reason))
+        expected="""Your message 'Hello world!' from sender@unittests.fuglu.org to recipient@unittests.fuglu.org could not be delivered because a three-headed monkey stole it"""
+        self.assertEquals(result,expected),"Got unexpected template result: %s"%result       
         

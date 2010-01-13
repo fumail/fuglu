@@ -16,12 +16,12 @@
 #
 
 import smtplib
-from string import Template
 import traceback
 import logging
 import os
 import unittest
 
+from fuglu.shared import apply_template
 
 class Bounce:
     """Send Mail (Bounces)"""
@@ -29,18 +29,6 @@ class Bounce:
     def __init__(self,config):
         self.logger=logging.getLogger('fuglu.bouncer')
         self.config=config
-    
-    
-    
-    def apply_template(self,templatecontent,suspect,values):
-        values['from_address']=suspect.from_address
-        values['to_address']=suspect.to_address
-        values['subject']=suspect.getMessageRep()['subject']
-        
-        template = Template(templatecontent)
-        
-        message= template.safe_substitute(values)
-        return message
         
     
     def send_template_file(self,recipient,templatefile,suspect,values):
@@ -80,7 +68,7 @@ class Bounce:
             self.logger.info('Not sending bounce to %s - bounces disabled by plugin'%recipient)
             return
         
-        message=self.apply_template(templatecontent, suspect, values)
+        message=apply_template(templatecontent, suspect, values)
 
         self.logger.debug('Sending bounce message to %s'%recipient)
         fromaddress="<>"
@@ -94,30 +82,6 @@ class Bounce:
         smtpServer.helo(self.config.get('main','outgoinghelo'))
         smtpServer.sendmail(fromaddress, toaddress, message)
         smtpServer.quit()
-        
-        
-class TemplateTestcase(unittest.TestCase):
-    """Test Templates"""
-    def setUp(self):     
-        pass
- 
-    def tearDown(self):
-        pass     
-
-    def test_hf(self):
-        """Test header filters"""
-        from fuglu.shared import Suspect
-
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','testdata/helloworld.eml')
-        suspect.tags['nobounce']=True
-        
-        reason="a three-headed monkey stole it"
-        
-        template="""Your message '${subject}' from ${from_address} to ${to_address} could not be delivered because ${reason}"""
-        
-        result=Bounce(None).apply_template(template, suspect, dict(reason=reason))
-        expected="""Your message 'Hello world!' from sender@unittests.fuglu.org to recipient@unittests.fuglu.org could not be delivered because a three-headed monkey stole it"""
-        self.assertEquals(result,expected),"Got unexpected template result: %s"%result
         
         
         
