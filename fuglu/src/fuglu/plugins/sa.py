@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,REJECT,Suspect,string_to_actioncode
+from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,REJECT,Suspect,string_to_actioncode,apply_template
 import time
 from socket import *
 import email
@@ -29,9 +29,34 @@ class SAPlugin(ScannerPlugin):
         self.logger=self._logger()
         
     def lint(self):
-        allok=(self.checkConfig()  and self.lint_ping() and self.lint_spam())
+        allok=(self.checkConfig()  and self.lint_ping() and self.lint_spam() and self.lint_blacklist())
         return allok
 
+    def lint_blacklist(self):
+        if not self.config.has_option('SAPlugin', 'check_sql_blacklist') or not self.config.getboolean('SAPlugin','check_sql_blacklist'):
+            return True
+        
+        from fuglu.extensions.sql import ENABLED,get_session
+        if not ENABLED:
+            print "SQL Blacklist requested but SQLALCHEMY is not enabled"
+            return False
+        
+
+        session=get_session(self.config.get('SAPlugin','sql_blacklist_dbconnectstring'))
+        suspect=Suspect('dummy@example.com','dummy@example.com','/dev/null')
+        conf_sql=self.config.get('SAPlugin','sql_blacklist_sql')
+        sql,params=self._replace_sql_params(suspect, conf_sql)
+        try:
+            session.execute(sql,params)
+            print "Blacklist SQL Query OK"
+            return True
+        except Exception,e:
+            print e
+            return False
+        
+        
+        
+        
     def lint_ping(self):
         """ping sa"""
         serverHost = self.config.get('SAPlugin','host')          
@@ -88,7 +113,76 @@ Subject: test scanner
         else:
             print "SA did not detect GTUBE"
             return False
+    
+    
+    def _replace_sql_params(self,suspect,conf_sql):
+        """replace template variables in sql with parameters and set sqlalchemy parameters from suspect"""
+        from string import Template
+        values={}
+        values['from_address']=':fromaddr'
+        values['to_address']=':toaddr'
+        values['from_domain']=':fromdomain'
+        values['to_domain']=':todomain'
         
+        template = Template(conf_sql)
+    
+        sql= template.safe_substitute(values)
+        
+        params={
+                'fromaddr':suspect.from_address,
+                'toaddr':suspect.to_address,
+                'fromdomain':suspect.from_domain,
+                'todomain':suspect.to_domain,
+        }
+        
+        return sql,params
+    
+    def check_sql_blacklist(self,suspect):
+        """Check this message against the SQL blacklist. returns highspamaction on hit, DUNNO otherwise"""    
+        #work in progress
+        if not self.config.has_option('SAPlugin', 'check_sql_blacklist') or not self.config.getboolean('SAPlugin','check_sql_blacklist'):
+            return DUNNO
+        
+        from fuglu.extensions.sql import ENABLED
+        if not ENABLED:
+            self.logger.error('Cannot check sql blacklist, SQLALCHEMY extension is not available')
+            return DUNNO
+        
+        from fuglu.extensions.sql import get_session
+        
+        
+        self.logger.debug('blacklist check')
+        dbsession=get_session(self.config.get('SAPlugin','sql_blacklist_dbconnectstring'))
+        conf_sql=self.config.get('SAPlugin','sql_blacklist_sql')
+        
+        sql,params=self._replace_sql_params(suspect, conf_sql)
+        
+        resultproxy=dbsession.execute(sql,params)
+
+        for result in resultproxy:
+            dbvalue=result[0] # this value might have multiple words
+            allvalues=dbvalue.split()
+            for blvalue in allvalues:
+                self.logger.debug(blvalue)
+                #build regex
+                #translate glob to regex
+                #http://stackoverflow.com/questions/445910/create-regex-from-glob-expression
+                regexp = re.escape(blvalue).replace(r'\?', '.').replace(r'\*', '.*?')
+                self.logger.debug(regexp)
+                pattern=re.compile(regexp)
+                
+                if pattern.search(suspect.from_address):
+                    self.logger.debug('Blacklist match : %s for sa pref %s'%(suspect.from_address,blvalue))
+                    configaction=string_to_actioncode(self.config.get('SAPlugin','highspamaction'),self.config)
+                    suspect.tags['spam']['SpamAssassin']=True
+                    prependheader=self.config.get('main','prependaddedheaders')
+                    suspect.addheader("%sBlacklisted"%prependheader, blvalue)
+                    if configaction==None:
+                        return DUNNO
+                    return configaction
+                 
+        return DUNNO
+    
     def examine(self,suspect):
         #check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip')==True:
@@ -104,7 +198,8 @@ Subject: test scanner
         if spamsize>maxsize:
             self.logger.info('Size Skip, %s > %s'%(spamsize,maxsize))
             suspect.debug('Too big for spamchecks. %s > %s'%(spamsize,maxsize))
-            return
+            return self.check_sql_blacklist(suspect)
+            
         
         starttime=time.time()
         
@@ -237,8 +332,12 @@ Subject: test scanner
 class SAPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""
     def setUp(self):
-        from ConfigParser import RawConfigParser        
+        from ConfigParser import RawConfigParser  
+        import os      
         config=RawConfigParser()
+        config.add_section('main')
+        config.set('main','prependaddedheaders','X-Fuglu-')
+        
         config.add_section('SAPlugin')
         config.set('SAPlugin', 'host','127.0.0.1')
         config.set('SAPlugin', 'port','783')
@@ -250,6 +349,21 @@ class SAPluginTestCase(unittest.TestCase):
         config.set('SAPlugin', 'lowspamaction','DUNNO')
         config.set('SAPlugin', 'highspamaction','REJECT')
         config.set('SAPlugin', 'highspamlevel','15')
+        
+        #sql blacklist
+        testfile="/tmp/sa_test.db"
+        if os.path.exists(testfile):
+            os.remove(testfile)
+        #important: 4 slashes for absolute paths!
+        self.testdb="sqlite:///%s"%testfile
+
+        sql="""SELECT value FROM userpref WHERE preference='blacklist_from' AND username in ('@GLOBAL','%' || ${to_domain},${to_address})"""
+        
+        
+        config.set('SAPlugin', 'sql_blacklist_dbconnectstring',self.testdb)
+        config.set('SAPlugin', 'sql_blacklist_sql',sql)
+        config.set('SAPlugin', 'check_sql_blacklist','True')
+        
         self.candidate=SAPlugin(config)
 
     def test_score(self):
@@ -266,3 +380,32 @@ Subject: test scanner
         score=int( suspect.get_tag('SAPlugin.spamscore'))
         self.failUnless(score>1000, "GTUBE mails should score > 1000")
         self.failUnless(result==REJECT,'High spam should be rejected')
+        
+        
+    def test_sql_blacklist(self):        
+        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
+        
+        import fuglu.extensions.sql
+        if not fuglu.extensions.sql.ENABLED:
+            print "Excluding test that needs sqlalchemy extension"
+            return
+        
+        session=fuglu.extensions.sql.get_session(self.testdb)
+        
+        createsql="""CREATE TABLE userpref (
+  username varchar(100) NOT NULL DEFAULT '',
+  preference varchar(30) NOT NULL DEFAULT '',
+  value varchar(100) NOT NULL DEFAULT ''
+)"""
+
+        session.execute(createsql)
+        self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'sender is not blacklisted'
+        
+        
+        insertsql="""INSERT INTO userpref (username,preference,value) VALUES ('%unittests.fuglu.org','blacklist_from','*@unittests.fuglu.org')"""
+        session.execute(insertsql)
+
+        self.assertEquals(self.candidate.check_sql_blacklist(suspect),REJECT),'sender should be blacklisted'
+        
+        fuglu.extensions.sql.ENABLED=False
+        self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'problem if sqlalchemy is not available'

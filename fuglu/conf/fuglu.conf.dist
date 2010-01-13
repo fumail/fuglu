@@ -170,6 +170,18 @@ lowspamaction=DEFAULTLOWSPAMACTION
 #but you can override this here if you like
 highspamaction=DEFAULTHIGHSPAMACTION
 
+#SQL Blacklist
+#fuglu can consult the blacklist for messages that cannot be scanned by SA because they are too big
+#This requires that sqlalchemy is installed (easy_install sqlalchemy should do the trick)
+check_sql_blacklist=0
+
+#sqlalchemy connect string
+sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
+
+#SQL query to get the blacklist entries for a suspect
+#you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
+sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
+
 
 #Clam antivirus (clamd)
 [ClamavPlugin]
