@@ -409,3 +409,4 @@ Subject: test scanner
         
         fuglu.extensions.sql.ENABLED=False
         self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'problem if sqlalchemy is not available'
+        fuglu.extensions.sql.ENABLED=True
