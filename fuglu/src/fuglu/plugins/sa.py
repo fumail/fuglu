@@ -152,13 +152,17 @@ Subject: test scanner
         
         
         self.logger.debug('blacklist check')
-        dbsession=get_session(self.config.get('SAPlugin','sql_blacklist_dbconnectstring'))
-        conf_sql=self.config.get('SAPlugin','sql_blacklist_sql')
-        
-        sql,params=self._replace_sql_params(suspect, conf_sql)
-        
-        resultproxy=dbsession.execute(sql,params)
-
+        try:
+            dbsession=get_session(self.config.get('SAPlugin','sql_blacklist_dbconnectstring'))
+            conf_sql=self.config.get('SAPlugin','sql_blacklist_sql')
+            
+            sql,params=self._replace_sql_params(suspect, conf_sql)
+            
+            resultproxy=dbsession.execute(sql,params)
+        except Exception,e:
+            self.logger.error('Could not read blacklist from DB: %s'%e)
+            return DUNNO
+            
         for result in resultproxy:
             dbvalue=result[0] # this value might have multiple words
             allvalues=dbvalue.split()
@@ -362,7 +366,7 @@ class SAPluginTestCase(unittest.TestCase):
         
         config.set('SAPlugin', 'sql_blacklist_dbconnectstring',self.testdb)
         config.set('SAPlugin', 'sql_blacklist_sql',sql)
-        config.set('SAPlugin', 'check_sql_blacklist','True')
+        config.set('SAPlugin', 'check_sql_blacklist','False')
         
         self.candidate=SAPlugin(config)
 
@@ -382,7 +386,8 @@ Subject: test scanner
         self.failUnless(result==REJECT,'High spam should be rejected')
         
         
-    def test_sql_blacklist(self):        
+    def test_sql_blacklist(self):
+        self.candidate.config.set('SAPlugin', 'check_sql_blacklist','True')    
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         
         import fuglu.extensions.sql
@@ -410,3 +415,10 @@ Subject: test scanner
         fuglu.extensions.sql.ENABLED=False
         self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'problem if sqlalchemy is not available'
         fuglu.extensions.sql.ENABLED=True
+        
+        self.candidate.config.set('SAPlugin','sql_blacklist_sql','this is a buggy sql statement')
+        self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'error coping with db problems'
+        
+        #simulate unavailable db
+        self.candidate.config.set('SAPlugin','sql_blacklist_dbconnectstring','mysql://127.0.0.1:9977/idonotexist')
+        self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'error coping with db problems'
