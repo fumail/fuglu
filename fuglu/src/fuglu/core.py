@@ -152,6 +152,8 @@ class StatsThread(object):
             self.logger.error('MRTG directory %s not found, disabling stats writer'%dir)
             return
         
+        self.logger.info('Writing statistics to %s'%dir)
+        
         while self.stayalive:
             time.sleep(self.writeinterval)
             uptime=self.stats.uptime()
@@ -173,14 +175,17 @@ class StatsThread(object):
             
     
     def write_mrtg(self,filename,value1,value2,uptime,identifier):
-        fp=open(filename,'w')
-        fp.write("%s\n"%value1)
-        if value2:
-            fp.write("%s\n"%value2)
-        else:
-            fp.write("0\n");
-        fp.write("%s\n%s\n"%(uptime,identifier))
-        fp.close()
+        try:
+            fp=open(filename,'w')
+            fp.write("%s\n"%value1)
+            if value2:
+                fp.write("%s\n"%value2)
+            else:
+                fp.write("0\n");
+            fp.write("%s\n%s\n"%(uptime,identifier))
+            fp.close()
+        except Exception,e:
+            self.logger.error('Could not write mrtg stats file %s : %s)'%(filename,e))
     
 
 class FUSMTPClient(smtplib.SMTP):
