@@ -19,7 +19,7 @@
 #fuglu main startup file
 
 #update this one for new releases
-FUGLU_VERSION="0.4.1svn"
+FUGLU_VERSION="0.4.2"
 
 import ConfigParser
 from fuglu.daemon import DaemonStuff
