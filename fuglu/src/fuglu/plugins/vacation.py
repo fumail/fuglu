@@ -48,6 +48,7 @@ vacation_ignoreheaderregex={
     'x-precedence':'(bulk|list|junk)',
     'x-barracuda-spam-status':'yes',
     'x-dspam-result':'(spam|bl[ao]cklisted)',
+    'X-Mailer':'^Mail$',
 }
 
 class Vacation(object):
