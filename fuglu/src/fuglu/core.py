@@ -257,9 +257,9 @@ class SessionHandler:
             
             # Set fuglu spam status
             if suspect.is_spam():
-                suspect.addheader("%sSpamstatus"%prependheader, 'YES')
+                suspect.addheader("%sSpamstatus"%prependheader, 'Yes')
             else:
-                suspect.addheader("%sSpamstatus"%prependheader, 'NO')
+                suspect.addheader("%sSpamstatus"%prependheader, 'No')
             
              
             #how long did it all take?
