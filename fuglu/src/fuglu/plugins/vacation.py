@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-#   Copyright 2010 Oli Schacher
+#   Copyright 2009 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -32,23 +31,58 @@ import logging
 
 
 # from address regex
-vacation_ignoresenderregex=["^owner-","^request-","^bounces-","^noreply","^postmaster@","^mailer-daemon@","^listserv@","^majordomo@","^bounce","^www(-data)?@","^mdaemon@","^root@","^webmaster@","^administrator@"]
+vacation_ignoresenderregex=["^owner-",
+                            "^request-",
+                            "-request@",
+                            "^bounce[s]?-",
+                            "-bounce[s]?@",
+                            "-confirm@",
+                            "-errors@",
+                            "^no[\-]?reply",
+                            "^postmaster@",
+                            "^mailer[-_]daemon@",
+                            "^mailer@",
+                            "^listserv@",
+                            "^majordom[o]?@",
+                            "^mailman@",
+                            "^nobody@",
+                            "^bounce",
+                            "^www(-data)?@",
+                            "^mdaemon@",
+                            "^root@",
+                            "^webmaster@",
+                            "^administrator@",
+                            "^support@",
+                            ]
 
 
 #if one of these headers exists, we should not send auto reply
-vacation_ignoreheaderexists=["list-help", "list-unsubscribe", "list-subscribe", "list-owner", "list-post", "list-archive", "list-id", "mailing-List",
-                       "x-facebook-notify","x-mailing-list",
+vacation_ignoreheaderexists=["list-help",
+                             "list-unsubscribe", 
+                             "list-subscribe", 
+                             "list-owner", 
+                             "list-post", 
+                             "list-archive", 
+                             "list-id", 
+                             "mailing-List",
+                             "x-facebook-notify",
+                             "x-mailing-list",
+                             'x-cron-env',
+                             'x-autoresponse',
+                             'x-eBay-mailtracker'
                        ]
 #if these headers exist and match regex, we should not send auto reply
 vacation_ignoreheaderregex={
     'x-spam-flag':'yes',
     'x-spam-status':'yes',
     'X-Spam-Flag2': 'yes',
+    'X-Bluewin-Spam-Score':'^100',
     'precedence':'(bulk|list|junk)',
     'x-precedence':'(bulk|list|junk)',
     'x-barracuda-spam-status':'yes',
     'x-dspam-result':'(spam|bl[ao]cklisted)',
     'X-Mailer':'^Mail$',
+    'auto-submitted':'auto-replied',
 }
 
 class Vacation(object):
@@ -315,6 +349,7 @@ class VacationPlugin(ScannerPlugin):
         h = Header(vacation.subject,'ISO-8859-1')
         msg['Subject']=h
         msg['Precedence']='bulk'
+        msg['Auto-Submitted']='auto-replied'
         msg['From']=suspect.to_address
         msg['To']=suspect.from_address
         
@@ -400,17 +435,17 @@ class VacationTestCase(unittest.TestCase):
         from fuglu.shared import Suspect
         v=Vacation()
         v.ignoresender=""
-        v.awayuser='recipient@unittests.fuglu.org'
+        v.awayuser=u'recipient@unittests.fuglu.org'
         v.created=datetime.now()
         v.start=datetime.now()
         v.end=v.start+timedelta(days=2)
-        v.subject='awaaay'
-        v.body='cya'
+        v.subject=u'awaaay'
+        v.body=u'cya'
         self.session.add(v)
         self.session.flush()
         self.session.expunge_all()
         self.refreshcache()
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
+        suspect=Suspect(u'sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         suspect.set_tag('nobounce',True)
         
         candidatevacation=self.candidate.on_vacation(suspect)
@@ -420,7 +455,7 @@ class VacationTestCase(unittest.TestCase):
         self.assertFalse(self.candidate.should_send_vacation_message(suspect),"2nd test Message should NOT generate vacation reply")
         
         
-        suspect2=Suspect('sender@unittests.fuglu.org','recipient2@unittests.fuglu.org','/dev/null')
+        suspect2=Suspect(u'sender@unittests.fuglu.org','recipient2@unittests.fuglu.org','/dev/null')
         suspect2.set_tag('nobounce',True)
         candidatevacation=self.candidate.on_vacation(suspect2)
         self.assertFalse(candidatevacation!=None,"There should be no vacation object for this recipient")
@@ -430,13 +465,13 @@ class VacationTestCase(unittest.TestCase):
     def test_ignore_sender(self):
         from fuglu.shared import Suspect
         v=Vacation()
-        v.ignoresender="unittests.fuglu.org oli@wgwh.ch"
-        v.awayuser='recipient@unittests.fuglu.org'
+        v.ignoresender=u"unittests.fuglu.org oli@wgwh.ch"
+        v.awayuser=u'recipient@unittests.fuglu.org'
         v.created=datetime.now()
         v.start=datetime.now()
         v.end=v.start+timedelta(days=2)
-        v.subject='gone for good'
-        v.body='outta here'
+        v.subject=u'gone for good'
+        v.body=u'outta here'
         self.session.add(v)
         self.session.flush()
         self.session.expunge_all()
@@ -455,13 +490,13 @@ class VacationTestCase(unittest.TestCase):
         from fuglu.shared import Suspect
         import email
         v=Vacation()
-        v.ignoresender=""
-        v.awayuser='recipient@unittests.fuglu.org'
+        v.ignoresender=u""
+        v.awayuser=u'recipient@unittests.fuglu.org'
         v.created=datetime.now()
         v.start=datetime.now()
         v.end=v.start+timedelta(days=2)
-        v.subject='awaaay'
-        v.body='cya'
+        v.subject=u'awaaay'
+        v.body=u'cya'
         self.session.add(v)
         self.session.flush()
         self.session.expunge_all()
@@ -485,13 +520,13 @@ Subject: mailinglist membership reminder...
         from fuglu.shared import Suspect
         import email
         v=Vacation()
-        v.ignoresender=""
-        v.awayuser='recipient@unittests.fuglu.org'
+        v.ignoresender=u""
+        v.awayuser=u'recipient@unittests.fuglu.org'
         v.created=datetime.now()
         v.start=datetime.now()
         v.end=v.start+timedelta(days=2)
-        v.subject='awaaay'
-        v.body='cya'
+        v.subject=u'awaaay'
+        v.body=u'cya'
         self.session.add(v)
         self.session.flush()
         self.session.expunge_all()
@@ -510,12 +545,12 @@ Subject: mailinglist membership reminder...
 
     def test_generated_message(self):
         from fuglu.shared import Suspect
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
+        suspect=Suspect(u'sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         suspect.tags['nobounce']=True
         
         v=Vacation()
-        v.ignoresender=""
-        v.awayuser='recipient@unittests.fuglu.org'
+        v.ignoresender=u""
+        v.awayuser=u'recipient@unittests.fuglu.org'
         v.created=datetime.now()
         v.start=datetime.now()
         v.end=v.start+timedelta(days=2)
