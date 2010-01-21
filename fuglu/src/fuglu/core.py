@@ -347,7 +347,12 @@ class SessionHandler:
             return
         
         if not os.path.isdir(trashdir):
-            self.logger.error("Trashdir %s does not exist"%trashdir)
+            try:
+                os.makedirs(trashdir)
+            except:
+                self.logger.error("Trashdir %s does not exist and could not be created"%trashdir)
+                return
+            self.logger.info('Created trashdir %s'%trashdir)
         
         try:
             (handle,trashfilename)=tempfile.mkstemp(prefix=BASENAME,dir=self.config.get('main','trashdir'))
