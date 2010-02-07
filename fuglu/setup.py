@@ -3,7 +3,7 @@ import glob
 
 
 setup(name = "fuglu",
-    version = "0.4.2",
+    version = "0.4.3",
     description = "Fuglu Mail Content Scanner",
     author = "O. Schacher",
     url='http://www.fuglu.org',
