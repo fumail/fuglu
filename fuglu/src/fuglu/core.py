@@ -740,7 +740,16 @@ class MainController:
             name=getattr(fl,'__name__')
             ret.append(( name,enabled,status))
         return ret
-            
+    
+    def get_component_by_alias(self,pluginalias):
+        """Returns the full plugin component from an alias. if this alias is not configured, return the original string"""
+        if not self.config.has_section('PluginAlias'):
+            return pluginalias
+        
+        if not self.config.has_option('PluginAlias', pluginalias):
+            return pluginalias
+        
+        return self.config.get('PluginAlias', pluginalias)
     
     def load_plugins(self):
         """load plugins defined in config"""
@@ -761,7 +770,7 @@ class MainController:
             
         self._logger().debug('Module search path %s'%sys.path)
         self._logger().debug('Loading scanner plugins')
-        plugins=self.config.get('main', 'plugins').split(',')
+        plugins=map(self.get_component_by_alias,self.config.get('main', 'plugins').split(','))
         for structured_name in plugins:
             if structured_name=="":
                 continue
@@ -774,7 +783,7 @@ class MainController:
         
         
         self._logger().debug('Loading prepender plugins')
-        plugins=self.config.get('main', 'prependers').split(',')
+        plugins=map(self.get_component_by_alias,self.config.get('main', 'prependers').split(','))
         for structured_name in plugins:
             if structured_name=="":
                 continue
@@ -787,7 +796,7 @@ class MainController:
         
         
         self._logger().debug('Loading appender plugins')
-        plugins=self.config.get('main', 'appenders').split(',')
+        plugins=map(self.get_component_by_alias,self.config.get('main', 'appenders').split(','))
         for structured_name in plugins:
             if structured_name=="":
                 continue

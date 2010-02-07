@@ -24,7 +24,7 @@ group=nobody
 plugindir=
 
 #what SCANNER plugins do we load, comma separated
-plugins=fuglu.plugins.archive.ArchivePlugin,fuglu.plugins.attachment.FiletypePlugin,fuglu.plugins.clamav.ClamavPlugin,fuglu.plugins.sa.SAPlugin
+plugins=archive,attachment,clamav,spamassassin
 #experimental plugins you may add here:
 #fuglu.plugins.fuheaders.HeaderPlugin
 
@@ -32,7 +32,7 @@ plugins=fuglu.plugins.archive.ArchivePlugin,fuglu.plugins.attachment.FiletypePlu
 #prepender plugins are plugins run at the beginning which can have influence on the scanner plugins
 #like disable certain plugins based on special conditions
 # eg. skip SA for outgoing mail
-prependers=fuglu.plugins.p_debug.MessageDebugger,fuglu.plugins.p_skipper.PluginSkipper
+prependers=debug,skip
 #experimental plugins you may add here:
 #
 
@@ -136,6 +136,25 @@ noreinject=True
 noappender=True
 
 
+
+
+[PluginAlias]
+#This section allows to set aliases for plugins
+
+#prependers
+debug=fuglu.plugins.p_debug.MessageDebugger
+skip=fuglu.plugins.p_skipper.PluginSkipper
+
+#scanners
+archive=fuglu.plugins.archive.ArchivePlugin
+attachment=fuglu.plugins.attachment.FiletypePlugin
+clamav=fuglu.plugins.clamav.ClamavPlugin
+spamassassin=fuglu.plugins.sa.SAPlugin
+vacation=fuglu.plugins.vacation.VacationPlugin
+
+#appenders
+
+
 #Spamassassin
 [SAPlugin]
 #where is spamd
@@ -181,7 +200,6 @@ sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
 #SQL query to get the blacklist entries for a suspect
 #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
-
 
 #Clam antivirus (clamd)
 [ClamavPlugin]
