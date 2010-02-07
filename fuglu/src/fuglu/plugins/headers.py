@@ -10,12 +10,12 @@ import unittest
 
 class HeaderPlugin(ScannerPlugin):
     """Removes existing Headers"""
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('HeaderPlugin', 'removeheaders'),)
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars=((self.section, 'removeheaders'),)
         
     def examine(self,suspect):
-        removeheaders=self.config.get('HeaderPlugin', 'removeheaders').split(',')
+        removeheaders=self.config.get(self.section, 'removeheaders').split(',')
         
         #debug example
         #self._logger().debug('hello world from StubPlugin')

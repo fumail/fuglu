@@ -23,9 +23,9 @@ import unittest
 
 class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('SAPlugin','lowspamaction'),('SAPlugin','highspamaction'),('SAPlugin','highspamlevel'),('SAPlugin','peruserconfig'),('SAPlugin','host'),('SAPlugin','port'),('SAPlugin','maxsize'),('SAPlugin','spamheader'),('SAPlugin','timeout'),('SAPlugin','retries'))
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'))
         self.logger=self._logger()
         
     def lint(self):
@@ -33,7 +33,7 @@ class SAPlugin(ScannerPlugin):
         return allok
 
     def lint_blacklist(self):
-        if not self.config.has_option('SAPlugin', 'check_sql_blacklist') or not self.config.getboolean('SAPlugin','check_sql_blacklist'):
+        if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section,'check_sql_blacklist'):
             return True
         
         from fuglu.extensions.sql import ENABLED,get_session
@@ -42,9 +42,9 @@ class SAPlugin(ScannerPlugin):
             return False
         
 
-        session=get_session(self.config.get('SAPlugin','sql_blacklist_dbconnectstring'))
+        session=get_session(self.config.get(self.section,'sql_blacklist_dbconnectstring'))
         suspect=Suspect('dummy@example.com','dummy@example.com','/dev/null')
-        conf_sql=self.config.get('SAPlugin','sql_blacklist_sql')
+        conf_sql=self.config.get(self.section,'sql_blacklist_sql')
         sql,params=self._replace_sql_params(suspect, conf_sql)
         try:
             session.execute(sql,params)
@@ -59,10 +59,10 @@ class SAPlugin(ScannerPlugin):
         
     def lint_ping(self):
         """ping sa"""
-        serverHost = self.config.get('SAPlugin','host')          
-        serverPort = self.config.getint('SAPlugin','port')
-        timeout=self.config.getint('SAPlugin','timeout')
-        retries = self.config.getint('SAPlugin','retries')
+        serverHost = self.config.get(self.section,'host')          
+        serverPort = self.config.getint(self.section,'port')
+        timeout=self.config.getint(self.section,'timeout')
+        retries = self.config.getint(self.section,'retries')
         for i in range(0,retries):
             try:
                 self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
@@ -140,7 +140,7 @@ Subject: test scanner
     def check_sql_blacklist(self,suspect):
         """Check this message against the SQL blacklist. returns highspamaction on hit, DUNNO otherwise"""    
         #work in progress
-        if not self.config.has_option('SAPlugin', 'check_sql_blacklist') or not self.config.getboolean('SAPlugin','check_sql_blacklist'):
+        if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section,'check_sql_blacklist'):
             return DUNNO
         
         from fuglu.extensions.sql import ENABLED
@@ -153,8 +153,8 @@ Subject: test scanner
         
         self.logger.debug('blacklist check')
         try:
-            dbsession=get_session(self.config.get('SAPlugin','sql_blacklist_dbconnectstring'))
-            conf_sql=self.config.get('SAPlugin','sql_blacklist_sql')
+            dbsession=get_session(self.config.get(self.section,'sql_blacklist_dbconnectstring'))
+            conf_sql=self.config.get(self.section,'sql_blacklist_sql')
             
             sql,params=self._replace_sql_params(suspect, conf_sql)
             
@@ -177,7 +177,7 @@ Subject: test scanner
                 
                 if pattern.search(suspect.from_address):
                     self.logger.debug('Blacklist match : %s for sa pref %s'%(suspect.from_address,blvalue))
-                    configaction=string_to_actioncode(self.config.get('SAPlugin','highspamaction'),self.config)
+                    configaction=string_to_actioncode(self.config.get(self.section,'highspamaction'),self.config)
                     suspect.tags['spam']['SpamAssassin']=True
                     prependheader=self.config.get('main','prependaddedheaders')
                     suspect.addheader("%sBlacklisted"%prependheader, blvalue)
@@ -196,8 +196,8 @@ Subject: test scanner
         spamsize=suspect.size
         suspect.debug('Message size: %s'%spamsize)
         
-        maxsize=self.config.getint('SAPlugin', 'maxsize')
-        spamheadername=self.config.get('SAPlugin','spamheader')
+        maxsize=self.config.getint(self.section, 'maxsize')
+        spamheadername=self.config.get(self.section,'spamheader')
         
         if spamsize>maxsize:
             self.logger.info('Size Skip, %s > %s'%(spamsize,maxsize))
@@ -253,7 +253,7 @@ Subject: test scanner
         if isspam:
             self.logger.debug('Message is spam')
             suspect.debug('Message is spam')
-            configaction=string_to_actioncode(self.config.get('SAPlugin','lowspamaction'),self.config)
+            configaction=string_to_actioncode(self.config.get(self.section,'lowspamaction'),self.config)
             if configaction!=None:
                 action=configaction
         else:
@@ -264,8 +264,8 @@ Subject: test scanner
         suspect.tags['spam']['SpamAssassin']=isspam
         if spamscore != None:
             suspect.tags['SAPlugin.spamscore']=spamscore
-            if spamscore>=self.config.getint('SAPlugin','highspamlevel'):
-                configaction=string_to_actioncode(self.config.get('SAPlugin','highspamaction'),self.config)
+            if spamscore>=self.config.getint(self.section,'highspamlevel'):
+                configaction=string_to_actioncode(self.config.get(self.section,'highspamaction'),self.config)
                 if configaction!=None:
                     action=configaction
         
@@ -276,11 +276,11 @@ Subject: test scanner
         
     def safilter(self,messagecontent,user):
         """pass content to sa, return cleaned mail"""
-        serverHost = self.config.get('SAPlugin','host')          
-        serverPort = self.config.getint('SAPlugin','port')
-        timeout=self.config.getint('SAPlugin','timeout')
-        retries = self.config.getint('SAPlugin','retries')
-        peruserconfig = self.config.getboolean('SAPlugin','peruserconfig')
+        serverHost = self.config.get(self.section,'host')          
+        serverPort = self.config.getint(self.section,'port')
+        timeout=self.config.getint(self.section,'timeout')
+        retries = self.config.getint(self.section,'retries')
+        peruserconfig = self.config.getboolean(self.section,'peruserconfig')
         spamsize=len(messagecontent)
         for i in range(0,retries):
             try:

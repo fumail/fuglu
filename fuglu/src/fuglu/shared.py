@@ -256,7 +256,12 @@ class Suspect:
 class BasicPlugin(object):
     """Base class for all plugins"""
     
-    def __init__(self,config):
+    def __init__(self,config,section=None):
+        if section==None:
+            self.section=self.__class__.__name__
+        else:
+            self.section=section
+            
         self.config=config
         self.requiredvars=()
         pass

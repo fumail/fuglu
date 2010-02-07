@@ -20,10 +20,10 @@ import os
 
 class PluginSkipper(PrependerPlugin):
     """Skips plugins based on standard filter file"""
-    def __init__(self,config):
-        PrependerPlugin.__init__(self,config)
+    def __init__(self,config,section=None):
+        PrependerPlugin.__init__(self,config,section)
         self.filter=None
-        self.requiredvars=(('PluginSkipper','filterfile'),)
+        self.requiredvars=((self.section,'filterfile'),)
         self.logger=self._logger()
         
     def pluginlist(self,suspect,pluginlist):
@@ -51,7 +51,7 @@ class PluginSkipper(PrependerPlugin):
         if self.filter!=None:
             return True
         
-        filename=self.config.get('PluginSkipper','filterfile')
+        filename=self.config.get(self.section,'filterfile')
         if filename==None or filename=="":
             return False
         

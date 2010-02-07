@@ -22,9 +22,9 @@ import shutil
 
 class ArchivePlugin(ScannerPlugin):
     """Store mails to archive"""
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('ArchivePlugin','archiverules'),('ArchivePlugin','archivedir'),('ArchivePlugin','makedomainsubdir'),('ArchivePlugin','storeoriginal'))
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars=((self.section,'archiverules'),(self.section,'archivedir'),(self.section,'makedomainsubdir'),(self.section,'storeoriginal'))
         self.headerfilter=None
     
     def lint(self):
@@ -32,7 +32,7 @@ class ArchivePlugin(ScannerPlugin):
         return allok
     
     def lint_dirs(self):
-        archivedir=self.config.get('ArchivePlugin', 'archivedir')
+        archivedir=self.config.get(self.section, 'archivedir')
         if archivedir=="":
             print 'Archivedir is not specified'
             return False
@@ -46,7 +46,7 @@ class ArchivePlugin(ScannerPlugin):
     def examine(self,suspect):
         starttime=time.time()
         
-        archiverules=self.config.get('ArchivePlugin', 'archiverules')
+        archiverules=self.config.get(self.section, 'archiverules')
         if archiverules==None or archiverules=="":
             return DUNNO
         
@@ -67,14 +67,14 @@ class ArchivePlugin(ScannerPlugin):
         suspect.tags['ArchivePlugin.time']="%.4f"%difftime
     
     def archive(self,suspect):
-        archivedir=self.config.get('ArchivePlugin', 'archivedir')
+        archivedir=self.config.get(self.section, 'archivedir')
         if archivedir=="":
             self._logger().error('Archivedir is not specified')
             return
         
         finaldir=archivedir
         
-        makedomainsubdir=self.config.getboolean('ArchivePlugin','makedomainsubdir')
+        makedomainsubdir=self.config.getboolean(self.section,'makedomainsubdir')
         if makedomainsubdir:
             finaldir="%s/%s"%(archivedir,suspect.to_domain)
         
@@ -82,7 +82,7 @@ class ArchivePlugin(ScannerPlugin):
             os.makedirs(finaldir,0755)
         
         filename="%s/%s"%(finaldir,suspect.id)
-        if self.config.getboolean('ArchivePlugin','storeoriginal'):
+        if self.config.getboolean(self.section,'storeoriginal'):
             shutil.copy(suspect.tempfile, filename)
         else:
             fp=open(filename,'w')
@@ -95,7 +95,7 @@ class ArchivePlugin(ScannerPlugin):
         
     
     def __str__(self):
-        return 'ArchivePlugin';
+        return 'ArchivePlugin'
     
 
 #### UNIT TESTS

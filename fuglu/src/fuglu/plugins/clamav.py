@@ -23,13 +23,13 @@ import time
 
 class ClamavPlugin(ScannerPlugin):
     """Clam Antivirus Plugin"""
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
-        self.clamdhost=config.get('ClamavPlugin','host')
-        self.clamdport=config.getint('ClamavPlugin','port')
-        self.timeout=config.getint('ClamavPlugin','timeout')
-        self.maxsize=config.getint('ClamavPlugin','maxsize')
-        self.retries = self.config.getint('ClamavPlugin','retries')
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.clamdhost=config.get(self.section,'host')
+        self.clamdport=config.getint(self.section,'port')
+        self.timeout=config.getint(self.section,'timeout')
+        self.maxsize=config.getint(self.section,'maxsize')
+        self.retries = self.config.getint(self.section,'retries')
         
     def examine(self,suspect):
         starttime=time.time()

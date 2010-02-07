@@ -38,6 +38,8 @@ import smtplib
 from email.Header import Header
 import threading
 from threadpool import ThreadPool
+import re
+import inspect
 
 HOSTNAME=socket.gethostname()
 
@@ -753,11 +755,6 @@ class MainController:
     
     def load_plugins(self):
         """load plugins defined in config"""
-        
-        newplugins=[]
-        newprependers=[]
-        newappenders=[]
-        
         allOK=True
         plugdir=self.config.get('main', 'plugindir').strip()
         if plugdir!="" and not os.path.isdir(plugdir):
@@ -770,43 +767,18 @@ class MainController:
             
         self._logger().debug('Module search path %s'%sys.path)
         self._logger().debug('Loading scanner plugins')
-        plugins=map(self.get_component_by_alias,self.config.get('main', 'plugins').split(','))
-        for structured_name in plugins:
-            if structured_name=="":
-                continue
-            try:
-                plugininstance=self._load_component(structured_name)
-                newplugins.append(plugininstance)
-            except Exception,e:
-                self._logger().error('Could not load scanner plugin %s : %s'%(structured_name,e))
-                allOK=False
+        newplugins,loadok=self._load_all(self.config.get('main', 'plugins'))
+        if not loadok:
+            allOK=False
         
+        newprependers,loadok=self._load_all(self.config.get('main', 'prependers'))
+        if not loadok:
+            allOK=False
         
-        self._logger().debug('Loading prepender plugins')
-        plugins=map(self.get_component_by_alias,self.config.get('main', 'prependers').split(','))
-        for structured_name in plugins:
-            if structured_name=="":
-                continue
-            try:
-                plugininstance=self._load_component(structured_name)
-                newprependers.append(plugininstance)
-            except Exception,e:
-                self._logger().error('Could not load prepender plugin %s : %s'%(structured_name,e))
-                allOK=False
-        
-        
-        self._logger().debug('Loading appender plugins')
-        plugins=map(self.get_component_by_alias,self.config.get('main', 'appenders').split(','))
-        for structured_name in plugins:
-            if structured_name=="":
-                continue
-            try:
-                #from: http://mail.python.org/pipermail/python-list/2003-May/204392.html
-                plugininstance=self._load_component(structured_name)
-                newappenders.append(plugininstance)
-            except Exception,e:
-                self._logger().error('Could not load appender plugin %s : %s'%(structured_name,e))
-                allOK=False
+        newappenders,loadok=self._load_all(self.config.get('main', 'appenders'))
+        if not loadok:
+            allOK=False
+
         if allOK:
             self.plugins=newplugins
             self.prependers=newprependers
@@ -814,13 +786,46 @@ class MainController:
             
         return allOK
     
-    def _load_component(self,structured_name):
+    def _load_all(self,configstring):
+        """load all plugins from config string. returns tuple ([list of loaded instances],allOk)"""
+        pluglist=[]
+        config_re=re.compile("""^(?P<structured_name>[a-zA-Z0-9\.\_]+)(?:\((?P<config_override>[a-zA-Z0-9\.\_]+)\))?$""")
+        allOK=True
+        plugins=configstring.split(',')
+        for plug in plugins:
+            if plug=="":
+                continue
+            m=config_re.match(plug)
+            if m==None:
+                self.logger.error('Invalid Plugin Syntax: %s'%plug)
+                allOK=False
+                continue
+            structured_name,configoverride=m.groups()
+            structured_name=self.get_component_by_alias(structured_name)
+            try:
+                plugininstance=self._load_component(structured_name,configsection=configoverride)
+                pluglist.append(plugininstance)
+            except Exception,e:
+                self._logger().error('Could not load plugin %s : %s'%(structured_name,e))
+                allOK=False
+        
+        return pluglist,allOK
+    
+    def _load_component(self,structured_name,configsection=None):
         #from: http://mail.python.org/pipermail/python-list/2003-May/204392.html
         component_names = structured_name.split('.')
         mod = __import__('.'.join(component_names[:-1]))
         for component_name in component_names[1:]:
             mod = getattr(mod, component_name)
-        plugininstance=mod(self.config)
+        
+        if configsection==None:
+            plugininstance=mod(self.config)
+        else:
+            #check if plugin supports config override
+            if 'section' in inspect.getargspec(mod.__init__).args:
+                plugininstance=mod(self.config,section=configsection)
+            else:
+                raise Exception,'Cannot set Config Section %s : Plugin %s does not support config override'%(configsection,mod)
         return plugininstance
             
 class SMTPServer:    

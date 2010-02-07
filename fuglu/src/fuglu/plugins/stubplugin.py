@@ -29,12 +29,12 @@ import unittest
 
 class StubPlugin(ScannerPlugin):
     """Copy this to make a new plugin"""
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
         
     def examine(self,suspect):
         #config Example
-        #maxsize=self.config.getint('StubPlugin', 'maxsize')
+        #maxsize=self.config.getint(self.section, 'maxsize')
         
         #debug example
         #self._logger().debug('hello world from StubPlugin')

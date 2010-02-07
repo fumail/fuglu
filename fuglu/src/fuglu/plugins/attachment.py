@@ -179,22 +179,22 @@ class RulesCache( object ):
 
 class FiletypePlugin(ScannerPlugin):
     """Copy this to make a new plugin"""
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
-        self.requiredvars=(('FiletypePlugin','template_blockedfile'),('FiletypePlugin','rulesdir'))
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars=((self.section,'template_blockedfile'),(self.section,'rulesdir'))
         self.logger=self._logger()
         if MAGIC_AVAILABLE:
             self.ms = magic.open(magic.MAGIC_MIME)
             self.ms.load()
         else:
             self.logger.warning('python-magic not available')
-        self.rulescache=RulesCache(self.config.get('FiletypePlugin','rulesdir'))
+        self.rulescache=RulesCache(self.config.get(self.section,'rulesdir'))
         self.extremeverbosity=False
 
 
     def examine(self,suspect):
         starttime=time.time()
-        self.blockedfiletemplate=self.config.get('FiletypePlugin','template_blockedfile')
+        self.blockedfiletemplate=self.config.get(self.section,'template_blockedfile')
 
         returnaction=self.walk(suspect)
 

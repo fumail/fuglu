@@ -208,9 +208,9 @@ class VacationCache( object ):
         self.logger.debug('%s vacations loaded'%vaccounter)
         
 class VacationPlugin(ScannerPlugin):
-    def __init__(self,config):
-        ScannerPlugin.__init__(self,config)
-        self.requiredvars=[('VacationPlugin','dbconnectstring')]
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars=[(self.section,'dbconnectstring')]
         self.logger=self._logger()
         self.cache=None
         
@@ -310,7 +310,7 @@ class VacationPlugin(ScannerPlugin):
     
     def already_notified(self,vacation,recipient):
         """return true if this user has been notfied in the last 24 hours"""
-        dbsession=fuglu.extensions.sql.get_session(self.config.get('VacationPlugin','dbconnectstring'))
+        dbsession=fuglu.extensions.sql.get_session(self.config.get(self.section,'dbconnectstring'))
         log=dbsession.query(VacationReply).filter_by(vacation=vacation).filter(VacationReply.sent>datetime.now()-timedelta(days=1)).first()
         dbsession.expunge_all()
         if log!=None:
@@ -365,7 +365,7 @@ class VacationPlugin(ScannerPlugin):
         log.sent=datetime.now()
         log.vacation=vacation
         
-        dbsession=fuglu.extensions.sql.get_session(self.config.get('VacationPlugin','dbconnectstring'))
+        dbsession=fuglu.extensions.sql.get_session(self.config.get(self.section,'dbconnectstring'))
         dbsession.add(log)
         dbsession.flush()
         dbsession.expunge_all()
@@ -384,7 +384,7 @@ class VacationPlugin(ScannerPlugin):
             return False
         
         try:
-            dbsession=fuglu.extensions.sql.get_session(self.config.get('VacationPlugin','dbconnectstring'))
+            dbsession=fuglu.extensions.sql.get_session(self.config.get(self.section,'dbconnectstring'))
             bind=dbsession.get_bind(Vacation)
             bind.connect()
         except Exception,e:
