@@ -144,7 +144,7 @@ class Suspect:
             self.from_address=''
             
         try:
-            (user, self.to_domain) = self.to_address.split('@')
+            (user, self.to_domain) = self.to_address.rsplit('@',1)
         except:
             raise ValueError,"invalid to email address: %s"%self.to_address
       
@@ -153,7 +153,7 @@ class Suspect:
             self.from_domain=''
         else:
             try:
-                (user, self.from_domain) = self.from_address.split('@')
+                (user, self.from_domain) = self.from_address.rsplit('@',1)
             except Exception, e:
                 raise ValueError,"invalid from email address: '%s'"%self.from_address
     
