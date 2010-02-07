@@ -537,7 +537,10 @@ class MainController:
                            ('main','outgoinghelo'),
                            ('main','tempdir'),
                            ('main','prependaddedheaders'),
-                           ('main','mrtgdir')
+                           ('main','mrtgdir'),
+                           ('spam','defaultlowspamaction'),
+                           ('spam','defaulthighspamaction'),
+                           ('virus','defaultvirusaction'),
                            )
         self.config=config
         self.smtpservers=[]
