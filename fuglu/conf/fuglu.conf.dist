@@ -94,7 +94,7 @@ minthreads=2
 maxthreads=40
 
 [spam]
-#what tp do with messages that plugins think are spam but  not so sure  ("low spam")
+#what to do with messages that plugins think are spam but  not so sure  ("low spam")
 #in normal usage you probably never set this something other than DUNNO
 #this is a DEFAULT action, eg. anti spam plugins should take this if you didn't set 
 # a individual override
