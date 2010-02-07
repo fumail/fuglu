@@ -242,6 +242,9 @@ class SessionHandler:
             tempfilename=sess.tempfilename
             
             suspect=Suspect(fromaddr,toaddr,tempfilename)
+            suspect.recipients=set(sess.recipients)
+            if len(suspect.recipients)!=1:
+                self.logger.warning('Notice: Message from %s has %s recipients. Plugins supporting one one recipient will see: %s'%(fromaddr,len(suspect.recipients),toaddr))
             self.logger.debug("Message from %s to %s: %s bytes stored to %s"%(fromaddr,toaddr,suspect.size,tempfilename))
             self.set_threadinfo("Handling message %s"%suspect)
             #store incoming port to tag, could be used to disable plugins based on port
@@ -887,7 +890,8 @@ class SMTPSession:
     def __init__(self, socket,config):
         self.config=config
         self.from_address=None
-        self.to_address=None
+        self.to_address=None  #single address
+        self.recipients=[] #multiple recipients
         self.helo=None
         
         self.socket = socket;
@@ -992,7 +996,9 @@ class SMTPSession:
             if (self.state != SMTPSession.ST_MAIL) and (self.state != SMTPSession.ST_RCPT):
                 return ("503 Bad command sequence", 1)
             self.state = SMTPSession.ST_RCPT
-            self.to_address=self.stripAddress(data)
+            rec=self.stripAddress(data)
+            self.to_address=rec
+            self.recipients.append(rec)
         elif cmd == "DATA":
             if self.state != SMTPSession.ST_RCPT:
                 return ("503 Bad command sequence", 1)

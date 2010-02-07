@@ -129,7 +129,8 @@ class Suspect:
         #stuff set from smtp transaction
         self.size=os.path.getsize(tempfile)
         self.from_address=from_address
-        self.to_address=to_address
+        self.to_address=to_address  # for plugins supporting only one recipient
+        self.recipients=[] # for plugins supporting multiple recipients
         
         #additional basic information
         self.timestamp=time.time()
