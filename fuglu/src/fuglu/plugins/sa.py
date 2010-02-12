@@ -151,8 +151,6 @@ Subject: test scanner
         
         from fuglu.extensions.sql import get_session
         
-        
-        self.logger.debug('blacklist check')
         try:
             dbsession=get_session(self.config.get(self.section,'sql_blacklist_dbconnectstring'))
             conf_sql=self.config.get(self.section,'sql_blacklist_sql')
@@ -162,6 +160,7 @@ Subject: test scanner
             resultproxy=dbsession.execute(sql,params)
         except Exception,e:
             self.logger.error('Could not read blacklist from DB: %s'%e)
+            suspect.debug('Blacklist check failed: %s'%e)
             return DUNNO
             
         for result in resultproxy:
@@ -182,6 +181,7 @@ Subject: test scanner
                     suspect.tags['spam']['SpamAssassin']=True
                     prependheader=self.config.get('main','prependaddedheaders')
                     suspect.addheader("%sBlacklisted"%prependheader, blvalue)
+                    suspect.debug('Sender is Blacklisted: %s'%blvalue)
                     if configaction==None:
                         return DUNNO
                     return configaction
@@ -203,6 +203,8 @@ Subject: test scanner
         if spamsize>maxsize:
             self.logger.info('Size Skip, %s > %s'%(spamsize,maxsize))
             suspect.debug('Too big for spamchecks. %s > %s'%(spamsize,maxsize))
+            prependheader=self.config.get('main','prependaddedheaders')
+            suspect.addheader("%sSA-SKIP"%prependheader, 'Too big for spamchecks. %s > %s'%(spamsize,maxsize))
             return self.check_sql_blacklist(suspect)
             
         
