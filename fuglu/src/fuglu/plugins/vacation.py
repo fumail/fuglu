@@ -333,9 +333,17 @@ class VacationPlugin(ScannerPlugin):
             from email.MIMEText import MIMEText
             from email.Header import Header
         
+        #check subject
+        subj=vacation.subject
+        if subj==None or subj.strip()=='':
+            self.logger.errror('Vacation has no subject, not sending message')
+            return None
         
         # We must choose the body charset manually
         body=vacation.body
+        if body==None:
+            body=''
+            
         for body_charset in 'US-ASCII', 'ISO-8859-1', 'UTF-8':
             try:
                 body.encode(body_charset)
