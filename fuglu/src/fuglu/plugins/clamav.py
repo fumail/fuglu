@@ -195,9 +195,6 @@ class ClamavPlugin(ScannerPlugin):
         
         return s
     
-    def __str__(self):
-        return 'ClamavPlugin';
-    
     def lint(self):
         allok=(self.checkConfig() and self.lint_ping() and self.lint_eicar())
         return allok

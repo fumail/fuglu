@@ -377,10 +377,6 @@ class VacationPlugin(ScannerPlugin):
         dbsession.add(log)
         dbsession.flush()
         dbsession.expunge_all()
-        
-    
-    def __str__(self):
-        return 'VacationPlugin';
     
     def lint(self):
         allok=(self.checkConfig()  and self.lint_sql() )

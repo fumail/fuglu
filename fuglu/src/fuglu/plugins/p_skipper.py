@@ -62,7 +62,3 @@ class PluginSkipper(PrependerPlugin):
         
         self.filter=HeaderFilter(filename)
         return True
-    
-        
-    def __str__(self):
-        return 'PluginSkipper';

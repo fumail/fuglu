@@ -33,9 +33,6 @@ class HeaderPlugin(ScannerPlugin):
         difftime=endtime-starttime
         suspect.tags['HeaderPlugin.time']="%.4f"%difftime
     
-    def __str__(self):
-        return 'HeaderPlugin';
-    
     
 class HeaderPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""

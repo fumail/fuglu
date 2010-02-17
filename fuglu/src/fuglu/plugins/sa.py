@@ -332,9 +332,6 @@ Subject: test scanner
             
             time.sleep(1)
         return None
-                
-    def __str__(self):
-        return 'SAPlugin';
     
 class SAPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""

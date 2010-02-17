@@ -39,7 +39,3 @@ class MessageDebugger(PrependerPlugin):
             suspect.tags['debug']=True
             suspect.tags['debugfile']=fp
         self.logger.debug('Debugport: %s , Incoming port: %s'%(debugport,suspect.get_tag('incomingport')))
-            
-
-    def __str__(self):
-        return 'MessageDebugger';

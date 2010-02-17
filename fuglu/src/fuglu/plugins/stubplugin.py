@@ -50,9 +50,6 @@ class StubPlugin(ScannerPlugin):
         suspect.tags['StubPlugin.time']="%.4f"%difftime
         return DUNNO
     
-    def __str__(self):
-        return 'StubPlugin';
-    
     
 class StubPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""

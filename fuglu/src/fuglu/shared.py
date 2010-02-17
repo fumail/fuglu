@@ -290,6 +290,12 @@ class BasicPlugin(object):
                 allOK=False
         return allOK
 
+    def __str__(self):
+        classname=self.__class__.__name__
+        if self.section==classname:
+            return classname;
+        else:
+            return '%s(%s)'%(classname,self.section)
 
 class ScannerPlugin(BasicPlugin):
     """Scanner Plugin Base Class"""

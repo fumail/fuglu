@@ -91,12 +91,7 @@ class ArchivePlugin(ScannerPlugin):
             
         self._logger().info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
         return filename
-        
-        
-    
-    def __str__(self):
-        return 'ArchivePlugin'
-    
+
 
 #### UNIT TESTS
 
