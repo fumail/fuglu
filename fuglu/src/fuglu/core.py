@@ -828,7 +828,7 @@ class MainController:
             plugininstance=mod(self.config)
         else:
             #check if plugin supports config override
-            if 'section' in inspect.getargspec(mod.__init__).args:
+            if 'section' in inspect.getargspec(mod.__init__)[0]:
                 plugininstance=mod(self.config,section=configsection)
             else:
                 raise Exception,'Cannot set Config Section %s : Plugin %s does not support config override'%(configsection,mod)
