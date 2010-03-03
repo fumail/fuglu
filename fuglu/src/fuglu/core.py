@@ -29,8 +29,11 @@ import smtplib
 import threading
 from threadpool import ThreadPool
 import inspect
-#from smtpconnector import SMTPServer,SMTPSession,FUSMTPClient
-from smtpconnector import SMTPServer
+
+
+from fuglu.connectors.smtpconnector import SMTPServer
+from fuglu.connectors.milterconnector import MilterServer
+from fuglu.connectors.ncblackholeconnector import NCServer
 from fuglu.stats import StatsThread
 from fuglu.scansession import SessionHandler
 
@@ -70,7 +73,7 @@ class MainController(object):
                            ('virus','defaultvirusaction'),
                            )
         self.config=config
-        self.smtpservers=[]
+        self.servers=[]
         self.logger=self._logger()
         self.stayalive=True
         self.threadpool=None
@@ -107,16 +110,32 @@ class MainController(object):
         queuesize=maxthreads*10
         self.threadpool=ThreadPool(minthreads, maxthreads, queuesize)
         
-        self.logger.info("Init SMTP Engine")
-        
-        
+        self.logger.info("Starting interface sockets...")
         #TODO: load multiple connectors
         ports=self.config.get('main', 'incomingport')
         for port in ports.split(','):
-            port=int(port.strip())
-            smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
-            thread.start_new_thread(smtpserver.serve, ())
-            self.smtpservers.append(smtpserver)
+            port=port.strip()
+            protocol='smtp'
+            
+            if port.find(':')>0:
+                (protocol,port)=port.split(':')
+            
+            port=int(port)
+            if protocol=='smtp':
+                smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(smtpserver.serve, ())
+                self.servers.append(smtpserver)
+            elif protocol=='milter':
+                milterserver=MilterServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(milterserver.serve, ())
+                self.servers.append(milterserver)
+            elif protocol=='netcat':
+                ncserver=NCServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(ncserver.serve, ())
+                self.servers.append(ncserver)
+            else:
+                self.logger.error('Unknown Interface Protocol: %s, ignoring server on port %s'%(protocol,port))
+            
             
         #control socket
         #TODO: port config...
@@ -152,7 +171,7 @@ class MainController(object):
         
         for port in portlist:
             alreadyRunning=False
-            for serv in self.smtpservers:
+            for serv in self.servers:
                 if serv.port==port:
                     alreadyRunning=True
                     break
@@ -160,21 +179,21 @@ class MainController(object):
             if not alreadyRunning:
                 smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
                 thread.start_new_thread(smtpserver.serve, ())
-                self.smtpservers.append(smtpserver)
+                self.servers.append(smtpserver)
         
-        servercopy=self.smtpservers[:] 
+        servercopy=self.servers[:] 
         for serv in servercopy:
             if serv.port not in portlist:
                 self.logger.info('Closing server socket on port %s'%serv.port)
                 serv.shutdown()
-                self.smtpservers.remove(serv)
+                self.servers.remove(serv)
         
         self.logger.info('Config changes applied')
     
             
     def shutdown(self):
         self.statsthread.stayalive=False
-        for server in self.smtpservers:
+        for server in self.servers:
             self.logger.info('Closing server socket on port %s'%server.port)
             server.shutdown()
         
@@ -529,7 +548,7 @@ class AllpluginTestCase(unittest.TestCase):
         #longstring=''.join([random.choice(string.letters + string.digits+' ') for i in range(200)])
         longstring="The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog."
         suspect.addheader('longstring', longstring )
-        from fuglu.smtpconnector import buildmsgsource
+        from fuglu.connectors.smtpconnector import buildmsgsource
         msgsource=buildmsgsource(suspect)
         
         newrep=email.message_from_string(msgsource)
@@ -543,7 +562,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
     """Full check if mail runs through"""
     
     def setUp(self):
-        from smtpconnector import DummySMTPServer
+        from fuglu.connectors.smtpconnector import DummySMTPServer
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
         

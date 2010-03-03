@@ -17,18 +17,16 @@
 import smtplib
 import logging
 import socket
-import sys
-import threading
 import string
 import tempfile
 import os
-from fuglu.protocolbase import ProtocolHandler
 import unittest
 import thread
 import ConfigParser
-from fuglu.scansession import SessionHandler
-from fuglu.shared import Suspect
 
+
+from fuglu.shared import Suspect
+from fuglu.protocolbase import ProtocolHandler,BasicTCPServer
 from email.Header import Header
 
 
@@ -52,6 +50,8 @@ def buildmsgsource(suspect):
 
 
 class SMTPHandler(ProtocolHandler):
+    protoname= 'SMTP (After Queue)'
+    
     def __init__(self,socket,config):
         ProtocolHandler.__init__(self, socket,config)
         self.sess=SMTPSession(socket,config)
@@ -105,9 +105,9 @@ class SMTPHandler(ProtocolHandler):
         self.sess.endsession(451, reason)
         
     def discard(self,reason):
-        self.sess.endsession(250, "OK")
+        self.sess.endsession(250, reason)
         #self.sess=None
-        
+      
 class FUSMTPClient(smtplib.SMTP):
 
     """
@@ -122,53 +122,9 @@ class FUSMTPClient(smtplib.SMTP):
         return (code,response)
     
 
-class SMTPServer(object):    
-    def __init__(self, controller,port=10025,address="127.0.0.1"):
-        self.logger=logging.getLogger("fuglu.smtp.incoming.%s"%(port))
-        self.logger.debug('Starting incoming SMTP Server on Port %s'%port)
-        self.port=port
-        self.controller=controller
-        self.stayalive=1
-        
-        try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._socket.bind((address, port))
-            self._socket.listen(5)
-        except Exception,e:
-            self.logger.error('Could not start incoming SMTP Server: %s'%e)
-            sys.exit(1)
-   
-   
-    def shutdown(self):
-        self.stayalive=False
-        self._socket.close()
-        
-    def serve(self):
-        #disable to debug... 
-        use_multithreading=True
-        controller=self.controller
-        threading.currentThread().name='SMTP Server on Port %s'%self.port
-        
-        self.logger.info('SMTP Server running on port %s'%self.port)
-        if use_multithreading:
-                threadpool=self.controller.threadpool
-        while self.stayalive:
-            try:
-                self.logger.debug('Waiting for connection...')
-                nsd = self._socket.accept()
-                if not self.stayalive:
-                    break
-                ph=SMTPHandler(nsd[0], controller.config)
-                engine = SessionHandler(ph,controller.config,controller.prependers,controller.plugins,controller.appenders)
-                self.logger.debug('Incoming connection from %s'%str(nsd[1]))
-                if use_multithreading:
-                    #this will block if queue is full
-                    threadpool.add_task(engine)
-                else:
-                    engine.handlesession()
-            except Exception,e:
-                self.logger.error('Exception in serve(): %s'%str(e))
+class SMTPServer(BasicTCPServer):    
+    def __init__(self, controller,port=10125,address="127.0.0.1"):
+        BasicTCPServer.__init__(self, controller, port, address, SMTPHandler)
 
                  
 class SMTPSession(object):
