@@ -63,13 +63,15 @@ class BasicTCPServer(object):
             self._socket.bind((address, port))
             self._socket.listen(5)
         except Exception,e:
-            self.logger.error('Could not start incoming Server: %s'%e)
+            self.logger.error('Could not start incoming Server on port %s: %s'%(port,e))
             sys.exit(1)
    
    
     def shutdown(self):
         self.stayalive=False
+        self._socket.shutdown(1)
         self._socket.close()
+        
         
     def serve(self):
         #disable to debug... 
