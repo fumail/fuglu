@@ -251,7 +251,14 @@ class Suspect:
     def setMessageRep(self,msgrep):
         """replace the message content. this must be a standard python email representation"""
         self.msgrep=msgrep
-        
+    
+    def getOriginalSource(self):
+        try:
+            source=open(self.tempfile).read()
+        except Exception,e:
+            logging.getLogger('fuglu.suspect').error('Cannot retrieve original source from tempfile %s : %s'%(self.tempfile,str(e)))
+            raise e
+        return source    
         
 ##it is important that this class explicitly extends from object, or __subclasses__() will not work!
 class BasicPlugin(object):
