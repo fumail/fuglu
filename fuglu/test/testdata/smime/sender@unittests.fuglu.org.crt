@@ -1,0 +1,48 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: md5WithRSAEncryption
+        Issuer: C=CH, ST=ZH, O=Fuglu, CN=fuglu.org/emailAddress=support@fuglu.org
+        Validity
+            Not Before: Mar 12 13:46:56 2010 GMT
+            Not After : Jul 27 13:46:56 2037 GMT
+        Subject: C=CH, ST=ZH, O=Fuglu, CN=sender@unittests.fuglu.org/emailAddress=sender@unittests.fuglu.org
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (1024 bit)
+                Modulus (1024 bit):
+                    00:b4:9d:7b:47:8b:1f:61:4b:d0:b2:14:6e:bc:7f:
+                    35:44:f9:0c:b7:4e:d0:ec:8b:23:e9:ab:3a:4b:7d:
+                    d7:d9:79:ab:54:4c:61:5d:f1:a4:ae:8a:0d:fb:50:
+                    2d:11:61:9b:1f:e0:1b:3e:23:0b:e6:78:78:71:b2:
+                    97:60:83:f8:3d:cb:d8:c8:43:74:c2:11:94:59:82:
+                    eb:9a:16:9b:ea:c8:30:c6:ee:55:7c:02:94:3a:a5:
+                    31:ae:0e:ed:9c:50:01:0b:7b:a3:ab:dc:ef:b9:cb:
+                    8b:b9:32:9d:ff:fb:b8:31:8c:fa:d3:a5:ce:8c:23:
+                    c3:64:87:80:bc:2a:68:17:ef
+                Exponent: 65537 (0x10001)
+    Signature Algorithm: md5WithRSAEncryption
+        31:bc:66:67:e3:c5:fd:a7:97:15:a9:0d:71:7e:51:22:91:17:
+        55:40:17:48:3d:1d:82:8a:da:b0:0b:e3:3f:ab:d9:17:39:14:
+        a8:0a:28:d7:81:90:57:61:91:61:fb:c0:54:6f:04:eb:f8:19:
+        75:e1:f6:5f:15:58:15:2b:2b:95:4d:29:4f:50:73:d0:e0:fa:
+        8e:1f:a0:cf:d0:fb:de:9d:fb:b7:92:3c:da:65:4c:f3:ef:1d:
+        1a:ee:06:05:d0:51:f2:0c:af:ca:0f:0b:40:d1:f2:e9:44:06:
+        87:6a:a9:cd:ca:36:23:52:2e:96:6e:29:17:09:3f:43:8b:6e:
+        af:be
+-----BEGIN CERTIFICATE-----
+MIICTjCCAbegAwIBAgIBATANBgkqhkiG9w0BAQQFADBgMQswCQYDVQQGEwJDSDEL
+MAkGA1UECBMCWkgxDjAMBgNVBAoTBUZ1Z2x1MRIwEAYDVQQDEwlmdWdsdS5vcmcx
+IDAeBgkqhkiG9w0BCQEWEXN1cHBvcnRAZnVnbHUub3JnMB4XDTEwMDMxMjEzNDY1
+NloXDTM3MDcyNzEzNDY1NlowejELMAkGA1UEBhMCQ0gxCzAJBgNVBAgTAlpIMQ4w
+DAYDVQQKEwVGdWdsdTEjMCEGA1UEAxQac2VuZGVyQHVuaXR0ZXN0cy5mdWdsdS5v
+cmcxKTAnBgkqhkiG9w0BCQEWGnNlbmRlckB1bml0dGVzdHMuZnVnbHUub3JnMIGf
+MA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0nXtHix9hS9CyFG68fzVE+Qy3TtDs
+iyPpqzpLfdfZeatUTGFd8aSuig37UC0RYZsf4Bs+IwvmeHhxspdgg/g9y9jIQ3TC
+EZRZguuaFpvqyDDG7lV8ApQ6pTGuDu2cUAELe6Or3O+5y4u5Mp3/+7gxjPrTpc6M
+I8Nkh4C8KmgX7wIDAQABMA0GCSqGSIb3DQEBBAUAA4GBADG8Zmfjxf2nlxWpDXF+
+USKRF1VAF0g9HYKK2rAL4z+r2Rc5FKgKKNeBkFdhkWH7wFRvBOv4GXXh9l8VWBUr
+K5VNKU9Qc9Dg+o4foM/Q+96d+7eSPNplTPPvHRruBgXQUfIMr8oPC0DR8ulEBodq
+qc3KNiNSLpZuKRcJP0OLbq++
+-----END CERTIFICATE-----
