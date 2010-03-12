@@ -557,7 +557,7 @@ class AllpluginTestCase(unittest.TestCase):
         #this seems to trigger http://bugs.python.org/issue1974 ?
         #self.failUnless(newrep['longstring']==longstring, "Long header was not written correctly: %s != %s"%(longstring,newrep['longstring']))
         
-        
+     
 class EndtoEndTestTestCase(unittest.TestCase):
     """Full check if mail runs through"""
     
@@ -565,7 +565,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
         from fuglu.connectors.smtpconnector import DummySMTPServer
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
-        
+
         #init core
         self.mc=MainController(self.config)
         
@@ -578,8 +578,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
     
     def tearDown(self):
         self.mc.shutdown()
-        
-    
+        self.smtp.shutdown()
     
     
     def testE2E(self):
@@ -590,9 +589,9 @@ class EndtoEndTestTestCase(unittest.TestCase):
         time.sleep(1)
         
         #send test message
-        smtpServer = smtplib.SMTP('127.0.0.1',self.config.getint('main', 'incomingport'))
+        smtpclient = smtplib.SMTP('127.0.0.1',self.config.getint('main', 'incomingport'))
         #smtpServer.set_debuglevel(1)
-        smtpServer.helo('test.e2e')
+        smtpclient.helo('test.e2e')
         testmessage="""Hello World!\r
 Don't dare you change any of my bytes or even remove one!"""
         
@@ -602,8 +601,8 @@ Don't dare you change any of my bytes or even remove one!"""
         msg["Subject"]="End to End Test"
         msgstring=msg.as_string()
         inbytes=len(msg.get_payload())
-        smtpServer.sendmail('sender@fuglu.org', 'recipient@fuglu.org', msgstring)
-        smtpServer.quit()
+        smtpclient.sendmail('sender@fuglu.org', 'recipient@fuglu.org', msgstring)
+        smtpclient.quit()
         
         #get answer
         gotback=self.smtp.suspect
@@ -616,7 +615,56 @@ Don't dare you change any of my bytes or even remove one!"""
         outbytes=len(payload)
         self.failUnlessEqual(testmessage, payload, "Message body has been altered. In: %s bytes, Out: %s bytes, teststring=->%s<- result=->%s<-"%(inbytes,outbytes,testmessage,payload))
         
- 
-
+class SMIMETestCase(unittest.TestCase):
+    """Email Signature Tests"""
+    
+    def setUp(self):
         
+        from fuglu.connectors.smtpconnector import DummySMTPServer
+        self.config=ConfigParser.RawConfigParser()
+        self.config.read(['testdata/endtoendtest.conf'])
+        self.config.set('main','incomingport',"7721")
+        #init core
+        self.mc=MainController(self.config)
+        
+        #start listening smtp dummy server to get fuglus answer
+        self.smtp=DummySMTPServer(self.config, self.config.getint('main', 'outgoingport'), "127.0.0.1")
+        thread.start_new_thread(self.smtp.serve, ())
+        
+        #start fuglus listening server
+        thread.start_new_thread(self.mc.startup, ())
+    
+    def tearDown(self):
+        self.mc.shutdown()
+        self.smtp.shutdown()
+             
+    def testSMIME(self):
+        """test if S/MIME mails still pass the signature"""
+        
+        #give fuglu time to start listener
+        time.sleep(1)
+        
+        #send test message
+        smtpclient = smtplib.SMTP('127.0.0.1',self.config.getint('main', 'incomingport'))
+        #smtpServer.set_debuglevel(1)
+        smtpclient.helo('test.smime')
+        inputfile='testdata/smime/signedmessage.eml'
+        (status,output)=self.verifyOpenSSL(inputfile)
+        self.assertTrue(status==0,"Testdata S/MIME verification failed: \n%s"%output)
+        msgstring=open(inputfile,'r').read()
+        smtpclient.sendmail('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', msgstring)
+        
+        smtpclient.quit()
+        
+        #verify the smtp server stored the file correctly
+        tmpfile=self.smtp.tempfilename
+        
+        #self.failUnlessEqual(msgstring, tmpcontent, "SMTP Server did not store the tempfile correctly: %s"%tmpfile)
+        (status,output)=self.verifyOpenSSL(tmpfile)
+        self.assertTrue(status==0,"S/MIME verification failed: \n%s\n tmpfile is:%s"%(output,tmpfile))
+
+    def verifyOpenSSL(self,file):
+        import commands
+        (status,output)=commands.getstatusoutput("openssl smime -verify -noverify -in %s"%file)
+        return (status,output)
         
