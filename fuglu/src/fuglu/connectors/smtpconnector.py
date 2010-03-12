@@ -32,6 +32,7 @@ from email.Header import Header
 
 def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
+    
     #we must prepend headers manually as we can't set a header order in email objects
     
     msgrep=suspect.getMessageRep()
@@ -57,16 +58,32 @@ class SMTPHandler(ProtocolHandler):
         self.sess=SMTPSession(socket,config)
     
     
+    def is_signed(self,suspect):
+        msgrep=suspect.getMessageRep()
+        if msgrep.has_key('Content-Type'):
+            ctype=msgrep['Content-Type']
+            if ctype.lower().find('multipart/signed')>-1:
+                return True
+        return False
+    
     def re_inject(self,suspect):
         """Send message back to postfix"""
         if suspect.get_tag('noreinject'):
             return 'message not re-injected by plugin request'
-        modifiedtext=buildmsgsource(suspect)
+        
+        if suspect.get_tag('reinjectoriginal'):
+            self.logger.info('Injecting original message source without modifications')
+            msgcontent=suspect.getOriginalSource()
+        elif self.is_signed(suspect):
+            self.logger.info('S/MIME signed message detected - sending original source without modifications')
+            msgcontent=suspect.getOriginalSource()
+        else:
+            msgcontent=buildmsgsource(suspect)
         
         client = FUSMTPClient('127.0.0.1',self.config.getint('main', 'outgoingport'))
         client.helo(self.config.get('main','outgoinghelo'))
   
-        client.sendmail(suspect.from_address, suspect.to_address, modifiedtext)
+        client.sendmail(suspect.from_address, suspect.to_address, msgcontent)
         #if we did not get an exception so far, we can grab the server answer using the patched client
         #servercode=client.lastservercode
         serveranswer=client.lastserveranswer
@@ -316,7 +333,7 @@ class DummySMTPServer(object):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._socket.bind((address, port))
-        self._socket.listen(5)
+        self._socket.listen(1)
         self.suspect=None
         
     def serve(self):
@@ -337,6 +354,11 @@ class DummySMTPServer(object):
         self.logger.debug("Message from %s to %s stored to %s"%(fromaddr,toaddr,self.tempfilename))
         
         self.suspect=Suspect(fromaddr,toaddr,self.tempfilename)
+        
+    def shutdown(self):
+        self._socket.shutdown(1)
+        self._socket.close()
+        self.logger.info('Dummy smtp server on port %s shut down'%self.port)
 
 class OtherTests(unittest.TestCase):
     """Other testcases"""
