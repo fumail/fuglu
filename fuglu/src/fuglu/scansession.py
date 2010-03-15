@@ -132,7 +132,7 @@ class SessionHandler(object):
                 retmesg= 'Internal problem - message deferred'
                 if self.message!=None:
                     retmesg=self.message
-                self.protohandlerdefer(retmesg)
+                self.protohandler.defer(retmesg)
             else:
                 self.logger.error('Invalid Message action Code: %s. Using DEFER'%result)
                 message_is_deferred=True
