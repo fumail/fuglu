@@ -223,10 +223,14 @@ class VacationPlugin(ScannerPlugin):
     def examine(self,suspect):
         starttime=time.time()
   
-        vac=self.should_send_vacation_message(suspect)
-        if vac!=None:
-            self.logger.debug('Vacation message candidate detected: Sender: %s recipient(on vacation): %s'%(suspect.from_address,suspect.to_address))
-            self.send_vacation_reply(suspect,vac)
+        ###this plugin should not cause fuglu to defer
+        try:
+            vac=self.should_send_vacation_message(suspect)
+            if vac!=None:
+                self.logger.debug('Vacation message candidate detected: Sender: %s recipient(on vacation): %s'%(suspect.from_address,suspect.to_address))
+                self.send_vacation_reply(suspect,vac)
+        except Exception,e:
+            self.logger.error("Exception in Vacation Plugin: %s"%e)
             
         endtime=time.time()
         difftime=endtime-starttime
