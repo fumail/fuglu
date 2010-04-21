@@ -28,7 +28,7 @@ import re
 from threading import Lock
 from datetime import datetime,timedelta
 import logging
-
+import traceback
 
 # from address regex
 vacation_ignoresenderregex=["^owner-",
@@ -98,7 +98,7 @@ class Vacation(object):
         self.ignoresender=None
         
     def __str__(self):
-        return "Vacation(%s) start=%s end=%s ignore=%s subject=%s"%(self.awayuser,self.start,self.end,self.ignoresender,self.subject) 
+        return "Vacation(%s) start=%s end=%s ignore=%s"%(self.awayuser,self.start,self.end,self.ignoresender) 
 
     def __repr__(self):
         return str(self)
@@ -160,7 +160,7 @@ class VacationCache( object ):
         if not hasattr(self, 'lock'):
             self.lock=Lock()
         if not hasattr(self,'logger'):
-            self.logger=logging.getLogger('fuglu.plugins.vacation.Cache')
+            self.logger=logging.getLogger('fuglu.plugin.vacation.Cache')
         if not hasattr(self,'lastreload'):
             self.lastreload=0
         self.config=config
@@ -230,7 +230,9 @@ class VacationPlugin(ScannerPlugin):
                 self.logger.debug('Vacation message candidate detected: Sender: %s recipient(on vacation): %s'%(suspect.from_address,suspect.to_address))
                 self.send_vacation_reply(suspect,vac)
         except Exception,e:
+            exc=traceback.format_exc()
             self.logger.error("Exception in Vacation Plugin: %s"%e)
+            self.logger.error(exc)
             
         endtime=time.time()
         difftime=endtime-starttime
@@ -259,6 +261,7 @@ class VacationPlugin(ScannerPlugin):
             return None
         
         if self.already_notified(vacation, suspect.from_address):
+            self.logger.debug('Sender %s already notified, not sending another vacation reply'%suspect.from_address)
             return None
         
         return vacation
@@ -315,7 +318,7 @@ class VacationPlugin(ScannerPlugin):
     def already_notified(self,vacation,recipient):
         """return true if this user has been notfied in the last 24 hours"""
         dbsession=fuglu.extensions.sql.get_session(self.config.get(self.section,'dbconnectstring'))
-        log=dbsession.query(VacationReply).filter_by(vacation=vacation).filter(VacationReply.sent>datetime.now()-timedelta(days=1)).first()
+        log=dbsession.query(VacationReply).filter_by(vacation=vacation).filter(VacationReply.sent>datetime.now()-timedelta(days=1)).filter_by(recipient=recipient).first()
         dbsession.expunge_all()
         if log!=None:
             self.logger.debug('Sender %s already notfied at %s'%(log.recipient,log.sent))
@@ -395,8 +398,12 @@ class VacationPlugin(ScannerPlugin):
             dbsession=fuglu.extensions.sql.get_session(self.config.get(self.section,'dbconnectstring'))
             bind=dbsession.get_bind(Vacation)
             bind.connect()
+            now=datetime.now()
+            allvacs=dbsession.query(Vacation).filter_by(enabled=True).filter(Vacation.start<now).filter(Vacation.end>now)
+            for vac in allvacs:
+                print vac
         except Exception,e:
-            print "Could not connect to database: %s"%e
+            print "Database error: %s"%e
             return False
             
         return True
