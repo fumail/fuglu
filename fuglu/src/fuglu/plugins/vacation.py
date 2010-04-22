@@ -54,6 +54,7 @@ vacation_ignoresenderregex=["^owner-",
                             "^webmaster@",
                             "^administrator@",
                             "^support@",
+                            "^news(letter)?@",
                             ]
 
 
