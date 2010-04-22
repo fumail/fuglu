@@ -34,8 +34,7 @@ import traceback
 vacation_ignoresenderregex=["^owner-",
                             "^request-",
                             "-request@",
-                            "^bounce[s]?-",
-                            "-bounce[s]?@",
+                            "bounce.*@", #everything with 'bounce' in the lefthandside is probably automated
                             "-confirm@",
                             "-errors@",
                             "^no[\-]?reply",
