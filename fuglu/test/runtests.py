@@ -38,11 +38,22 @@ globalconfig=ConfigParser.ConfigParser()
 readconfig=globalconfig.read(['../conf/fuglu.conf.dist','%s/test.conf'%devdir])
 print readconfig
 
-def getModules():
-    """returns all plugin modules"""
+def getPluginModules():
     from fuglu.plugins import __all__ as allplugs
     return map(lambda x:"fuglu.plugins.%s"%x, allplugs)
 
+def getExtensionModules():
+    from fuglu.extensions import __all__ as allplugs
+    return map(lambda x:"fuglu.extensions.%s"%x, allplugs)
+
+def getConnectorModules():
+    from fuglu.connectors import __all__ as allplugs
+    return map(lambda x:"fuglu.connectors.%s"%x, allplugs)
+
+def getCoreModules():
+    from fuglu import __all__ as allplugs
+    return map(lambda x:"fuglu.%s"%x, allplugs)
+    
 
 testonly=None
 if len(sys.argv)>1:
@@ -54,18 +65,22 @@ alltests=unittest.TestSuite()
 plugdir=globalconfig.get('main', 'plugindir').strip()
 if plugdir!="":
     sys.path.append(plugdir)
-modules=getModules()
-modules.insert(0,'fuglu.stats')
-modules.insert(0,'fuglu.scansession')
-modules.insert(0,'fuglu.connectors.smtpconnector')
-modules.insert(0,'fuglu.connectors.milterconnector')
-modules.insert(0,'fuglu.connectors.ncblackholeconnector')
-modules.insert(0,'fuglu.bounce')
-modules.insert(0,'fuglu.shared')
-modules.insert(0,'fuglu.core')
+modules=[]
+modules.extend(getCoreModules())
+modules.extend(getExtensionModules())
+modules.extend(getConnectorModules())
+modules.extend(getPluginModules())
+
+if globalconfig.has_section('test'):
+    if globalconfig.has_option('test', 'includemodules'):
+        addmods=globalconfig.get('test', 'includemodules').split(',')
+        print "Additional modules specified in test config: %s"%addmods
+        modules.extend(addmods)
 
 for mod in modules:
     if testonly!=None and mod not in testonly:
+        continue
+    if mod==None or mod=='':
         continue
     ldmod=__import__(mod)
     suite=loader.loadTestsFromName(mod)
