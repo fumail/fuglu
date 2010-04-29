@@ -24,8 +24,6 @@ import tempfile
 import os
 from fuglu.protocolbase import ProtocolHandler
 import unittest
-import thread
-import ConfigParser
 from fuglu.scansession import SessionHandler
 from fuglu.shared import Suspect
 
@@ -51,10 +49,10 @@ def buildmsgsource(suspect):
     return modifiedtext
 
 
-class SMTPHandler(ProtocolHandler):
+class ESMTPHandler(ProtocolHandler):
     def __init__(self,socket,config):
         ProtocolHandler.__init__(self, socket,config)
-        self.sess=SMTPSession(socket,config)
+        self.sess=ESMTPPassthroughSession(socket,config)
     
     
     def re_inject(self,suspect):
@@ -63,22 +61,10 @@ class SMTPHandler(ProtocolHandler):
             return 'message not re-injected by plugin request'
         modifiedtext=buildmsgsource(suspect)
         
-        client = FUSMTPClient('127.0.0.1',self.config.getint('main', 'outgoingport'))
-        client.helo(self.config.get('main','outgoinghelo'))
-  
-        client.sendmail(suspect.from_address, suspect.to_address, modifiedtext)
-        #if we did not get an exception so far, we can grab the server answer using the patched client
-        #servercode=client.lastservercode
-        serveranswer=client.lastserveranswer
-        try:
-            client.quit()
-        except Exception,e:
-            self.logger.warning('Exception while quitting re-inject session: %s'%str(e))
-        
-        if serveranswer==None:
-            self.logger.warning('Re-inject: could not get server answer.')
-            serveranswer=''
-        return serveranswer
+        (code,answer)=self.sess.forwardconn.data(modifiedtext)
+        if code!=250:
+            raise Exception,"Got status code '%s' Postfix said: %s"%(code,answer)
+        return "%s %s"%(code,answer)
     
 
     def get_suspect(self):
@@ -107,25 +93,12 @@ class SMTPHandler(ProtocolHandler):
     def discard(self,reason):
         self.sess.endsession(250, "OK")
         #self.sess=None
-        
-class FUSMTPClient(smtplib.SMTP):
-
-    """
-    This class patches the sendmail method of SMTPLib so we can get the return message from postfix 
-    after we have successfully re-injected. We need this so we can find out the new Queue-ID
-    """
-    
-    def getreply(self):
-        (code,response)=smtplib.SMTP.getreply(self)
-        self.lastserveranswer=response
-        self.lastservercode=code
-        return (code,response)
     
 
-class SMTPServer(object):    
+class ESMTPServer(object):    
     def __init__(self, controller,port=10025,address="127.0.0.1"):
         self.logger=logging.getLogger("fuglu.smtp.incoming.%s"%(port))
-        self.logger.debug('Starting incoming SMTP Server on Port %s'%port)
+        self.logger.debug('Starting incoming ESMTP Server on Port %s'%port)
         self.port=port
         self.controller=controller
         self.stayalive=1
@@ -136,7 +109,7 @@ class SMTPServer(object):
             self._socket.bind((address, port))
             self._socket.listen(5)
         except Exception,e:
-            self.logger.error('Could not start incoming SMTP Server: %s'%e)
+            self.logger.error('Could not start incoming ESMTP Server: %s'%e)
             sys.exit(1)
    
    
@@ -148,7 +121,7 @@ class SMTPServer(object):
         #disable to debug... 
         use_multithreading=True
         controller=self.controller
-        threading.currentThread().name='SMTP Server on Port %s'%self.port
+        threading.currentThread().name='ESMTP Server on Port %s'%self.port
         
         self.logger.info('SMTP Server running on port %s'%self.port)
         if use_multithreading:
@@ -159,7 +132,7 @@ class SMTPServer(object):
                 nsd = self._socket.accept()
                 if not self.stayalive:
                     break
-                ph=SMTPHandler(nsd[0], controller.config)
+                ph=ESMTPHandler(nsd[0], controller.config)
                 engine = SessionHandler(ph,controller.config,controller.prependers,controller.plugins,controller.appenders)
                 self.logger.debug('Incoming connection from %s'%str(nsd[1]))
                 if use_multithreading:
@@ -179,19 +152,6 @@ class ESMTPPassthroughSession(object):
     ST_DATA = 4
     ST_QUIT = 5
     
-    
-    def _init_forward_connection(self):
-        self.logger.debug('esablisihng pre-q forward connection to postfix')
-        HOST = '127.0.0.1'    # The remote host
-        PORT = 50007         # The same port as used by the server
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
-        s.send('Hello, world')
-        data = s.recv(1024)
-        s.close()
-        print 'Received', repr(data)
-
-    
     def __init__(self, socket,config):
         self.config=config
         self.from_address=None
@@ -200,14 +160,11 @@ class ESMTPPassthroughSession(object):
         self.helo=None
         
         self.socket = socket;
-        self.state = SMTPSession.ST_INIT
+        self.state = ESMTPPassthroughSession.ST_INIT
         self.logger=logging.getLogger("fuglu.smtpsession")
         self.tempfile=None
-
-        #TODO: create client socket here, pass all commands to postfix
-        #the handler reinject code should then only pass the data section here?
-        self.outsocket=socket.socket()
-
+        self.forwardconn=None
+        
     def endsession(self,code,message):
         self.socket.send("%s %s\r\n"%(code,message))
         data = ''
@@ -251,7 +208,7 @@ class ESMTPPassthroughSession(object):
                     data += lump
                     if (len(data) >= 2) and data[-2:] == '\r\n':
                         completeLine = 1
-                        if self.state != SMTPSession.ST_DATA:
+                        if self.state != ESMTPPassthroughSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
                         else:
                             try:
@@ -275,42 +232,67 @@ class ESMTPPassthroughSession(object):
                     # EOF
                     return False
         return False
+    
+    
+    def forwardCommand(self,command):
+        command=command.strip()
+        if self.forwardconn==None:
+            self.forwardconn=smtplib.SMTP('127.0.0.1',self.config.getint('main', 'outgoingport'))
+        self.logger.debug("""SEND: "%s" """%command)
+        code,ans=self.forwardconn.docmd(command)
+        ret="%s %s"%(code,ans)
+        if ret.find('\n'):
+            temprv=[]
+            parts=ret.split('\n')
+            code=ret[:3]
+            parts[0]=parts[0][3:]
+            for line in parts:
+                line=line.strip()
+                temprv.append('%s-%s'%(code,line))
+            #replace - with space on last line
+            temprv[-1]='%s %s'%(code,line)
             
+            ret='\r\n'.join(temprv)
+        self.logger.debug("""RECEIVE: "%s" """%ret)
+        return ret.strip()
+    
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
         cmd = string.upper(cmd)
         keep = 1
-        rv = None
-        if cmd == "HELO":
-            self.state = SMTPSession.ST_HELO
-            self.helo=data
+        rv=None
+        
+        if cmd in["EHLO",'HELO']:
+            self.state = ESMTPPassthroughSession.ST_HELO
         elif cmd == "RSET":
             self.from_address=None
             self.to_address=None
             self.helo=None
             self.dataAccum = ""
-            self.state = SMTPSession.ST_INIT
+            self.state = ESMTPPassthroughSession.ST_INIT
         elif cmd == "NOOP":
             pass
         elif cmd == "QUIT":
             keep = 0
+            return "221 bye",keep
+        
         elif cmd == "MAIL":
-            if self.state != SMTPSession.ST_HELO:
+            if self.state != ESMTPPassthroughSession.ST_HELO:
                 return ("503 Bad command sequence", 1)
-            self.state = SMTPSession.ST_MAIL
+            self.state = ESMTPPassthroughSession.ST_MAIL
             self.from_address=self.stripAddress(data)
         elif cmd == "RCPT":
-            if (self.state != SMTPSession.ST_MAIL) and (self.state != SMTPSession.ST_RCPT):
+            if (self.state != ESMTPPassthroughSession.ST_MAIL) and (self.state != ESMTPPassthroughSession.ST_RCPT):
                 return ("503 Bad command sequence", 1)
-            self.state = SMTPSession.ST_RCPT
+            self.state = ESMTPPassthroughSession.ST_RCPT
             rec=self.stripAddress(data)
             self.to_address=rec
             self.recipients.append(rec)
         elif cmd == "DATA":
-            if self.state != SMTPSession.ST_RCPT:
+            if self.state != ESMTPPassthroughSession.ST_RCPT:
                 return ("503 Bad command sequence", 1)
-            self.state = SMTPSession.ST_DATA
+            self.state = ESMTPPassthroughSession.ST_DATA
             self.dataAccum = ""
             try:
                 (handle,tempfilename)=tempfile.mkstemp(prefix='fuglu',dir=self.config.get('main','tempdir'))
@@ -320,13 +302,10 @@ class ESMTPPassthroughSession(object):
                 self.endsession(421,"could not create file: %s"%str(e))
 
             return ("354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1)
-        else:
-            return ("505 Eh? WTF was that?", 1)
-
-        if rv:
-            return (rv, keep)
-        else:
-            return("250 OK", keep)
+        
+        rv = self.forwardCommand(data)        
+                        
+        return rv,keep
 
     def doData(self, data):
         #store the last few bytes in memory to keep track when the msg is finished
@@ -342,7 +321,7 @@ class ESMTPPassthroughSession(object):
             
             self.tempfile.close()
 
-            self.state = SMTPSession.ST_HELO
+            self.state = ESMTPPassthroughSession.ST_HELO
             return "250 OK - Data and terminator. found"
         else:
             self.tempfile.write(data)

@@ -34,6 +34,8 @@ import inspect
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncblackholeconnector import NCServer
+from fuglu.connectors.esmtpconnector import ESMTPServer
+
 from fuglu.stats import StatsThread
 from fuglu.scansession import SessionHandler
 
@@ -125,7 +127,11 @@ class MainController(object):
                 smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
                 thread.start_new_thread(smtpserver.serve, ())
                 self.servers.append(smtpserver)
-            elif protocol=='milter':
+            elif protocol=='esmtp': #experimental
+                esmtpserver=ESMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(esmtpserver.serve, ())
+                self.servers.append(esmtpserver)
+            elif protocol=='milter': #experimental
                 milterserver=MilterServer(self,port=port,address=self.config.get('main', 'bindaddress'))
                 thread.start_new_thread(milterserver.serve, ())
                 self.servers.append(milterserver)
