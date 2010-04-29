@@ -40,30 +40,8 @@ print readconfig
 
 def getModules():
     """returns all plugin modules"""
-    global globalconfig
-    mods=[]
-    plugins=globalconfig.get('main', 'plugins').split(',')
-    for structured_name in plugins:
-        if structured_name=="":
-            continue
-        component_names = structured_name.split('.')
-        mod='.'.join(component_names[:-1])
-        mods.append(mod)
-    plugins=globalconfig.get('main', 'prependers').split(',')
-    for structured_name in plugins:
-        if structured_name=="":
-            continue
-        component_names = structured_name.split('.')
-        mod='.'.join(component_names[:-1])
-        mods.append(mod)
-    plugins=globalconfig.get('main', 'appenders').split(',')
-    for structured_name in plugins:
-        if structured_name=="":
-            continue
-        component_names = structured_name.split('.')
-        mod='.'.join(component_names[:-1])
-        mods.append(mod)
-    return mods
+    from fuglu.plugins import __all__ as allplugs
+    return map(lambda x:"fuglu.plugins.%s"%x, allplugs)
 
 
 testonly=None
