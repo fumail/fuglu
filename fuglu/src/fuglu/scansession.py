@@ -143,7 +143,8 @@ class SessionHandler(object):
             if not message_is_deferred:
                 self.stats.increasecounters(suspect)
                 self.run_appenders(suspect,result)
-            
+            else:
+                self.logger.warning("DEFERRED %s"%suspect.id)
             
             #clean up
             try:
