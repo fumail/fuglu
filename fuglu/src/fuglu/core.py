@@ -287,7 +287,7 @@ class MainController(object):
         """load fuglu extensions"""
         ret=[]
         import fuglu.extensions
-        for extension in fuglu.extensions.__ALL__:
+        for extension in fuglu.extensions.__all__:
             mod = __import__('fuglu.extensions.%s'%extension)
             ext=getattr(mod,'extensions')
             fl=getattr(ext,extension)
