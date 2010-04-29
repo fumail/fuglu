@@ -201,7 +201,7 @@ Subject: test scanner
         spamheadername=self.config.get(self.section,'spamheader')
         
         if spamsize>maxsize:
-            self.logger.info('Size Skip, %s > %s'%(spamsize,maxsize))
+            self.logger.info('%s Size Skip, %s > %s'%(suspect.id,spamsize,maxsize))
             suspect.debug('Too big for spamchecks. %s > %s'%(spamsize,maxsize))
             prependheader=self.config.get('main','prependaddedheaders')
             suspect.addheader("%sSA-SKIP"%prependheader, 'Too big for spamchecks. %s > %s'%(spamsize,maxsize))
@@ -216,7 +216,7 @@ Subject: test scanner
         content=None
         if filtered==None:
             suspect.debug('SA Scan failed - please check error log')
-            self.logger.error('SA scan FAILED. Deferring message')
+            self.logger.error('%s SA scan FAILED. Deferring message'%suspect.id)
             return DEFER
             
             #TODO make config option 'problemaction'

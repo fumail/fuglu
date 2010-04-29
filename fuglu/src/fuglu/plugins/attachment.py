@@ -230,7 +230,7 @@ class FiletypePlugin(ScannerPlugin):
                 if action=='deny':
                     # remove non ascii chars
                     asciirep="".join([x for x in object if ord(x) < 128])
-                    self._logger().info('Mail contains blocked attachment name/type %s (delete, send bounce) '%object)
+                    self._logger().info('suspect %s contains blocked attachment name/type %s (delete, send bounce) '%(suspect.id,object))
                     blockinfo="%s: %s"%(asciirep,description)
                     suspect.tags['FiletypePlugin.errormessage']=blockinfo
                     bounce=Bounce(self.config)
@@ -238,7 +238,7 @@ class FiletypePlugin(ScannerPlugin):
                     return DELETE
 
                 if action=='delete':
-                    self._logger().info('Mail contains blocked attachment name/type %s (delete, no bounce)'%object)
+                    self._logger().info('suspect %s contains blocked attachment name/type %s (delete, no bounce)'%(suspect.id,object))
                     return DELETE
 
                 if action=='accept':
