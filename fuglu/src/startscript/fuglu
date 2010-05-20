@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#   Copyright 2009 Oli Schacher
+#   Copyright 2010 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 #fuglu main startup file
 
 #update this one for new releases
-FUGLU_VERSION="0.4.2"
+FUGLU_VERSION="0.4.5"
 
 import ConfigParser
 from fuglu.daemon import DaemonStuff
