@@ -382,7 +382,7 @@ Subject: test scanner
         suspect.setMessageRep(email.message_from_string(stream))
         result=self.candidate.examine(suspect)
         score=int( suspect.get_tag('SAPlugin.spamscore'))
-        self.failUnless(score>1000, "GTUBE mails should score > 1000")
+        self.failUnless(score>999, "GTUBE mails should score ~1000 , we got %s"%score)
         self.failUnless(result==REJECT,'High spam should be rejected')
         
         
