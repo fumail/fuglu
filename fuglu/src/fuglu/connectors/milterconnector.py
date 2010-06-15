@@ -64,9 +64,7 @@ class MilterSession(PpyMilter):
 
         self.logger=logging.getLogger('fuglu.miltersession')
         
-        self.__milter_dispatcher = PpyMilterDispatcher(object)
-        self.__milter_dispatcher.__milter=self
-
+        self.__milter_dispatcher = PpyMilterDispatcher(self)
         self.body=None
         self.recipients=[]
         self.from_address=None
@@ -80,7 +78,7 @@ class MilterSession(PpyMilter):
         self.to_address=rcpt_to
         return self.Continue()
 
-    def OnMailFrom(self,cmd,mail_from):
+    def OnMailFrom(self,cmd,mail_from,args):
         self.from_address=mail_from
         return self.Continue()
         
@@ -97,7 +95,13 @@ class MilterSession(PpyMilter):
     def getincomingmail(self):
         try:
             while True:
-                dat=self.socket.recv(MILTER_LEN_BYTES)
+                lenbuf=[]
+                lenread=0
+                while lenread < MILTER_LEN_BYTES:
+                    pdat=self.socket.recv(MILTER_LEN_BYTES-lenread)
+                    lenbuf.append(pdat)
+                    lenread+=len(pdat)
+                dat="".join(lenbuf)
                 self.logger.info(dat)
                 self.logger.info(len(dat))
                 packetlen = int(struct.unpack('!I',dat)[0])
