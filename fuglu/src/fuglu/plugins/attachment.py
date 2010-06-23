@@ -15,8 +15,9 @@
 # $Id$
 #
 import sys
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,Suspect
+from fuglu.shared import ScannerPlugin,DELETE,DUNNO,ACCEPT,Suspect
 from fuglu.bounce import Bounce
+import fuglu.extensions.sql
 import time
 import re
 import mimetypes
@@ -24,6 +25,7 @@ import os
 import os.path
 import logging
 import unittest
+from fuglu.extensions.sql import DBFile
 
 from threading import Lock
 
@@ -112,7 +114,7 @@ class RulesCache( object ):
 
     def _loadrules(self):
         """effectively loads the rules, do not call directly, only through reloadifnecessary"""
-        self.logger.debug('Re-Loading attachment rules...')
+        self.logger.debug('Reloading attachment rules...')
 
         #set last timestamp
         statinfo=os.stat(self.rulesdir)
@@ -158,25 +160,28 @@ class RulesCache( object ):
         if not os.path.isfile(filename):
             self.logger.warning('Ignoring file %s - not a file'%filename)
             return None
-        ret={}
         handle=open(filename)
-        for line in handle.readlines():
+        return self.get_rules_from_config_lines(handle.readlines())
+
+    def get_rules_from_config_lines(self,lineslist):
+        ret={}
+        for line in lineslist:
             line=line.strip()
             if line.startswith('#') or line=='':
                 continue
             tuple=line.split(None,2)
             if (len(tuple)!=3):
-                self.logger.debug('Ignoring invalid line in %s (length %s): %s'%(filename,len(tuple),line))
+                self.logger.debug('Ignoring invalid line  (length %s): %s'%(len(tuple),line))
             (action,regex,description)=tuple
             action=action.lower()
-            if action!="allow" and action!="deny" and action!="delete":
+            if action not in ["allow","deny","delete"]:
                 self.logger.error('Invalid rule action: %s'%action)
                 continue
 
             tp=(action,regex,description)
             ret[regex]=tp
         return ret
-
+        
 class FiletypePlugin(ScannerPlugin):
     """Copy this to make a new plugin"""
     def __init__(self,config,section=None):
@@ -191,13 +196,11 @@ class FiletypePlugin(ScannerPlugin):
         self.rulescache=RulesCache(self.config.get(self.section,'rulesdir'))
         self.extremeverbosity=False
 
-
     def examine(self,suspect):
         starttime=time.time()
         self.blockedfiletemplate=self.config.get(self.section,'template_blockedfile')
 
         returnaction=self.walk(suspect)
-
 
         endtime=time.time()
         difftime=endtime-starttime
@@ -241,8 +244,8 @@ class FiletypePlugin(ScannerPlugin):
                     self._logger().info('suspect %s contains blocked attachment name/type %s (delete, no bounce)'%(suspect.id,object))
                     return DELETE
 
-                if action=='accept':
-                    return 'accept'
+                if action=='allow':
+                    return ACCEPT
         return DUNNO
 
 
@@ -257,15 +260,28 @@ class FiletypePlugin(ScannerPlugin):
 
     def walk(self,suspect):
         """walks through a message and checks each attachment according to the rulefile specified in the config"""
+        #try db rules first
+        
         self.rulescache.reloadifnecessary()
-        user_names=self.rulescache.getNAMERules(suspect.to_address)
+        dbconn=''
+        if self.config.has_option(self.section,'dbfile'):
+            dbconn=self.config.get(self.section,'dbfile')
+           
+        if dbconn.strip()!='':
+            query=self.config.get(self.section,'query')
+            dbfile=DBFile(dbconn, query)
+            user_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'filename'}))
+            user_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'contenttype'}))
+            domain_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'filename'}))
+            domain_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'contenttype'}))
+        else:
+            user_names=self.rulescache.getNAMERules(suspect.to_address)
+            user_ctypes=self.rulescache.getCTYPERules(suspect.to_address)
+    
+            domain_names=self.rulescache.getNAMERules(suspect.to_domain)
+            domain_ctypes=self.rulescache.getCTYPERules(suspect.to_domain)
 
-
-        user_ctypes=self.rulescache.getCTYPERules(suspect.to_address)
-
-        domain_names=self.rulescache.getNAMERules(suspect.to_domain)
-        domain_ctypes=self.rulescache.getCTYPERules(suspect.to_domain)
-
+        #always get defaults from file
         default_names=self.rulescache.getNAMERules('default')
         default_ctypes=self.rulescache.getCTYPERules('default')
 
@@ -296,8 +312,6 @@ class FiletypePlugin(ScannerPlugin):
                 return DELETE
 
             #go through content type rules
-
-
             res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_mime,suspect)
             if res==DELETE:
                 return DELETE
@@ -315,7 +329,7 @@ class FiletypePlugin(ScannerPlugin):
         return "Attachment Blocker"
 
     def lint(self):
-        allok=(self.checkConfig() and self.lint_magic())
+        allok=(self.checkConfig() and self.lint_magic() and self.lint_sql())
         return allok
 
     def lint_magic(self):
@@ -324,6 +338,94 @@ class FiletypePlugin(ScannerPlugin):
             return False
         return True
 
+    def lint_sql(self):
+        dbconn=''
+        if self.config.has_option(self.section,'dbfile'):
+            dbconn=self.config.get(self.section,'dbfile')
+        if dbconn.strip()!='':
+            print "Reading per user/domain attachment rules from database"
+            if not fuglu.extensions.sql.ENABLED:
+                print "Fuglu SQL Extension not available, cannot load attachment rules from database"
+                return False
+            query=self.config.get(self.section,'query')
+            dbfile=DBFile(dbconn, query)
+            try:
+                dbfile.getContent({'scope':'lint','checktype':'filename'})
+            except Exception,e:
+                import traceback
+                print "Could not get attachment rules from database. Exception: %s"%str(e)
+                print traceback.format_exc()
+                return False
+        else:
+            print "No database configured. Using per user/domain file configuration from %s"%self.config.get(self.section,'rulesdir')
+        return True
+
+
+class DatabaseConfigTestCase(unittest.TestCase):
+    """Testcases for the Attachment Checker Plugin"""
+    def setUp(self):
+        from ConfigParser import RawConfigParser
+        import tempfile
+        import shutil
+        from sqlalchemy import Table, Column,  MetaData,  Unicode, Integer
+        from sqlalchemy.ext.declarative import declarative_base
+        
+        testfile="/tmp/attachconfig.db"
+        if os.path.exists(testfile):
+            os.remove(testfile)
+        #important: 4 slashes for absolute paths!
+        testdb="sqlite:///%s"%testfile
+        DeclarativeBase = declarative_base()
+        metadata = DeclarativeBase.metadata
+        rules_table = Table("attachmentrules", metadata,
+                    Column('id', Integer, primary_key=True),
+                    Column('scope', Unicode(255), nullable=False),
+                    Column('checktype', Unicode(20), nullable=False),
+                    Column('action', Unicode(255), nullable=False),
+                    Column('regex', Unicode(255), nullable=False),
+                    Column('description', Unicode(255), nullable=False),
+                    Column('prio', Integer, nullable=False),
+        )
+        
+        self.session=fuglu.extensions.sql.get_session(testdb)
+        self.session.flush()
+        bind=self.session.get_bind(rules_table)
+        bind.connect()
+        bind.engine.echo=True
+        metadata.create_all(bind)
+        self.tempdir=tempfile.mkdtemp('attachtestdb', 'fuglu')
+        self.template='%s/blockedfile.tmpl'%self.tempdir
+        shutil.copy('../conf/templates/blockedfile.tmpl.dist',self.template)
+        shutil.copy('../conf/rules/default-filenames.conf.dist','%s/default-filenames.conf'%self.tempdir)
+        shutil.copy('../conf/rules/default-filetypes.conf.dist','%s/default-filetypes.conf'%self.tempdir)
+        config=RawConfigParser()
+        config.add_section('FiletypePlugin')
+        config.set('FiletypePlugin', 'template_blockedfile',self.template)
+        config.set('FiletypePlugin', 'rulesdir',self.tempdir)
+        config.set('FiletypePlugin','dbfile',testdb)
+        config.set('FiletypePlugin','query','SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
+        config.add_section('main')
+        config.set('main','disablebounces','1')
+        self.candidate=FiletypePlugin(config)
+    
+    def test_dbrules(self):
+        """Test if db rules correctly override defaults"""
+        import tempfile
+        import shutil
+
+        testdata="""
+        INSERT INTO attachmentrules(scope,checktype,action,regex,description,prio) VALUES
+        ('recipient@unittests.fuglu.org','contenttype','allow','application/x-executable','this user likes exe',1)
+        """
+        self.session.execute(testdata)
+        #copy file rules
+        tempfilename=tempfile.mktemp(suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy('testdata/binaryattachment.eml',tempfilename)
+        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
+
+        result=self.candidate.examine(suspect)
+        os.remove(tempfilename)
+        self.failIf(result!=DUNNO)
 
 class AttachmentPluginTestCase(unittest.TestCase):
     """Testcases for the Attachment Checker Plugin"""
