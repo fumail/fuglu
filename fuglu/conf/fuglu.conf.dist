@@ -189,6 +189,11 @@ lowspamaction=DEFAULTLOWSPAMACTION
 #but you can override this here if you like
 highspamaction=DEFAULTHIGHSPAMACTION
 
+#what should we do if sa scan fails?
+#DEFER: keep the messages in your queue until SA is available again, basically stop the mailflow
+#DUNNO: accept the message without SA scan
+problemaction=DEFER
+
 #SQL Blacklist
 #fuglu can consult the blacklist for messages that cannot be scanned by SA because they are too big
 #This requires that sqlalchemy is installed (easy_install sqlalchemy should do the trick)
