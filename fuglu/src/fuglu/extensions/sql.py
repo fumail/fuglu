@@ -17,6 +17,7 @@
 #
 # Fuglu SQLAlchemy Extension
 #
+from string import Template
 import logging
 modlogger=logging.getLogger('fuglu.extensions.sql')
 ENABLED=False
@@ -43,3 +44,28 @@ def get_session(connectstring):
     session = scoped_session(maker)
     session.configure(bind=engine)
     return session
+
+
+class DBFile(object):
+    """A DB File allows storing configs in any rdbms. """
+    
+    def __init__(self,connectstring,query):
+        self.connectstring=connectstring
+        #eg. "select action,regex,description FROM tblname where scope=:scope
+        self.query=query
+        self.logger=logging.getLogger('fuglu.sql.dbfile')
+        
+    def getContent(self,templatevars=None):
+        """Get the content from the database as a list of lines. If the query returns multiple columns, they are joined together with a space as separator
+        templatevars: replace placeholders in the originalquery , eg. select bla from bla where domain=:domain
+        """
+        if templatevars==None:
+            templatevars={}
+        sess=get_session(self.connectstring)
+        res=sess.execute(self.query,templatevars)
+        self.logger.debug('Executing query %s with vars %s'%(self.query,templatevars))
+        buffer=[]
+        for row in res:
+            line=" ".join(row)
+            buffer.append(line)
+        return buffer
