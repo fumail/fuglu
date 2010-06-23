@@ -64,7 +64,7 @@ def actioncode_to_string(actioncode):
 
 def string_to_actioncode(actionstring,config=None):
     """return the code for this action"""
-    upper=actionstring.upper()
+    upper=actionstring.upper().strip()
     if config!=None:
         if upper=='DEFAULTHIGHSPAMACTION':
             confval=config.get('spam','defaulthighspamaction').upper()
