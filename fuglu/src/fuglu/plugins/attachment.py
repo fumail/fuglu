@@ -264,8 +264,8 @@ class FiletypePlugin(ScannerPlugin):
         
         self.rulescache.reloadifnecessary()
         dbconn=''
-        if self.config.has_option(self.section,'dbfile'):
-            dbconn=self.config.get(self.section,'dbfile')
+        if self.config.has_option(self.section,'dbconnectstring'):
+            dbconn=self.config.get(self.section,'dbconnectstring')
            
         if dbconn.strip()!='':
             query=self.config.get(self.section,'query')
@@ -340,8 +340,8 @@ class FiletypePlugin(ScannerPlugin):
 
     def lint_sql(self):
         dbconn=''
-        if self.config.has_option(self.section,'dbfile'):
-            dbconn=self.config.get(self.section,'dbfile')
+        if self.config.has_option(self.section,'dbconnectstring'):
+            dbconn=self.config.get(self.section,'dbconnectstring')
         if dbconn.strip()!='':
             print "Reading per user/domain attachment rules from database"
             if not fuglu.extensions.sql.ENABLED:
@@ -402,7 +402,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
         config.add_section('FiletypePlugin')
         config.set('FiletypePlugin', 'template_blockedfile',self.template)
         config.set('FiletypePlugin', 'rulesdir',self.tempdir)
-        config.set('FiletypePlugin','dbfile',testdb)
+        config.set('FiletypePlugin','dbconnectstring',testdb)
         config.set('FiletypePlugin','query','SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
         config.add_section('main')
         config.set('main','disablebounces','1')
