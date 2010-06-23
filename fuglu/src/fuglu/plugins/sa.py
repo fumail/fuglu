@@ -25,7 +25,7 @@ class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'))
+        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'problemaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'))
         self.logger=self._logger()
         
     def lint(self):
@@ -217,12 +217,13 @@ Subject: test scanner
         if filtered==None:
             suspect.debug('SA Scan failed - please check error log')
             self.logger.error('%s SA scan FAILED. Deferring message'%suspect.id)
-            return DEFER
-            
-            #TODO make config option 'problemaction'
-            #this would acceppt the message
-            #suspect.addheader('%sSA-SKIP'%self.config.get('main','prependaddedheaders'),'SA scan failed')
-            #content=spam
+            suspect.addheader('%sSA-SKIP'%self.config.get('main','prependaddedheaders'),'SA scan failed')
+            retcode=string_to_actioncode(self.config.get(self.section,'problemaction'), self.config)
+            if retcode!=None:
+                return retcode
+            else:
+                #in case of invalid problem action
+                return DEFER
             
         else:
             content=filtered 
@@ -352,6 +353,7 @@ class SAPluginTestCase(unittest.TestCase):
         config.set('SAPlugin', 'spamheader','X-Spam-Status')
         config.set('SAPlugin', 'lowspamaction','DUNNO')
         config.set('SAPlugin', 'highspamaction','REJECT')
+        config.set('SAPlugin', 'problemaction','DEFER')
         config.set('SAPlugin', 'highspamlevel','15')
         
         #sql blacklist
