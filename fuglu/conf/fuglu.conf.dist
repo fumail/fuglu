@@ -221,6 +221,17 @@ rulesdir=/etc/fuglu/rules
 #DELETE : discard messages (not recommended)
 blockaction=BOUNCE
 
+#database filerules configuration
+#get rules from db first, only use files as fallback
+#this requires the fuglu sql extension to be working
+#
+#dbfile=sqlite:////usr/local/fuglu/filerules.db
+#query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
+#
+#:scope will be replaced by the recipient address first, then by the recipient domain
+#:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
+
+
 [HeaderPlugin]
 removeheaders=
 
