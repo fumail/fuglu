@@ -225,7 +225,7 @@ blockaction=BOUNCE
 #get rules from db first, only use files as fallback
 #this requires the fuglu sql extension to be working
 #
-#dbfile=sqlite:////usr/local/fuglu/filerules.db
+#dbconnectstring=sqlite:////usr/local/fuglu/filerules.db
 #query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 #
 #:scope will be replaced by the recipient address first, then by the recipient domain
