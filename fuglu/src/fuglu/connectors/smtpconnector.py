@@ -23,7 +23,7 @@ import os
 import unittest
 import thread
 import ConfigParser
-
+import re
 
 from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler,BasicTCPServer
@@ -286,6 +286,7 @@ class SMTPSession(object):
             return("250 OK", keep)
 
     def doData(self, data):
+        data=self.unquoteData(data)
         #store the last few bytes in memory to keep track when the msg is finished
         self.dataAccum = self.dataAccum + data
         
@@ -293,7 +294,7 @@ class SMTPSession(object):
             self.dataAccum=self.dataAccum[-5:]
         
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
-            #check if there is more data to write tot he file
+            #check if there is more data to write to the file
             if len(data)>4:
                 self.tempfile.write(data[0:-5])
             
@@ -304,7 +305,11 @@ class SMTPSession(object):
         else:
             self.tempfile.write(data)
             return None   
-             
+    
+    def unquoteData(self,data):
+        """two leading dots at the beginning of a line must be unquoted to a single dot"""
+        return re.sub(r'(?m)^\.\.', '.',data)
+       
     def stripAddress(self,address):
         """
         Strip the leading & trailing <> from an address.  Handy for
