@@ -120,6 +120,7 @@ class Suspect:
         self.tags={}
         self.tags['virus']={}
         self.tags['spam']={}
+        self.tags['highspam']={}
         self.tags['decisions']=[]
         
         
@@ -197,6 +198,14 @@ class Suspect:
         """Set a new tag"""
         self.tags[key]=value
         
+    def is_highspam(self):
+        """Returns True if ANY of the spam engines tagged this suspect as spam"""
+        for key in self.tags['highspam'].keys():
+            val=self.tags['highspam'][key]
+            if val:
+                return True
+        return False
+    
     def is_spam(self):
         """Returns True if ANY of the spam engines tagged this suspect as spam"""
         for key in self.tags['spam'].keys():
@@ -272,7 +281,6 @@ class BasicPlugin(object):
             
         self.config=config
         self.requiredvars=()
-        pass
     
     def _logger(self):
         """returns the logger for this plugin"""
