@@ -113,7 +113,6 @@ class MainController(object):
         self.threadpool=ThreadPool(minthreads, maxthreads, queuesize)
         
         self.logger.info("Starting interface sockets...")
-        #TODO: load multiple connectors
         ports=self.config.get('main', 'incomingport')
         for port in ports.split(','):
             port=port.strip()
