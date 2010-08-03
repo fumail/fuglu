@@ -266,9 +266,11 @@ Subject: test scanner
         
             
         suspect.tags['spam']['SpamAssassin']=isspam
+        suspect.tags['highspam']['SpamAssassin']=False
         if spamscore != None:
             suspect.tags['SAPlugin.spamscore']=spamscore
             if spamscore>=self.config.getint(self.section,'highspamlevel'):
+                suspect.tags['highspam']['SpamAssassin']=True
                 configaction=string_to_actioncode(self.config.get(self.section,'highspamaction'),self.config)
                 if configaction!=None:
                     action=configaction
