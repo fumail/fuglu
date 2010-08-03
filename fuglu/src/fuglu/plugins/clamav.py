@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER
+from fuglu.shared import ScannerPlugin,string_to_actioncode
 import socket
 import string
 import time
@@ -30,6 +30,7 @@ class ClamavPlugin(ScannerPlugin):
         self.timeout=config.getint(self.section,'timeout')
         self.maxsize=config.getint(self.section,'maxsize')
         self.retries = self.config.getint(self.section,'retries')
+        self.requiredvars=((self.section,'host'),(self.section,'port'),(self.section,'timeout'),(self.section,'maxsize'),(self.section,'retries'),(self.section,'virusaction'))
         
     def examine(self,suspect):
         starttime=time.time()
@@ -56,7 +57,7 @@ class ClamavPlugin(ScannerPlugin):
                 suspect.tags['ClamavPlugin.time']="%.4f"%difftime
                 
                 if viri!=None:
-                    return DELETE
+                    return string_to_actioncode(self.config.get(self.section,'virusaction'))
                 return DUNNO
             except Exception,e:
                 self._logger().warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.retries,str(e)))
