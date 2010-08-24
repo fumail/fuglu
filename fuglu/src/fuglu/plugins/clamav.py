@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,string_to_actioncode
+from fuglu.shared import ScannerPlugin,string_to_actioncode,DEFER,DUNNO
 import socket
 import string
 import time
@@ -31,6 +31,15 @@ class ClamavPlugin(ScannerPlugin):
         self.maxsize=config.getint(self.section,'maxsize')
         self.retries = self.config.getint(self.section,'retries')
         self.requiredvars=((self.section,'host'),(self.section,'port'),(self.section,'timeout'),(self.section,'maxsize'),(self.section,'retries'),(self.section,'virusaction'))
+    
+    
+    def _problemcode(self):
+        retcode=string_to_actioncode(self.config.get(self.section,'problemaction'), self.config)
+        if retcode!=None:
+            return retcode
+        else:
+            #in case of invalid problem action
+            return DEFER
         
     def examine(self,suspect):
         starttime=time.time()
@@ -63,7 +72,7 @@ class ClamavPlugin(ScannerPlugin):
                 self._logger().warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.retries,str(e)))
         self._logger().error("Clamdscan failed after %s retries"%self.retries)
         content=None
-        return DEFER
+        return self._problemcode()
     
         
         
