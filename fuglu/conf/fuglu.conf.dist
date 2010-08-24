@@ -164,6 +164,10 @@ port=783
 #maximum size in bytes. larger messages will be skipped
 maxsize=256000
 
+#forward the original message or replace the content as returned by spamassassin
+#if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
+forwardoriginal=0
+
 #what header does sa set
 spamheader=X-Spam-Status
 
@@ -215,6 +219,7 @@ timeout=10
 maxsize=22000000
 retries=3
 virusaction=DEFAULTVIRUSACTION
+problemaction=DEFER
 
 #Attachment 
 [FiletypePlugin]
