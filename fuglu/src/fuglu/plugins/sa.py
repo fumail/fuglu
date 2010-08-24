@@ -339,12 +339,14 @@ Subject: test scanner
                     self.logger.error("Got bad status from spamd: %s"%status)
                     continue
                 
-                (spamword,spamstatus,colon, score,slash,required)=line2_spaminfo.split()
+                self.logger.debug('Spamd said: %s'%line2_spaminfo)
+                (spamword,spamstatusword,colon, score,slash,required)=line2_spaminfo.split()
                 rules=content.split(',')
                 spstatus=False
-                if spamstatus=='True':
-                    spamstatus=True
-                return (spamstatus,float(score),rules)
+                if spamstatusword=='True':
+                    spstatus=True
+                    
+                return (spstatus,float(score),rules)
             except timeout:
                 self.logger.error('SPAMD Socket timed out.')
             except herror,h:
@@ -468,7 +470,6 @@ Subject: test scanner
         self.failUnless(result==REJECT,'High spam should be rejected')
         
     def test_symbols(self):
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         stream="""Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org
 From: oli@unittests.fuglu.org
@@ -476,11 +477,26 @@ Subject: test scanner
 
   XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
-        spamstatus,spamscore,rules=self.candidate.safilter_symbols(stream,'oli@wgwh.ch')
+        spamstatus,spamscore,rules=self.candidate.safilter_symbols(stream,'oli@unittests.fuglu.org')
         self.failUnless('GTUBE' in rules,"GTUBE not found in SYMBOL scan")
         self.failIf(spamscore<500)
         self.failUnless(spamstatus)
         
+        stream2="""Received: from mail.python.org (mail.python.org [82.94.164.166])
+    by bla.fuglu.org (Postfix) with ESMTPS id 395743E03A5
+    for <recipient@unittests.fuglu.org>; Sun, 22 Aug 2010 18:15:11 +0200 (CEST)
+Date: Tue, 24 Aug 2010 09:20:57 +0200
+To: oli@unittests.fuglu.org
+From: oli@unittests.fuglu.org
+Subject: test Tue, 24 Aug 2010 09:20:57 +0200
+X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
+Message-Id: <20100824072058.282BC3E0154@fumail.leetdreams.ch>
+
+This is a test mailing """
+        
+        spamstatus,spamscore,rules=self.candidate.safilter_symbols(stream2,'oli@unittests.fuglu.org')
+        #print rules
+        self.failIf(spamstatus,"This message should not be detected as spam")
         
         
     def test_sql_blacklist(self):
