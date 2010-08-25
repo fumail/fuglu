@@ -15,7 +15,8 @@
 # $Id$
 #
 import sys
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,ACCEPT,Suspect
+from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO,\
+    string_to_actioncode, actioncode_to_string
 from fuglu.bounce import Bounce
 import fuglu.extensions.sql
 import time
@@ -40,6 +41,10 @@ except ImportError:
 FUATT_NAMESCONFENDING="-filenames.conf"
 FUATT_CTYPESCONFENDING="-filetypes.conf"
 
+ATTACHMENT_DUNNO=0
+ATTACHMENT_BLOCK=1
+ATTACHMENT_OK=2
+ATTACHMENT_SILENTDELETE=3
 
 class RulesCache( object ):
     """caches rule files and compiled regex patterns"""
@@ -218,7 +223,7 @@ class FiletypePlugin(ScannerPlugin):
 
     def matchRules(self,ruleset,object,suspect):
         if ruleset==None:
-            return DUNNO
+            return ATTACHMENT_DUNNO
 
         for regex in ruleset.keys():
             prog=self.rulescache.getRegex(regex)
@@ -233,20 +238,22 @@ class FiletypePlugin(ScannerPlugin):
                 if action=='deny':
                     # remove non ascii chars
                     asciirep="".join([x for x in object if ord(x) < 128])
-                    self._logger().info('suspect %s contains blocked attachment name/type %s (delete, send bounce) '%(suspect.id,object))
-                    blockinfo="%s: %s"%(asciirep,description)
-                    suspect.tags['FiletypePlugin.errormessage']=blockinfo
-                    bounce=Bounce(self.config)
-                    bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
-                    return DELETE
+                    self._logger().info('suspect %s contains blocked attachment name/type %s'%(suspect.id,object))
+                    if self.config.get(self.section,'sendbounce'):
+                        self._logger().info("Sending attachment block bounce to %s"%suspect.from_address)
+                        blockinfo="%s: %s"%(asciirep,description)
+                        suspect.tags['FiletypePlugin.errormessage']=blockinfo
+                        bounce=Bounce(self.config)
+                        bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
+                    return ATTACHMENT_BLOCK
 
                 if action=='delete':
-                    self._logger().info('suspect %s contains blocked attachment name/type %s (delete, no bounce)'%(suspect.id,object))
-                    return DELETE
+                    self._logger().info('suspect %s contains blocked attachment name/type %s -- SILENT DELETE! --'%(suspect.id,object))
+                    return ATTACHMENT_SILENTDELETE
 
                 if action=='allow':
-                    return ACCEPT
-        return DUNNO
+                    return ATTACHMENT_OK
+        return ATTACHMENT_DUNNO
 
 
     def matchMultipleSets(self,setlist,object,suspect):
@@ -254,20 +261,24 @@ class FiletypePlugin(ScannerPlugin):
         self._logger().debug('Checking Object %s against attachment rulesets'%object)
         for ruleset in setlist:
             res=self.matchRules(ruleset, object,suspect)
-            if res!=DUNNO:
+            if res!=ATTACHMENT_DUNNO:
                 return res
-        return DUNNO
+        return ATTACHMENT_DUNNO
 
     def walk(self,suspect):
         """walks through a message and checks each attachment according to the rulefile specified in the config"""
-        #try db rules first
         
+        blockaction=self.config.get(self.section,'blockaction')
+        blockactioncode=string_to_actioncode(blockaction)
+        
+        #try db rules first
         self.rulescache.reloadifnecessary()
         dbconn=''
         if self.config.has_option(self.section,'dbconnectstring'):
             dbconn=self.config.get(self.section,'dbconnectstring')
            
         if dbconn.strip()!='':
+            self.logger.debug('Loading attachment rules from database')
             query=self.config.get(self.section,'query')
             dbfile=DBFile(dbconn, query)
             user_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'filename'}))
@@ -275,6 +286,7 @@ class FiletypePlugin(ScannerPlugin):
             domain_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'filename'}))
             domain_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'contenttype'}))
         else:
+            self.logger.debug('Loading attachment rules from filesystem')
             user_names=self.rulescache.getNAMERules(suspect.to_address)
             user_ctypes=self.rulescache.getCTYPERules(suspect.to_address)
     
@@ -308,20 +320,27 @@ class FiletypePlugin(ScannerPlugin):
 
 
             res=self.matchMultipleSets([user_names,domain_names,default_names], att_name,suspect)
-            if res==DELETE:
+            if res==ATTACHMENT_SILENTDELETE:
                 return DELETE
+            if res==ATTACHMENT_BLOCK:
+                return blockactioncode
+            
 
             #go through content type rules
             res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_mime,suspect)
-            if res==DELETE:
+            if res==ATTACHMENT_SILENTDELETE:
                 return DELETE
-
+            if res==ATTACHMENT_BLOCK:
+                return blockactioncode
+            
             if MAGIC_AVAILABLE:
                 pl = i.get_payload(decode=True)
                 contenttype_magic=self.getBuffertype(pl)
                 res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_magic,suspect)
-                if res==DELETE:
+                if res==ATTACHMENT_SILENTDELETE:
                     return DELETE
+                if res==ATTACHMENT_BLOCK:
+                    return blockactioncode
 
         return DUNNO
 
@@ -403,6 +422,8 @@ class DatabaseConfigTestCase(unittest.TestCase):
         config.set('FiletypePlugin', 'template_blockedfile',self.template)
         config.set('FiletypePlugin', 'rulesdir',self.tempdir)
         config.set('FiletypePlugin','dbconnectstring',testdb)
+        config.set('FiletypePlugin', 'blockaction','DELETE')
+        config.set('FiletypePlugin', 'sendbounce','True')
         config.set('FiletypePlugin','query','SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
         config.add_section('main')
         config.set('main','disablebounces','1')
@@ -424,8 +445,17 @@ class DatabaseConfigTestCase(unittest.TestCase):
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
 
         result=self.candidate.examine(suspect)
+        resstr=actioncode_to_string(result)
+        self.assertEquals(resstr,"DUNNO")
+        
+        
+        #another recipient should still get the block
+        suspect=Suspect('sender@unittests.fuglu.org','recipient2@unittests.fuglu.org',tempfilename)
+
+        result=self.candidate.examine(suspect)
+        resstr=actioncode_to_string(result)
+        self.assertEquals(resstr,"DELETE")
         os.remove(tempfilename)
-        self.failIf(result!=DUNNO)
 
 class AttachmentPluginTestCase(unittest.TestCase):
     """Testcases for the Attachment Checker Plugin"""
@@ -443,6 +473,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
         config.add_section('FiletypePlugin')
         config.set('FiletypePlugin', 'template_blockedfile',self.template)
         config.set('FiletypePlugin', 'rulesdir',self.tempdir)
+        config.set('FiletypePlugin', 'blockaction','DELETE')
+        config.set('FiletypePlugin', 'sendbounce','True')
         config.add_section('main')
         config.set('main','disablebounces','1')
         self.candidate=FiletypePlugin(config)
@@ -480,4 +512,4 @@ class AttachmentPluginTestCase(unittest.TestCase):
 
         result=self.candidate.examine(suspect)
         os.remove(tempfilename)
-        self.failIf(result!=DUNNO)
+        self.assertEquals(result,DUNNO)

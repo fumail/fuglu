@@ -44,7 +44,6 @@ ACCEPT=1 # accept message, no further tests
 DELETE=2 # blackhole, no further tests
 REJECT=3 # reject, no further tests
 DEFER=4 # defer, no further tests
-BOUNCE=5 # send a bounce out of fuglu (eg. the attachment plugin)
 
 ALLCODES={
           'DUNNO':DUNNO,
@@ -52,7 +51,6 @@ ALLCODES={
           'DELETE':DELETE,
           'REJECT':REJECT,
           'DEFER':DEFER,
-          'BOUNCE':BOUNCE,
           }
 
 def actioncode_to_string(actioncode):

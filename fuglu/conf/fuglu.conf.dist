@@ -223,13 +223,15 @@ problemaction=DEFER
 
 #Attachment 
 [FiletypePlugin]
-template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 rulesdir=/etc/fuglu/rules
+#inform the sender about blocked attachments
+sendbounce=True
+template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #what should the plugin do when a blocked attachment is detected
-#BOUNCE (default): send a bounce message out of fuglu
 #REJECT : reject the message (recommended in pre-queue mode)
-#DELETE : discard messages (not recommended)
-blockaction=BOUNCE
+#DELETE : discard messages
+#DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
+blockaction=DELETE
 
 #database filerules configuration
 #get rules from db first, only use files as fallback
