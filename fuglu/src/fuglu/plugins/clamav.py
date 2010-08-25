@@ -282,7 +282,8 @@ class ClamavPluginTestCase(unittest.TestCase):
 
         self.candidate=ClamavPlugin(config)
 
-    def test_score(self):
+    def test_result(self):
+        """Test if EICAR virus is detected and message deleted"""
         import email
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         stream="""Date: Mon, 08 Sep 2008 17:33:54 +0200
