@@ -29,7 +29,7 @@ import smtplib
 import threading
 from threadpool import ThreadPool
 import inspect
-
+import traceback
 
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
@@ -366,6 +366,8 @@ class MainController(object):
                 pluglist.append(plugininstance)
             except Exception,e:
                 self._logger().error('Could not load plugin %s : %s'%(structured_name,e))
+                exc=traceback.format_exc()
+                self._logger().error(exc)
                 allOK=False
         
         return pluglist,allOK
