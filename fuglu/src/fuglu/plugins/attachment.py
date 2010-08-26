@@ -236,7 +236,18 @@ class FiletypePlugin(ScannerPlugin):
         return type
 
 
-    def matchRules(self,ruleset,object,suspect):
+    def matchRules(self,ruleset,object,suspect,attachmentname=None):
+        if attachmentname==None:
+            attachmentname=""
+        attachmentname="".join([x for x in attachmentname if ord(x) < 128])
+        
+        # remove non ascii chars
+        asciirep="".join([x for x in object if ord(x) < 128])
+        
+        displayname=attachmentname
+        if asciirep==attachmentname:
+            displayname=''
+        
         if ruleset==None:
             return ATTACHMENT_DUNNO
 
@@ -251,10 +262,8 @@ class FiletypePlugin(ScannerPlugin):
                 self._logger().debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(object,regex,description,action))
                 suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(object,regex,description,action))
                 if action=='deny':
-                    # remove non ascii chars
-                    asciirep="".join([x for x in object if ord(x) < 128])
-                    self._logger().info('suspect %s contains blocked attachment name/type %s'%(suspect.id,object))
-                    blockinfo="%s: %s"%(asciirep,description)
+                    self.logger.info('suspect %s contains blocked attachment %s %s'%(suspect.id,displayname,asciirep))
+                    blockinfo="%s %s: %s"%(displayname,asciirep,description)
                     if self.config.get(self.section,'sendbounce'):
                         self._logger().info("Sending attachment block bounce to %s"%suspect.from_address)
                         suspect.tags['FiletypePlugin.errormessage']=blockinfo
@@ -263,7 +272,7 @@ class FiletypePlugin(ScannerPlugin):
                     return ATTACHMENT_BLOCK
 
                 if action=='delete':
-                    self._logger().info('suspect %s contains blocked attachment name/type %s -- SILENT DELETE! --'%(suspect.id,object))
+                    self.logger.info('suspect %s contains blocked attachment %s %s -- SILENT DELETE! --'%(suspect.id,displayname,asciirep))
                     return ATTACHMENT_SILENTDELETE
 
                 if action=='allow':
@@ -271,11 +280,11 @@ class FiletypePlugin(ScannerPlugin):
         return ATTACHMENT_DUNNO
 
 
-    def matchMultipleSets(self,setlist,object,suspect):
+    def matchMultipleSets(self,setlist,object,suspect,attachmentname=None):
         """run through multiple sets and return the first action which matches object"""
         self._logger().debug('Checking Object %s against attachment rulesets'%object)
         for ruleset in setlist:
-            res=self.matchRules(ruleset, object,suspect)
+            res=self.matchRules(ruleset, object,suspect,attachmentname)
             if res!=ATTACHMENT_DUNNO:
                 return res
         return ATTACHMENT_DUNNO
@@ -328,36 +337,44 @@ class FiletypePlugin(ScannerPlugin):
 
                 if ext==None:
                     ext=''
-                att_name = 'noname%s' % ext
+                att_name = 'unnamed%s' % ext
 
-            #check attachment name
-            #self._logger().debug('Attachment Name: %s'%att_name)
+            
 
-
-            res=self.matchMultipleSets([user_names,domain_names,default_names], att_name,suspect)
+            res=self.matchMultipleSets([user_names,domain_names,default_names], att_name,suspect,att_name)
             if res==ATTACHMENT_SILENTDELETE:
+                self._debuginfo(suspect,"Attachment name=%s SILENT DELETE : blocked by name"%att_name)
                 return DELETE
             if res==ATTACHMENT_BLOCK:
+                self._debuginfo(suspect,"Attachment name=%s : blocked by name)"%att_name)
                 return blockactioncode
             
 
             #go through content type rules
-            res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_mime,suspect)
+            res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_mime,suspect,att_name)
             if res==ATTACHMENT_SILENTDELETE:
+                self._debuginfo(suspect,"Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (message source)"%(att_name,contenttype_mime))
                 return DELETE
             if res==ATTACHMENT_BLOCK:
+                self._debuginfo(suspect,"Attachment name=%s content-type=%s : blocked by mime content type (message source)"%(att_name,contenttype_mime))
                 return blockactioncode
             
             if MAGIC_AVAILABLE:
                 pl = i.get_payload(decode=True)
                 contenttype_magic=self.getBuffertype(pl)
-                res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_magic,suspect)
+                res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_magic,suspect,att_name)
                 if res==ATTACHMENT_SILENTDELETE:
+                    self._debuginfo(suspect,"Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (magic)"%(att_name,contenttype_mime))
                     return DELETE
                 if res==ATTACHMENT_BLOCK:
+                    self._debuginfo(suspect,"Attachment name=%s content-type=%s : blocked by mime content type (magic)"%(att_name,contenttype_mime))
                     return blockactioncode
-
         return DUNNO
+
+    def _debuginfo(self,suspect,message):
+        """Debug to log and suspect"""
+        suspect.debug(message)
+        self.logger.debug(message)
 
     def __str__(self):
         return "Attachment Blocker"
