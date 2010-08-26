@@ -30,10 +30,18 @@ from fuglu.extensions.sql import DBFile
 
 from threading import Lock
 
-MAGIC_AVAILABLE=False
+MAGIC_AVAILABLE=0
+MAGIC_PYTHON_FILE=1
+MAGIC_PYTHON_MAGIC=2
+
 try:
     import magic
-    MAGIC_AVAILABLE=True
+    #python-file or python-magic? python-magic does not have an open attribute
+    if hasattr(magic,'open'):
+        MAGIC_AVAILABLE=MAGIC_PYTHON_FILE
+    else:
+        MAGIC_AVAILABLE=MAGIC_PYTHON_MAGIC
+
 except ImportError:
     pass
 
@@ -194,8 +202,9 @@ class FiletypePlugin(ScannerPlugin):
         self.requiredvars=((self.section,'template_blockedfile'),(self.section,'rulesdir'))
         self.logger=self._logger()
         if MAGIC_AVAILABLE:
-            self.ms = magic.open(magic.MAGIC_MIME)
-            self.ms.load()
+            if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
+                self.ms = magic.open(magic.MAGIC_MIME)
+                self.ms.load()
         else:
             self.logger.warning('python-magic not available')
         self.rulescache=RulesCache(self.config.get(self.section,'rulesdir'))
@@ -213,11 +222,17 @@ class FiletypePlugin(ScannerPlugin):
         return returnaction
 
     def getFiletype(self,path):
-        type =  self.ms.file(path)
+        if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
+            type=self.ms.file(path)
+        elif MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
+            type=magic.from_file(path,mime=True)
         return type
 
     def getBuffertype(self,buffer):
-        type=self.ms.buffer(buffer)
+        if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
+            type=self.ms.buffer(buffer)
+        elif MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
+            type=magic.from_buffer(buffer, mime=True)
         return type
 
 
@@ -239,9 +254,9 @@ class FiletypePlugin(ScannerPlugin):
                     # remove non ascii chars
                     asciirep="".join([x for x in object if ord(x) < 128])
                     self._logger().info('suspect %s contains blocked attachment name/type %s'%(suspect.id,object))
+                    blockinfo="%s: %s"%(asciirep,description)
                     if self.config.get(self.section,'sendbounce'):
                         self._logger().info("Sending attachment block bounce to %s"%suspect.from_address)
-                        blockinfo="%s: %s"%(asciirep,description)
                         suspect.tags['FiletypePlugin.errormessage']=blockinfo
                         bounce=Bounce(self.config)
                         bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
@@ -353,8 +368,12 @@ class FiletypePlugin(ScannerPlugin):
 
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
-            print "python-magic library not available. Will only do content-type checks, no real file analysis"
+            print "python-magic and python-file library not available. Will only do content-type checks, no real file analysis"
             return False
+        if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
+            print "Found python-file magic library"
+        if MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
+            print "Found python-magic library"
         return True
 
     def lint_sql(self):
