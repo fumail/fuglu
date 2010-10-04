@@ -164,8 +164,16 @@ port=783
 #maximum size in bytes. larger messages will be skipped
 maxsize=256000
 
+#should we scan the original message as retreived from postfix or scan the current state 
+#in fuglu (which might have been altered by previous plugins)
+#only set this to disabled if you have a custom plugin that adds special headers to the message that will be 
+#used in spamassassin rules
+scanoriginal=1
+
 #forward the original message or replace the content as returned by spamassassin
 #if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
+#"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
+#message as retreived from previous plugins 
 forwardoriginal=0
 
 #what header does sa set

@@ -25,7 +25,7 @@ class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'problemaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'forwardoriginal'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'))
+        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'problemaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'scanoriginal'),(self.section,'forwardoriginal'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'))
         self.logger=self._logger()
         
     def lint(self):
@@ -220,7 +220,12 @@ Subject: test scanner
         starttime=time.time()
         
         forwardoriginal=self.config.getboolean(self.section,'forwardoriginal')
-        spam=suspect.getMessageRep().as_string()
+        
+        if self.config.getboolean(self.section,'scanoriginal'):
+            spam=suspect.getOriginalSource()
+        else:
+            spam=suspect.getMessageRep().as_string()
+            
         if forwardoriginal:
             ret=self.safilter_symbols(spam, suspect.to_address)
             if ret==None:
