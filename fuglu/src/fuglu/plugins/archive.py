@@ -26,7 +26,8 @@ class ArchivePlugin(ScannerPlugin):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars=((self.section,'archiverules'),(self.section,'archivedir'),(self.section,'makedomainsubdir'),(self.section,'storeoriginal'))
         self.headerfilter=None
-    
+        self.logger=self._logger()
+        
     def lint(self):
         allok=(self.checkConfig() and self.lint_dirs())
         return allok
@@ -59,7 +60,12 @@ class ArchivePlugin(ScannerPlugin):
         
         (match,arg)=self.headerfilter.matches(suspect)
         if match:
-            self.archive(suspect)
+            if arg!=None and arg.lower()=='no':
+                self.logger.debug("""Header matches archive exception rule - not archiving""")
+            else:
+                self.logger.debug("""Header matches archive rule""")
+                self.archive(suspect)
+                
         
         #For debugging, its good to know how long each plugin took
         endtime=time.time()
