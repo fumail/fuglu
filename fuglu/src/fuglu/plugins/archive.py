@@ -81,7 +81,7 @@ class ArchivePlugin(ScannerPlugin):
         if not os.path.isdir(finaldir):
             os.makedirs(finaldir,0755)
         
-        filename="%s/%s"%(finaldir,suspect.id)
+        filename="%s/%s.eml"%(finaldir,suspect.id)
         if self.config.getboolean(self.section,'storeoriginal'):
             shutil.copy(suspect.tempfile, filename)
         else:
