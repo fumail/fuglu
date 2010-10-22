@@ -381,7 +381,7 @@ class HeaderFilter(object):
             
             regex=sp[1]
             try:
-                pattern=re.compile(regex, re.IGNORECASE)
+                pattern=re.compile(regex, re.IGNORECASE|re.DOTALL)
             except Exception,e:
                 self.logger.error('Could not compile regex %s in file %s (%s)'%(regex,self.filename,e))
                 continue
