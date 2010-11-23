@@ -307,8 +307,10 @@ class FiletypePlugin(ScannerPlugin):
             dbfile=DBFile(dbconn, query)
             user_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'filename'}))
             user_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'contenttype'}))
+            self.logger.debug('Found %s filename rules, %s content-type rules for address %s'%(len(user_names),len(user_ctypes),suspect.to_address))
             domain_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'filename'}))
             domain_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'contenttype'}))
+            self.logger.debug('Found %s filename rules, %s content-type rules for domain %s'%(len(domain_names),len(domain_ctypes),suspect.to_domain))
         else:
             self.logger.debug('Loading attachment rules from filesystem')
             user_names=self.rulescache.getNAMERules(suspect.to_address)
