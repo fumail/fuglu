@@ -4,14 +4,15 @@
 keys=root
 
 [handlers]
-keys=sysout,logfile
+keys=sysout,logfile,syslog
 
 [formatters]
-keys=sysoutformatter,logfileformatter
+keys=sysoutformatter,logfileformatter,syslogformatter
 
 [logger_root]
 level=INFO
 handlers=logfile
+#set this to syslog instead of logfile if you'd like fuglu to log to your standard mail log
 
 [logger_saplugin]
 level=INFO
@@ -45,8 +46,17 @@ level=NOTSET
 args=('/var/log/fuglu/fuglu.log','midnight',1,14)
 formatter=logfileformatter
 
+[handler_syslog]
+class=handlers.SysLogHandler
+level=NOTSET
+formatter=syslogformatter
+args=('/dev/log',handlers.SysLogHandler.LOG_MAIL)
+
 [formatter_logfileformatter]
 format=%(asctime)s %(name)-12s: %(levelname)s %(message)s
 
 [formatter_sysoutformatter]
 format=%(asctime)s %(levelname)s %(message)s
+
+[formatter_syslogformatter]
+format=postomaat[%(process)d]: %(message)s
