@@ -90,8 +90,5 @@ deny	\.cmd$		Batch files are often malicious
 deny	\.cpl$		Control panel items are often used to hide viruses
 deny	\.mhtml$	MHTML files can be used in an attack against Eudora
 
-# Deny filenames containing CLSID's
-deny	\{[a-hA-H0-9-]{25,}\}	Files containing  CLSID's are trying to hide their real type
-
 # Deny filenames with lots of contiguous white space in them.
 deny	\s{10,}		A long gap in a name is often used to hide part of it (10+ spaces)
