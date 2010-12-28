@@ -1,9 +1,11 @@
 from distutils.core import setup
 import glob
-
+import sys
+sys.path.insert(0,'src')
+from fuglu import FUGLU_VERSION
 
 setup(name = "fuglu",
-    version = "0.4.5",
+    version = FUGLU_VERSION,
     description = "Fuglu Mail Content Scanner",
     author = "O. Schacher",
     url='http://www.fuglu.org',

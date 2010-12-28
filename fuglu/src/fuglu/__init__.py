@@ -15,3 +15,5 @@
 # $Id$
 #
 __all__=['bounce','core','daemon','funkyconsole','protocolbase','scansession','shared','stats','threadpool']
+
+FUGLU_VERSION="0.4.6svn4"
