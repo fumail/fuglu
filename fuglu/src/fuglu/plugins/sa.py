@@ -442,6 +442,7 @@ class SAPluginTestCase(unittest.TestCase):
         config.set('SAPlugin', 'problemaction','DEFER')
         config.set('SAPlugin', 'highspamlevel','15')
         config.set('SAPlugin', 'forwardoriginal','False')
+        config.set('SAPlugin', 'scanoriginal','False')
         
         #sql blacklist
         testfile="/tmp/sa_test.db"
