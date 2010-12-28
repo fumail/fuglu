@@ -18,10 +18,10 @@
 #
 #fuglu main startup file
 
-#update this one for new releases
-FUGLU_VERSION="0.4.5"
+
 
 import ConfigParser
+from fuglu import FUGLU_VERSION
 from fuglu.daemon import DaemonStuff
 import logging
 import logging.config
@@ -99,8 +99,9 @@ if os.path.isdir(dconfdir):
     configfiles=[dconfdir+'/'+c for c in filelist if c.endswith('.conf')]
     readfiles=config.read(configfiles)
 
+
+daemon=DaemonStuff('/var/run/fuglu.pid')
 if config.getboolean('main', 'daemonize')and not lint:
-    daemon=DaemonStuff('/var/run/fuglu.pid')
     daemon.createDaemon()
 if lint:
     # define a Handler which writes INFO messages or higher to the sys.stderr
@@ -125,43 +126,13 @@ else:
 baselogger=logging.getLogger('')
 baselogger.info("FuGLU Version %s starting up"%FUGLU_VERSION)
 
-starting_uid = os.getuid()
-starting_gid = os.getgid()
-starting_uid_name = pwd.getpwuid(starting_uid).pw_name
-starting_gid_name = grp.getgrgid(starting_gid).gr_name
-
 try:
     running_user=config.get('main','user')
     running_group=config.get('main','group')
 except:
     running_user='nobody'
     running_group='nobody'
-
-try:
-    running_uid = pwd.getpwnam(running_user).pw_uid
-    running_gid = grp.getgrnam(running_group).gr_gid
-except:
-    baselogger.error('Can not drop privileges, user %s or group %s does not exist'%(running_user,running_group))
-    sys.exit(1)
-new_umask=077
-old_umask = os.umask(new_umask)
-baselogger.info('Dropping Privileges. Before: %s(%s)/%s(%s) After: %s(%s)/%s(%s)'%(starting_uid_name,
-                                                                                                     starting_uid,
-                                                                                                     starting_gid_name,
-                                                                                                     starting_gid,
-                                                                                                     running_user,
-                                                                                                     running_uid,
-                                                                                                     running_group,
-                                                                                                     running_gid,
-                                                                                                     ))
-try:
-    os.setgid(running_gid)
-    os.setuid(running_uid)
-except OSError,e:
-    baselogger.error('Could not set effective uid/gid: %s'%e)
-    sys.exit(1)
-
-
+daemon.drop_privs(running_user,running_group)
 
 controller=MainController(config)
 if lint:
