@@ -265,8 +265,14 @@ class PpyMilterDispatcher(object):
         """
         (hostname, data) = data.split('\0', 1)
         family = struct.unpack('c', data[0])[0]
-        port = struct.unpack('!H', data[1:3])[0]
-        address = data[3:]
+        
+        #http://code.google.com/p/ppymilter/issues/detail?id=6
+        if family==4 or family==6:
+            port = struct.unpack('!H', data[1:3])[0]
+            address = data[3:]
+        else:
+            port =0
+            address = 'unknown'
         return (cmd, hostname, family, port, address)
 
     def _ParseHelo(self, cmd, data):
