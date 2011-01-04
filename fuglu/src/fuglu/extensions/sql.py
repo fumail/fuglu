@@ -35,7 +35,7 @@ except:
 
     
 def get_session(connectstring):
-    global sessions,ENABLED
+    global ENABLED
     if not ENABLED:
         raise Exception,"sql extension not enabled"
 
