@@ -82,6 +82,7 @@ class MainController(object):
         self.controlserver=None
         self.started=datetime.datetime.now()
         self.statsthread=None
+        self.debugconsole=False
         
     def _logger(self):
         myclass=self.__class__.__name__
@@ -149,11 +150,31 @@ class MainController(object):
         self.controlserver=control
         
         self.logger.info('Startup complete')
-        while self.stayalive:
-            try:
-                time.sleep(10)
-            except KeyboardInterrupt:
-                self.shutdown()
+        if self.debugconsole:
+            self.run_debugconsole()            
+        else:
+            #mainthread dummy loop
+            while self.stayalive:
+                try:
+                    time.sleep(10)
+                except KeyboardInterrupt:
+                    pass
+        self.shutdown()
+    
+    def run_debugconsole(self):
+        import readline
+        import code
+        from fuglu.shared import *
+        print "Fuglu Interactive Console started"
+        print ""
+        print "pre-defined locals:"
+        
+        mc=self
+        print "mc : maincontroller"
+        
+        terp=code.InteractiveConsole(locals())
+        terp.interact("")
+        
     
     def reload(self):
         """apply config changes"""

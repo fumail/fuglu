@@ -78,15 +78,19 @@ def sighup(signum,frame):
 
 lint=False
 debugmsg=False
+console=False
 
-for arg in sys.argv:
-    if arg=="--lint":
-        lint=True
-        
-    if arg=="--version":
-        print "Fuglu Version %s"%FUGLU_VERSION
-        sys.exit(0)
+if "--lint" in sys.argv:
+    lint=True
+
+if "--console" in sys.argv:
+    console=True
     
+if "--version" in sys.argv:
+    print "Fuglu Version %s"%FUGLU_VERSION
+    sys.exit(0)        
+    
+
 
 config=ConfigParser.ConfigParser()
 if not os.path.exists(fugluconfigfile):
@@ -101,7 +105,7 @@ if os.path.isdir(dconfdir):
 
 
 daemon=DaemonStuff('/var/run/fuglu.pid')
-if config.getboolean('main', 'daemonize')and not lint:
+if config.getboolean('main', 'daemonize')and not lint and not console:
     daemon.createDaemon()
 if lint:
     # define a Handler which writes INFO messages or higher to the sys.stderr
@@ -135,10 +139,12 @@ except:
 daemon.drop_privs(running_user,running_group)
 
 controller=MainController(config)
+    
 if lint:
     controller.lint()
 else:
     signal.signal(signal.SIGHUP, sighup)
+    if console:
+        controller.debugconsole=True
     controller.startup()
-
 
