@@ -14,7 +14,6 @@
 #
 # $Id$
 #
-import sys
 from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO,\
     string_to_actioncode, actioncode_to_string
 from fuglu.bounce import Bounce

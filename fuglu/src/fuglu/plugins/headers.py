@@ -2,7 +2,7 @@
 Headerplugin
 """
 
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER
+from fuglu.shared import ScannerPlugin
 import time
 import unittest
 

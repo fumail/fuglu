@@ -15,7 +15,6 @@
 # $Id$
 #
 from fuglu.shared import PrependerPlugin,HeaderFilter
-import time
 import os
 
 class PluginSkipper(PrependerPlugin):

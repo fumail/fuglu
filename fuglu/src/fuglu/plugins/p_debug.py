@@ -14,9 +14,8 @@
 #
 # $Id$
 #
-from fuglu.shared import PrependerPlugin,HeaderFilter
-import time
-import os
+from fuglu.shared import PrependerPlugin
+
 
 class MessageDebugger(PrependerPlugin):
     """Message Debugger Plugin"""
