@@ -110,7 +110,7 @@ class SessionHandler(object):
                     self.protohandler.commitback(suspect)
                     self.stats.outcount+=1
                     
-                except KeyboardInterrupt, k:
+                except KeyboardInterrupt:
                     sys.exit()
                 except Exception,e:
                     message_is_deferred=True
@@ -269,7 +269,7 @@ class SessionHandler(object):
                         self.logger.debug('Prepender %s added plugins: %s'%(plugin,map(str,added)))
                     plugcopy=result
                     
-            except Exception,e:
+            except Exception:
                 exc=traceback.format_exc()
                 self.logger.error('Prepender plugin %s failed: %s'%(str(plugin),exc))
         return plugcopy
@@ -284,8 +284,8 @@ class SessionHandler(object):
                 self.logger.debug('Running appender %s'%plugin)
                 suspect.debug('Running appender %s'%plugin)
                 self.set_threadinfo("%s : Running appender %s"%(suspect,plugin))
-                result=plugin.process(suspect,finaldecision)       
-            except Exception,e:
+                plugin.process(suspect,finaldecision)       
+            except Exception:
                 exc=traceback.format_exc()
                 self.logger.error('Appender plugin %s failed: %s'%(str(plugin),exc))
        
