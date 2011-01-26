@@ -48,14 +48,28 @@ except ImportError:
 FUATT_NAMESCONFENDING="-filenames.conf"
 FUATT_CTYPESCONFENDING="-filetypes.conf"
 
+FUATT_DEFAULT=u'default'
+
+FUATT_ACTION_ALLOW=u'allow'
+FUATT_ACTION_DENY=u'deny'
+FUATT_ACTION_DELETE=u'delete'
+
+FUATT_CHECKTYPE_FN=u'filename'
+FUATT_CHECKTYPE_CT=u'contenttype'
+
 ATTACHMENT_DUNNO=0
 ATTACHMENT_BLOCK=1
 ATTACHMENT_OK=2
 ATTACHMENT_SILENTDELETE=3
 
+KEY_NAME=u"name"
+KEY_CTYPE=u"ctype"
+
 class RulesCache( object ):
     """caches rule files and compiled regex patterns"""
 
+    
+    
     __shared_state = {}
 
     def __init__(self,rulesdir):
@@ -101,10 +115,10 @@ class RulesCache( object ):
         return ret
 
     def getCTYPERules(self,key):
-        return self.getRules('ctype', key)
+        return self.getRules(KEY_CTYPE, key)
 
     def getNAMERules(self,key):
-        return self.getRules('name', key)
+        return self.getRules(KEY_NAME, key)
 
     def reloadifnecessary(self):
         """reload rules if file changed"""
@@ -136,7 +150,7 @@ class RulesCache( object ):
 
         filelist=os.listdir(self.rulesdir)
 
-        newruleset={'name':{},'ctype':{}}
+        newruleset={KEY_NAME:{},KEY_CTYPE:{}}
 
         rulecounter=0
         for filename in filelist:
@@ -150,10 +164,10 @@ class RulesCache( object ):
                 continue
             rulesloaded=len(ruleset)
             self.logger.debug('%s rules loaded from file %s'%(rulesloaded,filename))
-            type='name'
+            type=KEY_NAME
             key=filename[0:-len(FUATT_NAMESCONFENDING)]
             if(filename.endswith(FUATT_CTYPESCONFENDING)):
-                type='ctype'
+                type=KEY_CTYPE
                 key=filename[0:-len(FUATT_CTYPESCONFENDING)]
             newruleset[type][key]=ruleset
             self.logger.debug('Updating cache: [%s][%s]'%(type,key))
@@ -186,7 +200,7 @@ class RulesCache( object ):
                 self.logger.debug('Ignoring invalid line  (length %s): %s'%(len(tuple),line))
             (action,regex,description)=tuple
             action=action.lower()
-            if action not in ["allow","deny","delete"]:
+            if action not in [FUATT_ACTION_ALLOW,FUATT_ACTION_DENY,FUATT_ACTION_DELETE]:
                 self.logger.error('Invalid rule action: %s'%action)
                 continue
 
@@ -304,11 +318,11 @@ class FiletypePlugin(ScannerPlugin):
             self.logger.debug('Loading attachment rules from database')
             query=self.config.get(self.section,'query')
             dbfile=DBFile(dbconn, query)
-            user_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'filename'}))
-            user_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':'contenttype'}))
+            user_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':FUATT_CHECKTYPE_FN}))
+            user_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':FUATT_CHECKTYPE_CT}))
             self.logger.debug('Found %s filename rules, %s content-type rules for address %s'%(len(user_names),len(user_ctypes),suspect.to_address))
-            domain_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'filename'}))
-            domain_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':'contenttype'}))
+            domain_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':FUATT_CHECKTYPE_FN}))
+            domain_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':FUATT_CHECKTYPE_CT}))
             self.logger.debug('Found %s filename rules, %s content-type rules for domain %s'%(len(domain_names),len(domain_ctypes),suspect.to_domain))
         else:
             self.logger.debug('Loading attachment rules from filesystem')
@@ -319,8 +333,8 @@ class FiletypePlugin(ScannerPlugin):
             domain_ctypes=self.rulescache.getCTYPERules(suspect.to_domain)
 
         #always get defaults from file
-        default_names=self.rulescache.getNAMERules('default')
-        default_ctypes=self.rulescache.getCTYPERules('default')
+        default_names=self.rulescache.getNAMERules(FUATT_DEFAULT)
+        default_ctypes=self.rulescache.getCTYPERules(FUATT_DEFAULT)
 
         m=suspect.getMessageRep()
         for i in m.walk():
@@ -406,7 +420,7 @@ class FiletypePlugin(ScannerPlugin):
             query=self.config.get(self.section,'query')
             dbfile=DBFile(dbconn, query)
             try:
-                dbfile.getContent({'scope':'lint','checktype':'filename'})
+                dbfile.getContent({'scope':'lint','checktype':FUATT_CHECKTYPE_FN})
             except Exception,e:
                 import traceback
                 print "Could not get attachment rules from database. Exception: %s"%str(e)
@@ -471,7 +485,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
         import tempfile
         import shutil
 
-        testdata="""
+        testdata=u"""
         INSERT INTO attachmentrules(scope,checktype,action,regex,description,prio) VALUES
         ('recipient@unittests.fuglu.org','contenttype','allow','application/x-executable','this user likes exe',1)
         """
