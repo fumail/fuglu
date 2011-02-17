@@ -84,6 +84,7 @@ class ESMTPHandler(ProtocolHandler):
 
     def commitback(self,suspect):
         injectanswer=self.re_inject(suspect)
+        suspect.set_tag("injectanswer",injectanswer)
         self.sess.endsession(250, "FUGLU REQUEUE(%s): %s"%(suspect.id,injectanswer))
         self.sess=None
         
