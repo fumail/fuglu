@@ -33,7 +33,7 @@ class ClamavPlugin(ScannerPlugin):
         self.maxsize=config.getint(self.section,'maxsize')
         self.retries = self.config.getint(self.section,'retries')
         self.requiredvars=((self.section,'host'),(self.section,'port'),(self.section,'timeout'),(self.section,'maxsize'),(self.section,'retries'),(self.section,'virusaction'))
-    
+        self.logger=self._logger()
     
     def _problemcode(self):
         retcode=string_to_actioncode(self.config.get(self.section,'problemaction'), self.config)
@@ -47,7 +47,7 @@ class ClamavPlugin(ScannerPlugin):
         starttime=time.time()
         
         if suspect.size>self.maxsize:
-            self._logger().info('Not scanning - message too big')
+            self.logger.info('Not scanning - message too big')
             return
         
         content=suspect.getMessageRep().as_string()
@@ -56,7 +56,7 @@ class ClamavPlugin(ScannerPlugin):
             try:
                 viri=self.scan_stream(content)
                 if viri!=None:
-                    self._logger().info( "Virus found in message from %s : %s"%(suspect.from_address,viri))
+                    self.logger.info( "Virus found in message from %s : %s"%(suspect.from_address,viri))
                     suspect.tags['virus']['ClamAV']=True
                     suspect.tags['ClamavPlugin.virus']=viri
                     suspect.debug('Viri found in message : %s'%viri)
@@ -73,88 +73,11 @@ class ClamavPlugin(ScannerPlugin):
                     return actioncode
                 return DUNNO
             except Exception,e:
-                self._logger().warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.retries,str(e)))
-        self._logger().error("Clamdscan failed after %s retries"%self.retries)
+                self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.retries,str(e)))
+        self.logger.error("Clamdscan failed after %s retries"%self.retries)
         content=None
         return self._problemcode()
-    
-        
-        
-        
-        
-    def scan_file(self,file):
-        """
-        Scan a file or directory given by filename and stop on virus
-    
-        file (string) : filename or directory (MUST BE ABSOLUTE PATH !)
-    
-        return either :
-          - (dict) : {filename1: "virusname"}
-          - None if no virus found
-        
-        May raise :
-          - ScanError : in case of communication problem
-        """
-    
-        s = self.__init_socket__()
-    
-        s.send('SCAN %s' % file)
-        result='...'
-        dr={}
-        while result!='':
-            result = s.recv(20000)
-            if len(result)>0:
-                filenm = string.join(result.strip().split(':')[:-1])
-                virusname = result.strip().split(':')[-1].strip()
-                if virusname[-5:]=='ERROR':
-                    raise Exception, virusname
-                elif virusname[-5:]=='FOUND':
-                    dr[filenm]=virusname[:-6]
-        s.close()
-        if dr=={}:
-            return None
-        else:
-            return dr
-
-############################################################################
-
-    def contscan_file(self,file):
-        """
-        Scan a file or directory given by filename
-    
-        file (string) : filename or directory (MUST BE ABSOLUTE PATH !)
-    
-        return either :
-          - (dict) : {filename1: "virusname", filename2: "virusname"}
-          - None if no virus found
-    
-        May raise :
-          - ScanError : in case of communication problem
-        """
-
-    
-        s = self.__init_socket__()
-    
-        s.send('CONTSCAN %s' % file)
-        result='...'
-        dr={}
-        while result!='':
-            result = s.recv(20000)
-            if len(result)>0:
-                filenm = string.join(result.strip().split(':')[:-1])
-                virusname = result.strip().split(':')[-1].strip()
-                if virusname[-5:]=='ERROR':
-                    raise Exception, virusname
-                elif virusname[-5:]=='FOUND':
-                    dr[filenm]=virusname[:-6]
-        s.close()
-        if dr=={}:
-            return None
-        else:
-            return dr
-    
-    ############################################################################
-    
+  
     def scan_stream(self,buffer):
         """
         Scan a buffer
@@ -174,7 +97,7 @@ class ClamavPlugin(ScannerPlugin):
     
         s.send('STREAM')
         port = int(s.recv(200).strip().split(' ')[1])
-        self._logger().debug('Sending stream to clamd on host %s port %s'%(self.clamdhost,port))
+        self.logger.debug('Sending stream to clamd on host %s port %s'%(self.clamdhost,port))
         n=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         n.connect((self.clamdhost, port))
         sent = n.sendall(buffer)
