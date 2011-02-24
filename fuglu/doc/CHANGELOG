@@ -20,7 +20,7 @@
  	* new option "forwardoriginal" -> Does forward the original message source to the next plugin, without modified SA-Headers
 
 Developers:
- * Suspects now also have a "highspam" tag which allows different behaviour based on wheter a message is "probably" or "definitely" spam
+ * Suspects now also have a "highspam" tag which allows different behavior based on whether a message is "probably" or "definitely" spam
  * if a plugin cant be loaded, a full stack trace is displayed
  * Appenderplugins can now read the tag "injectanswer" which contains the final smtp answer from SMTP reinjects
  * (sql extension) DBFiles allow reading sql tables and treat them like config files
