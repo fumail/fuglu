@@ -164,7 +164,7 @@ class MainController(object):
     def run_debugconsole(self):
         import readline
         import code
-        from fuglu.shared import *
+        from fuglu.shared import DUNNO,ACCEPT,DELETE,REJECT,DEFER,Suspect
         print "Fuglu Interactive Console started"
         print ""
         print "pre-defined locals:"
