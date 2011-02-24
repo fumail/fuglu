@@ -54,12 +54,12 @@ class ClamavPlugin(ScannerPlugin):
 
         for i in range(0,self.retries):
             try:
-                viri=self.scan_stream(content)
-                if viri!=None:
-                    self.logger.info( "Virus found in message from %s : %s"%(suspect.from_address,viri))
+                viruses=self.scan_stream(content)
+                if viruses!=None:
+                    self.logger.info( "Virus found in message from %s : %s"%(suspect.from_address,viruses))
                     suspect.tags['virus']['ClamAV']=True
-                    suspect.tags['ClamavPlugin.virus']=viri
-                    suspect.debug('Viri found in message : %s'%viri)
+                    suspect.tags['ClamavPlugin.virus']=viruses
+                    suspect.debug('viruses found in message : %s'%viruses)
                 else:
                     suspect.tags['virus']['ClamAV']=False
                 
@@ -67,7 +67,7 @@ class ClamavPlugin(ScannerPlugin):
                 difftime=endtime-starttime
                 suspect.tags['ClamavPlugin.time']="%.4f"%difftime
                 
-                if viri!=None:
+                if viruses!=None:
                     virusaction=self.config.get(self.section,'virusaction')
                     actioncode=string_to_actioncode(virusaction,self.config)
                     return actioncode
