@@ -1,0 +1,28 @@
+-- Fuglu 0.4.6
+ * started changelog ;-)
+ * bugfix: Milter protocol errors
+ * bugfix: Incorrect unquoting of two leading dots in smtp transactions could lead to broken s/mime sigs
+ * A few plugins now have a 'PROBLEMACTION' so it is now configurable if a message should be deferred or accepted if for example the clamav daemon is not reachable
+ * Attachment Plugin:
+ 	* Configuration of attachment rules can now be read from a database table (sql extension)
+ 	* Support rule configuration from sql
+ 	* Support both 'python-magic' and 'python-file' libraries
+ 	* Improved log messages
+ 	* "BOUNCE" action has been removed and replaced with the config option 'sendbounce'
+ * Archive Plugin:
+ 	* Allow archive exception rules (append "no" to the regex)
+ 	* Messages are now stored as '<suspect-id>.eml'
+ * Clamav Plugin:
+ 	* Virusaction is now configurable
+ * Spamassassin Plugin:
+ 	* now Supports lowspam / highspam configuration
+ 	* new option "scanoriginal" -> Scans the unmodified original message (not the probably modified version from other plugins)
+ 	* new option "forwardoriginal" -> Does forward the original message source to the next plugin, without modified SA-Headers
+
+Developers:
+ * Suspects now also have a "highspam" tag which allows different behaviour based on wheter a message is "probably" or "definitely" spam
+ * if a plugin cant be loaded, a full stack trace is displayed
+ * Appenderplugins can now read the tag "injectanswer" which contains the final smtp answer from SMTP reinjects
+ * (sql extension) DBFiles allow reading sql tables and treat them like config files
+
+-- Fuglu 0.4.5, Released 2010-05-20
