@@ -113,7 +113,7 @@ class ClamavPlugin(ScannerPlugin):
                 if virusname[-5:]=='ERROR':
                     raise Exception, virusname
                 elif virusname!='OK':
-                    dr[filenm]=virusname
+                    dr[filenm]=virusname.replace(" FOUND",'')
         s.close()
         if dr=={}:
             return None
