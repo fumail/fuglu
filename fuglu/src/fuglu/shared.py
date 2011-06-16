@@ -235,6 +235,10 @@ class Suspect:
         if self.is_spam():
             spamstring="yes"
         
+        modifiedstring="no"
+        if self.is_modified():
+            modifiedstring="yes"
+            
         #fix tag represenations
         tagscopy=self.tags.copy()
         if tagscopy.has_key('SAPlugin.spamscore'):
@@ -244,7 +248,7 @@ class Suspect:
         if tagscopy.has_key('decisions'):
             del tagscopy['decisions']
         
-        astring="Suspect %s: from=%s to=%s size=%s , spam=%s, virus=%s tags=%s"%(self.id,self.from_address, self.to_address,self.size,spamstring,virusstring,tagscopy)
+        astring="Suspect %s: from=%s to=%s size=%s spam=%s virus=%s modified=%s tags=%s"%(self.id,self.from_address, self.to_address,self.size,spamstring,virusstring,modifiedstring,tagscopy)
         return astring
     
     def getMessageRep(self):
@@ -261,7 +265,8 @@ class Suspect:
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
         """
-        self.source=msgrep.as_string()
+        self.setSource(msgrep.as_string())
+        self.logger.warning("Message source has been modified by a plugin")
         
     def is_modified(self):
         """returns true if the message source has been modified"""
