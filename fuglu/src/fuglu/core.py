@@ -30,6 +30,7 @@ import threading
 from threadpool import ThreadPool
 import inspect
 import traceback
+import time
 
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
@@ -144,8 +145,12 @@ class MainController(object):
             
             
         #control socket
-        #TODO: port config...
-        control=ControlServer(self,address=self.config.get('main', 'bindaddress'))
+        if self.config.has_option('main', 'controlport'):
+            controlport=self.config.getint('main','controlport')
+        else:
+            controlport=None
+            
+        control=ControlServer(self,address=self.config.get('main', 'bindaddress'),port=controlport)
         thread.start_new_thread(control.serve, ())
         self.controlserver=control
         
@@ -488,7 +493,9 @@ Virus:\t\t${viruscount}
     
         
 class ControlServer(object):    
-    def __init__(self, controller,port=10010,address="127.0.0.1"):
+    def __init__(self, controller,port=None,address="127.0.0.1"):
+        if port==None:
+            port=10010
         self.logger=logging.getLogger("fuglu.control.%s"%port)
         self.logger.debug('Starting Control/Info server on port %s'%port)
         self.port=port
@@ -507,7 +514,13 @@ class ControlServer(object):
    
     def shutdown(self):
         self.stayalive=False
-        self._socket.close()
+        self.logger.info("Control Server on port %s shutting down"%self.port)
+        try:
+            self._socket.shutdown()
+            self._socket.close()
+            time.sleep(3)
+        except:
+            pass
         
     def serve(self):
         threading.currentThread().name='ControlServer Thread'
@@ -589,16 +602,22 @@ class AllpluginTestCase(unittest.TestCase):
 class EndtoEndTestTestCase(unittest.TestCase):
     """Full check if mail runs through"""
     
+    FUGLU_PORT=7711
+    DUMMY_PORT=7712
+    FUGLUCONTROL_PORT=7713
+    
     def setUp(self):
         from fuglu.connectors.smtpconnector import DummySMTPServer
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
-
+        self.config.set('main','incomingport',str(EndtoEndTestTestCase.FUGLU_PORT))
+        self.config.set('main','outgoingport',str(EndtoEndTestTestCase.DUMMY_PORT))
+        self.config.set('main','controlport',str(EndtoEndTestTestCase.FUGLUCONTROL_PORT))
         #init core
         self.mc=MainController(self.config)
         
         #start listening smtp dummy server to get fuglus answer
-        self.smtp=DummySMTPServer(self.config, self.config.getint('main', 'outgoingport'), "127.0.0.1")
+        self.smtp=DummySMTPServer(self.config, EndtoEndTestTestCase.DUMMY_PORT, "127.0.0.1")
         thread.start_new_thread(self.smtp.serve, ())
         
         #start fuglus listening server
@@ -617,7 +636,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
         time.sleep(1)
         
         #send test message
-        smtpclient = smtplib.SMTP('127.0.0.1',self.config.getint('main', 'incomingport'))
+        smtpclient = smtplib.SMTP('127.0.0.1',EndtoEndTestTestCase.FUGLU_PORT)
         #smtpServer.set_debuglevel(1)
         smtpclient.helo('test.e2e')
         testmessage="""Hello World!\r
@@ -642,16 +661,23 @@ Don't dare you change any of my bytes or even remove one!"""
         payload=msgrep.get_payload()
         outbytes=len(payload)
         self.failUnlessEqual(testmessage, payload, "Message body has been altered. In: %s bytes, Out: %s bytes, teststring=->%s<- result=->%s<-"%(inbytes,outbytes,testmessage,payload))
-        
-class SMIMETestCase(unittest.TestCase):
-    """Email Signature Tests"""
+
+
+class DKIMTestCase(unittest.TestCase):
+    """DKIM Sig Test"""
+    
+    FUGLU_PORT=7731
+    DUMMY_PORT=7732
+    FUGLUCONTROL_PORT=7733
     
     def setUp(self):
-        
+
         from fuglu.connectors.smtpconnector import DummySMTPServer
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
-        self.config.set('main','incomingport',"7721")
+        self.config.set('main','incomingport',str(DKIMTestCase.FUGLU_PORT))
+        self.config.set('main','outgoingport',str(DKIMTestCase.DUMMY_PORT))
+        self.config.set('main','controlport',str(DKIMTestCase.FUGLUCONTROL_PORT))
         #init core
         self.mc=MainController(self.config)
         
@@ -665,7 +691,71 @@ class SMIMETestCase(unittest.TestCase):
     def tearDown(self):
         self.mc.shutdown()
         self.smtp.shutdown()
-             
+      
+    def testDKIM(self):
+        #give fuglu time to start listener
+        time.sleep(1)
+        inputfile='testdata/helloworld.eml'
+        msgstring=open(inputfile,'r').read()
+        from fuglu.lib.patcheddkimlib import verify,sign
+        import cStringIO
+        
+        dkimheader=sign(msgstring,'whatever','testfuglu.org',open('testdata/dkim/testfuglu.org.private').read(),include_headers=['From','To'])
+        signedcontent=dkimheader+msgstring        
+        logbuffer=cStringIO.StringIO()
+        self.assertTrue(verify(signedcontent,debuglog=logbuffer),"Failed DKIM verification immediately after signing %s"%logbuffer.getvalue())
+        
+        
+        #send test message
+        try:
+            smtpclient = smtplib.SMTP('127.0.0.1',DKIMTestCase.FUGLU_PORT)
+        except Exception,e:
+            self.fail("Could not connect to fuglu on port %s : %s"%(DKIMTestCase.FUGLU_PORT,str(e)))
+        #smtpServer.set_debuglevel(1)
+        smtpclient.helo('test.dkim')
+        
+        
+        smtpclient.sendmail('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', signedcontent)
+        
+        smtpclient.quit()
+        
+        #verify the smtp server stored the file correctly
+        tmpfile=self.smtp.tempfilename
+        
+        result=open(tmpfile,'r').read()
+        logbuffer=cStringIO.StringIO()
+        verify_ok=verify(result,debuglog=logbuffer)
+        self.assertTrue(verify_ok,"Failed DKIM verification: %s"%logbuffer.getvalue())
+
+class SMIMETestCase(unittest.TestCase):
+    """Email Signature Tests"""
+    
+    FUGLU_PORT=7721
+    DUMMY_PORT=7722
+    FUGLUCONTROL_PORT=7723
+    
+    def setUp(self):
+        time.sleep(5)
+        from fuglu.connectors.smtpconnector import DummySMTPServer
+        self.config=ConfigParser.RawConfigParser()
+        self.config.read(['testdata/endtoendtest.conf'])
+        self.config.set('main','incomingport',str(SMIMETestCase.FUGLU_PORT))
+        self.config.set('main','outgoingport',str(SMIMETestCase.DUMMY_PORT))
+        self.config.set('main','controlport',str(SMIMETestCase.FUGLUCONTROL_PORT))
+        #init core
+        self.mc=MainController(self.config)
+        
+        #start listening smtp dummy server to get fuglus answer
+        self.smtp=DummySMTPServer(self.config, SMIMETestCase.DUMMY_PORT, "127.0.0.1")
+        thread.start_new_thread(self.smtp.serve, ())
+        
+        #start fuglus listening server
+        thread.start_new_thread(self.mc.startup, ())
+    
+    def tearDown(self):
+        self.mc.shutdown()
+        self.smtp.shutdown()
+        
     def testSMIME(self):
         """test if S/MIME mails still pass the signature"""
         
@@ -673,7 +763,7 @@ class SMIMETestCase(unittest.TestCase):
         time.sleep(1)
         
         #send test message
-        smtpclient = smtplib.SMTP('127.0.0.1',self.config.getint('main', 'incomingport'))
+        smtpclient = smtplib.SMTP('127.0.0.1',SMIMETestCase.FUGLU_PORT)
         #smtpServer.set_debuglevel(1)
         smtpclient.helo('test.smime')
         inputfile='testdata/smime/signedmessage.eml'
