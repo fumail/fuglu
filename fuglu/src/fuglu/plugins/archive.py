@@ -92,7 +92,7 @@ class ArchivePlugin(ScannerPlugin):
             shutil.copy(suspect.tempfile, filename)
         else:
             fp=open(filename,'w')
-            fp.write(suspect.getMessageRep().as_string())
+            fp.write(suspect.getSource())
             fp.close()
             
         self._logger().info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
@@ -144,9 +144,12 @@ class ArchiveTestcase(unittest.TestCase):
         self.config.set('ArchivePlugin', 'storeoriginal', '1')
         candidate=ArchivePlugin(self.config)
         suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-        origmessage=suspect.getMessageRep().as_string()
+        origmessage=suspect.getSource()
+        
         #modify the mesg
-        suspect.getMessageRep()['X-Changed-Something']='Yes'
+        msgrep= suspect.getMessageRep()
+        msgrep['X-Changed-Something']='Yes'
+        suspect.setMessageRep(msgrep)
         
         filename=candidate.archive(suspect)
         self.assertTrue(filename!=None and filename)
@@ -171,9 +174,11 @@ class ArchiveTestcase(unittest.TestCase):
         self.config.set('ArchivePlugin', 'storeoriginal', '0')
         candidate=ArchivePlugin(self.config)
         suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-        origmessage=suspect.getMessageRep().as_string()
+        origmessage=suspect.getSource()
         #modify the mesg
-        suspect.getMessageRep()['X-Changed-Something']='Yes'
+        msgrep= suspect.getMessageRep()
+        msgrep['X-Changed-Something']='Yes'
+        suspect.setMessageRep(msgrep)
         
         filename=candidate.archive(suspect)
         self.assertTrue(filename!=None and filename)

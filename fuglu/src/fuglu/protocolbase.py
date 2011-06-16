@@ -68,9 +68,13 @@ class BasicTCPServer(object):
    
    
     def shutdown(self):
+        self.logger.info("TCP Server on port %s closing"%self.port)
         self.stayalive=False
-        self._socket.shutdown(1)
-        self._socket.close()
+        try:
+            self._socket.shutdown(1)
+            self._socket.close()
+        except:
+            pass
         
         
     def serve(self):

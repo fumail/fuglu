@@ -22,11 +22,16 @@ class HeaderPlugin(ScannerPlugin):
           
         starttime=time.time()
         
+        mod=False
         msgrep=suspect.getMessageRep()
         for header in removeheaders:
             if msgrep.has_key(msgrep):
                 self ._logger().debug('Removed Header: %s'%header)
                 del msgrep[header]
+                mod=True
+                
+        if mod:
+            suspect.setMessageRep(msgrep)
         
         #For debugging, its good to know how long each plugin took
         endtime=time.time()

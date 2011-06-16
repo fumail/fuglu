@@ -33,10 +33,7 @@ from email.Header import Header
 def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
     #we must prepend headers manually as we can't set a header order in email objects
-    
-    msgrep=suspect.getMessageRep()
-    
-    origmsgtxt=msgrep.as_string()
+    origmsgtxt=suspect.getSource()
     newheaders=""
     
     for key in suspect.addheaders:
@@ -116,7 +113,11 @@ class ESMTPServer(object):
    
     def shutdown(self):
         self.stayalive=False
-        self._socket.close()
+        try:
+            self._socket.shutdown()
+            self._socket.close()
+        except:
+            pass
         
     def serve(self):
         #disable to debug... 

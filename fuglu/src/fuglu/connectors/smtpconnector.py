@@ -24,6 +24,7 @@ import unittest
 import thread
 import ConfigParser
 import re
+import time
 
 from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler,BasicTCPServer
@@ -34,10 +35,7 @@ def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
     
     #we must prepend headers manually as we can't set a header order in email objects
-    
-    msgrep=suspect.getMessageRep()
-    
-    origmsgtxt=msgrep.as_string()
+    origmsgtxt=suspect.getSource()
     newheaders=""
     
     for key in suspect.addheaders:
@@ -362,8 +360,11 @@ class DummySMTPServer(object):
         self.suspect=Suspect(fromaddr,toaddr,self.tempfilename)
         
     def shutdown(self):
-        self._socket.shutdown(1)
-        self._socket.close()
+        try:
+            self._socket.shutdown(1)
+            self._socket.close()
+        except:
+            pass
         self.logger.info('Dummy smtp server on port %s shut down'%self.port)
 
 class OtherTests(unittest.TestCase):

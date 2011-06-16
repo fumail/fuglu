@@ -111,8 +111,9 @@ class Suspect:
     with a suspect and may modify the tags or even the message content itself.
     """
     
-    def __init__(self,from_address,to_address,tempfile):
-        self.msgrep=None
+    def __init__(self,from_address,to_address,tempfile):        
+        self.source = None
+        """holds the message source if set directly"""
         
         #tags set by plugins
         self.tags={}
@@ -248,18 +249,36 @@ class Suspect:
     
     def getMessageRep(self):
         """returns the python email api representation of this suspect"""
-        if self.msgrep!=None:
-            return self.msgrep
-        fh=open(self.tempfile,'r')
-        self.msgrep=email.message_from_file(fh)
-        fh.close()
-        return self.msgrep
+        if self.source!=None:
+            return email.message_from_string(self.source)
+        else:
+            fh=open(self.tempfile,'r')
+            msgrep=email.message_from_file(fh)
+            fh.close()
+            return msgrep
     
     def setMessageRep(self,msgrep):
-        """replace the message content. this must be a standard python email representation"""
-        self.msgrep=msgrep
+        """replace the message content. this must be a standard python email representation
+        Warning: setting the source via python email representation seems to break dkim signatures!
+        """
+        self.source=msgrep.as_string()
+        
+    def is_modified(self):
+        """returns true if the message source has been modified"""
+        return self.source!=None
     
+    def getSource(self):
+        """returns the current message source, possibly changed by plugins"""
+        if self.source!=None:
+            return self.source
+        else:
+            return self.getOriginalSource()
+        
+    def setSource(self,source):
+        self.source=source
+        
     def getOriginalSource(self):
+        """returns the original, unmodified message source"""
         try:
             source=open(self.tempfile).read()
         except Exception,e:

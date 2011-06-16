@@ -224,7 +224,7 @@ Subject: test scanner
         if self.config.getboolean(self.section,'scanoriginal'):
             spam=suspect.getOriginalSource()
         else:
-            spam=suspect.getMessageRep().as_string()
+            spam=suspect.getSource()
             
         if forwardoriginal:
             ret=self.safilter_symbols(spam, suspect.to_address)
@@ -248,7 +248,7 @@ Subject: test scanner
                 content=filtered 
             
             newmsgrep=email.message_from_string(content)
-            suspect.setMessageRep(newmsgrep)
+            suspect.setSource(content)
 
             isspam=False
             spamheader=newmsgrep[spamheadername]
@@ -469,7 +469,7 @@ Subject: test scanner
 
   XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
-        suspect.setMessageRep(email.message_from_string(stream))
+        suspect.setSource(stream)
         result=self.candidate.examine(suspect)
         score=int( suspect.get_tag('SAPlugin.spamscore'))
         self.failUnless(score>999, "GTUBE mails should score ~1000 , we got %s"%score)

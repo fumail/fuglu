@@ -50,7 +50,7 @@ class ClamavPlugin(ScannerPlugin):
             self.logger.info('Not scanning - message too big')
             return
         
-        content=suspect.getMessageRep().as_string()
+        content=suspect.getSource()
 
         for i in range(0,self.retries):
             try:
