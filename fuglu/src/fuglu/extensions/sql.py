@@ -33,15 +33,28 @@ except:
     modlogger.warning('sqlalchemy not installed, not enabling sql extension')
     STATUS="sqlalchemy not installed"
 
-    
+
+_sessmaker=None
+_engines = {}
+
 def get_session(connectstring):
     global ENABLED
+    global _sessmaker
+    global _engines
+    
     if not ENABLED:
         raise Exception,"sql extension not enabled"
 
-    engine = create_engine(connectstring)
-    maker = sessionmaker(autoflush=True, autocommit=True)
-    session = scoped_session(maker)
+    if connectstring in _engines:
+        engine=_engines[connectstring]
+    else:
+        engine = create_engine(connectstring,pool_recycle=20)
+        _engines[connectstring]=engine
+    
+    if _sessmaker==None:
+        _sessmaker = sessionmaker(autoflush=True, autocommit=True)
+    
+    session = scoped_session(_sessmaker)
     session.configure(bind=engine)
     return session
 
@@ -68,4 +81,5 @@ class DBFile(object):
         for row in res:
             line=" ".join(row)
             buffer.append(line)
+        sess.close()
         return buffer
