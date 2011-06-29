@@ -266,7 +266,7 @@ class Suspect:
         Warning: setting the source via python email representation seems to break dkim signatures!
         """
         self.setSource(msgrep.as_string())
-        self.logger.warning("Message source has been modified by a plugin")
+        logging.warning("Message source has been modified by a plugin")
         
     def is_modified(self):
         """returns true if the message source has been modified"""
