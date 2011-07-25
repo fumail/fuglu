@@ -266,7 +266,7 @@ class Suspect:
         Warning: setting the source via python email representation seems to break dkim signatures!
         """
         self.setSource(msgrep.as_string())
-        logging.warning("Message source has been modified by a plugin")
+        #logging.warning("Message source has been modified by a plugin")
         
     def is_modified(self):
         """returns true if the message source has been modified"""
@@ -395,7 +395,8 @@ class HeaderFilter(object):
             #line shold be "headername    regex    arguments"
             sp=line.split(None,2)
             if len(sp)<2:
-                self.logger.debug('Ignoring line %s'%line)
+                self.logger.error(""""Invalid line '%s' in Rulefile %s. Ignoring."""%(line,self.filename))
+                continue
             
             args=None
             if len(sp)==3:
