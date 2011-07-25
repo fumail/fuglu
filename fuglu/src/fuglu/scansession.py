@@ -60,7 +60,7 @@ class SessionHandler(object):
                 return
             
             if len(suspect.recipients)!=1:
-                self.logger.warning('Notice: Message from %s has %s recipients. Plugins supporting one one recipient will see: %s'%(suspect.from_address,len(suspect.recipients),suspect.to_address))
+                self.logger.warning('Notice: Message from %s has %s recipients. Plugins supporting only one recipient will see: %s'%(suspect.from_address,len(suspect.recipients),suspect.to_address))
             self.logger.debug("Message from %s to %s: %s bytes stored to %s"%(suspect.from_address,suspect.to_address,suspect.size,suspect.tempfile))
             self.set_threadinfo("Handling message %s"%suspect)
             #store incoming port to tag, could be used to disable plugins based on port
