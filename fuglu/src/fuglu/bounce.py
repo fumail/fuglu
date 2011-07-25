@@ -82,6 +82,3 @@ class Bounce:
         smtpServer.helo(self.config.get('main','outgoinghelo'))
         smtpServer.sendmail(fromaddress, toaddress, message)
         smtpServer.quit()
-        
-        
-        
