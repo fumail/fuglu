@@ -27,7 +27,7 @@ import logging
 import logging.config
 import fuglu.funkyconsole
 import sys
-from fuglu.core import MainController,VERSION
+from fuglu.core import MainController
 import signal
 import os
 import pwd
@@ -119,7 +119,7 @@ if lint:
     logging.getLogger('').addHandler(console)
     fc=fuglu.funkyconsole.FunkyConsole()
     print fc.strcolor("Fuglu", "yellow"),
-    print fc.strcolor(VERSION, "green")
+    print fc.strcolor(FUGLU_VERSION, "green")
     print "----------",fc.strcolor("LINT MODE", (fc.MODE["blink"],fc.FG["magenta"])),"----------"
 
 else:
