@@ -238,16 +238,32 @@ class Suspect:
         modifiedstring="no"
         if self.is_modified():
             modifiedstring="yes"
+        
+        
+        blacklist=['decisions',]
+        tagscopy={}
+        
+        for k,v in self.tags.iteritems():
+            if k in blacklist:
+                continue
             
-        #fix tag represenations
-        tagscopy=self.tags.copy()
-        if tagscopy.has_key('SAPlugin.spamscore'):
-            tagscopy['SAPlugin.spamscore']="%.2f"%tagscopy['SAPlugin.spamscore']
-        
-        #remove bloat
-        if tagscopy.has_key('decisions'):
-            del tagscopy['decisions']
-        
+            try:
+                strrep=str(v)
+            except: #Unicodedecode errors and stuff like that
+                continue
+            
+            therep=v
+            
+            maxtaglen=100
+            if len(strrep)>maxtaglen:
+                therep=strrep[:maxtaglen]+"..."
+            
+            #specialfixes
+            if k=='SAPlugin.spamscore':
+                therep="%.2f"%v
+            
+            tagscopy[k]=therep
+                
         astring="Suspect %s: from=%s to=%s size=%s spam=%s virus=%s modified=%s tags=%s"%(self.id,self.from_address, self.to_address,self.size,spamstring,virusstring,modifiedstring,tagscopy)
         return astring
     
