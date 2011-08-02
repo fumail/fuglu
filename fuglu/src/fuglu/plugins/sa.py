@@ -227,14 +227,14 @@ Subject: test scanner
             spam=suspect.getSource()
             
         if forwardoriginal:
-            ret=self.safilter_symbols(spam, suspect.to_address)
+            ret=self.safilter_report(spam, suspect.to_address)
             if ret==None:
-                suspect.debug('SA Symbol Scan failed - please check error log')
-                self.logger.error('%s SA Symbol scan FAILED'%suspect.id)
+                suspect.debug('SA report Scan failed - please check error log')
+                self.logger.error('%s SA report scan FAILED'%suspect.id)
                 suspect.addheader('%sSA-SKIP'%self.config.get('main','prependaddedheaders'),'SA scan failed')
                 return self._problemcode()
-            isspam,spamscore,rules=ret
-            suspect.tags['SAPlugin.rules']=rules
+            isspam,spamscore,report=ret
+            suspect.tags['SAPlugin.report']=report
             
         else:
             filtered=self.safilter(spam,suspect.to_address)
@@ -298,72 +298,6 @@ Subject: test scanner
         suspect.tags['SAPlugin.time']="%.4f"%difftime
         return action
     
-    def safilter_symbols(self,messagecontent,user):
-        """Pass content to sa, return spamflag, score, rules"""
-        serverHost = self.config.get(self.section,'host')          
-        serverPort = self.config.getint(self.section,'port')
-        timeout=self.config.getint(self.section,'timeout')
-        retries = self.config.getint(self.section,'retries')
-        peruserconfig = self.config.getboolean(self.section,'peruserconfig')
-        spamsize=len(messagecontent)
-        for i in range(0,retries):
-            try:
-                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
-                s = socket(AF_INET, SOCK_STREAM)   
-        
-                s.settimeout(timeout)
-                s.connect((serverHost, serverPort)) 
-                s.sendall('SYMBOLS SPAMC/1.2')
-                s.sendall("\r\n")
-                s.sendall("Content-length: %s"%spamsize)
-                s.sendall("\r\n")
-                if peruserconfig:
-                    s.sendall("User: %s"%user)
-                    s.sendall("\r\n")
-                s.sendall("\r\n")
-                s.sendall(messagecontent)
-                self.logger.debug('Sent %s bytes to spamd'%spamsize)
-                s.shutdown(1)
-                socketfile=s.makefile("rb")
-                line1_info=socketfile.readline()
-                self.logger.debug(line1_info)
-                line2_spaminfo=socketfile.readline()
-                
-                line3=socketfile.readline()
-                content=socketfile.read()
-                content=content.strip()
-                
-                self.logger.debug('Got %s message bytes from back from spamd'%len(content))
-                answer=line1_info.strip().split()
-                if len(answer)!=3:
-                    self.logger.error("Got invalid status line from spamd: %s"%line1_info)
-                    continue
-                
-                (version,number,status)=answer
-                if status!='EX_OK':
-                    self.logger.error("Got bad status from spamd: %s"%status)
-                    continue
-                
-                self.logger.debug('Spamd said: %s'%line2_spaminfo)
-                (spamword,spamstatusword,colon, score,slash,required)=line2_spaminfo.split()
-                rules=content.split(',')
-                spstatus=False
-                if spamstatusword=='True':
-                    spstatus=True
-                    
-                return (spstatus,float(score),rules)
-            except timeout:
-                self.logger.error('SPAMD Socket timed out.')
-            except herror,h:
-                self.logger.error('SPAMD Herror encountered : %s'%str(h))
-            except gaierror,g:
-                self.logger.error('SPAMD gaierror encountered: %s'%str(g))
-            except error,e:
-                self.logger.error('SPAMD socket error: %s'%str(e))
-            
-            time.sleep(1)
-        return None
-    
     def safilter(self,messagecontent,user):
         """pass content to sa, return sa-processed mail"""
         serverHost = self.config.get(self.section,'host')          
@@ -419,6 +353,113 @@ Subject: test scanner
             
             time.sleep(1)
         return None
+    
+    def safilter_symbols(self,messagecontent,user):
+        """Pass content to sa, return spamflag, score, rules"""    
+        ret = self._safilter_content(messagecontent, user, 'SYMBOLS')
+        if ret==None:
+            return None
+        
+        status,score,content=ret
+        
+        rules=content.split(',')
+        return status,score,rules
+    
+    def safilter_report(self,messagecontent,user):
+        return self._safilter_content(messagecontent, user, 'REPORT')
+    
+    def _safilter_content(self,messagecontent,user,command):
+        """pass content to sa, return body"""
+        assert command in ['SYMBOLS','REPORT',]
+        serverHost = self.config.get(self.section,'host')          
+        serverPort = self.config.getint(self.section,'port')
+        timeout=self.config.getint(self.section,'timeout')
+        retries = self.config.getint(self.section,'retries')
+        peruserconfig = self.config.getboolean(self.section,'peruserconfig')
+        spamsize=len(messagecontent)
+        for i in range(0,retries):
+            try:
+                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
+                s = socket(AF_INET, SOCK_STREAM)   
+        
+                s.settimeout(timeout)
+                s.connect((serverHost, serverPort)) 
+                s.sendall('%s SPAMC/1.2'%command)
+                s.sendall("\r\n")
+                s.sendall("Content-length: %s"%spamsize)
+                s.sendall("\r\n")
+                if peruserconfig:
+                    s.sendall("User: %s"%user)
+                    s.sendall("\r\n")
+                s.sendall("\r\n")
+                s.sendall(messagecontent)
+                self.logger.debug('Sent %s bytes to spamd'%spamsize)
+                s.shutdown(1)
+                socketfile=s.makefile("rb")
+                line1_info=socketfile.readline()
+                self.logger.debug(line1_info)
+                line2_spaminfo=socketfile.readline()
+                
+                line3=socketfile.readline()
+                content=socketfile.read()
+                content=content.strip()
+                
+                self.logger.debug('Got %s message bytes from back from spamd'%len(content))
+                answer=line1_info.strip().split()
+                if len(answer)!=3:
+                    self.logger.error("Got invalid status line from spamd: %s"%line1_info)
+                    continue
+                
+                (version,number,status)=answer
+                if status!='EX_OK':
+                    self.logger.error("Got bad status from spamd: %s"%status)
+                    continue
+                
+                self.logger.debug('Spamd said: %s'%line2_spaminfo)
+                (spamword,spamstatusword,colon, score,slash,required)=line2_spaminfo.split()
+                spstatus=False
+                if spamstatusword=='True':
+                    spstatus=True
+                    
+                return (spstatus,float(score),content)
+            except timeout:
+                self.logger.error('SPAMD Socket timed out.')
+            except herror,h:
+                self.logger.error('SPAMD Herror encountered : %s'%str(h))
+            except gaierror,g:
+                self.logger.error('SPAMD gaierror encountered: %s'%str(g))
+            except error,e:
+                self.logger.error('SPAMD socket error: %s'%str(e))
+            
+            time.sleep(1)
+        return None
+    
+    
+    def debug_proto(self,messagecontent,command='SYMBOLS'):
+        """proto debug.. only used for development"""
+        command=command.upper()
+        assert command in ['CHECK','SYMBOLS','REPORT','REPORT_IFSPAM','SKIP','PING','PROCESS','TELL']
+        
+        serverHost = "127.0.0.1"
+        serverPort = 783
+        timeout=20
+
+
+        spamsize=len(messagecontent)
+        s = socket(AF_INET, SOCK_STREAM)   
+
+        s.settimeout(timeout)
+        s.connect((serverHost, serverPort)) 
+        s.sendall('%s SPAMC/1.2'%command)
+        s.sendall("\r\n")
+        s.sendall("Content-length: %s"%spamsize)
+        s.sendall("\r\n")
+        s.sendall("\r\n")
+        s.sendall(messagecontent)
+        s.shutdown(1)
+        socketfile=s.makefile("rb")
+        gotback=socketfile.read()
+        print gotback
     
 class SAPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""
@@ -541,3 +582,22 @@ This is a test mailing """
         #simulate unavailable db
         self.candidate.config.set('SAPlugin','sql_blacklist_dbconnectstring','mysql://127.0.0.1:9977/idonotexist')
         self.assertEquals(self.candidate.check_sql_blacklist(suspect),DUNNO),'error coping with db problems'
+        
+        
+
+if __name__=='__main__':
+    import sys
+    command=sys.argv[1]
+    plugin=SAPlugin(None)
+    stream="""Date: Mon, 08 Sep 2008 17:33:54 +0200
+To: oli@unittests.fuglu.org
+From: oli@unittests.fuglu.org
+Subject: test scanner
+
+  XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
+"""
+    print "sending..."
+    print "--------------"
+    plugin.debug_proto(stream,command)
+    print "--------------"
+    
