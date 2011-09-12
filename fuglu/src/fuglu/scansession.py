@@ -176,7 +176,7 @@ class SessionHandler(object):
             self.logger.info('Created trashdir %s'%trashdir)
         
         try:
-            (handle,trashfilename)=tempfile.mkstemp(prefix='fuglu',dir=self.config.get('main','trashdir'))
+            (handle,trashfilename)=tempfile.mkstemp(prefix=suspect.id,dir=self.config.get('main','trashdir'))
             trashfile=os.fdopen(handle,'w+b')
             trashfile.write(suspect.getSource())
             trashfile.close()
@@ -184,16 +184,17 @@ class SessionHandler(object):
         except Exception,e:
             self.logger.error("could not create file %s: %s"%(trashfilename,e))
         
-        try:
-            handle=open('%s/00-fuglutrash.log'%self.config.get('main','trashdir'),'a')
-            # <date> <time> <from address> <to address> <plugin that said "DELETE"> <filename>
-            time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
-            handle.write("%s %s %s %s %s"%(time,suspect.from_address,suspect.to_address,killerplugin,trashfilename))
-            handle.write("\n")
-            handle.close()
-            
-        except Exception,e:
-            self.logger.error("Could not update trash index: %s"%e)
+        #TODO: document main.trashlog
+        if self.config.has_option('main','trashlog') and self.config.getboolean('main','trashlog'):
+            try:
+                handle=open('%s/00-fuglutrash.log'%self.config.get('main','trashdir'),'a')
+                # <date> <time> <from address> <to address> <plugin that said "DELETE"> <filename>
+                time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
+                handle.write("%s %s %s %s %s"%(time,suspect.from_address,suspect.to_address,killerplugin,trashfilename))
+                handle.write("\n")
+                handle.close()
+            except Exception,e:
+                self.logger.error("Could not update trash log: %s"%e)
 
     
     def run_plugins(self,suspect,pluglist):
