@@ -6,8 +6,6 @@ import logging
 import ConfigParser
 import os
 
-sys.path.insert(0,'../src')
-
 
 #make sure working dir is set to the directory where runtests.py resides
 import inspect
@@ -15,7 +13,7 @@ this_file = inspect.currentframe().f_code.co_filename
 workdir=os.path.dirname(os.path.abspath(this_file))
 os.chdir(workdir)
 
-
+sys.path.insert(0,'../src')
 
 homedir=os.getenv("HOME")
 devdir='%s/fuglu-dev'%homedir
