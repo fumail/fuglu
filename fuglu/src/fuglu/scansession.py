@@ -118,9 +118,8 @@ class SessionHandler(object):
                     traceback.print_exc(file=sys.stdout)
                     self.protohandler.defer('Internal error trying to commit.')
                     
-                    
-                
             elif result==DELETE:
+                self.logger.info("MESSAGE DELETED: %s"%suspect.id)
                 self.protohandler.discard('OK')
             elif result==REJECT:
                 retmesg="Rejected by content scanner"
