@@ -94,7 +94,14 @@ print "STARTING TESTS"
 print ""
 
 runner=unittest.TextTestRunner()
-runner.run(alltests)
+result=runner.run(alltests)
 
 print ""
 print "Debug Output written to:%s"%logfile
+
+if result.wasSuccessful():
+    print "ALL TESTS SUCCESSFUL"
+    sys.exit(0)
+else:
+    print "TESTRUN FAILED"
+    sys.exit(1)
