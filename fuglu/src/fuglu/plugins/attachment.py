@@ -67,8 +67,6 @@ KEY_CTYPE=u"ctype"
 
 class RulesCache( object ):
     """caches rule files and compiled regex patterns"""
-
-    
     
     __shared_state = {}
 
@@ -87,9 +85,6 @@ class RulesCache( object ):
             self.lastreload=0
         self.rulesdir=rulesdir
         self.reloadifnecessary()
-
-
-
 
     def getRegex(self,regex):
         """compile regex and return cached object"""
@@ -437,32 +432,27 @@ class DatabaseConfigTestCase(unittest.TestCase):
         from ConfigParser import RawConfigParser
         import tempfile
         import shutil
-        from sqlalchemy import Table, Column,  MetaData,  Unicode, Integer
-        from sqlalchemy.ext.declarative import declarative_base
         
         testfile="/tmp/attachconfig.db"
         if os.path.exists(testfile):
             os.remove(testfile)
         #important: 4 slashes for absolute paths!
         testdb="sqlite:///%s"%testfile
-        DeclarativeBase = declarative_base()
-        metadata = DeclarativeBase.metadata
-        rules_table = Table("attachmentrules", metadata,
-                    Column('id', Integer, primary_key=True),
-                    Column('scope', Unicode(255), nullable=False),
-                    Column('checktype', Unicode(20), nullable=False),
-                    Column('action', Unicode(255), nullable=False),
-                    Column('regex', Unicode(255), nullable=False),
-                    Column('description', Unicode(255), nullable=False),
-                    Column('prio', Integer, nullable=False),
-        )
         
+        sql="""create table attachmentrules(
+        id integer not null primary key,
+        scope varchar(255) not null,
+        checktype varchar(20) not null,
+        action varchar(255) not null,
+        regex varchar(255) not null,
+        description varchar(255) not null,
+        prio integer not null
+        )
+        """ 
+
         self.session=fuglu.extensions.sql.get_session(testdb)
         self.session.flush()
-        bind=self.session.get_bind(rules_table)
-        bind.connect()
-        bind.engine.echo=True
-        metadata.create_all(bind)
+        self.session.execute(sql)
         self.tempdir=tempfile.mkdtemp('attachtestdb', 'fuglu')
         self.template='%s/blockedfile.tmpl'%self.tempdir
         shutil.copy('../conf/templates/blockedfile.tmpl.dist',self.template)
