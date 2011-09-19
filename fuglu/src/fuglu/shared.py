@@ -434,6 +434,9 @@ class HeaderFilter(object):
     
     def _getHeader(self,suspect,headername):
         """return mail header value or special value"""
+        #strip ending : (request AXB)
+        if headername.enswith(':'):
+            headername=headername[:-1]
         if headername=='envelope_from':
             return [suspect.from_address,]
         if headername=='envelope_to':
