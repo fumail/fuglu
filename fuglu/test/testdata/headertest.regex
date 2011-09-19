@@ -7,6 +7,8 @@ to_domain	unittests.fuglu.org	Sent to unittest domain!
 
 envelope_from sender@unittests.fuglu.org Envelope sender is sender@unittests.fuglu.org
 
-MIME-Version 1.0 Mime Version is 1.0
+MIME-Version 1\.0 Mime Version is 1.0
 
 @testtag testvalue A tag match
+
+MI*ion 1\.0 Globbing works

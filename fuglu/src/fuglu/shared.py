@@ -381,7 +381,7 @@ class HeaderFilter(object):
         self.lastreload=0
         self.logger=logging.getLogger('fuglu.headerfilter')
         self._reloadifnecessary()
-        
+        self.recache={}
         
     def _reloadifnecessary(self):
         now=time.time()
@@ -435,7 +435,7 @@ class HeaderFilter(object):
     def _getHeader(self,suspect,headername):
         """return mail header value or special value"""
         #strip ending : (request AXB)
-        if headername.enswith(':'):
+        if headername.endswith(':'):
             headername=headername[:-1]
         if headername=='envelope_from' or headername=='from_address':
             return [suspect.from_address,]
@@ -451,7 +451,25 @@ class HeaderFilter(object):
             tagname=headername[1:]
             return [suspect.get_tag(tagname),]
         
-        return suspect.getMessageRep().get_all(headername)
+        #header globbing
+        messagerep=suspect.getMessageRep()
+        valuelist=[]
+        if '*' in headername:
+            regex=re.escape(headername)
+            regex=regex.replace('\*','.*')
+            if regex in self.recache:
+                patt=self.recache[regex]
+            else:
+                patt=re.compile(regex,re.IGNORECASE)
+                self.recache[regex]=patt
+            
+            for h in messagerep.keys():
+                if re.match(patt, h)!=None:
+                    valuelist.extend(messagerep.get_all(h))
+        else:
+            valuelist=messagerep.get_all(headername)
+            
+        return valuelist
         
            
     def matches(self,suspect):
@@ -520,7 +538,7 @@ class HeaderFilterTestCase(unittest.TestCase):
         self.failUnless('Envelope sender is sender@unittests.fuglu.org' in headermatches,"Envelope Sender not matched in header chekc")
         self.failUnless('Mime Version is 1.0' in headermatches,"Standard header Mime Version not found")
         self.failUnless('A tag match' in headermatches,"Tag match did not work")
-        
+        self.failUnless('Globbing works' in headermatches,"header globbing failed")
         (match,arg)=self.candidate.matches(suspect)
         self.failUnless(match,'Match should return True')
 
