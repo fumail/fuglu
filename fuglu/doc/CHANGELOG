@@ -3,6 +3,12 @@
  * bugfix: Milter protocol errors
  * bugfix: Incorrect unquoting of two leading dots in smtp transactions could lead to broken s/mime sigs
  * A few plugins now have a 'PROBLEMACTION' so it is now configurable if a message should be deferred or accepted if for example the clamav daemon is not reachable
+ * the trashlog can now be disabled
+ * Headerfilters: 
+ 	* now supports header wildcard (Character '*')
+ 	* accepts colon at the end
+ 	* alias "from_address" for envelope from and "to_address" for envelope_to 
+ 
  * Attachment Plugin:
  	* Configuration of attachment rules can now be read from a database table (sql extension)
  	* Support rule configuration from sql
