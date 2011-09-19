@@ -437,9 +437,9 @@ class HeaderFilter(object):
         #strip ending : (request AXB)
         if headername.enswith(':'):
             headername=headername[:-1]
-        if headername=='envelope_from':
+        if headername=='envelope_from' or headername=='from_address':
             return [suspect.from_address,]
-        if headername=='envelope_to':
+        if headername=='envelope_to' or headername=='to_address':
             return [suspect.to_address,]
         if headername=='from_domain':
             return [suspect.from_domain,]
