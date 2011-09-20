@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,HeaderFilter
+from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,SuspectFilter
 import time
 import unittest
 import os
@@ -25,7 +25,7 @@ class ArchivePlugin(ScannerPlugin):
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars=((self.section,'archiverules'),(self.section,'archivedir'),(self.section,'makedomainsubdir'),(self.section,'storeoriginal'))
-        self.headerfilter=None
+        self.filter=None
         self.logger=self._logger()
         
     def lint(self):
@@ -55,10 +55,10 @@ class ArchivePlugin(ScannerPlugin):
             self._logger().error('Archive Rules file does not exist : %s'%archiverules)
             return DUNNO
         
-        if self.headerfilter==None:
-            self.headerfilter=HeaderFilter(archiverules)
+        if self.filter==None:
+            self.filter=SuspectFilter(archiverules)
         
-        (match,arg)=self.headerfilter.matches(suspect)
+        (match,arg)=self.filter.matches(suspect)
         if match:
             if arg!=None and arg.lower()=='no':
                 self.logger.debug("""Header matches archive exception rule - not archiving""")

@@ -371,15 +371,15 @@ class AppenderPlugin(BasicPlugin):
         self._logger().warning('Unimplemented examine() method')
 
 
-class HeaderFilter(object):
-    """Allows filtering Suspect based on header/tag regexes"""
+class SuspectFilter(object):
+    """Allows filtering Suspect based on header/tag/body regexes"""
     def __init__(self,filename):
         self.filename=filename
         self.patterns=[]
         
         self.reloadinterval=30
         self.lastreload=0
-        self.logger=logging.getLogger('fuglu.headerfilter')
+        self.logger=logging.getLogger('fuglu.suspectfilter')
         self._reloadifnecessary()
         self.recache={}
         
@@ -519,10 +519,10 @@ class HeaderFilter(object):
     
     
   
-class HeaderFilterTestCase(unittest.TestCase):
+class SuspectFilterTestCase(unittest.TestCase):
     """Test Header Filter"""
     def setUp(self):     
-        self.candidate=HeaderFilter('testdata/headertest.regex')
+        self.candidate=SuspectFilter('testdata/headertest.regex')
  
     def tearDown(self):
         pass     

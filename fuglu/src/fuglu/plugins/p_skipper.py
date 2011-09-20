@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import PrependerPlugin,HeaderFilter
+from fuglu.shared import PrependerPlugin,SuspectFilter
 import os
 
 class PluginSkipper(PrependerPlugin):
@@ -26,7 +26,7 @@ class PluginSkipper(PrependerPlugin):
         self.logger=self._logger()
         
     def pluginlist(self,suspect,pluginlist):
-        """Removes scannerplugins based on headerfilter file"""
+        """Removes scannerplugins based on filter file"""
         if not self._initfilter():
             return None
         
@@ -59,5 +59,5 @@ class PluginSkipper(PrependerPlugin):
             return False
         
         
-        self.filter=HeaderFilter(filename)
+        self.filter=SuspectFilter(filename)
         return True
