@@ -432,11 +432,15 @@ class SuspectFilter(object):
         self.patterns=newpatterns
     
     
-    def _getHeader(self,suspect,headername):
+    def _getField(self,suspect,headername):
         """return mail header value or special value"""
         #strip ending : (request AXB)
         if headername.endswith(':'):
             headername=headername[:-1]
+        
+        
+         
+        #builtins
         if headername=='envelope_from' or headername=='from_address':
             return [suspect.from_address,]
         if headername=='envelope_to' or headername=='to_address':
@@ -445,14 +449,37 @@ class SuspectFilter(object):
             return [suspect.from_domain,]
         if headername=='to_domain':
             return [suspect.to_domain,]
+        if headername=='body:raw':
+            return [suspect.getOriginalSource()]
         
         #if it starts with a @ we return a tag, not a header
         if headername[0:1]=='@':
             tagname=headername[1:]
             return [suspect.get_tag(tagname),]
         
-        #header globbing
+        
+        
         messagerep=suspect.getMessageRep()
+        
+        #body rules on decoded text parts
+        if headername=='body' or headername=='body:decoded':
+            textparts=[]
+            for part in messagerep.walk():
+                if part.get_content_maintype()=='text' and (not part.is_multipart()):
+                    textparts.append(part.get_payload(None,True))
+            return textparts
+        
+        if headername.startswith('mime:'):
+            allvalues=[]
+            realheadername=headername[5:]
+            for part in messagerep.walk():
+                allvalues.extend(self._get_headers(realheadername, part))
+            return allvalues
+                
+        #standard header
+        return self._get_headers(headername, messagerep)
+    
+    def _get_headers(self,headername,payload):
         valuelist=[]
         if '*' in headername:
             regex=re.escape(headername)
@@ -463,21 +490,21 @@ class SuspectFilter(object):
                 patt=re.compile(regex,re.IGNORECASE)
                 self.recache[regex]=patt
             
-            for h in messagerep.keys():
+            for h in payload.keys():
                 if re.match(patt, h)!=None:
-                    valuelist.extend(messagerep.get_all(h))
+                    valuelist.extend(payload.get_all(h))
         else:
-            valuelist=messagerep.get_all(headername)
+            valuelist=payload.get_all(headername)
             
         return valuelist
-        
+           
            
     def matches(self,suspect):
         """returns (True,arg) if any regex matches, (False,None) otherwise"""
         self._reloadifnecessary()
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._getHeader(suspect,headername)
+            vals=self._getField(suspect,headername)
             if vals==None:
                 self.logger.debug('No header %s found'%headername)
                 continue
@@ -498,16 +525,19 @@ class SuspectFilter(object):
         self._reloadifnecessary()
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._getHeader(suspect,headername)
+            vals=self._getField(suspect,headername)
             if vals==None:
-                self.logger.debug('No header %s found'%headername)
+                self.logger.debug('No field %s found'%headername)
                 continue
             for val in vals:
-                self.logger.debug("""Checking headername %s (arg '%s') against value %s"""%(headername,arg,val))
                 if val==None:
                     continue
-                if pattern.match(str(val)):
+                if pattern.search(str(val))!=None:
+                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
                     ret.append (arg)
+                else:
+                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
+                    
         return ret
        
     def filechanged(self):
@@ -539,6 +569,10 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failUnless('Mime Version is 1.0' in headermatches,"Standard header Mime Version not found")
         self.failUnless('A tag match' in headermatches,"Tag match did not work")
         self.failUnless('Globbing works' in headermatches,"header globbing failed")
+        self.failUnless('body rule works' in headermatches,"decoded body rule failed")
+        self.failUnless('raw body rule works' in headermatches,"raw body failed")
+        self.failUnless('mime rule works' in headermatches,"mime rule failed")
+        self.failIf('this should not match in a body rule' in headermatches,'decoded body rule matched raw body')
         (match,arg)=self.candidate.matches(suspect)
         self.failUnless(match,'Match should return True')
 

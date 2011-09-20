@@ -3,12 +3,14 @@
  * bugfix: Milter protocol errors
  * bugfix: Incorrect unquoting of two leading dots in smtp transactions could lead to broken s/mime sigs
  * A few plugins now have a 'PROBLEMACTION' so it is now configurable if a message should be deferred or accepted if for example the clamav daemon is not reachable
- * the trashlog can now be disabled
- * Headerfilters: 
+ * new option: [main] trashlog (boolean), default False, if True, Fuglu writes a 00-fuglutrash.log file in the trashdir listing all deleted messages
+ * SuspectFilters (previously 'HeaderFilters'): 
  	* now supports header wildcard (Character '*')
  	* accepts colon at the end
- 	* alias "from_address" for envelope from and "to_address" for envelope_to 
- 
+ 	* alias "from_address" for envelope from and "to_address" for envelope_to
+ 	* new type: 'mime:<headername>' to check mime headers in all attachments
+ 	* new type: 'body:decoded' to match the body in all text/* parts
+ 	* bugfix: regexes now match everywhere in the field, not just at the beginning
  * Attachment Plugin:
  	* Configuration of attachment rules can now be read from a database table (sql extension)
  	* Support rule configuration from sql
@@ -17,7 +19,7 @@
  	* "BOUNCE" action has been removed and replaced with the config option 'sendbounce'
  * Archive Plugin:
  	* Allow archive exception rules (append "no" to the regex)
- 	* Messages are now stored as '<suspect-id>.eml'
+ 	* Messages are now stored as '<suspect-id>.eml' instead of a random string
  * Clamav Plugin:
  	* Virusaction is now configurable
  * Spamassassin Plugin:

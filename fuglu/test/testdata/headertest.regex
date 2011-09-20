@@ -12,3 +12,12 @@ MIME-Version 1\.0 Mime Version is 1.0
 @testtag testvalue A tag match
 
 MI*ion 1\.0 Globbing works
+
+body	bla	body rule works
+
+body:raw 12140 raw body rule works
+
+mime:Content-Type plain mime rule works
+
+#this should not match
+body	12140	this should not match in a body rule
