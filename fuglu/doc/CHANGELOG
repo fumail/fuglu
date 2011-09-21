@@ -9,7 +9,9 @@
  	* accepts colon at the end
  	* alias "from_address" for envelope from and "to_address" for envelope_to
  	* new type: 'mime:<headername>' to check mime headers in all attachments
- 	* new type: 'body:decoded' to match the body in all text/* parts
+ 	* new type: 'body:stripped'  (or just 'body') to match all text parts with html tags removed and newlines replaced by space
+ 	* new type: 'body:raw' to match the decoded body in all text/* parts
+ 	* new type: 'body:full' to match the full undecoded body
  	* bugfix: regexes now match everywhere in the field, not just at the beginning
  * Attachment Plugin:
  	* Configuration of attachment rules can now be read from a database table (sql extension)

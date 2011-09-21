@@ -9,4 +9,6 @@ Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
 Content-Type: text/plain
 
 blablabla
+
+some <tagged>text</tagged>
 ------=_MIME_BOUNDARY_000_12140--

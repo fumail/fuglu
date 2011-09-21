@@ -30,6 +30,14 @@ except:
     MD5LIB=_MD5
     import md5
     
+    
+HAVE_BEAUTIFULSOUP=False
+try:
+    import BeautifulSoup
+    HAVE_BEAUTIFULSOUP=True
+except:
+    pass
+
 import random
 import email
 import re
@@ -382,6 +390,7 @@ class SuspectFilter(object):
         self.logger=logging.getLogger('fuglu.suspectfilter')
         self._reloadifnecessary()
         self.recache={}
+        self.stripre=re.compile(r'<[^>]*?>')
         
     def _reloadifnecessary(self):
         now=time.time()
@@ -432,13 +441,33 @@ class SuspectFilter(object):
         self.patterns=newpatterns
     
     
+    def strip_text(self,content):
+        """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
+        
+        #replace newline with space
+        content=content.replace("\n", " ")
+        
+        if HAVE_BEAUTIFULSOUP:
+            soup = BeautifulSoup.BeautifulSoup(content)
+            stripped=''.join([e for e in soup.recursiveChildGenerator() if isinstance(e,unicode)])
+            return stripped
+
+        #no library available, use regex replace
+        return re.sub(self.stripre, '', content)
+    
+    def get_decoded_textparts(self,messagerep):
+        """Returns a list of all text contents"""
+        textparts=[]
+        for part in messagerep.walk():
+            if part.get_content_maintype()=='text' and (not part.is_multipart()):
+                textparts.append(part.get_payload(None,True))
+        return textparts
+    
     def _getField(self,suspect,headername):
         """return mail header value or special value"""
         #strip ending : (request AXB)
         if headername.endswith(':'):
             headername=headername[:-1]
-        
-        
          
         #builtins
         if headername=='envelope_from' or headername=='from_address':
@@ -449,7 +478,7 @@ class SuspectFilter(object):
             return [suspect.from_domain,]
         if headername=='to_domain':
             return [suspect.to_domain,]
-        if headername=='body:raw':
+        if headername=='body:full':
             return [suspect.getOriginalSource()]
         
         #if it starts with a @ we return a tag, not a header
@@ -457,17 +486,14 @@ class SuspectFilter(object):
             tagname=headername[1:]
             return [suspect.get_tag(tagname),]
         
-        
-        
         messagerep=suspect.getMessageRep()
         
         #body rules on decoded text parts
-        if headername=='body' or headername=='body:decoded':
-            textparts=[]
-            for part in messagerep.walk():
-                if part.get_content_maintype()=='text' and (not part.is_multipart()):
-                    textparts.append(part.get_payload(None,True))
-            return textparts
+        if headername=='body:raw':
+            return self.get_decoded_textparts(messagerep)
+        
+        if headername=='body' or headername=='body:stripped':
+            return map(self.strip_text, self.get_decoded_textparts(messagerep))
         
         if headername.startswith('mime:'):
             allvalues=[]
@@ -570,9 +596,10 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failUnless('A tag match' in headermatches,"Tag match did not work")
         self.failUnless('Globbing works' in headermatches,"header globbing failed")
         self.failUnless('body rule works' in headermatches,"decoded body rule failed")
-        self.failUnless('raw body rule works' in headermatches,"raw body failed")
+        self.failUnless('full body rule works' in headermatches,"full body failed")
         self.failUnless('mime rule works' in headermatches,"mime rule failed")
         self.failIf('this should not match in a body rule' in headermatches,'decoded body rule matched raw body')
+        #TODO: raw body rules
         (match,arg)=self.candidate.matches(suspect)
         self.failUnless(match,'Match should return True')
 
