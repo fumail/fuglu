@@ -106,9 +106,8 @@ Subject: test scanner
 
   XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
-        result=self.safilter(stream, 'test')
-        gtubere=re.compile('GTUBE[^-]')
-        if gtubere.search(result)!=None:
+        spamflag,score,rules=self.safilter_symbols(stream, 'test')
+        if 'GTUBE' in rules:
             print "GTUBE Has been detected correctly"
             return True
         else:
