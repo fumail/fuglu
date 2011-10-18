@@ -473,7 +473,7 @@ class SuspectFilter(object):
         if headername=='envelope_from' or headername=='from_address':
             return [suspect.from_address,]
         if headername=='envelope_to' or headername=='to_address':
-            return [suspect.to_address,]
+            return suspect.recipients
         if headername=='from_domain':
             return [suspect.from_domain,]
         if headername=='to_domain':
@@ -499,7 +499,9 @@ class SuspectFilter(object):
             allvalues=[]
             realheadername=headername[5:]
             for part in messagerep.walk():
-                allvalues.extend(self._get_headers(realheadername, part))
+                hdrslist=self._get_headers(realheadername, part)
+                if hdrslist!=None:
+                    allvalues.extend(hdrslist)
             return allvalues
                 
         #standard header
@@ -538,8 +540,8 @@ class SuspectFilter(object):
             for val in vals:
                 if val==None:
                     continue
-                self.logger.debug("""Checking headername %s (arg '%s') against value %s"""%(headername,arg,val))
-                if pattern.match(str(val)):
+                self.logger.debug("""Checking headername %s (arg '%s') regex '%s' against value %s"""%(headername,arg,pattern.pattern,val))
+                if pattern.search(str(val)):
                     self.logger.debug('Match headername %s on val %s'%(headername,val))
                     return (True,arg)
         self.logger.debug('No match found')
