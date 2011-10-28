@@ -1,3 +1,5 @@
+include doc/CHANGELOG
+include doc/INSTALL
 include conf/*.dist
 include conf/*.cfg
 include conf/templates/*.dist

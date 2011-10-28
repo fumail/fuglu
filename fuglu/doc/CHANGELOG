@@ -1,4 +1,4 @@
--- Fuglu 0.4.6
+-- Fuglu 0.5.0, Released 2011-10-28
  * started changelog ;-)
  * bugfix: Milter protocol errors
  * bugfix: Incorrect unquoting of two leading dots in smtp transactions could lead to broken s/mime sigs
@@ -7,7 +7,7 @@
  * SuspectFilters (previously 'HeaderFilters'): 
  	* now supports header wildcard (Character '*')
  	* accepts colon at the end
- 	* alias "from_address" for envelope from and "to_address" for envelope_to
+ 	* alias "from_address" for envelope_from and "to_address" for envelope_to
  	* new type: 'mime:<headername>' to check mime headers in all attachments
  	* new type: 'body:stripped'  (or just 'body') to match all text parts with html tags removed and newlines replaced by space
  	* new type: 'body:raw' to match the decoded body in all text/* parts
@@ -31,8 +31,9 @@
 
 Developers:
  * Suspects now also have a "highspam" tag which allows different behavior based on whether a message is "probably" or "definitely" spam
- * if a plugin cant be loaded, a full stack trace is displayed
+ * if a plugin cannot be loaded, a full stack trace is displayed
  * Appenderplugins can now read the tag "injectanswer" which contains the final smtp answer from SMTP reinjects
  * (sql extension) DBFiles allow reading sql tables and treat them like config files
-
+ * HeaderFilter is now called SuspectFilter
+ 
 -- Fuglu 0.4.5, Released 2010-05-20
