@@ -190,7 +190,7 @@ class VacationCache( object ):
             self.lock.release()
             
     def _loadvacation(self):
-        """effectively loads the vacation, do not call directly, only through reloadifnecessary"""
+        """loads all vacations from database, do not call directly, only through reloadifnecessary"""
         self.logger.debug('Reloading vacation...')
 
         self.lastreload=time.time()
@@ -270,12 +270,20 @@ class VacationPlugin(ScannerPlugin):
     
     def on_vacation(self,suspect):
         """return Vacation object if recipient is on vacation, None otherwise"""
-        rec=suspect.to_address
-        vacation=None
+        toaddress=suspect.to_address
+        todomain=suspect.to_domain
+        
         allvacs=self._cache().vacations
-        if allvacs.has_key(rec):
-            vacation=allvacs[rec]
-        return vacation
+        
+        #check for individual vacation
+        if toaddress in allvacs:
+            return allvacs[toaddress]
+        
+        #domain wide vacation
+        if todomain in allvacs:
+            return allvacs[todomain]
+        
+        return None
 
     
     def ignore_sender(self,vacation,suspect):
