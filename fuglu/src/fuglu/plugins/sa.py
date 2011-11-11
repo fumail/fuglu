@@ -200,6 +200,7 @@ Subject: test scanner
         #check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip')==True:
             self.logger.debug('Skipping SA Plugin (requested by previous plugin)')
+            suspect.set_tag('SAPlugin.skipreason','requested by previous plugin')
             return
         
         spamsize=suspect.size
@@ -213,6 +214,7 @@ Subject: test scanner
             suspect.debug('Too big for spamchecks. %s > %s'%(spamsize,maxsize))
             prependheader=self.config.get('main','prependaddedheaders')
             suspect.addheader("%sSA-SKIP"%prependheader, 'Too big for spamchecks. %s > %s'%(spamsize,maxsize))
+            suspect.set_tag('SAPlugin.skipreason','size skip')
             return self.check_sql_blacklist(suspect)
             
         
@@ -231,6 +233,7 @@ Subject: test scanner
                 suspect.debug('SA report Scan failed - please check error log')
                 self.logger.error('%s SA report scan FAILED'%suspect.id)
                 suspect.addheader('%sSA-SKIP'%self.config.get('main','prependaddedheaders'),'SA scan failed')
+                suspect.set_tag('SAPlugin.skipreason','scan failed')
                 return self._problemcode()
             isspam,spamscore,report=ret
             suspect.tags['SAPlugin.report']=report
@@ -242,6 +245,7 @@ Subject: test scanner
                 suspect.debug('SA Scan failed - please check error log')
                 self.logger.error('%s SA scan FAILED'%suspect.id)
                 suspect.addheader('%sSA-SKIP'%self.config.get('main','prependaddedheaders'),'SA scan failed')
+                suspect.set_tag('SAPlugin.skipreason','scan failed')
                 return self._problemcode()
             else:
                 content=filtered 
