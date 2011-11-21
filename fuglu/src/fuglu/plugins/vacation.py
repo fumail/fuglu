@@ -196,7 +196,7 @@ class VacationCache( object ):
         self.lastreload=time.time()
 
         newvacations={}
-        dbsession=fuglu.extensions.sql.get_session(self.config.get('VacationPlugin','dbconnectstring'))
+        dbsession=fuglu.extensions.sql.get_session(self.config.get('VacationPlugin','dbconnectstring'),expire_on_commit=False)
         vaccounter=0
         now=datetime.now()
         for vac in dbsession.query(Vacation).filter_by(enabled=True).filter(Vacation.start<now).filter(Vacation.end>now):
@@ -412,7 +412,7 @@ class VacationPlugin(ScannerPlugin):
             for vac in allvacs:
                 print vac
         except Exception,e:
-            print "Database error: %s"%e
+            print "Database error: %s"%str(e)
             return False
             
         return True
