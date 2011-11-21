@@ -37,7 +37,7 @@ except:
 _sessmaker=None
 _engines = {}
 
-def get_session(connectstring):
+def get_session(connectstring,**kwargs):
     global ENABLED
     global _sessmaker
     global _engines
@@ -52,7 +52,7 @@ def get_session(connectstring):
         _engines[connectstring]=engine
     
     if _sessmaker==None:
-        _sessmaker = sessionmaker(autoflush=True, autocommit=True)
+        _sessmaker = sessionmaker(autoflush=True, autocommit=True,**kwargs)
     
     session = scoped_session(_sessmaker)
     session.configure(bind=engine)
