@@ -151,6 +151,7 @@ attachment=fuglu.plugins.attachment.FiletypePlugin
 clamav=fuglu.plugins.clamav.ClamavPlugin
 spamassassin=fuglu.plugins.sa.SAPlugin
 vacation=fuglu.plugins.vacation.VacationPlugin
+actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
 
 #appenders
 
@@ -274,3 +275,5 @@ filterfile=/etc/fuglu/skipplugins.regex
 [VacationPlugin]
 dbconnectstring=sqlite:////usr/local/fuglu/vacation.db
 
+[ActionOverridePlugin]
+actionrules=/etc/fuglu/actionrules.regex
