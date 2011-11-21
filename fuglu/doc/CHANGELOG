@@ -1,3 +1,13 @@
+-- Fuglu 0.5.0+ svn:
+ * new Plugin: Killer (Deletes All messages)
+ * new Plugin: ActionOverride (Custom action based on filter)
+ * Vacation Plugin: Now supports domain wide ooo messages
+ 
+ 
+Developers:
+ * Spamassassin Plugin: writes new tag "SAPlugin.skipreason' if the message was not scanned
+ 
+ 
 -- Fuglu 0.5.0, Released 2011-10-28
  * started changelog ;-)
  * bugfix: Milter protocol errors
