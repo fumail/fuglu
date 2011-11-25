@@ -224,7 +224,8 @@ class Suspect:
     
     def addheader(self,key,value,immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
-        if you set immediate=True the message source will be replaced immediately
+        if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
+        visible to later plugins (eg. for spamassassin rules), otherwise, leave as False which is faster.
         """
         if immediate:
             val=unicode(value,errors='ignore')  # is ignore the right thing to do here?
