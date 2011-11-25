@@ -45,6 +45,7 @@ import unittest
 import ConfigParser
 import datetime
 from string import Template
+from email.Header import Header
 #constants
 
 DUNNO=0 #go on
@@ -221,9 +222,19 @@ class Suspect:
                 return True
         return False
     
-    def addheader(self,key,value):
-        """adds a entry to the list of headers to be added when re-injecting"""
-        self.addheaders[key]=value
+    def addheader(self,key,value,immediate=False):
+        """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
+        if you set immediate=True the message source will be replaced immediately
+        """
+        if immediate:
+            val=unicode(value,errors='ignore')  # is ignore the right thing to do here?
+            hdr=Header(val, header_name=key, continuation_ws=' ')
+            hdrline="%s: %s\n"%(key,hdr.encode())
+            src=hdrline+self.getSource()
+            self.setSource(src)
+        else:
+            self.addheaders[key]=value
+        
         
     
     def is_virus(self):
