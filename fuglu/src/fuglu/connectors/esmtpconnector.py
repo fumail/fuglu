@@ -67,7 +67,7 @@ class ESMTPHandler(ProtocolHandler):
     def get_suspect(self):
         success=self.sess.getincomingmail()
         if not success:
-            self.logger.error('incoming smtp transfer did not finish')
+            self.logger.error('incoming esmtp transfer did not finish')
             return None
         
         sess=self.sess
@@ -125,7 +125,7 @@ class ESMTPServer(object):
         controller=self.controller
         threading.currentThread().name='ESMTP Server on Port %s'%self.port
         
-        self.logger.info('SMTP Server running on port %s'%self.port)
+        self.logger.info('ESMTP Server running on port %s'%self.port)
         if use_multithreading:
                 threadpool=self.controller.threadpool
         while self.stayalive:
