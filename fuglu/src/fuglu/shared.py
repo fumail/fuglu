@@ -388,7 +388,7 @@ class AppenderPlugin(BasicPlugin):
     """Appender Plugins are run after the scan process (and after the re-injection if the message
     was accepted)"""
     def process(self,suspect,decision):
-        self._logger().warning('Unimplemented examine() method')
+        self._logger().warning('Unimplemented process() method')
 
 
 class SuspectFilter(object):
