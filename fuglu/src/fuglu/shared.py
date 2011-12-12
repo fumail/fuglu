@@ -114,7 +114,7 @@ def apply_template(templatecontent,suspect,values=None):
 
 HOSTNAME=socket.gethostname()
 
-class Suspect:
+class Suspect(object):
     """
     The suspect represents the message to be scanned. Each scannerplugin will be presented
     with a suspect and may modify the tags or even the message content itself.
@@ -411,7 +411,63 @@ class SuspectFilter(object):
             return
         if self.filechanged():
             self._reload()
+    
+    
+    def _load_simplestyle_line(self,line):
+        sp=line.split(None,2)
+        if len(sp)<2:
+            raise Exception(""""Invalid line '%s' in Rulefile %s. Ignoring."""%(line,self.filename))
         
+        args=None
+        if len(sp)==3:
+            args=sp[2]
+            
+        fieldname=sp[0]
+        #strip ending : (request AXB)
+        if fieldname.endswith(':'):
+            fieldname=fieldname[:-1]
+        regex=sp[1]
+        try:
+            pattern=re.compile(regex, re.IGNORECASE|re.DOTALL)
+        except Exception,e:
+            raise Exception('Could not compile regex %s in file %s (%s)'%(regex,self.filename,e))
+        
+        tup=(fieldname,pattern,args)
+        return tup
+    
+    def _load_perlstyle_line(self,line):
+        patt=r"""(?P<fieldname>[a-zA-Z0-9\-\.]+)[:]?\s+\/(?P<regex>(?:\\.|[^/\\])*)/(?P<flags>[IiMm]+)?((?:\s*$)|(?:\s+(?P<args>.*)))$"""
+        m=re.match(patt,line)
+        if m==None:
+            return None
+        
+        groups=m.groupdict()
+        regex=groups['regex']
+        flags=groups['flags']
+        if flags==None:
+            flags=[]
+        args=groups['args']
+        if args!=None and args.strip()=='':
+            args=None
+        fieldname=groups['fieldname']
+        
+        reflags=0
+        for flag in flags:
+            flag=flag.lower()
+            if flag=='i':
+                reflags|=re.I
+            if flag=='m':
+                reflags|=re.M
+            
+        try:
+            pattern=re.compile(regex, reflags)
+        except Exception,e:
+            raise Exception('Could not compile regex %s in file %s (%s)'%(regex,self.filename,e))
+        
+        tup=(fieldname,pattern,args)
+        return tup
+        
+    
     def _reload(self):
         self.logger.info('Reloading Rulefile %s'%self.filename)
         statinfo=os.stat(self.filename)
@@ -429,27 +485,28 @@ class SuspectFilter(object):
             if line.startswith('#'):
                 continue
             
-            #line shold be "headername    regex    arguments"
-            sp=line.split(None,2)
-            if len(sp)<2:
-                self.logger.error(""""Invalid line '%s' in Rulefile %s. Ignoring."""%(line,self.filename))
-                continue
             
-            args=None
-            if len(sp)==3:
-                args=sp[2]
-                
-            headername=sp[0]
-            
-            regex=sp[1]
+            #try advanced regex line
+            #<headername> /regex/<flags> <arguments>
             try:
-                pattern=re.compile(regex, re.IGNORECASE|re.DOTALL)
+                tup=self._load_perlstyle_line(line)
+                if tup!=None:
+                    newpatterns.append(tup)
+                    continue
             except Exception,e:
-                self.logger.error('Could not compile regex %s in file %s (%s)'%(regex,self.filename,e))
+                self.logger.error("perl style line failed %s, error: %s"%(line,str(e)))
                 continue
             
-            tup=(headername,pattern,args)
-            newpatterns.append(tup)
+            
+            #line shold be "headername    regex    arguments"
+            try:
+                tup=self._load_simplestyle_line(line)
+                newpatterns.append(tup)
+                continue
+            except Exception,e:
+                self.logger.error(str(e))
+                continue
+            
         self.patterns=newpatterns
     
     
@@ -476,11 +533,7 @@ class SuspectFilter(object):
         return textparts
     
     def _getField(self,suspect,headername):
-        """return mail header value or special value"""
-        #strip ending : (request AXB)
-        if headername.endswith(':'):
-            headername=headername[:-1]
-         
+        """return mail header value or special value"""         
         #builtins
         if headername=='envelope_from' or headername=='from_address':
             return [suspect.from_address,]
@@ -616,6 +669,11 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failUnless('full body rule works' in headermatches,"full body failed")
         self.failUnless('mime rule works' in headermatches,"mime rule failed")
         self.failIf('this should not match in a body rule' in headermatches,'decoded body rule matched raw body')
+        
+        #perl style advanced rules
+        self.failUnless('perl-style /-notation works!' in headermatches,"new rule format failed: %s"%headermatches)
+        self.failIf('this should not match' in headermatches,"rule flag ignorecase was not detected")
+        
         #TODO: raw body rules
         (match,arg)=self.candidate.matches(suspect)
         self.failUnless(match,'Match should return True')
