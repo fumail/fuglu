@@ -552,10 +552,13 @@ class SuspectFilter(object):
             for val in vals:
                 if val==None:
                     continue
-                self.logger.debug("""Checking headername %s (arg '%s') regex '%s' against value %s"""%(headername,arg,pattern.pattern,val))
-                if pattern.search(str(val)):
-                    self.logger.debug('Match headername %s on val %s'%(headername,val))
+                #self.logger.debug("""Checking headername %s (arg '%s') regex '%s' against value %s"""%(headername,arg,pattern.pattern,val))
+                if pattern.search(str(val)):   
+                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
                     return (True,arg)
+                else:
+                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
+                    
         self.logger.debug('No match found')
         return (False,None)
     
