@@ -63,6 +63,8 @@ class ArchivePlugin(ScannerPlugin):
             if arg!=None and arg.lower()=='no':
                 self.logger.debug("""Header matches archive exception rule - not archiving""")
             else:
+                if arg!=None and arg.lower()!='yes':
+                    self.logger.warning("Unknown archive action '%s' assuming 'yes'"%arg)
                 self.logger.debug("""Header matches archive rule""")
                 self.archive(suspect)
                 
