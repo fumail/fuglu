@@ -26,3 +26,4 @@ body	12140	this should not match in a body rule
 #new syntax
 subject /HELLO WORLD/i    perl-style /-notation works!   
 subject /HELLO WORLD/ this should not match
+to_domain /^unittests.fuglu.org$/ perl-style recipient match
