@@ -436,7 +436,7 @@ class SuspectFilter(object):
         return tup
     
     def _load_perlstyle_line(self,line):
-        patt=r"""(?P<fieldname>[a-zA-Z0-9\-\.]+)[:]?\s+\/(?P<regex>(?:\\.|[^/\\])*)/(?P<flags>[IiMm]+)?((?:\s*$)|(?:\s+(?P<args>.*)))$"""
+        patt=r"""(?P<fieldname>[a-zA-Z0-9\-\.\_\:]+)[:]?\s+\/(?P<regex>(?:\\.|[^/\\])*)/(?P<flags>[IiMm]+)?((?:\s*$)|(?:\s+(?P<args>.*)))$"""
         m=re.match(patt,line)
         if m==None:
             return None
@@ -450,7 +450,9 @@ class SuspectFilter(object):
         if args!=None and args.strip()=='':
             args=None
         fieldname=groups['fieldname']
-        
+        if fieldname.endswith(':'):
+            fieldname=fieldname[:-1]
+            
         reflags=0
         for flag in flags:
             flag=flag.lower()
@@ -672,6 +674,7 @@ class SuspectFilterTestCase(unittest.TestCase):
         
         #perl style advanced rules
         self.failUnless('perl-style /-notation works!' in headermatches,"new rule format failed: %s"%headermatches)
+        self.failUnless('perl-style recipient match' in headermatches,"new rule format failed for to_domain: %s"%headermatches)
         self.failIf('this should not match' in headermatches,"rule flag ignorecase was not detected")
         
         #TODO: raw body rules
