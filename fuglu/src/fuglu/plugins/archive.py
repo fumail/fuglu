@@ -61,14 +61,19 @@ class ArchivePlugin(ScannerPlugin):
         (match,arg)=self.filter.matches(suspect)
         if match:
             if arg!=None and arg.lower()=='no':
+                suspect.debug("Suspect matches archive exception rule")
                 self.logger.debug("""Header matches archive exception rule - not archiving""")
             else:
                 if arg!=None and arg.lower()!='yes':
                     self.logger.warning("Unknown archive action '%s' assuming 'yes'"%arg)
                 self.logger.debug("""Header matches archive rule""")
-                self.archive(suspect)
-                
-        
+                if suspect.get_tag('debug'):
+                    suspect.debug("Suspect matches archiving rule (i would  archive it if we weren't in debug mode)")
+                else:
+                    self.archive(suspect)
+        else:
+            suspect.debug("No archive rule/exception rule applies to this message")
+            
         #For debugging, its good to know how long each plugin took
         endtime=time.time()
         difftime=endtime-starttime
