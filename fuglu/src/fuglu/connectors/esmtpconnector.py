@@ -56,12 +56,21 @@ class ESMTPHandler(ProtocolHandler):
         """Send message back to postfix"""
         if suspect.get_tag('noreinject'):
             return 'message not re-injected by plugin request'
-        modifiedtext=buildmsgsource(suspect)
+        if suspect.get_tag('reinjectoriginal'):
+            self.logger.info('Injecting original message source without modifications')
+            msgcontent=suspect.getOriginalSource()
+        elif self.is_signed(suspect):
+            self.logger.info('S/MIME signed message detected - sending original source without modifications')
+            msgcontent=suspect.getOriginalSource()
+        else:
+            msgcontent=buildmsgsource(suspect)
         
-        (code,answer)=self.sess.forwardconn.data(modifiedtext)
+        (code,answer)=self.sess.forwardconn.data(msgcontent)
         if code!=250:
             raise Exception,"Got status code '%s' Postfix said: %s"%(code,answer)
         return "%s %s"%(code,answer)
+    
+    
     
 
     def get_suspect(self):
