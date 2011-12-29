@@ -47,7 +47,6 @@ class SessionHandler(object):
         self.workerthread=workerthread
         
         starttime=time.time()
-        sess=None
         prependheader=self.config.get('main','prependaddedheaders')
         try:
             self.set_threadinfo('receiving message')
@@ -125,7 +124,7 @@ class SessionHandler(object):
                 retmesg="Rejected by content scanner"
                 if self.message!=None:
                     retmesg=self.message
-                sess.endsession(550,retmesg)
+                self.protohandler.reject(retmesg)
             elif result==DEFER:
                 message_is_deferred=True
                 retmesg= 'Internal problem - message deferred'
@@ -156,8 +155,7 @@ class SessionHandler(object):
         except Exception, e:
             exc=traceback.format_exc()
             self.logger.error('Exception %s: %s'%(e,exc))
-            if sess!=None:
-                sess.endsession(421, 'exception %s'%e)
+            self.protohandler.defer("internal problem - message deferred")
         self.logger.debug('Session finished')
 
     

@@ -59,9 +59,6 @@ class ESMTPHandler(ProtocolHandler):
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info('Injecting original message source without modifications')
             msgcontent=suspect.getOriginalSource()
-        elif self.is_signed(suspect):
-            self.logger.info('S/MIME signed message detected - sending original source without modifications')
-            msgcontent=suspect.getOriginalSource()
         else:
             msgcontent=buildmsgsource(suspect)
         
@@ -100,6 +97,9 @@ class ESMTPHandler(ProtocolHandler):
     def discard(self,reason):
         self.sess.endsession(250, "OK")
         #self.sess=None
+    
+    def reject(self,reason):
+        self.sess.endsession(550, reason)
     
 
 class ESMTPServer(object):    
