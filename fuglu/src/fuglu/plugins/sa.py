@@ -25,7 +25,7 @@ class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'problemaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'scanoriginal'),(self.section,'forwardoriginal'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'))
+        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'problemaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'scanoriginal'),(self.section,'forwardoriginal'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'),(self.section,'rejectmessage'))
         self.logger=self._logger()
         
     def lint(self):
@@ -275,12 +275,16 @@ Subject: test scanner
          
         
         action=DUNNO
+        message=None
+        
         if isspam:
             self.logger.debug('Message is spam')
             suspect.debug('Message is spam')
             configaction=string_to_actioncode(self.config.get(self.section,'lowspamaction'),self.config)
             if configaction!=None:
                 action=configaction
+            values=dict(spamscore=spamscore)
+            message=apply_template(self.config.get(self.section,'rejectmessage'), suspect, values)
         else:
             self.logger.debug('Message is not spam')
             suspect.debug('Message is not spam')   
@@ -299,7 +303,7 @@ Subject: test scanner
         endtime=time.time()
         difftime=endtime-starttime
         suspect.tags['SAPlugin.time']="%.4f"%difftime
-        return action
+        return action,message
     
     def safilter(self,messagecontent,user):
         """pass content to sa, return sa-processed mail"""

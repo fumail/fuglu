@@ -15,7 +15,7 @@
 # $Id$
 #
 from fuglu.shared import ScannerPlugin,string_to_actioncode,DEFER,DUNNO,actioncode_to_string,\
-    DELETE, Suspect
+    DELETE, Suspect, apply_template
 import socket
 import string
 import time
@@ -32,7 +32,7 @@ class ClamavPlugin(ScannerPlugin):
         self.timeout=config.getint(self.section,'timeout')
         self.maxsize=config.getint(self.section,'maxsize')
         self.retries = self.config.getint(self.section,'retries')
-        self.requiredvars=((self.section,'host'),(self.section,'port'),(self.section,'timeout'),(self.section,'maxsize'),(self.section,'retries'),(self.section,'virusaction'))
+        self.requiredvars=((self.section,'host'),(self.section,'port'),(self.section,'timeout'),(self.section,'maxsize'),(self.section,'retries'),(self.section,'virusaction'),(self.section,'rejectmessage'))
         self.logger=self._logger()
     
     def _problemcode(self):
@@ -70,7 +70,10 @@ class ClamavPlugin(ScannerPlugin):
                 if viruses!=None:
                     virusaction=self.config.get(self.section,'virusaction')
                     actioncode=string_to_actioncode(virusaction,self.config)
-                    return actioncode
+                    firstinfected,firstvirusname=viruses.items()[0]
+                    values=dict(infectedfile=firstinfected,virusname=firstvirusname)
+                    message=apply_template(self.config.get(self.section,'rejectmessage'), suspect, values)
+                    return actioncode,message
                 return DUNNO
             except Exception,e:
                 self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.retries,str(e)))

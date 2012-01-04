@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO,\
+from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO, REJECT,\
     string_to_actioncode, actioncode_to_string
 from fuglu.bounce import Bounce
 import fuglu.extensions.sql
@@ -243,14 +243,18 @@ class FiletypePlugin(ScannerPlugin):
             type=magic.from_buffer(buffer, mime=True)
         return type
 
+    def asciionly(self,stri):
+        """return stri with all non-ascii chars removed"""
+        return "".join([x for x in stri if ord(x) < 128])
+        
 
     def matchRules(self,ruleset,object,suspect,attachmentname=None):
         if attachmentname==None:
             attachmentname=""
-        attachmentname="".join([x for x in attachmentname if ord(x) < 128])
+        attachmentname=self.asciionly(attachmentname)
         
         # remove non ascii chars
-        asciirep="".join([x for x in object if ord(x) < 128])
+        asciirep=self.asciionly(object)
         
         displayname=attachmentname
         if asciirep==attachmentname:
@@ -357,7 +361,8 @@ class FiletypePlugin(ScannerPlugin):
                 return DELETE
             if res==ATTACHMENT_BLOCK:
                 self._debuginfo(suspect,"Attachment name=%s : blocked by name)"%att_name)
-                return blockactioncode
+                message=suspect.tags['FiletypePlugin.errormessage']
+                return blockactioncode,message
             
 
             #go through content type rules
@@ -367,7 +372,8 @@ class FiletypePlugin(ScannerPlugin):
                 return DELETE
             if res==ATTACHMENT_BLOCK:
                 self._debuginfo(suspect,"Attachment name=%s content-type=%s : blocked by mime content type (message source)"%(att_name,contenttype_mime))
-                return blockactioncode
+                message=suspect.tags['FiletypePlugin.errormessage']
+                return blockactioncode,message
             
             if MAGIC_AVAILABLE:
                 pl = i.get_payload(decode=True)
@@ -378,7 +384,8 @@ class FiletypePlugin(ScannerPlugin):
                     return DELETE
                 if res==ATTACHMENT_BLOCK:
                     self._debuginfo(suspect,"Attachment name=%s content-type=%s : blocked by mime content type (magic)"%(att_name,contenttype_mime))
-                    return blockactioncode
+                    message=suspect.tags['FiletypePlugin.errormessage']
+                    return blockactioncode,message
         return DUNNO
 
     def _debuginfo(self,suspect,message):
