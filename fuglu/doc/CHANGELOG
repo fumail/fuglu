@@ -1,13 +1,20 @@
--- Fuglu 0.5.0+ svn:
+
+-- Fuglu 0.5.1, not yet released
+ * various bugfixes in Before-Queue Support
  * new Plugin: Killer (Deletes All messages)
  * new Plugin: ActionOverride (Custom action based on filter)
  * Vacation Plugin: Now supports domain wide ooo messages
+ * SuspectFilter Files now have support advanced regex format /<perl style regular expression>/<modifiers>
+ * Archive Plugin: Improved Logging
+ * Clamav Plugin / Spamassassin Plugin / Attachment Plugin: new option 'rejectmessage' for before queue rejects
  
  
-Developers:
+Developers: 
+
+ * suspect.addheader() has a new 'immediate' option to make headers visible for later plugins. by default, headers are only added before re-injecting
  * Spamassassin Plugin: writes new tag "SAPlugin.skipreason' if the message was not scanned
  
- 
+
 -- Fuglu 0.5.0, Released 2011-10-28
  * started changelog ;-)
  * bugfix: Milter protocol errors
