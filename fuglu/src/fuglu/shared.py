@@ -105,6 +105,8 @@ def apply_template(templatecontent,suspect,values=None):
     values['from_domain']=suspect.from_domain
     values['to_domain']=suspect.to_domain
     values['subject']=suspect.getMessageRep()['subject']
+    values['date']=str(datetime.date.today())
+    values['time']=time.strftime('%X')
     
     template = Template(templatecontent)
     
