@@ -226,7 +226,7 @@ sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND u
 [ClamavPlugin]
 #where do we find clamd?
 #if you want to use unix domain socket, set the port to the socket path, eg.
-#port=/var/lib/clamav/clamd.sock
+#port=/var/lib/clamav/clamd.sock (ubuntu default: /var/run/clamav/clamd.ctl)
 host=localhost
 port=3310
 timeout=10
