@@ -207,6 +207,9 @@ highspamaction=DEFAULTHIGHSPAMACTION
 #DUNNO: accept the message without SA scan
 problemaction=DEFER
 
+#if we are in before-queue mode, use this reject message template
+rejectmessage=message identified as spam
+
 #SQL Blacklist
 #fuglu can consult the blacklist for messages that cannot be scanned by SA because they are too big
 #This requires that sqlalchemy is installed (easy_install sqlalchemy should do the trick)
@@ -221,6 +224,9 @@ sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND u
 
 #Clam antivirus (clamd)
 [ClamavPlugin]
+#where do we find clamd?
+#if you want to use unix domain socket, set the port to the socket path, eg.
+#port=/var/lib/clamav/clamd.sock
 host=localhost
 port=3310
 timeout=10
@@ -229,6 +235,7 @@ maxsize=22000000
 retries=3
 virusaction=DEFAULTVIRUSACTION
 problemaction=DEFER
+rejectmessage=virus detected: ${virusname}
 
 #Attachment 
 [FiletypePlugin]

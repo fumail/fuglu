@@ -20,7 +20,7 @@ import socket
 import string
 import time
 import unittest
-
+import os
 
 
 class ClamavPlugin(ScannerPlugin):
@@ -28,7 +28,7 @@ class ClamavPlugin(ScannerPlugin):
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.clamdhost=config.get(self.section,'host')
-        self.clamdport=config.getint(self.section,'port')
+        self.clamdport=config.get(self.section,'port')
         self.timeout=config.getint(self.section,'timeout')
         self.maxsize=config.getint(self.section,'maxsize')
         self.retries = self.config.getint(self.section,'retries')
@@ -125,13 +125,31 @@ class ClamavPlugin(ScannerPlugin):
         
     def __init_socket__(self):
         clamd_HOST=self.clamdhost
-        clamd_PORT=self.clamdport
-        s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(self.timeout)
+        unixsocket=False
+        
         try:
-            s.connect((clamd_HOST, clamd_PORT))
-        except socket.error:
-            raise Exception, 'Could not reach clamd using network (%s, %s)' % (clamd_HOST, clamd_PORT)
+            iport=int(self.clamdport)
+        except ValueError:
+            unixsocket=True
+        
+        if unixsocket:
+            sock=self.clamdport
+            if not os.path.exists(sock):
+                raise Exception("unix socket %s not found"%sock)
+            s=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.settimeout(self.timeout)
+            try:
+                s.connect(sock)
+            except socket.error:
+                raise Exception('Could not reach clamd using unix socket %s' % sock)
+        else:
+            clamd_PORT=int(self.clamdport)
+            s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(self.timeout)
+            try:
+                s.connect((clamd_HOST, clamd_PORT))
+            except socket.error:
+                raise Exception('Could not reach clamd using network (%s, %s)' % (clamd_HOST, clamd_PORT))
         
         return s
     
@@ -144,8 +162,8 @@ class ClamavPlugin(ScannerPlugin):
     def lint_ping(self):
         try:
             s = self.__init_socket__()
-        except:
-            print "Could not contact clamd"
+        except Exception,e:
+            print "Could not contact clamd: %s"%(str(e))
             return False
         s.send('PING')
         result = s.recv(20000)
