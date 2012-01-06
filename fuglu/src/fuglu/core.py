@@ -161,9 +161,9 @@ class MainController(object):
             #mainthread dummy loop
             while self.stayalive:
                 try:
-                    time.sleep(10)
+                    time.sleep(1)
                 except KeyboardInterrupt:
-                    pass
+                    self.stayalive=False
         self.shutdown()
     
     def run_debugconsole(self):
