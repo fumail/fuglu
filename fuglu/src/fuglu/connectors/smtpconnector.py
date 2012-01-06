@@ -81,7 +81,7 @@ class SMTPHandler(ProtocolHandler):
         client = FUSMTPClient('127.0.0.1',self.config.getint('main', 'outgoingport'))
         client.helo(self.config.get('main','outgoinghelo'))
   
-        client.sendmail(suspect.from_address, suspect.to_address, msgcontent)
+        client.sendmail(suspect.from_address, suspect.recipients, msgcontent)
         #if we did not get an exception so far, we can grab the server answer using the patched client
         #servercode=client.lastservercode
         serveranswer=client.lastserveranswer
