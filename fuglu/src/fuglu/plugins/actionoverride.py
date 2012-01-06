@@ -54,12 +54,28 @@ class ActionOverridePlugin(ScannerPlugin):
                 self.logger.error("Rule match but no action defined.")
                 return DUNNO
             
-            actioncode=string_to_actioncode(arg, self.config)
-            if actioncode==None:
+            arg=arg.strip()
+            spl=arg.split(None,1)
+            actionstring=spl[0]
+            message=None
+            if len(spl)==2:
+                message=spl[1]
+            self.logger.debug("%s: Rule match! Action override: %s"%(suspect.id,arg.upper()))
+            
+            actioncode=string_to_actioncode(actionstring,self.config)
+            if actioncode!=None:
+                return actioncode,message
+                
+            elif actionstring.upper()=='REDIRECT':
+                suspect.to_address=message.strip()
+                suspect.recipients=[suspect.to_address,]
+                #todo: should we override to_domain? probably not
+                #todo: check for invalid adress, multiple adressses
+                #todo: document redirect action
+            else:
                 self.logger.error("Invalid action: %s"%arg)
                 return DUNNO
-            
-            self.logger.debug("%s: Rule match! Action override: %s"%(suspect.id,arg.upper()))
+                        
             
         return DUNNO
         
