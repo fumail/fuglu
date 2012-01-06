@@ -18,6 +18,5 @@ setup(name = "fuglu",
                 ('/etc/fuglu',glob.glob('conf/*.dist')),
                 ('/etc/fuglu/templates',glob.glob('conf/templates/*.dist')),
                 ('/etc/fuglu/rules',glob.glob('conf/rules/*.dist')),
-                ('/etc/init.d',['scripts/init.d-centos/fuglu']),
                 ]
 )
