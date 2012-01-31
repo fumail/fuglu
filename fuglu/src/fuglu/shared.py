@@ -310,20 +310,23 @@ class Suspect(object):
         """returns true if the message source has been modified"""
         return self.source!=None
     
-    def getSource(self):
+    def getSource(self,maxbytes=None):
         """returns the current message source, possibly changed by plugins"""
         if self.source!=None:
-            return self.source
+            return self.source[:maxbytes]
         else:
-            return self.getOriginalSource()
+            return self.getOriginalSource(maxbytes)
         
     def setSource(self,source):
         self.source=source
         
-    def getOriginalSource(self):
+    def getOriginalSource(self,maxbytes=None):
         """returns the original, unmodified message source"""
+        readbytes=-1
+        if maxbytes!=None:
+            readbytes=maxbytes
         try:
-            source=open(self.tempfile).read()
+            source=open(self.tempfile).read(readbytes)
         except Exception,e:
             logging.getLogger('fuglu.suspect').error('Cannot retrieve original source from tempfile %s : %s'%(self.tempfile,str(e)))
             raise e
