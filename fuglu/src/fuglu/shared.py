@@ -539,8 +539,10 @@ class SuspectFilter(object):
                 textparts.append(part.get_payload(None,True))
         return textparts
     
-    def _getField(self,suspect,headername):
-        """return mail header value or special value"""         
+    def _getField(self,suspect,headername,messagerep=None):
+        """return mail header value or special value. msgrep should be the cached suspects messagerep
+        so we don't have to load it for every call to _getField
+        """         
         #builtins
         if headername=='envelope_from' or headername=='from_address':
             return [suspect.from_address,]
@@ -558,7 +560,8 @@ class SuspectFilter(object):
             tagname=headername[1:]
             return [suspect.get_tag(tagname),]
         
-        messagerep=suspect.getMessageRep()
+        if messagerep==None:
+            messagerep=suspect.getMessageRep()
         
         #body rules on decoded text parts
         if headername=='body:raw':
@@ -602,9 +605,11 @@ class SuspectFilter(object):
     def matches(self,suspect):
         """returns (True,arg) if any regex matches, (False,None) otherwise"""
         self._reloadifnecessary()
+        messagerep=suspect.getMessageRep()
+        
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._getField(suspect,headername)
+            vals=self._getField(suspect,headername,messagerep=messagerep)
             if vals==None:
                 self.logger.debug('No header %s found'%headername)
                 continue
