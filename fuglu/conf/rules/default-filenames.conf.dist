@@ -7,13 +7,9 @@
 # delete - silently delete the message, no error is sent back. Be careful with this option!
 
 
-# JKF 04/01/2005 More Microsoft security vulnerabilities
 deny    \.ani$                  Windows animated cursor file security vulnerability
 deny    \.cur$                  Windows cursor file security vulnerability
 deny    \.hlp$                  Windows help file security vulnerability
-
-
-# JKF 08/07/2005 Several virus scanners may miss this one
 deny    \.cab$                  Possible malicious Microsoft cabinet file
 
 # These are known to be mostly harmless.
@@ -82,7 +78,7 @@ deny    \.scr$          Windows Screensavers are often used to hide viruses
 deny    \.bat$          Batch files are often malicious
 deny    \.cmd$          Batch files are often malicious
 deny    \.cpl$          Control panel items are often used to hide viruses
-deny    \.mhtml$        MHTML files can be used in an attack against Eudora
+
 
 # Deny filenames with lots of contiguous white space in them.
 deny    \s{10,}         A long gap in a name is often used to hide part of it (10+ spaces)
