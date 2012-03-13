@@ -223,6 +223,7 @@ class ClamavPluginTestCase(unittest.TestCase):
         config.set('ClamavPlugin', 'maxsize','22000000')
         config.set('ClamavPlugin', 'virusaction','DEFAULTVIRUSACTION')
         config.set('ClamavPlugin', 'problemaction','DEFER')
+        config.set('ClamavPlugin', 'rejectmessage','')
 
         self.candidate=ClamavPlugin(config)
 
@@ -256,5 +257,7 @@ AAEAAQA3AAAAbQAAAAAA
 
         suspect.setMessageRep(email.message_from_string(stream))
         result=self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result,message=result
         strresult=actioncode_to_string(result)
         self.assertEqual(strresult,"DELETE")

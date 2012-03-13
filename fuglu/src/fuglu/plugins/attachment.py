@@ -501,6 +501,8 @@ class DatabaseConfigTestCase(unittest.TestCase):
         suspect=Suspect('sender@unittests.fuglu.org','recipient2@unittests.fuglu.org',tempfilename)
 
         result=self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result,message=result
         resstr=actioncode_to_string(result)
         self.assertEquals(resstr,"DELETE")
         os.remove(tempfilename)
@@ -545,6 +547,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
 
         result=self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result,message=result
         os.remove(tempfilename)
         self.failIf(result!=DELETE)
 
@@ -559,5 +563,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
 
         result=self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result,message=result
         os.remove(tempfilename)
         self.assertEquals(result,DUNNO)

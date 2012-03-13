@@ -520,6 +520,8 @@ Subject: test scanner
 """
         suspect.setSource(stream)
         result=self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result,message=result
         score=int( suspect.get_tag('SAPlugin.spamscore'))
         self.failUnless(score>999, "GTUBE mails should score ~1000 , we got %s"%score)
         self.failUnless(result==REJECT,'High spam should be rejected')
