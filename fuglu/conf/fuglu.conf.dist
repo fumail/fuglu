@@ -60,7 +60,8 @@ incomingport=10025,10099,10888
 outgoingport=10026
 
 #outgoing helo we should use
-outgoinghelo=change.me.in.fuglu.conf.local
+#leave empty to use current hostname
+outgoinghelo=
 
 #temp dir where we can store messages
 tempdir=/tmp/

@@ -40,10 +40,6 @@ from fuglu.connectors.esmtpconnector import ESMTPServer
 from fuglu.stats import StatsThread
 from fuglu.scansession import SessionHandler
 
-HOSTNAME=socket.gethostname()
-
-
-
 
 class MainController(object):
     """main class to startup and control the app"""
@@ -304,12 +300,6 @@ class MainController(object):
             except ConfigParser.NoOptionError:
                 print "Missing configuration value [%s] :: %s"%(section,config)
                 allOK=False
-        
-        outgoinghelocheck="change.me.in.fuglu.conf.local"       
-        if self.config.get('main','outgoinghelo')==outgoinghelocheck:
-            print "Your outgoing helo still says '%s' - you should change this option to a real fqdn "%outgoinghelocheck
-            allOK=False
-        
             
         return allOK
     
