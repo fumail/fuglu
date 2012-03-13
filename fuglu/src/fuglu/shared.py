@@ -67,6 +67,8 @@ def actioncode_to_string(actioncode):
     for key,val in ALLCODES.items():
         if val==actioncode:
             return key
+    if actioncode==None:
+        return "NULL ACTION CODE"
     return 'INVALID ACTION CODE %s'%actioncode
 
 def string_to_actioncode(actionstring,config=None):
