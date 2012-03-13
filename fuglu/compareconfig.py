@@ -46,11 +46,13 @@ newsections=newconfig.sections()
 
 #values that usually differ from the default
 excludelist=[
-             ('main','outgoinghelo'),
              ('main','plugins'),
+             ('main','prependers'),
+             ('main','identifier'),
+             ('main','appenders'),
              ('main','trashdir'),
              ('ArchivePlugin','archivedir'),
-             ]
+]
 
 for newsection in newsections:
     #print "Checking section %s"%newsection
