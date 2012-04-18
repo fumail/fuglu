@@ -51,11 +51,10 @@ class ESMTPHandler(ProtocolHandler):
         ProtocolHandler.__init__(self, socket,config)
         self.sess=ESMTPPassthroughSession(socket,config)
     
-    
     def re_inject(self,suspect):
         """Send message back to postfix"""
         if suspect.get_tag('noreinject'):
-            return 'message not re-injected by plugin request'
+            return (250,'message not re-injected by plugin request')
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info('Injecting original message source without modifications')
             msgcontent=suspect.getOriginalSource()
@@ -63,12 +62,7 @@ class ESMTPHandler(ProtocolHandler):
             msgcontent=buildmsgsource(suspect)
         
         (code,answer)=self.sess.forwardconn.data(msgcontent)
-        if code!=250:
-            raise Exception,"Got status code '%s' Postfix said: %s"%(code,answer)
-        return "%s %s"%(code,answer)
-    
-    
-    
+        return (code,answer)
 
     def get_suspect(self):
         success=self.sess.getincomingmail()
@@ -86,9 +80,12 @@ class ESMTPHandler(ProtocolHandler):
         return suspect
 
     def commitback(self,suspect):
-        injectanswer=self.re_inject(suspect)
+        injectcode,injectanswer=self.re_inject(suspect)
         suspect.set_tag("injectanswer",injectanswer)
-        self.sess.endsession(250, "FUGLU REQUEUE(%s): %s"%(suspect.id,injectanswer))
+        if injectcode>=200 and injectcode<300:
+            self.sess.endsession(250, "FUGLU REQUEUE(%s): %s"%(suspect.id,injectanswer))
+        else:
+            self.sess.endsession(injectcode,injectanswer)
         self.sess=None
         
     def defer(self,reason):
