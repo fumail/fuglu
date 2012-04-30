@@ -12,7 +12,7 @@ setup(name = "fuglu",
     author_email = "oli@fuglu.org",
     package_dir={'':'src'},
     packages = ['fuglu','fuglu.plugins','fuglu.extensions','fuglu.lib','fuglu.connectors'],
-    scripts = ["src/startscript/fuglu","src/tools/fuglu_debug","src/tools/fuglu_control"],
+    scripts = ["src/startscript/fuglu","src/tools/fuglu_debug","src/tools/fuglu_control","src/tools/fuglu_conf"],
     long_description = """Fuglu Mail Content Scanner""" ,
     data_files=[
                 ('/etc/fuglu',glob.glob('conf/*.dist')),
