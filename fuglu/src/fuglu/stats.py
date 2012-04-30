@@ -124,8 +124,8 @@ class StatsThread(object):
         
     def writestats(self):
         dir=self.config.get('main','mrtgdir')
-        if dir==None or dir=="":
-            self.logger.info('No mrtg directory defined, disabling stats writer')
+        if dir==None or dir.strip()=="":
+            self.logger.debug('No mrtg directory defined, disabling stats writer')
             return
         
         if not os.path.isdir(dir):
