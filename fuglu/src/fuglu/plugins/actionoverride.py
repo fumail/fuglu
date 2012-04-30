@@ -22,7 +22,12 @@ class ActionOverridePlugin(ScannerPlugin):
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.logger=self._logger()
-        self.requiredvars=((self.section,'actionrules'),)
+        self.requiredvars={
+            'actionrules':{
+                'default':'/etc/fuglu/actionrules.regex',
+                'description':'Rules file',
+            }                  
+        }
         self.filter=None
     
     def lint(self):

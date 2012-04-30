@@ -27,12 +27,47 @@ class ClamavPlugin(ScannerPlugin):
     """Clam Antivirus Plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.clamdhost=config.get(self.section,'host')
-        self.clamdport=config.get(self.section,'port')
-        self.timeout=config.getint(self.section,'timeout')
-        self.maxsize=config.getint(self.section,'maxsize')
-        self.retries = self.config.getint(self.section,'retries')
-        self.requiredvars=((self.section,'host'),(self.section,'port'),(self.section,'timeout'),(self.section,'maxsize'),(self.section,'retries'),(self.section,'virusaction'),(self.section,'rejectmessage'))
+        self.requiredvars={
+            'host':{
+                'default':'localhost',
+                'description':'hostname where clamd runs',
+            },
+            
+            'port':{
+                'default':'3310',
+                'description':"tcp port number or path to clamd.sock for unix domain sockets\nexample /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl ",
+            },
+                         
+            'timeout':{
+                'default':'10',
+                'description':'socket timeout',
+            },
+                           
+            'maxsize':{
+                'default':'22000000',
+                'description':"maximum message size, larger messages will not be scanned.  \nshould match the 'StreamMaxLength' config option in clamd.conf ",
+            },
+                           
+            'retries':{
+                'default':'3',
+                'description':'how often should fuglu retry the connection before giving up',
+            },
+                           
+            'virusaction':{
+                'default':'DEFAULTVIRUSACTION',
+                'description':"action if infection is detected (DUNNO, REJECT, DELETE)",
+            },
+                           
+            'problemaction':{
+                'default':'DEFER',
+                'description':"action if there is a problem (DUNNO, DEFER)",
+            },
+            
+            'rejectmessage':{
+                'default':'virus detected: ${virusname}',
+                'description':"reject message template if running in pre-queue mode and virusaction=REJECT",
+            },
+        }        
         self.logger=self._logger()
     
     def _problemcode(self):
@@ -46,13 +81,13 @@ class ClamavPlugin(ScannerPlugin):
     def examine(self,suspect):
         starttime=time.time()
         
-        if suspect.size>self.maxsize:
+        if suspect.size>self.config.getint(self.section,'maxsize'):
             self.logger.info('Not scanning - message too big')
             return
         
         content=suspect.getSource()
 
-        for i in range(0,self.retries):
+        for i in range(0,self.config.getint(self.section,'retries')):
             try:
                 viruses=self.scan_stream(content)
                 if viruses!=None:
@@ -76,8 +111,8 @@ class ClamavPlugin(ScannerPlugin):
                     return actioncode,message
                 return DUNNO
             except Exception,e:
-                self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.retries,str(e)))
-        self.logger.error("Clamdscan failed after %s retries"%self.retries)
+                self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s"%(i+1,self.config.getint(self.section,'retries'),str(e)))
+        self.logger.error("Clamdscan failed after %s retries"%self.config.getint(self.section,'retries'))
         content=None
         return self._problemcode()
   
@@ -100,9 +135,9 @@ class ClamavPlugin(ScannerPlugin):
     
         s.send('STREAM')
         port = int(s.recv(200).strip().split(' ')[1])
-        self.logger.debug('Sending stream to clamd on host %s port %s'%(self.clamdhost,port))
+        self.logger.debug('Sending stream to clamd on host %s port %s'%(self.config.get(self.section,'host'),port))
         n=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        n.connect((self.clamdhost, port))
+        n.connect((self.config.get(self.section,'host'), port))
         sent = n.sendall(buffer)
         n.close()
 
@@ -124,28 +159,28 @@ class ClamavPlugin(ScannerPlugin):
             return dr
         
     def __init_socket__(self):
-        clamd_HOST=self.clamdhost
+        clamd_HOST=self.config.get(self.section,'host')
         unixsocket=False
         
         try:
-            iport=int(self.clamdport)
+            iport=int(self.config.get(self.section,'port'))
         except ValueError:
             unixsocket=True
         
         if unixsocket:
-            sock=self.clamdport
+            sock=self.config.get(self.section,'port')
             if not os.path.exists(sock):
                 raise Exception("unix socket %s not found"%sock)
             s=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.settimeout(self.timeout)
+            s.settimeout(self.config.getint(self.section,'timeout'))
             try:
                 s.connect(sock)
             except socket.error:
                 raise Exception('Could not reach clamd using unix socket %s' % sock)
         else:
-            clamd_PORT=int(self.clamdport)
+            clamd_PORT=int(self.config.get(self.section,'port'))
             s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(self.timeout)
+            s.settimeout(self.config.getint(self.section,'timeout'))
             try:
                 s.connect((clamd_HOST, clamd_PORT))
             except socket.error:

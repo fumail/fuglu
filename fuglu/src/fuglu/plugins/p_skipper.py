@@ -22,7 +22,11 @@ class PluginSkipper(PrependerPlugin):
     def __init__(self,config,section=None):
         PrependerPlugin.__init__(self,config,section)
         self.filter=None
-        self.requiredvars=((self.section,'filterfile'),)
+        self.requiredvars={
+            'filterfile':{
+                'default':'/etc/fuglu/skipplugins.regex',
+            }
+        }
         self.logger=self._logger()
         
     def pluginlist(self,suspect,pluginlist):

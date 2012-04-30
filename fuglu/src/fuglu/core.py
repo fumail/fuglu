@@ -48,29 +48,200 @@ class MainController(object):
     appenders=[]
     config=None
     
-    def __init__(self,config):
-        self.requiredvars=(('performance','minthreads'),
-                           ('performance','maxthreads'),
-                           ('main','user'),
-                           ('main','group'),
-                           ('main','disablebounces'),
-                           ('main','trashdir'),
-                           ('main','daemonize'),
-                           ('main','plugindir'),
-                           ('main','plugins'),
-                           ('main','prependers'),
-                           ('main','appenders'),
-                           ('main','incomingport'),
-                           ('main','bindaddress'),
-                           ('main','outgoingport'),
-                           ('main','outgoinghelo'),
-                           ('main','tempdir'),
-                           ('main','prependaddedheaders'),
-                           ('main','mrtgdir'),
-                           ('spam','defaultlowspamaction'),
-                           ('spam','defaulthighspamaction'),
-                           ('virus','defaultvirusaction'),
-                           )
+    def __init__(self,config):        
+        self.requiredvars={
+            #main section
+            'identifier':{
+              'section':'main',
+              'description':"""identifier can be any string that helps you identifying your config file\nthis helps making sure the correct config is loaded. this identifier will be printed out when fuglu is reloading its config""",
+              'default':'dist',
+            },
+                           
+            'daemonize':{
+              'section':'main',
+              'description':"run as a daemon? (fork)",
+              'default':"1",
+              #todo: validator...?
+            },
+                           
+            'user':{
+              'section':'main',
+              'description':"run as user",
+              'default':"nobody",
+              #todo: validator, check user...?
+            },  
+                           
+            'group':{
+              'section':'main',
+              'description':"run as group",
+              'default':"nobody",
+              #todo: validator, check user...?
+            },   
+                           
+           'plugindir':{
+              'section':'main',
+              'description':"where should fuglu search for additional plugins",
+              'default':"",
+            },
+                           
+            'plugins':{
+              'section':'main',
+              'description':"what SCANNER plugins do we load, comma separated",
+              'default':"archive,attachment,clamav,spamassassin",
+            },
+            
+            'prependers':{
+              'section':'main',
+              'description':"what PREPENDER plugins do we load, comma separated",
+              'default':"debug,skip",
+            },
+            
+            'appenders':{
+              'section':'main',
+              'description':"what APPENDER plugins do we load, comma separated\nappender plugins are plugins run after the scanning plugins\nappenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message\n(unless a mail is deferred in which case running the appender would not make sense as it will come again)",
+              'default':"",
+            },
+            'bindaddress':{
+              'section':'main',
+              'description':"address fuglu should listen on. usually 127.0.0.1 so connections are accepted from local host only",
+              'default':"127.0.0.1",
+            },
+                           
+            'bindaddress':{
+              'section':'main',
+              'description':"address fuglu should listen on. usually 127.0.0.1 so connections are accepted from local host only",
+              'default':"127.0.0.1",
+            },
+                           
+            'incomingport':{
+              'section':'main',
+              'description':"incoming port(s) (postfix connects here)\nyou can use multiple comma separated ports here\nf.ex. to separate incoming and outgoing mail and a special port for debugging messages\n10025: standard incoming mail\n10099: outgoing mail\n10888: debug port",
+              'default':"10025,10099,10888",
+            },
+            
+            'outgoingport':{
+              'section':'main',
+              'description':"outgoing port (what port does postfix listen for re-injects)",
+              'default':"10026",
+            },
+                
+            'outgoinghelo':{
+              'section':'main',
+              'description':"#outgoing helo we should use for re-injects\nleave empty to auto-detect current hostname",
+              'default':"",
+            },
+            
+            'tempdir':{
+              'section':'main',
+              'description':"temp dir where fuglu can store messages while scanning",
+              'default':"/tmp",
+            },
+                           
+            'prependaddedheaders':{
+              'section':'main',
+              'description':"String to prepend to added headers",
+              'default':"X-Fuglu-",
+            },
+            
+            'trashdir':{
+              'section':'main',
+              'description':"If a plugin decides to delete a message, save a copy here\ndefault empty, eg. do not save a backup copy",
+              'default':"",
+            },
+            
+            'disablebounces':{
+              'section':'main',
+              'description':"if this is set to True/1/yes , no Bounces will be sent from Fuglu eg. after a blocked attachment has been detected\nThis may be used for debugging/testing to make sure fuglu can not produce backscatter",
+              'default':"0",
+            },
+            
+            'debuginfoheader':{
+              'section':'main',
+              'description':"write debug info header to every mail",
+              'default':"0",
+            },
+                           
+            'mrtgdir':{
+              'section':'main',
+              'description':"write mrtg statistics",
+              'default':"",
+            },
+          
+            #performance section
+            'minthreads':{
+                'default':"2",
+                'section':'performance',
+                'description':'minimum scanner threads',
+            },
+            'maxthreads':{
+                'default':"40",
+                'section':'performance',
+                'description':'maximum scanner threads',
+            }, 
+                           
+                           
+            #spam section
+            'defaultlowspamaction':{
+                'default':"DUNNO",
+                'section':'spam',
+                'description':"""what to do with messages that plugins think are spam but  not so sure  ("low spam")\nin normal usage you probably never set this something other than DUNNO\nthis is a DEFAULT action, eg. anti spam plugins should take this if you didn't set \n a individual override""",
+            }, 
+                           
+            'defaulthighspamaction':{
+                'default':"DUNNO",
+                'section':'spam',
+                'description':"""what to do with messages if a plugin is sure it is spam ("high spam") \nin after-queue mode this is probably still DUNNO or maybe DELETE for courageous people\nthis is a DEFAULT action, eg. anti spam plugins should take this if you didn't set\n a individual override """,
+            },
+            
+            #virus section
+             'defaultvirusaction':{
+                'default':"DELETE",
+                'section':'virus',
+                'description':"""#what to do with messages if a plugin detects a virus\nin after-queue mode this should probably be DELETE\nin pre-queue mode you could use REJECT\nthis is a DEFAULT action, eg. anti-virus plugins should take this if you didn't set \n a individual override""",
+            },
+            
+            #  plugin alias
+             'debug':{
+                'default':"fuglu.plugins.p_debug.MessageDebugger",
+                'section':'PluginAlias',
+            },
+                           
+             'skip':{
+                'default':"fuglu.plugins.p_skipper.PluginSkipper",
+                'section':'PluginAlias',
+            },
+                           
+            'archive':{
+                'default':"fuglu.plugins.archive.ArchivePlugin",
+                'section':'PluginAlias',
+            },
+            
+            'attachment':{
+                'default':"fuglu.plugins.attachment.FiletypePlugin",
+                'section':'PluginAlias',
+            }, 
+                           
+            'clamav':{
+                'default':"fuglu.plugins.clamav.ClamavPlugin",
+                'section':'PluginAlias',
+            },
+                           
+            'spamassassin':{
+                'default':"fuglu.plugins.sa.SAPlugin",
+                'section':'PluginAlias',
+            },
+                                       
+            'vacation':{
+                'default':"fuglu.plugins.vacation.VacationPlugin",
+                'section':'PluginAlias',
+            },
+                           
+            'actionoverride':{
+                'default':"fuglu.plugins.actionoverride.ActionOverridePlugin",
+                'section':'PluginAlias',
+            },                
+        }
+        
         self.config=config
         self.servers=[]
         self.logger=self._logger()
@@ -253,7 +424,7 @@ class MainController(object):
         if not self.load_plugins():
             print fc.strcolor('At least one plugin failed to load','red')
         print fc.strcolor('Plugin loading complete','magenta')
-        
+         
         print "Linting ",fc.strcolor("main configuration",'cyan')
         if not self.checkConfig():
             print fc.strcolor("ERROR","red")
@@ -285,22 +456,62 @@ class MainController(object):
                 print fc.strcolor("ERROR","red")
         print "%s plugins reported errors."%errors
         
-        
+    
+    
+    def propagate_defaults(self,requiredvars,config,defaultsection=None):
+        """propagate defaults from requiredvars if they are missing in config"""
+        for option,infodic in requiredvars.iteritems():
+            if 'section' in infodic:
+                section=infodic['section']
+            else:
+                section=defaultsection
+                
+            default=infodic['default']
+            
+            if not config.has_section(section):
+                config.add_section(section)
+                
+            if not config.has_option(section,option):
+                config.set(section,option,default)
+    
+    def propagate_core_defaults(self):
+        """check for missing core config options and try to fill them with defaults
+        must be called before we can do plugin loading stuff
+        """
+        self.propagate_defaults(self.requiredvars, self.config,'main')
+    
+    def propagate_plugin_defaults(self):
+        """propagate defaults from loaded lugins"""
+        #plugins, prependers, appenders
+        allplugs=self.plugins+self.prependers+self.appenders
+        for plug in allplugs:
+            if hasattr(plug,'requiredvars'):
+                requiredvars=getattr(plug,'requiredvars')
+                if type(requiredvars)==dict:
+                        self.propagate_defaults(requiredvars, self.config, plug.section)
+            
     
     def checkConfig(self):
-        """Check if all requred options are in the config file"""
+        """Check if all requred options are in the config file
+        Fill missing values with defaults if possible
+        """
         allOK=True
-        for configvar in self.requiredvars:
-            (section,config)=configvar
+        for config,infodic in self.requiredvars.iteritems():
+            section=infodic['section']
             try:
                 var=self.config.get(section,config)
+    
+                if 'validator' in infodic:
+                    if not infodic["validator"](var):
+                        print "Validation failed for [%s] :: %s"%(section,config)
+                        allOK=False
+                
             except ConfigParser.NoSectionError:
                 print "Missing configuration section [%s] :: %s"%(section,config)
                 allOK=False
             except ConfigParser.NoOptionError:
                 print "Missing configuration value [%s] :: %s"%(section,config)
                 allOK=False
-            
         return allOK
     
     
@@ -358,6 +569,7 @@ class MainController(object):
             self.plugins=newplugins
             self.prependers=newprependers
             self.appenders=newappenders
+            self.propagate_plugin_defaults()
             
         return allOK
     

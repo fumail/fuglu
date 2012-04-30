@@ -62,6 +62,7 @@ def reloadconfig():
         
     logger.info('Reload config complete. Current configuration:%s'%identifier)
     controller.config=newconfig
+    controller.propagate_core_defaults()
     
     logger.info('Reloading plugins...')
     ok=controller.load_plugins()
@@ -69,6 +70,8 @@ def reloadconfig():
         logger.info('Plugin reload completed')
     else:
         logger.error('Plugin reload failed')
+    
+    controller.propagate_plugin_defaults()
     
     controller.reload()
 
@@ -105,8 +108,13 @@ if os.path.isdir(dconfdir):
 
 
 daemon=DaemonStuff('/var/run/fuglu.pid')
-if config.getboolean('main', 'daemonize')and not lint and not console:
-    daemon.createDaemon()
+#we could have an empty config file
+if  not lint and not console: #no daemon for lint&console mode
+    if config.has_option('main', 'daemonize'):
+        if config.getboolean('main', 'daemonize'):
+            daemon.createDaemon()
+    else: #option not specified -> default to run daemon
+        daemon.createDaemon()
 if lint:
     # define a Handler which writes INFO messages or higher to the sys.stderr
     console = logging.StreamHandler()
@@ -126,6 +134,10 @@ else:
     logging.config.fileConfig(fugluloggingfile)
 
 
+controller=MainController(config)
+controller.propagate_core_defaults()
+
+
 #drop privileges
 baselogger=logging.getLogger('')
 baselogger.info("FuGLU Version %s starting up"%FUGLU_VERSION)
@@ -138,7 +150,7 @@ except:
     running_group='nobody'
 daemon.drop_privs(running_user,running_group)
 
-controller=MainController(config)
+
     
 if lint:
     controller.lint()

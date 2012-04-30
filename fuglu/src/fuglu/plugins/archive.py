@@ -24,7 +24,27 @@ class ArchivePlugin(ScannerPlugin):
     """Store mails to archive"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section,'archiverules'),(self.section,'archivedir'),(self.section,'makedomainsubdir'),(self.section,'storeoriginal'))
+        
+        self.requiredvars={
+            'archiverules':{
+                'default':'/etc/fuglu/archive.regex',
+                'description':'Archiving SuspectFilter File',
+            },
+                           
+            'archivedir':{
+                'default':'/tmp',
+                'description':'storage for archived messages',
+            },
+            'makedomainsubdir':{
+                'default':'1',
+                'description':'create a subdirectory of the destination domain within archivedir',
+            },
+             'storeoriginal':{
+                'default':'1',
+                'description':"if true/1/yes: store original message\nif false/0/no: store message probably altered by previous plugins, eg with spamassassin headers",
+            }
+        }
+        
         self.filter=None
         self.logger=self._logger()
         

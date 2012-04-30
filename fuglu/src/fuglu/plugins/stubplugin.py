@@ -31,6 +31,8 @@ class StubPlugin(ScannerPlugin):
     """Copy this to make a new plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
+        #TODO: self.requiredvars....
+        #DO NOT call self.config.get .. here!
         
     def examine(self,suspect):
         #config Example

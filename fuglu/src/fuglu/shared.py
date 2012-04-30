@@ -345,7 +345,7 @@ class BasicPlugin(object):
             self.section=section
             
         self.config=config
-        self.requiredvars=()
+        self.requiredvars={}
     
     def _logger(self):
         """returns the logger for this plugin"""
@@ -358,16 +358,44 @@ class BasicPlugin(object):
     
     def checkConfig(self):
         allOK=True
-        for configvar in self.requiredvars:
-            (section,config)=configvar
-            try:
-                var=self.config.get(section,config)
-            except ConfigParser.NoOptionError:
-                print "Missing configuration value [%s] :: %s"%(section,config)
-                allOK=False
-            except ConfigParser.NoSectionError:
-                print "Missing configuration section %s"%(section)
-                allOK=False
+        
+        #old config style
+        if type(self.requiredvars)==tuple or type(self.requiredvars)==list:
+            for configvar in self.requiredvars:
+                if type(self.requiredvars)==tuple:
+                    (section,config)=configvar
+                else:
+                    config=configvar
+                    section=self.section                   
+                try:
+                    var=self.config.get(section,config)
+                except ConfigParser.NoOptionError:
+                    print "Missing configuration value [%s] :: %s"%(section,config)
+                    allOK=False
+                except ConfigParser.NoSectionError:
+                    print "Missing configuration section %s"%(section)
+                    allOK=False    
+        
+        #new config style
+        if type(self.requiredvars)==dict:
+            for config,infodic in self.requiredvars.iteritems():
+                section=self.section
+                if 'section' in infodic:
+                    section=infodic['section']
+                    
+                try:
+                    var=self.config.get(section,config)
+                    if 'validator' in infodic:
+                        if not infodic["validator"](var):
+                            print "Validation failed for [%s] :: %s"%(section,config)
+                            allOK=False          
+                except ConfigParser.NoSectionError:
+                    print "Missing configuration section [%s] :: %s"%(section,config)
+                    allOK=False
+                except ConfigParser.NoOptionError:
+                    print "Missing configuration value [%s] :: %s"%(section,config)
+                    allOK=False
+        
         return allOK
 
     def __str__(self):

@@ -23,7 +23,45 @@ class MessageDebugger(PrependerPlugin):
         PrependerPlugin.__init__(self,config)
         self.filter=None
         self.logger=self._logger()
+        self.requiredvars={
+            'debugport':{
+                'default':'10888',
+                'description':'messages incoming on this port will be debugged to a logfile\nMake sure the debugport is also set in the incomingport configuration option in the main section',
+            },
+            
+            'debugfile':{
+                'default':'/tmp/fuglu_debug.log',
+                'description':"debug log output",
+            },
+                         
+            'nobounce':{
+                'default':'1',
+                'description':'debugged message can not be bounced',
+            },
+                           
+            'noreinject':{
+                'default':'1',
+                'description':"don't re-inject debugged messages back to postfix",
+            },
+                           
+            'noappender':{
+                'default':'1',
+                'description':"don't run appender plugins for debugged messages",
+            },
+        }        
+    
+    def lint(self):
+        debugport=self.config.get(self.section,'debugport')
+        incomingport=self.config.get('main','incomingport')
+
+        allok=self.checkConfig()
         
+        if debugport not in incomingport.split(','):
+            print "Debug port %s not specified in [main]::incomingport - messages can't be debugged"%debugport
+            allok=False
+
+        return allok
+       
     def pluginlist(self,suspect,pluginlist):
         debugport=self.config.getint('debug','debugport')
         if suspect.get_tag('incomingport')==debugport:

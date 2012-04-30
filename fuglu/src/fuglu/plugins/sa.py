@@ -25,7 +25,92 @@ class SAPlugin(ScannerPlugin):
     """Spamassassin Plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section,'lowspamaction'),(self.section,'highspamaction'),(self.section,'problemaction'),(self.section,'highspamlevel'),(self.section,'peruserconfig'),(self.section,'host'),(self.section,'port'),(self.section,'maxsize'),(self.section,'scanoriginal'),(self.section,'forwardoriginal'),(self.section,'spamheader'),(self.section,'timeout'),(self.section,'retries'),(self.section,'rejectmessage'))
+        self.requiredvars={
+            'host':{
+                'default':'localhost',
+                'description':'hostname where spamd runs',
+            },
+            
+            'port':{
+                'default':'783',
+                'description':"tcp port number ",
+            },
+                         
+            'timeout':{
+                'default':'30',
+                'description':'how long should we wait for an answer from sa',
+            },
+                           
+            'maxsize':{
+                'default':'256000',
+                'description':"maximum size in bytes. larger messages will be skipped",
+            },
+                           
+            'retries':{
+                'default':'3',
+                'description':'how often should fuglu retry the connection before giving up',
+            },
+            
+            'scanoriginal':{
+                'default':'1',
+                'description':"should we scan the original message as retreived from postfix or scan the current state \nin fuglu (which might have been altered by previous plugins)\nonly set this to disabled if you have a custom plugin that adds special headers to the message that will be \nused in spamassassin rules",
+            },
+                           
+            'forwardoriginal':{
+                'default':'0',
+                'description':"""forward the original message or replace the content as returned by spamassassin\nif this is set to True/1/Yes , no spamassassin headers will be visible in the final message.\n"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the\nmessage as retreived from previous plugins """,
+            },
+        
+            'spamheader':{
+                'default':'X-Spam-Status',
+                'description':'what header does sa set to indicate the spam status',
+            },
+                           
+            'peruserconfig':{
+                'default':'1',
+                'description':'enable SA user configuration ',
+            },
+            
+            'highspamlevel':{
+                'default':'15',
+                'description':'spamscore threshold to mark a message as high spam',
+            },
+           
+           
+            'highspamaction':{
+                'default':'DEFAULTHIGHSPAMACTION',
+                'description':"what should we do with high spam (spam score above highspamlevel)",
+            },
+                           
+            'lowspamaction':{
+                'default':'DEFAULTLOWSPAMACTION',
+                'description':"what should we do with low spam (eg. detected as spam, but score not over highspamlevel)",
+            },
+                           
+            'problemaction':{
+                'default':'DEFER',
+                'description':"action if there is a problem (DUNNO, DEFER)",
+            },
+            
+            'rejectmessage':{
+                'default':'message identified as spam',
+                'description':"reject message template if running in pre-queue mode",
+            },
+             
+            'check_sql_blacklist':{
+                'default':'0',
+                'description':"consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks\nrequires the sql extension to be enabled",
+            },              
+            'sql_blacklist_dbconnectstring':{
+                'default':'mysql:///localhost/spamassassin',
+                'description':"sqlalchemy db connect string",
+            },                 
+            'sql_blacklist_sql':{
+                'default':"""SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})""",
+                'description':"SQL query to get the blacklist entries for a suspect\nyou may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}",
+            }, 
+            
+        } 
         self.logger=self._logger()
         
     def lint(self):

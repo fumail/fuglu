@@ -12,7 +12,12 @@ class HeaderPlugin(ScannerPlugin):
     """Removes existing Headers"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section, 'removeheaders'),)
+        self.requiredvars={
+            'removeheaders':{
+                'default':'',
+                'description':'headers to remove from incoming messages, comma separated',
+            },
+        }
         
     def examine(self,suspect):
         removeheaders=self.config.get(self.section, 'removeheaders').split(',')

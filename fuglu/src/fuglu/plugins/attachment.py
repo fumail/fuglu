@@ -207,7 +207,39 @@ class FiletypePlugin(ScannerPlugin):
     """Copy this to make a new plugin"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=((self.section,'template_blockedfile'),(self.section,'rulesdir'))
+        self.requiredvars={
+            'template_blockedfile':{
+                'default':'/etc/fuglu/templates/blockedfile.tmpl',
+                'description':'Mail template for the bounce to inform sender about blocked attachment',
+            },
+            
+            'sendbounce':{
+                'default':'1',
+                'description':'inform the sender about blocked attachments',
+            },
+                         
+            'rulesdir':{
+                'default':'/etc/fuglu/rules',
+                'description':'directory that contains attachment rules',
+            },
+                           
+            'blockaction':{
+                'default':'DELETE',
+                'description':'what should the plugin do when a blocked attachment is detected\nREJECT : reject the message (recommended in pre-queue mode)\nDELETE : discard messages\nDUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)',
+            },
+                           
+            'dbconnectstring':{
+                'default':'',
+                'description':'sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled',
+                'confidential':True,
+            },
+                           
+            'query':{
+                'default':'SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio',
+                'description':"sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain\n:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules",
+            },       
+        }
+        
         self.logger=self._logger()
         if MAGIC_AVAILABLE:
             if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
@@ -215,11 +247,14 @@ class FiletypePlugin(ScannerPlugin):
                 self.ms.load()
         else:
             self.logger.warning('python-magic not available')
-        self.rulescache=RulesCache(self.config.get(self.section,'rulesdir'))
+        self.rulescache=None
         self.extremeverbosity=False
 
     def examine(self,suspect):
         starttime=time.time()
+        if self.rulescache==None:
+            self.rulescache=RulesCache(self.config.get(self.section,'rulesdir'))
+        
         self.blockedfiletemplate=self.config.get(self.section,'template_blockedfile')
 
         returnaction=self.walk(suspect)

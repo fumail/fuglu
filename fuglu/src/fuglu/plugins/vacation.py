@@ -211,7 +211,14 @@ class VacationCache( object ):
 class VacationPlugin(ScannerPlugin):
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
-        self.requiredvars=[(self.section,'dbconnectstring')]
+        self.requiredvars={             
+            'dbconnectstring':{
+                'default':'',
+                'description':'sqlalchemy connectstring to load vacations',
+                'confidential':True,
+            },
+        }
+        
         self.logger=self._logger()
         self.cache=None
         
