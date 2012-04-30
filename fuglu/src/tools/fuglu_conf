@@ -96,11 +96,14 @@ def print_overrides(defaultconfig,userconfig,controller):
                     pdef=defaultval
                     if defaultval.strip()=='':
                         pdef='empty'
+                    MAXCHARS=15
+                    if len(pdef)>MAXCHARS:
+                        pdef=pdef[:MAXCHARS-3]+"..."    
                     
                     pval=userval
                     #check if confidential
                     meta=get_config_meta(controller,sec,opt)
-                    if meta!=None and 'confidential' in meta and meta['confidential']:
+                    if pval.strip()!='' and meta!=None and 'confidential' in meta and meta['confidential']:
                         pval="***REDACTED***"
                     
                     print "%s=%s (def: %s)"%(opt,pval,pdef)
