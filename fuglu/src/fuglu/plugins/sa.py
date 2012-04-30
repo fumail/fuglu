@@ -104,6 +104,7 @@ class SAPlugin(ScannerPlugin):
             'sql_blacklist_dbconnectstring':{
                 'default':'mysql:///localhost/spamassassin',
                 'description':"sqlalchemy db connect string",
+                'confidential':True,
             },                 
             'sql_blacklist_sql':{
                 'default':"""SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})""",
