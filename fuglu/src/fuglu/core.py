@@ -592,6 +592,8 @@ class MainController(object):
             try:
                 plugininstance=self._load_component(structured_name,configsection=configoverride)
                 pluglist.append(plugininstance)
+            except (ConfigParser.NoSectionError,ConfigParser.NoOptionError):
+                self._logger().error("The plugin %s is accessing the config in __init__ -> can not load default values"%structured_name)
             except Exception,e:
                 self._logger().error('Could not load plugin %s : %s'%(structured_name,e))
                 exc=traceback.format_exc()
