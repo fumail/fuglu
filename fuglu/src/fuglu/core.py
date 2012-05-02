@@ -148,6 +148,12 @@ class MainController(object):
               'description':"If a plugin decides to delete a message, save a copy here\ndefault empty, eg. do not save a backup copy",
               'default':"",
             },
+                           
+            'trashlog':{
+              'section':'main',
+              'description':"list all deleted messages in 00-fuglutrash.log in the trashdir",
+              'default':"0",
+            },
             
             'disablebounces':{
               'section':'main',
