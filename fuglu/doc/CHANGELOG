@@ -1,5 +1,5 @@
 
--- Fuglu 0.5.1, not yet released
+-- Fuglu 0.6.0, not yet released
  * various bugfixes in Before-Queue Support
  * new Plugin: Killer (Deletes All messages) - used in some special setups
  * new Plugin: ActionOverride (Custom action based on filter)
@@ -9,11 +9,15 @@
  * Clamav Plugin / Spamassassin Plugin / Attachment Plugin: new option 'rejectmessage' for before queue rejects
  * improved core support for multi recipient messages. it is no longer absoultely required to set fuglu_*_destination_recipient_limit=1 
    (but some plugins still only check act on the first recipient)
+ * outgoinghelo is no longer mandatory, fuglu auto-detects the local hostname if the config option is empty
+ * new tool: fuglu_conf to export current config, show differences from the default (fuglu_conf -n) etc
  
 Developers: 
  * suspect.addheader() has a new 'immediate' option to make headers visible for later plugins. by default, headers are only added before re-injecting
  * Spamassassin Plugin: writes new tag "SAPlugin.skipreason' if the message was not scanned
- 
+ * new way of defining required config variables. plugins can now provide defaults and config option descriptions. 
+   see: http://sourceforge.net/apps/trac/fuglu/wiki/dev/WritingPlugins#definingconfigurationoptionsforyourplugin
+   important: for default values to work, make sure your plugin doesn't read it's own config values in __init__ !
 
 -- Fuglu 0.5.0, Released 2011-10-28
  * started changelog ;-)
