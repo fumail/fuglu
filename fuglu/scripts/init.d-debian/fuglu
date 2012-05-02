@@ -1,0 +1,50 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          fuglu
+# Required-Start:    $network $syslog
+# Required-Stop:     $network $syslog
+# X-Start-Before:    postfix
+# X-Stop-After:      postfix
+# Default-Start:     2 3 4 5
+# Default-Stop:      
+# Short-Description: Fuglu is yet another mail scanner daemon written in python.
+# Description:       Installed as a postfix after-queue filter fuglu can be used to filter spam, viruses, unwanted attachments etc.
+### END INIT INFO
+
+set -e
+
+FUGLU="/usr/local/bin/fuglu"
+PIDFILE="/var/run/fuglu.pid"
+
+OPTIONS=""
+MODULES=""
+
+# Get lsb functions
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_begin_msg "Starting FuGlu Mail Content Scanner: "
+    start-stop-daemon --start --quiet --exec "$FUGLU" --pidfile "$PIDFILE" -- $OPTIONS
+    log_end_msg $?
+    ;;
+  stop)
+    log_begin_msg "Stopping FuGlu Mail Content Scanner: "
+    start-stop-daemon --stop --quiet --retry 2 --pidfile "$PIDFILE"
+    log_end_msg $?
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  reload|force-reload) 
+    log_begin_msg "Reloading fuglu config: "
+    start-stop-daemon --stop --signal HUP --pidfile "$PIDFILE"
+    log_end_msg $?
+    ;;
+  *)
+    log_success_msg "Usage: $0 {start|stop|restart|reload|force-reload}"
+    exit 1
+esac
+
