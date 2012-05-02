@@ -84,6 +84,7 @@ vacation_ignoreheaderregex={
     'x-dspam-result':'(spam|bl[ao]cklisted)',
     'X-Mailer':'^Mail$',
     'auto-submitted':'auto-replied',
+    'X-Auto-Response-Suppress':'(AutoReply|OOF)',
 }
 
 class Vacation(object):
