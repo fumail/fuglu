@@ -19,10 +19,15 @@ from fuglu.shared import PrependerPlugin
 
 class MessageDebugger(PrependerPlugin):
     """Message Debugger Plugin"""
-    def __init__(self,config):
-        PrependerPlugin.__init__(self,config)
+    def __init__(self,config,section=None):
+        PrependerPlugin.__init__(self,config,section)
+        if self.section=='MessageDebugger':
+            self.section='debug'
+        
         self.filter=None
         self.logger=self._logger()
+        
+        
         self.requiredvars={
             'debugport':{
                 'default':'10888',
@@ -63,16 +68,16 @@ class MessageDebugger(PrependerPlugin):
         return allok
        
     def pluginlist(self,suspect,pluginlist):
-        debugport=self.config.getint('debug','debugport')
+        debugport=self.config.getint(self.section,'debugport')
         if suspect.get_tag('incomingport')==debugport:
             self.logger.info('Enabling debug mode for message on incoming port %s'%debugport)
-            if self.config.getboolean('debug','nobounce'):
+            if self.config.getboolean(self.section,'nobounce'):
                 suspect.tags['nobounce']=True
-            if self.config.getboolean('debug','noreinject'):
+            if self.config.getboolean(self.section,'noreinject'):
                 suspect.tags['noreinject']=True
-            if self.config.getboolean('debug','noappender'):
+            if self.config.getboolean(self.section,'noappender'):
                 suspect.tags['noappender']=True
-            fp=open(self.config.get('debug','debugfile'),'w')
+            fp=open(self.config.get(self.section,'debugfile'),'w')
             suspect.tags['debug']=True
             suspect.tags['debugfile']=fp
         self.logger.debug('Debugport: %s , Incoming port: %s'%(debugport,suspect.get_tag('incomingport')))
