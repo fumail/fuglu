@@ -37,7 +37,11 @@ if len(sys.argv)<2:
 fugluconfigfile='/etc/fuglu/fuglu.conf'
 newconfig=ConfigParser.ConfigParser()
 readconfig=newconfig.read([fugluconfigfile])
-localport=newconfig.getint('debug','debugport')    
+
+try:
+    localport=newconfig.getint('debug','debugport')
+except:
+    localport=10888    
 
 #connect to debug port
 smtpServer = smtplib.SMTP('127.0.0.1',localport)
