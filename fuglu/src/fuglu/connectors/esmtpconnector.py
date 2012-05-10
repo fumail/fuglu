@@ -92,7 +92,7 @@ class ESMTPHandler(ProtocolHandler):
         self.sess.endsession(451, reason)
         
     def discard(self,reason):
-        self.sess.endsession(250, "OK")
+        self.sess.endsession(250, reason)
         #self.sess=None
     
     def reject(self,reason):

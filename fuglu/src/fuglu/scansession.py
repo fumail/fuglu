@@ -119,7 +119,7 @@ class SessionHandler(object):
                     
             elif result==DELETE:
                 self.logger.info("MESSAGE DELETED: %s"%suspect.id)
-                self.protohandler.discard('OK')
+                self.protohandler.discard('OK: (%s)'%suspect.id)
             elif result==REJECT:
                 retmesg="Rejected by content scanner"
                 if self.message!=None:
