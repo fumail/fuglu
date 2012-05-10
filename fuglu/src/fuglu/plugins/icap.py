@@ -71,7 +71,12 @@ class ICAPPlugin(ScannerPlugin):
             'service':{
                 'default':'AVSCAN',
                 'description':'ICAP Av scan service, usually AVSCAN (sophos, symantec)',
-            }
+            },
+                           
+            'enginename':{
+                'default':'icap-generic',
+                'description':"name of the virus engine behind the icap service. used to inform other plugins. can be anything like 'sophos', 'symantec', ...",
+            },
         }        
         self.logger=self._logger()
     
@@ -85,7 +90,7 @@ class ICAPPlugin(ScannerPlugin):
         
     def examine(self,suspect):
         starttime=time.time()
-        enginetype=self.config.get(self.section,'type')
+        enginename=self.config.get(self.section,'enginename')
         
         if suspect.size>self.config.getint(self.section,'maxsize'):
             self.logger.info('Not scanning - message too big')
@@ -98,11 +103,11 @@ class ICAPPlugin(ScannerPlugin):
                 viruses=self.scan_stream(content)
                 if viruses!=None:
                     self.logger.info( "Virus found in message from %s : %s"%(suspect.from_address,viruses))
-                    suspect.tags['virus'][enginetype]=True
-                    suspect.tags['%s.virus'%enginetype]=viruses
+                    suspect.tags['virus'][enginename]=True
+                    suspect.tags['%s.virus'%enginename]=viruses
                     suspect.debug('viruses found in message : %s'%viruses)
                 else:
-                    suspect.tags['virus'][enginetype]=False
+                    suspect.tags['virus'][enginename]=False
                 
                 endtime=time.time()
                 difftime=endtime-starttime
@@ -176,15 +181,8 @@ class ICAPPlugin(ScannerPlugin):
         icapheader+=CRLF
         
         everything=icapheader+fakerequestheader+fakeresponseheader+bodypart+CRLF
-        print "SENT:"
-        print everything
-        
         s.sendall(everything)   
         result=s.recv(20000)
-        print "RECEIVED:"
-        print result
-        
-        
         s.close()
         
         sheader="X-Violations-Found:"
@@ -291,14 +289,16 @@ class ICAPPluginTestCase(unittest.TestCase):
         config.set('virus','defaultvirusaction','DELETE')
         config.add_section('ICAPPlugin')
         config.set('ICAPPlugin', 'host','127.0.0.1')
-        config.set('ICAPPlugin', 'port','3310')
+        config.set('ICAPPlugin','host','192.168.23.101')
+        config.set('ICAPPlugin', 'port','1344')
         config.set('ICAPPlugin', 'timeout','5')
         config.set('ICAPPlugin', 'retries','3')
         config.set('ICAPPlugin', 'maxsize','22000000')
         config.set('ICAPPlugin', 'virusaction','DEFAULTVIRUSACTION')
         config.set('ICAPPlugin', 'problemaction','DEFER')
         config.set('ICAPPlugin', 'rejectmessage','')
-        config.set('ICAPPlugin', 'type','sophos')
+        config.set('ICAPPlugin', 'service','AVSCAN')
+        config.set('ICAPPlugin', 'enginename','sophos')
 
         self.candidate=ICAPPlugin(config)
 
