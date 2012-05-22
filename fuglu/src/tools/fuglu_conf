@@ -118,7 +118,7 @@ def make_config(controller):
             meta=get_config_meta(controller,sec,opt)
             #print meta
 
-            if 'description' in meta:
+            if meta!=None and 'description' in meta:
                 desc='\n#'.join(meta['description'].split('\n'))
                 print '\n#%s'%desc
             
