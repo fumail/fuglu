@@ -13,9 +13,10 @@
  * outgoinghelo is no longer mandatory, fuglu auto-detects the local hostname if the config option is empty
  * new tool: fuglu_conf to export current config, show differences from the default (fuglu_conf -n) etc
  * fuglu now returns the internal id in the smtp session, if a message has been deleted (useful for searching logs)
+  
  
 Developers: 
- * suspect.addheader() has a new 'immediate' option to make headers visible for later plugins. by default, headers are only added before re-injecting
+ * suspect.addheader() has a new 'immediate' option to make headers visible for consecutive plugins. by default, headers are only added before re-injecting
  * Spamassassin Plugin: writes new tag "SAPlugin.skipreason' if the message was not scanned
  * new way of defining required config variables. plugins can now provide defaults and config option descriptions. 
    see: http://sourceforge.net/apps/trac/fuglu/wiki/dev/WritingPlugins#definingconfigurationoptionsforyourplugin
