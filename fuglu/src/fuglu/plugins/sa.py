@@ -254,7 +254,7 @@ Subject: test scanner
             for blvalue in allvalues:
                 self.logger.debug(blvalue)
                 #build regex
-                #translate glob to regex
+                #translate glob to regexr
                 #http://stackoverflow.com/questions/445910/create-regex-from-glob-expression
                 regexp = re.escape(blvalue).replace(r'\?', '.').replace(r'\*', '.*?')
                 self.logger.debug(regexp)
@@ -346,7 +346,7 @@ Subject: test scanner
             if spamheader==None:
                 self.logger.warning('Did not find Header %s in returned message from SA'%spamheadername)
             else:
-                if len(spamheader)>2 and spamheader.lower()[0:3]=='yes':
+                if len(spamheader)>2 and 'yes' in spamheader.lower():
                     isspam=True
                 patt=re.compile('Score=([\-\d\.]+)',re.IGNORECASE)
                 m=patt.search(spamheader)
