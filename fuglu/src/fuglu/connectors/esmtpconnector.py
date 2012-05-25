@@ -25,7 +25,7 @@ import os
 from fuglu.protocolbase import ProtocolHandler
 import unittest
 from fuglu.scansession import SessionHandler
-from fuglu.shared import Suspect
+from fuglu.shared import Suspect,apply_template
 
 from email.Header import Header
 
@@ -54,7 +54,8 @@ class ESMTPHandler(ProtocolHandler):
     def re_inject(self,suspect):
         """Send message back to postfix"""
         if suspect.get_tag('noreinject'):
-            return (250,'message not re-injected by plugin request')
+            #in esmtp sessions we don't want to provide info to the connecting client
+            return (250,'OK')
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info('Injecting original message source without modifications')
             msgcontent=suspect.getOriginalSource()
@@ -82,8 +83,12 @@ class ESMTPHandler(ProtocolHandler):
     def commitback(self,suspect):
         injectcode,injectanswer=self.re_inject(suspect)
         suspect.set_tag("injectanswer",injectanswer)
+        
+        values=dict(injectanswer=injectanswer)
+        message=apply_template(self.config.get('esmtpconnector','queuetemplate'), suspect, values)
+        
         if injectcode>=200 and injectcode<300:
-            self.sess.endsession(250, "FUGLU REQUEUE(%s): %s"%(suspect.id,injectanswer))
+            self.sess.endsession(250, message)
         else:
             self.sess.endsession(injectcode,injectanswer)
         self.sess=None

@@ -26,7 +26,7 @@ import ConfigParser
 import re
 import time
 
-from fuglu.shared import Suspect
+from fuglu.shared import Suspect,apply_template
 from fuglu.protocolbase import ProtocolHandler,BasicTCPServer
 from email.Header import Header
 
@@ -117,7 +117,10 @@ class SMTPHandler(ProtocolHandler):
     def commitback(self,suspect):
         injectanswer=self.re_inject(suspect)
         suspect.set_tag("injectanswer",injectanswer)
-        self.sess.endsession(250, "FUGLU REQUEUE(%s): %s"%(suspect.id,injectanswer))
+        values=dict(injectanswer=injectanswer)
+        message=apply_template(self.config.get('smtpconnector','requeuetemplate'), suspect, values)
+        
+        self.sess.endsession(250, message)
         self.sess=None
         
     def defer(self,reason):

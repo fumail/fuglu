@@ -205,6 +205,20 @@ class MainController(object):
                 'section':'virus',
                 'description':"""#what to do with messages if a plugin detects a virus\nin after-queue mode this should probably be DELETE\nin pre-queue mode you could use REJECT\nthis is a DEFAULT action, eg. anti-virus plugins should take this if you didn't set \n a individual override""",
             },
+                           
+            #smtpconnector
+             'requeuetemplate':{
+                'default':"FUGLU REQUEUE(${id}): ${injectanswer}",
+                'section':'smtpconnector',
+                'description':"""confirmation template sent back to the connecting postfix for accepted messages""",
+            },
+            
+            #esmtpconnector
+             'queuetemplate':{
+                'default':"${injectanswer}",
+                'section':'esmtpconnector',
+                'description':"""confirmation template sent back to the connecting client for accepted messages""",
+            },
             
             #  plugin alias
              'debug':{

@@ -102,6 +102,8 @@ def apply_template(templatecontent,suspect,values=None):
     if values==None:
         values={}
 
+    values['id']=suspect.id
+    values['timestamp']=suspect.timestamp
     values['from_address']=suspect.from_address
     values['to_address']=suspect.to_address
     values['from_domain']=suspect.from_domain
