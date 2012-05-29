@@ -39,7 +39,7 @@ from fuglu.connectors.esmtpconnector import ESMTPServer
 
 from fuglu.stats import StatsThread
 from fuglu.scansession import SessionHandler
-from fuglu.debug import ControlServer
+from fuglu.debug import ControlServer, CrashStore
 
 
 class MainController(object):
@@ -467,7 +467,7 @@ class MainController(object):
             try:
                 result=plugin.lint()
             except Exception,e:
-                MainController.store_exception()
+                CrashStore.store_exception()
                 print "ERROR: %s"%e
                 result=False
             
@@ -615,10 +615,10 @@ class MainController(object):
                 plugininstance=self._load_component(structured_name,configsection=configoverride)
                 pluglist.append(plugininstance)
             except (ConfigParser.NoSectionError,ConfigParser.NoOptionError):
-                MainController.store_exception()
+                CrashStore.store_exception()
                 self._logger().error("The plugin %s is accessing the config in __init__ -> can not load default values"%structured_name)
             except Exception,e:
-                MainController.store_exception()
+                CrashStore.store_exception()
                 self._logger().error('Could not load plugin %s : %s'%(structured_name,e))
                 exc=traceback.format_exc()
                 self._logger().error(exc)
