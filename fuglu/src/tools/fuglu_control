@@ -20,7 +20,6 @@
 # This tool is used to send messages to the fuglu control port
 
 import sys
-import ConfigParser
 import socket
 
 if len(sys.argv)<2:
@@ -31,20 +30,22 @@ if len(sys.argv)<2:
     print "uptime: show long fuglu has been running"
     print "workerlist: show current status of all mail scanning threads"
     print "threadlist: show current status of ALL threads (core + workers)"
+    print "exception: last 10 exception tracebacks"
     sys.exit(1)
 
-# what port is fuglu listening on?
-#fugluconfigfile='/etc/fuglu/fuglu.conf'
-#newconfig=ConfigParser.ConfigParser()
-#readconfig=newconfig.read([fugluconfigfile])
-#localport=newconfig.getint('debug','debugport')    
-localport=10010
 
+localport=10010
 
 cmd=" ".join(sys.argv[1:])
 #connect to debug port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(('127.0.0.1', localport))
+try:
+    s.connect(('127.0.0.1', localport))
+except Exception,e:
+    print "Cannot connect to fuglu control deamon on port %s - is fuglu running?"%localport
+    print str(e)
+    sys.exit(1)
+    
 s.sendall(cmd)
 data = s.recv(4096)
 s.close()

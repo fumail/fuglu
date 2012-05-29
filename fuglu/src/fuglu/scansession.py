@@ -16,6 +16,7 @@
 #
 
 from fuglu.shared import DUNNO,ACCEPT,REJECT,DEFER,DELETE
+from fuglu.debug import CrashStore
 import logging
 from fuglu.stats import Statskeeper
 import sys
@@ -24,6 +25,7 @@ import tempfile
 import time
 import os
 import datetime
+
 
 class SessionHandler(object):
     """thread handling one message"""
@@ -244,6 +246,7 @@ class SessionHandler(object):
                     self.logger.error('Invalid Message action Code: %s. Using DUNNO'%result)
                     
             except Exception,e:
+                CrashStore.store_exception()
                 exc=traceback.format_exc()
                 self.logger.error('Plugin %s failed: %s'%(str(plugin),exc))
                 suspect.debug('Plugin failed : %s . Please check fuglu log for more details'%e)
@@ -268,6 +271,7 @@ class SessionHandler(object):
                     plugcopy=result
                     
             except Exception:
+                CrashStore.store_exception()
                 exc=traceback.format_exc()
                 self.logger.error('Prepender plugin %s failed: %s'%(str(plugin),exc))
         return plugcopy
@@ -284,6 +288,7 @@ class SessionHandler(object):
                 self.set_threadinfo("%s : Running appender %s"%(suspect,plugin))
                 plugin.process(suspect,finaldecision)       
             except Exception:
+                CrashStore.store_exception()
                 exc=traceback.format_exc()
                 self.logger.error('Appender plugin %s failed: %s'%(str(plugin),exc))
        
