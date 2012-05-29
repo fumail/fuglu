@@ -30,7 +30,7 @@ if len(sys.argv)<2:
     print "uptime: show long fuglu has been running"
     print "workerlist: show current status of all mail scanning threads"
     print "threadlist: show current status of ALL threads (core + workers)"
-    print "exception: last 10 exception tracebacks"
+    print "exceptionlist: last 10 exception tracebacks"
     sys.exit(1)
 
 
@@ -47,7 +47,7 @@ except Exception,e:
     sys.exit(1)
     
 s.sendall(cmd)
-data = s.recv(4096)
+data = s.recv(32768)
 s.close()
 print data
 

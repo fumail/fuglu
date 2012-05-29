@@ -79,7 +79,7 @@ class ControlSession(object):
                        'threadlist':self.threadlist,
                        'uptime':self.uptime,
                        'stats':self.stats,
-                       'exception':self.exception,
+                       'exceptionlist':self.exceptionlist,
                        }
         self.logger=logging.getLogger('fuglu.controlsession')
         
@@ -121,14 +121,16 @@ class ControlSession(object):
         diff=datetime.datetime.now()-start
         return "Fuglu was started on %s\nUptime: %s"%(start,diff)
     
-    def exception(self,args):
+    def exceptionlist(self,args):
         """return last stacktrace"""
         excstring=""
+        i=0
         for excinfo,thetime,threadinfo in CrashStore.exceptions:
+            i+=1
             self.logger.info(str(excinfo))
             fmt=traceback.format_exception(*excinfo)
             timestr=datetime.datetime.fromtimestamp(thetime).ctime()
-            excstring=excstring+"\n %s : %s\n"%(timestr,threadinfo)
+            excstring=excstring+"\n[%s] %s : %s\n"%(i,timestr,threadinfo)
             excstring=excstring+"".join(fmt)
         return excstring
     
