@@ -127,7 +127,6 @@ class ControlSession(object):
         i=0
         for excinfo,thetime,threadinfo in CrashStore.exceptions:
             i+=1
-            self.logger.info(str(excinfo))
             fmt=traceback.format_exception(*excinfo)
             timestr=datetime.datetime.fromtimestamp(thetime).ctime()
             excstring=excstring+"\n[%s] %s : %s\n"%(i,timestr,threadinfo)
