@@ -67,13 +67,17 @@ class Statskeeper( object ):
     def increasecounters(self,suspect):
         """Update local counters after a suspect has passed the system"""
         self.totalcount+=1
-        if suspect.is_spam():
-            self.spamcount+=1
-        else:
-            self.hamcount+=1
+        isspam=suspect.is_spam()
+        isvirus=suspect.is_virus()
         
-        if suspect.is_virus():
+        if isspam:
+            self.spamcount+=1
+            
+        if isvirus:
             self.viruscount+=1
+            
+        if not (isspam or isvirus):
+            self.hamcount+=1
         
         scantime=suspect.get_tag('fuglu.scantime')
         self._appendscantime(scantime)
