@@ -213,7 +213,7 @@ class Suspect(object):
         self.tags[key]=value
         
     def is_highspam(self):
-        """Returns True if ANY of the spam engines tagged this suspect as spam"""
+        """Returns True if ANY of the spam engines tagged this suspect as high spam"""
         for key in self.tags['highspam'].keys():
             val=self.tags['highspam'][key]
             if val:
