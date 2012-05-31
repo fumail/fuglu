@@ -311,9 +311,9 @@ class FiletypePlugin(ScannerPlugin):
                 if action=='deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s'%(suspect.id,displayname,asciirep))
                     blockinfo="%s %s: %s"%(displayname,asciirep,description)
-                    if self.config.get(self.section,'sendbounce'):
+                    suspect.tags['FiletypePlugin.errormessage']=blockinfo
+                    if self.config.getboolean(self.section,'sendbounce'):
                         self._logger().info("Sending attachment block bounce to %s"%suspect.from_address)
-                        suspect.tags['FiletypePlugin.errormessage']=blockinfo
                         bounce=Bounce(self.config)
                         bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
                     return ATTACHMENT_BLOCK
