@@ -260,7 +260,17 @@ class MainController(object):
             'actionoverride':{
                 'default':"fuglu.plugins.actionoverride.ActionOverridePlugin",
                 'section':'PluginAlias',
-            },                
+            }, 
+                           
+            'icap':{
+                'default':"fuglu.plugins.icap.ICAPPlugin",
+                'section':'PluginAlias',
+            }, 
+            
+            'sssp':{
+                'default':"fuglu.plugins.sssp.SSSPPlugin",
+                'section':'PluginAlias',
+            },        
         }
         
         self.config=config
