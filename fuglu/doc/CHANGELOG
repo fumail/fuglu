@@ -1,19 +1,23 @@
 
 -- Fuglu 0.6.0, not yet released
- * various bugfixes in Before-Queue Support
+ * various bugfixes and improvements in before-queue support
  * new Plugin: Killer (Deletes All messages) - used in some special setups
  * new Plugin: ActionOverride (Custom action based on filter)
+ * new Plugin: SSSP (Sophos Antivirus scan over SSSP Prodocol / SAVDI)
+ * new Plugin: ICAP (Antivirus scan over ICAP - Sophos/Symantec/...)
  * Vacation Plugin: Now supports domain wide ooo messages
  * SuspectFilter Files now have support advanced regex format /<perl style regular expression>/<modifiers>
    see: http://sourceforge.net/apps/trac/fuglu/wiki/SuspectFilter
  * Archive Plugin: Improved Logging
+ * Attachment Plugin: bugfix, sendbounce option could not be disabled
+ * Spamassassin Plugin: bugfix, better detection of spamflag header
  * Clamav Plugin / Spamassassin Plugin / Attachment Plugin: new option 'rejectmessage' for before queue rejects
  * improved core support for multi recipient messages. it is no longer absoultely required to set fuglu_*_destination_recipient_limit=1 
-   (but some plugins still only check act on the first recipient)
+   (but some plugins still only act on the first recipient)
  * outgoinghelo is no longer mandatory, fuglu auto-detects the local hostname if the config option is empty
  * new tool: fuglu_conf to export current config, show differences from the default (fuglu_conf -n) etc
- * fuglu now returns the internal id in the smtp session, if a message has been deleted (useful for searching logs)
-  
+ * the message returned to the connecting client is now configurable
+ 
  
 Developers: 
  * suspect.addheader() has a new 'immediate' option to make headers visible for consecutive plugins. by default, headers are only added before re-injecting
@@ -22,6 +26,8 @@ Developers:
    see: http://sourceforge.net/apps/trac/fuglu/wiki/dev/WritingPlugins#definingconfigurationoptionsforyourplugin
    important: for default values to work, make sure your plugin doesn't read it's own config values in __init__ !
  * Suspect.getSource() now has an optional maxsize parameter to limit the amount of body data read into memory
+ * new development tool: 'plugdummy.py', dry-run and debug your plugins without a running fuglu
+   see: http://sourceforge.net/apps/trac/fuglu/wiki/dev/Plugdummy
  
  
  
