@@ -172,7 +172,7 @@ class ICAPPlugin(ScannerPlugin):
         responsestart=fakereqlen
         bodystart=fakereqlen+fakeresplen
         
-        #now that we know the lenth of the fake request/response, we can build the icap header
+        #now that we know the length of the fake request/response, we can build the ICAP header
         icapheader=""
         icapheader+="RESPMOD icap://%s:%s/%s ICAP/1.0 %s"%(host,port,service,CRLF)
         icapheader+="Host: "+host+CRLF
@@ -281,7 +281,6 @@ class ICAPPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""
     def setUp(self):
         from ConfigParser import RawConfigParser  
-        import os      
         config=RawConfigParser()
         config.add_section('main')
         config.add_section('virus')
