@@ -41,7 +41,7 @@ def run_debugconsole(**kwargs):
 if __name__=='__main__':
     
     parser=optparse.OptionParser(add_help_option=False)
-    parser.add_option("-f",action="store", dest="sender", default="sender@fuglu.local", help="envelope sender")
+    parser.add_option("-s",action="store", dest="sender", default="sender@fuglu.local", help="envelope sender")
     parser.add_option("-r", action="append", dest="recipients", help="add envelope recipient")
     parser.add_option("-h", action="append", dest="headers", help="add header, format: name:value")
     parser.add_option("-t", action="append", dest="tags", help="set tag, format: name:value")
