@@ -70,17 +70,7 @@ if __name__=='__main__':
     config.add_section('main')
     config.set('main', 'plugins', plugin)
     config.set('main','plugindir', opts.plugindir)
-    if opts.config:
-        for confpair in opts.config:
-            section=pluginstance.section
-            option,value=confpair.split(':',1)
-            if option.startswith('['):
-                ind=option.find(']')
-                section=option[1:ind]
-                option=option[ind+1:]
-            if not config.has_section(section):
-                config.add_section(section)
-            config.set(section,option,value)
+    
     
     #load plugin
     mc=MainController(config)
@@ -101,6 +91,18 @@ if __name__=='__main__':
     
     #get the plugin instance
     pluginstance=mc.plugins[0]
+    
+    if opts.config:
+        for confpair in opts.config:
+            section=pluginstance.section
+            option,value=confpair.split(':',1)
+            if option.startswith('['):
+                ind=option.find(']')
+                section=option[1:ind]
+                option=option[ind+1:]
+            if not config.has_section(section):
+                config.add_section(section)
+            config.set(section,option,value)
     
     #prepare the suspect
     if opts.recipients==None or len(opts.recipients)==0:
