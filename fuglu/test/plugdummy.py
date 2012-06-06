@@ -137,8 +137,8 @@ if __name__=='__main__':
     open(tmpfile,'w').write(mailmessage.as_string())
     logging.info("Input file created as %s"%tmpfile)
     suspect=Suspect(opts.sender, opts.recipients[0], tmpfile)
-    suspect.recipients=opts.recipients[0]
-     
+    suspect.recipients=opts.recipients
+    
     #tags
     if opts.tags:
         for tagpair in opts.tags:
