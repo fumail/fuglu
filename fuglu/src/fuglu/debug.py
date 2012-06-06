@@ -170,7 +170,7 @@ class CrashStore(object):
         if thread==None:
             thread=threading.currentThread()
         
-        name=thread.name
+        name=thread.getName()
         info=""
         if hasattr(thread,'threadinfo'):
             info=thread.threadinfo
