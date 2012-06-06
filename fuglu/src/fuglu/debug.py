@@ -168,7 +168,7 @@ class CrashStore(object):
             exc_info=sys.exc_info()
             
         if thread==None:
-            thread=threading.current_thread()
+            thread=threading.currentThread()
         
         name=thread.name
         info=""
