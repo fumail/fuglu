@@ -26,11 +26,9 @@ try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker
     ENABLED=True
-    modlogger.info('sql extension enabled')
     STATUS="available"
     
 except:
-    modlogger.warning('sqlalchemy not installed, not enabling sql extension')
     STATUS="sqlalchemy not installed"
 
 
