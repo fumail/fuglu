@@ -1,10 +1,11 @@
 
 -- Fuglu 0.6.0, not yet released
  * various bugfixes and improvements in before-queue support
- * new Plugin: Killer (Deletes All messages) - used in some special setups
  * new Plugin: ActionOverride (Custom action based on filter)
+ * new Plugin: F-prot Antivirus
  * new Plugin: SSSP (Sophos Antivirus scan over SSSP Prodocol / SAVDI)
  * new Plugin: ICAP (Antivirus scan over ICAP - Sophos/Symantec/...)
+ * new Plugin: Killer (Deletes All messages) - used in some special setups
  * Vacation Plugin: Now supports domain wide ooo messages
  * SuspectFilter Files now have support advanced regex format /<perl style regular expression>/<modifiers>
    see: http://sourceforge.net/apps/trac/fuglu/wiki/SuspectFilter
