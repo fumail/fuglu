@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,string_to_actioncode
+from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,string_to_actioncode,apply_template
 import socket
 import string
 import time
@@ -58,7 +58,12 @@ class FprotPlugin(ScannerPlugin):
             'problemaction':{
                 'default':'DEFER',
                 'description':"plugin action if scan fails",
-            },            
+            },    
+            
+            'rejectmessage':{
+                'default':'virus detected: ${virusname}',
+                'description':"reject message template if running in pre-queue mode and virusaction=REJECT",
+            },        
         }
                 
         self.pattern = re.compile('^(\d)+ <(.+)> (.+)$')
@@ -101,7 +106,10 @@ class FprotPlugin(ScannerPlugin):
                 if viruses!=None:
                     virusaction=self.config.get(self.section,'virusaction')
                     actioncode=string_to_actioncode(virusaction,self.config)
-                    return actioncode
+                    firstinfected,firstvirusname=viruses.items()[0]
+                    values=dict(infectedfile=firstinfected,virusname=firstvirusname)
+                    message=apply_template(self.config.get(self.section,'rejectmessage'), suspect, values)
+                    return actioncode,message
                 else:
                     return DUNNO
             except Exception,e:
@@ -157,7 +165,7 @@ class FprotPlugin(ScannerPlugin):
         
         result = s.recv(20000)
         if len(result)<1:
-            self_logger().error('Got no reply from fpscand')
+            self._logger().error('Got no reply from fpscand')
         s.close()
         
         return self._parse_result(result)
@@ -185,7 +193,7 @@ class FprotPlugin(ScannerPlugin):
 
         result = s.recv(20000)
         if len(result)<1:
-            self_logger().error('Got no reply from fpscand')
+            self._logger().error('Got no reply from fpscand')
         s.close()
         
         return self._parse_result(result)
