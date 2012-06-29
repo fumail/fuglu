@@ -270,7 +270,12 @@ class MainController(object):
             'sssp':{
                 'default':"fuglu.plugins.sssp.SSSPPlugin",
                 'section':'PluginAlias',
-            },        
+            },
+                           
+            'fprot':{
+                'default':"fuglu.plugins.fprot.FprotPlugin",
+                'section':'PluginAlias',
+            },         
         }
         
         self.config=config
