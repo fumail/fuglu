@@ -66,7 +66,7 @@ if __name__=='__main__':
     parser.add_option("-p", "--plugindir", action="store", dest="plugindir", default="/usr/local/fuglu/plugins", help="plugindir")
     parser.add_option("-c", action="store_true", dest="console", default=False, help="start an interactive console after the plugin has been run")
     parser.add_option("--help", action="store_true", dest="help", default=False, help="show options")
-    
+    parser.add_option("-a",action="store_true",dest="appender",default=False,help="run this as an appender plugin")
     
     (opts,args)=parser.parse_args()
     if opts.help:
@@ -83,7 +83,10 @@ if __name__=='__main__':
     #prepare config
     config=ConfigParser.ConfigParser()
     config.add_section('main')
-    config.set('main', 'plugins', plugin)
+    if opts.appender:
+        config.set('main','appenders',plugin)
+    else:
+        config.set('main', 'plugins', plugin)
     config.set('main','plugindir', opts.plugindir)
     
     
@@ -96,17 +99,23 @@ if __name__=='__main__':
         logging.error("Could not load plugin")
         sys.exit(1)
     
-    #check if the controller successfully added the plugin to the list
-    if len(mc.plugins)!=1:
-        logging.error("Plugin instantiate failed")
-        sys.exit(1)
-    
     #now switch to debug
     logging.getLogger().setLevel(logging.DEBUG)
     
-    #get the plugin instance
-    pluginstance=mc.plugins[0]
+    #check if the controller successfully added the plugin to the list
+    if opts.appender:
+        if len(mc.appenders)!=1:
+            logging.error("Appender Plugin instantiate failed")
+            sys.exit(1)
+        pluginstance=mc.appenders[0]
+        
+    else:
+        if len(mc.plugins)!=1:
+            logging.error("Scanner Plugin instantiate failed")
+            sys.exit(1)
+        pluginstance=mc.plugins[0]
     
+
     if opts.config:
         for confpair in opts.config:
             section=pluginstance.section
@@ -169,25 +178,30 @@ if __name__=='__main__':
     #now run examine
     logging.info("Running plugin: %s"%pluginstance)
     
-    ans = pluginstance.examine(suspect)
-    message=""
-    if type(ans) is tuple:
-        result,message=ans
+    if opts.appender:
+        #todo: maybe make DUNNO configurable? 2nd argument?
+        pluginstance.process(suspect,DUNNO)
+        
     else:
-        result=ans
+        ans = pluginstance.examine(suspect)
+        message=""
+        if type(ans) is tuple:
+            result,message=ans
+        else:
+            result=ans
+        
+        if result==None:
+            result=DUNNO
     
-    if result==None:
-        result=DUNNO
-
-    logging.info("Result: %s %s",actioncode_to_string(result), message)
-    logging.info(suspect)
-    
-    if suspect.is_modified():
-        outfilename='/tmp/fuglu_dummy_message_out.eml'
-        out=open(outfilename,'wb')
-        out.write(suspect.getSource())
-        out.close()
-        logging.info("Plugin modified the source -> modified message available as %s"%outfilename)
+        logging.info("Result: %s %s",actioncode_to_string(result), message)
+        logging.info(suspect)
+        
+        if suspect.is_modified():
+            outfilename='/tmp/fuglu_dummy_message_out.eml'
+            out=open(outfilename,'wb')
+            out.write(suspect.getSource())
+            out.close()
+            logging.info("Plugin modified the source -> modified message available as %s"%outfilename)
         
     if opts.console:
         run_debugconsole(suspect=suspect, plugin=pluginstance, result=result, config=config)
