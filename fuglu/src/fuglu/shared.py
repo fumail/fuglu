@@ -590,7 +590,12 @@ class SuspectFilter(object):
         #if it starts with a @ we return a tag, not a header
         if headername[0:1]=='@':
             tagname=headername[1:]
-            return [suspect.get_tag(tagname),]
+            tagval=suspect.get_tag(tagname)
+            if tagval==None:
+                compareval=''
+            else:
+                compareval=str(tagval)
+            return [compareval,]
         
         if messagerep==None:
             messagerep=suspect.getMessageRep()
