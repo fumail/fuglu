@@ -109,9 +109,11 @@ def print_overrides(defaultconfig,userconfig,controller):
                     print "%s=%s (def: %s)"%(opt,pval,pdef)
 
 
-def make_config(controller):
+def make_config(controller,onlysection=None):
     config=controller.config
     for sec in config.sections():
+        if onlysection!=None and sec!=onlysection:
+            continue
         print "\n[%s]"%sec
         for opt,val in config.items(sec):
             #print sec,opt
@@ -199,6 +201,11 @@ if __name__=='__main__':
         for op,val in userconfig.items('PluginAlias'):
             defaultconfig.set('PluginAlias',op,val)
     
+    if options.make and options.make.lower()!='all':
+        defaultconfig.set('main', 'plugins', options.make)
+        defaultconfig.set('main', 'prependers', '')
+        defaultconfig.set('main', 'appenders', '')
+    
     #load default values from plugins
     defcontroller=MainController(defaultconfig)
     defcontroller.propagate_core_defaults()
@@ -214,6 +221,9 @@ if __name__=='__main__':
     if options.notdefaults:
         print_overrides(defaultconfig,userconfig,activecontroller)
     elif options.make:
-        make_config(defcontroller)
+        sec=None
+        if options.make.lower()!='all':
+            sec=defcontroller.plugins[0].section
+        make_config(defcontroller,sec)
     else:
         print_config(activeconfig)
