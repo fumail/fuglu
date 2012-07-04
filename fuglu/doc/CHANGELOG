@@ -1,5 +1,5 @@
 
--- Fuglu 0.6.0, not yet released
+-- Fuglu 0.6.0, 2012-07-04
  * various bugfixes and improvements in before-queue support
  * new Plugin: ActionOverride (Custom action based on filter)
  * new Plugin: F-prot Antivirus

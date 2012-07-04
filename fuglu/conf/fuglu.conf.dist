@@ -36,6 +36,9 @@ group=nobody
 #(unless a mail is deferred in which case running the appender would not make sense as it will come again)
 appenders=
 
+#list all deleted messages in 00-fuglutrash.log in the trashdir
+trashlog=0
+
 #if this is set to True/1/yes , no Bounces will be sent from Fuglu eg. after a blocked attachment has been detected
 #This may be used for debugging/testing to make sure fuglu can not produce backscatter
 disablebounces=0
@@ -67,6 +70,19 @@ incomingport=10025,10099,10888
 #this helps making sure the correct config is loaded. this identifier will be printed out when fuglu is reloading its config
 identifier=dist
 
+[performance]
+
+#maximum scanner threads
+maxthreads=40
+
+#minimum scanner threads
+minthreads=2
+
+[esmtpconnector]
+
+#confirmation template sent back to the connecting client for accepted messages
+queuetemplate=${injectanswer}
+
 [spam]
 
 #what to do with messages if a plugin is sure it is spam ("high spam") 
@@ -85,19 +101,14 @@ defaultlowspamaction=DUNNO
 skip=fuglu.plugins.p_skipper.PluginSkipper
 clamav=fuglu.plugins.clamav.ClamavPlugin
 debug=fuglu.plugins.p_debug.MessageDebugger
+sssp=fuglu.plugins.sssp.SSSPPlugin
+fprot=fuglu.plugins.fprot.FprotPlugin
+icap=fuglu.plugins.icap.ICAPPlugin
 archive=fuglu.plugins.archive.ArchivePlugin
 spamassassin=fuglu.plugins.sa.SAPlugin
 vacation=fuglu.plugins.vacation.VacationPlugin
 actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
 attachment=fuglu.plugins.attachment.FiletypePlugin
-
-[performance]
-
-#maximum scanner threads
-maxthreads=40
-
-#minimum scanner threads
-minthreads=2
 
 [virus]
 
@@ -107,6 +118,11 @@ minthreads=2
 #this is a DEFAULT action, eg. anti-virus plugins should take this if you didn't set 
 # a individual override
 defaultvirusaction=DELETE
+
+[smtpconnector]
+
+#confirmation template sent back to the connecting postfix for accepted messages
+requeuetemplate=FUGLU REQUEUE(${id}): ${injectanswer}
 
 [ArchivePlugin]
 
@@ -156,7 +172,7 @@ retries=3
 host=localhost
 
 #reject message template if running in pre-queue mode and virusaction=REJECT
-rejectmessage=virus detected: ${virusname}
+rejectmessage=threat detected: ${virusname}
 
 #socket timeout
 timeout=10
@@ -238,7 +254,7 @@ scanoriginal=1
 #what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
 lowspamaction=DEFAULTLOWSPAMACTION
 
-[MessageDebugger]
+[debug]
 
 #messages incoming on this port will be debugged to a logfile
 #Make sure the debugport is also set in the incomingport configuration option in the main section
