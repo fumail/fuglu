@@ -64,7 +64,7 @@ class ICAPPlugin(ScannerPlugin):
             },
             
             'rejectmessage':{
-                'default':'virus detected: ${virusname}',
+                'default':'threat detected: ${virusname}',
                 'description':"reject message template if running in pre-queue mode and virusaction=REJECT",
             },
                            
