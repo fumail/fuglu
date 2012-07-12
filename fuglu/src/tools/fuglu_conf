@@ -223,6 +223,9 @@ if __name__=='__main__':
     elif options.make:
         sec=None
         if options.make.lower()!='all':
+            if len(defcontroller.plugins)==0:
+                stderr("could not load plugin '%s'\n"%options.make)
+                sys.exit(1)
             sec=defcontroller.plugins[0].section
         make_config(defcontroller,sec)
     else:
