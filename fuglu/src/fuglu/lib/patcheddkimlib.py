@@ -21,7 +21,6 @@ import hashlib
 import re
 import time
 
-import dns.resolver
 
 __all__ = [
     "Simple",
@@ -279,7 +278,8 @@ def dnstxt(name):
             
         record="v=DKIM1; k=rsa; p=%s"%k
         return record
-        
+    
+    import dns.resolver    
     a = dns.resolver.query(name, dns.rdatatype.TXT)
     for r in a.response.answer:
         if r.rdtype == dns.rdatatype.TXT:
