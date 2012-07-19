@@ -3,15 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to fuglu's documentation!
-=================================
+FuGlu Mail Content Scanner
+==========================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-
+   overview-index
+   installation-index
+   operation-index
+   plugins-index
+   help-index
 
 Indices and tables
 ==================
