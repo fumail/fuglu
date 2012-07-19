@@ -1,5 +1,0 @@
-##########
-#Headername		Regex	Plugins to skip, comma separated, only classname
-#see https://sourceforge.net/apps/trac/fuglu/wiki/SuspectFilter
-
-@incomingport	^10099$	SAPlugin

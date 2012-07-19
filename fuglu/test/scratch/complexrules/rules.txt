@@ -1,3 +1,0 @@
-# comment
-
-(from_domain = 'heise.de' or from_domain='bla.com') and to_domain='wgwh.ch' : whassup
