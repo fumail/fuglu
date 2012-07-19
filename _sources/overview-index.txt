@@ -1,28 +1,30 @@
-Topic Title
-===========
+Overview
+========
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+
+Fuglu is a mail scanner daemon written in python. Installed as a postfix before-queue or after-queue filter fuglu can be used to filter spam, viruses, unwanted attachments etc.
+
+
+Fuglu's simple plugin architecture allows extending functionality easily (basic python skills required).
+
 --------
-Subtitle
+Features
 --------
 
-text
+Fuglus features include
 
-Section
-.......
+ * Virus Scanning ( clamav / sophos / f-prot / .... )
+ * Spam Filter ( spamassassin )
+ * Mail Archive
+ * Attachment Blocker, with global/domain/individual rules
+ * Different behaviour for outgoing mail (eg. don't scan for spam but scan for viruses)
+ * statistics (performance mrtg graphs, spam/ham , viruses , ...)
 
-text
-
-
-Section 2
-.........
-
- * item 1
- * item 2
 
 
 

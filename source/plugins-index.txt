@@ -1,33 +1,61 @@
-Topic Title
-===========
+Plugins
+=======
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
---------
-Subtitle
---------
-
-text
-
-Section
-.......
+---------------
+Scanner Plugins
+---------------
 
 text
 
 
-Section 2
-.........
+-----------------
+Prepender Plugins
+-----------------
 
- * item 1
- * item 2
-
-
+text
 
 
+----------------
+Appender Plugins
+----------------
+
+text
 
 
+-------------------------
+Plugins included in Fuglu
+-------------------------
+
+text
+
+
+------------------------
+Writing your own plugins
+------------------------
+
+text
+
+Tutorial
+........
+
+
+text
+
+
+Common Tasks
+............
+
+text
+
+
+Unit Tests
+..........
+
+text
 
 

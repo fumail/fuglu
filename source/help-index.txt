@@ -1,31 +1,24 @@
-Topic Title
-===========
+Support
+=======
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
---------
-Subtitle
---------
-
-text
-
-Section
-.......
+---
+FAQ
+---
 
 text
 
 
-Section 2
-.........
 
- * item 1
- * item 2
+------------
+Mailing list
+------------
 
-
-
+text
 
 
 

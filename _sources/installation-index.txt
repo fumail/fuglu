@@ -1,33 +1,52 @@
-Topic Title
-===========
+Installation
+============
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
---------
-Subtitle
---------
+-------------
+Getting Fuglu
+-------------
 
 text
 
-Section
-.......
+-------------
+Prerequisites
+-------------
 
 text
 
 
-Section 2
-.........
 
- * item 1
- * item 2
+------------
+Installation
+------------
 
-
-
+text
 
 
 
 
+-------------
+Configuration
+-------------
+
+Fuglu config
+............
+
+text
+
+Postfix config
+..............
+
+text
+
+
+---------
+Upgrading
+---------
+
+text
 

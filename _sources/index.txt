@@ -6,6 +6,8 @@
 FuGlu Mail Content Scanner
 ==========================
 
+!! This new python sphinx based documentation is still under development - see http://sourceforge.net/apps/trac/fuglu/ for current documentation !!
+
 Contents:
 
 .. toctree::
