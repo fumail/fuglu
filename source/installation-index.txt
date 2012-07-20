@@ -10,23 +10,42 @@ Contents:
 Getting Fuglu
 -------------
 
-text
+the latest fuglu version is awailable on github.
+
+::
+
+	git clone https://github.com/gryphius/fuglu.git
+
+
+TODO: packages
 
 -------------
 Prerequisites
 -------------
 
-text
+required
+--------
 
+ * **python** (>=2.4)
+ * **python-setuptools**
+ * **postfix**
+
+recommended
+-----------
+
+ * **python-file** (the file magic bindings) - Without this the attachment checker will only be able to block based on content type/attachment name but not based on the real file content. 
+ * **Spamassassin Daemon (spamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
+ * **Clam Antivirus Daemon (clamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
 
 
 ------------
 Installation
 ------------
 
-text
+::
 
-
+	cd fuglu-x.y.z
+	python setup.py install # ubuntu users: prepend sudo
 
 
 -------------
@@ -36,17 +55,182 @@ Configuration
 Fuglu config
 ............
 
-text
+First of all, rename remove the .dist ending from all files in ``/etc/fuglu``, so you have a basic default configuration.
+
+edit ``/etc/fuglu/fuglu.conf`` and change parameters if you like
+
+Note: If you don't have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.
+
+eg, change
+
+::
+
+	plugins=archive,attachment,clamav,spamassassin
+
+to
+
+::
+
+	plugins=archive,attachment
+
+to disable both Antispam and Antivirus. 
+
+
+
+Make sure the logging directory exists:
+
+::
+
+
+	mkdir -p /var/log/fuglu
+	chown nobody /var/log/fuglu
+
+
+Then check if fuglu is happy with your configuration:
+
+
+::
+
+	fuglu --lint
+
+
+example:
+
+::
+
+
+	fuglu --lint                                                 
+
+	Fuglu $Id: core.py 7 2009-04-09 06:51:25Z oli $                                          
+	---------- LINT MODE ----------                                                          
+	Loading plugins...                                                                       
+	Plugin loading complete                                                                  
+	Linting  main configuration                                                              
+	OK                                                                                       
+
+	Linting Plugin  ArchivePlugin
+	OK
+
+	Linting Plugin  Attachment Blocker
+	OK
+
+	Linting Plugin  ClamavPlugin
+	Got Pong: PONG
+
+	Clamav found virus {'stream': 'Eicar-Test-Signature FOUND'}
+	OK
+
+	Linting Plugin  SAPlugin
+	Got: SPAMD/1.4 0 PONG
+
+	GTUBE Has been detected correctly
+	OK
+
+	Linting Plugin  MessageDebugger
+	OK
+
+	Linting Plugin  PluginSkipper
+	OK
+
+	0 plugins reported errors.
+
+
+
+If all went fine, run ``fuglu`` without parameters to start the daemon. 
+in ``/var/log/fuglu/fuglu.log`` you should then see output similar to this:
+
+::
+
+	tail /var/log/fuglu/fuglu.log
+	2009-04-16 16:14:54,738 root        : INFO Dropping Privileges. Before: root(0)/root(0) After: nobody(99)/nobody(99)
+	2009-04-16 16:14:54,739 fuglu.plugin.FiletypePlugin.RulesCache: INFO Loaded 0 rules from 2 files
+	2009-04-16 16:14:54,739 fuglu.MainController: INFO Init Stat Engine
+	2009-04-16 16:14:54,740 fuglu.MainController: INFO Init Threadpool
+	2009-04-16 16:14:54,740 fuglu.MainController: INFO Init SMTP Engine
+	2009-04-16 16:14:54,741 fuglu.MainController: INFO Startup complete
+	2009-04-16 16:14:54,742 fuglu.smtp.incoming.10025: INFO SMTP Server running on port 10025
+	2009-04-16 16:14:54,743 fuglu.smtp.incoming.10099: INFO SMTP Server running on port 10099
+	2009-04-16 16:14:54,743 fuglu.smtp.incoming.10888: INFO SMTP Server running on port 10888
+
+
+
+fuglu comes with a few example init scripts if you want to start fuglu like other system daemons
+
+
+
 
 Postfix config
 ..............
 
-text
+Once fuglu is up and running, we need to tell Postfix to use it as an after queue filter.
+
+Detailed documentation is available on the `postfix <http://www.postfix.org/FILTER_README.html>`_ website, but here is a quick example. 
+
+here is a quick example.
+
+add to ``master.cf`` :
 
 
----------
-Upgrading
----------
+::
 
-text
+	#fuglu
+	fuglu_default   unix  -       -       n       -       10      smtp
+		-o smtp_send_xforward_command=yes
+		-o disable_mime_output_conversion=yes
 
+	fuglu_trusted   unix  -       -       n       -       10      smtp
+		-o smtp_send_xforward_command=yes
+		-o disable_mime_output_conversion=yes
+
+	#
+	localhost:10026 inet  n       -       n       -       10      smtpd
+		-o content_filter=
+		-o receive_override_options=no_unknown_recipient_checks,no_header_body_checks,no_milters,no_address_mappings
+		-o smtpd_helo_restrictions=
+		-o smtpd_client_restrictions=
+		-o smtpd_sender_restrictions=
+		-o smtpd_recipient_restrictions=permit_mynetworks,reject
+		-o mynetworks=127.0.0.0/8
+		-o smtpd_authorized_xforward_hosts=127.0.0.0/8
+
+
+This creates two filters ``fuglu_trusted`` for outgoing mail and ``fuglu_default`` for incoming mail. An additional postfix instance will listen on port *10026* where fuglu can re-inject filtered messages.
+
+create a new file ``/etc/postfix/filter_default``
+
+::
+
+	# filter for others
+	/./ FILTER fuglu_default:[127.0.0.1]:10025
+
+
+this tells postfix to send untrusted messages to fuglu on port 10025
+
+create a new file ``/etc/postfix/filter_trusted``
+
+::
+
+	# filter for authenticated users 
+	/./ FILTER fuglu_trusted:[127.0.0.1]:10099
+
+this tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning 
+
+in ``main.cf`` add
+
+
+::
+
+	smtpd_recipient_restrictions = 	check_client_access pcre:/etc/postfix/filter_trusted,
+									permit_sasl_authenticated,
+									permit_mynetworks,
+									reject_unauth_destination,
+									pcre:/etc/postfix/filter_default
+
+	fuglu_trusted_destination_recipient_limit=1
+	fuglu_default_destination_recipient_limit=1
+
+
+
+run ``postfix reload`` and check your maillog for errors. from now on, messages should be filtered by fuglu!
+
+ 

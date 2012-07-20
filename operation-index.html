@@ -60,18 +60,149 @@
 </div>
 <div class="section" id="monitoring">
 <h2>Monitoring<a class="headerlink" href="#monitoring" title="Permalink to this headline">¶</a></h2>
-<p>text</p>
+<p>Fuglu has various places where you can see what it is is currently doing (eg. for debugging purposes) or what it has done (for statistical analysis)</p>
 <div class="section" id="command-line-interface">
 <h3>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<p>The <tt class="docutils literal"><span class="pre">fuglu_control</span></tt> command offers various options to get real-time information on fuglu internals</p>
+<p><strong>statistics:</strong></p>
+<div class="highlight-python"><pre>#$ fuglu_control stats
+Fuglu statistics
+---------------
+Uptime:         19:33:56.119661
+Avg scan time:  3.9657
+Total msgs:     86667
+Ham:            547
+Spam:           86124
+Virus:          8</pre>
+</div>
+<p><strong>Status of currently running scanner threads:</strong></p>
+<div class="highlight-python"><pre>#fuglu_control workerlist
+Total 10 Threads
+
+[98]: Suspect 8790fa16a3733350baf02d5b4e7d98e1: from=&lt;redacted&gt; to=&lt;redacted&gt; size=1043 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0080', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0055'} : Running Plugin SAPlugin
+*******
+[99]: Suspect b6f3019df4da4170888e144f98eaa3ad: from=&lt;redacted&gt; to=&lt;redacted&gt; size=5187 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0088', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0161'} : Running Plugin SAPlugin
+*******
+[100]: waiting for task
+*******
+[101]: Suspect eefa38e4ae4a9c2938670a46d6b2b922: from=&lt;redacted&gt; to=&lt;redacted&gt; size=5203 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0086', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0092'} : Running Plugin SAPlugin
+*******
+[102]: waiting for task
+*******
+[103]: waiting for task
+*******
+[104]: waiting for task
+*******
+[105]: waiting for task
+*******
+[106]: Suspect b47e2ebf00e3f0d83dc1c7f64dad69e8: from=&lt;redacted&gt; to=&lt;redacted&gt; size=29442 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0240', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0240'} : Running Plugin SAPlugin
+*******
+[107]: waiting for task</pre>
+</div>
+<p>run fuglu_control without arguments to get a list of all supported commands.</p>
 </div>
 <div class="section" id="logs">
 <h3>Logs<a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<p>Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed.. Fuglu logging is heavily configurable, eg. you can make individual plugins or parts of fuglu more verbose than others.</p>
+<p>TODO: Logging Config</p>
 </div>
 <div class="section" id="mrtg">
 <h3>MRTG<a class="headerlink" href="#mrtg" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<p>Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg <tt class="docutils literal"><span class="pre">/usr/local/fuglu/mrtg</span></tt>) and set this in <tt class="docutils literal"><span class="pre">fuglu.conf</span></tt>:</p>
+<div class="highlight-python"><pre>#Statistics
+mrtgdir=/usr/local/fuglu/mrtg</pre>
+</div>
+<p>You&#8217;ll need <em>mrtg</em> and a <em>webserver</em> for this to work... create a file called <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu_mrtg.cfg</span></tt>  like this:</p>
+<div class="highlight-python"><pre>Interval: 5
+WorkDir: /usr/local/fuglu/mrtg/output
+WriteExpires: yes
+Options[_]: growright,nopercent
+LogFormat: rrdtool
+
+#---------------------------------------------------------------
+Target[inout]: `cat /usr/local/fuglu/mrtg/inout`
+PageTop[inout]: &lt;H1&gt;Messages in/out&lt;/H1&gt;
+Options[inout]: growright,nopercent
+Title[inout]: Messages in/out
+ShortLegend[inout]: msgs/s
+YLegend[inout]: messages
+LegendI[inout]: in
+Legend1[inout]: Incoming Messages
+Legend2[inout]: Messages re-injected
+LegendO[inout]: re-inject
+MaxBytes[inout]: 60000000
+
+Target[hamspam]: `cat /usr/local/fuglu/mrtg/hamspam`
+Options[hamspam]: growright,nopercent
+Title[hamspam]: Ham / Spam
+PageTop[hamspam]: &lt;H1&gt;Ham / Spam&lt;/H1&gt;
+YLegend[hamspam]: messages/second
+ShortLegend[hamspam]: msgs/s
+LegendI[hamspam]: ham
+Legend1[hamspam]: Clean Messages (ham)
+LegendO[hamspam]: spam
+Legend2[hamspam]: Messages detected as spam
+MaxBytes[hamspam]: 600000
+AbsMax[hamspam]: 600000
+
+Target[scantime]: `cat /usr/local/fuglu/mrtg/scantime`
+Options[scantime]: growright,nopercent,gauge
+Title[scantime]: Scan Time
+PageTop[scantime]: &lt;H1&gt;Scan Time&lt;/H1&gt;
+WithPeak[scantime]: ymwd
+YLegend[scantime]: sec
+ShortLegend[scantime]: sec
+Legend1[scantime]: Time needed to analyze message
+LegendI[scantime]: scantime
+LegendO[scantime]:
+Legend2[scantime]:
+Legend3[scantime]: Peak Scantime
+Legend4[scantime]:
+MaxBytes[scantime]: 600000
+AbsMax[scantime]: 600000
+
+
+Target[threads]: `cat /usr/local/fuglu/mrtg/threads`
+Options[threads]: growright,nopercent,gauge
+Title[threads]: Threads
+PageTop[threads]: &lt;H1&gt;Running Threads&lt;/H1&gt;
+YLegend[threads]: threads
+ShortLegend[threads]: threads
+LegendO[threads]:
+Legend1[threads]: Number of running threads
+Legend2[threads]:
+LegendI[threads]: threads
+MaxBytes[threads]: 600000
+AbsMax[threads]: 600000
+
+
+Target[virus]: `cat /usr/local/fuglu/mrtg/virus`
+Options[virus]: growright,nopercent
+Title[virus]: virus
+PageTop[virus]: &lt;H1&gt;Virus&lt;/H1&gt;
+YLegend[virus]: virus
+ShortLegend[virus]: virus
+#LegendO[virus]: virus
+LegendI[virus]: virus
+Legend1[virus]: Number of viri detected
+MaxBytes[virus]: 600000
+AbsMax[virus]: 600000</pre>
+</div>
+<p>make sure, the path in WorkDir exists.</p>
+<p>then create a script <tt class="docutils literal"><span class="pre">/usr/local/bin/fuglu_mrtg.sh</span></tt></p>
+<div class="highlight-python"><pre>#!/bin/sh
+/usr/bin/env LANG=C /usr/bin/mrtg /etc/fuglu/fuglu_mrtg.cfg</pre>
+</div>
+<p>run <tt class="docutils literal"><span class="pre">fuglu_mrtg.sh</span></tt> to check for errors.</p>
+<p>if all went well, add it to your crontab:</p>
+<div class="highlight-python"><pre>*/5 * * * * /usr/local/bin/fuglu_mrtg.sh &gt;/dev/null 2&gt;&amp;1</pre>
+</div>
+<p>install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path to fuglu_mrtg.cfg correctly:</p>
+<div class="highlight-python"><pre># EDIT THIS to reflect all your MRTG config files
+BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }</pre>
+</div>
+<p>after pointing your browser to <tt class="docutils literal"><span class="pre">http://yourfuglubox.example.com/cgi-bin/fuglu.cgi</span></tt> you should see nice graphs.</p>
+<p>TODO: screenshots</p>
 </div>
 </div>
 <div class="section" id="debugging">

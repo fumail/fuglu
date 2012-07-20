@@ -47,10 +47,15 @@ Tutorial
 text
 
 
-Common Tasks
-............
+Common Tasks ("API" FAQ)
+........................
 
 text
+
+Debugging
+.........
+
+plugdummy....
 
 
 Unit Tests

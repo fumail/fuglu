@@ -10,22 +10,192 @@ Contents:
 Monitoring
 ----------
 
-text
+Fuglu has various places where you can see what it is is currently doing (eg. for debugging purposes) or what it has done (for statistical analysis) 
 
 Command Line Interface
 ......................
 
-text
+The ``fuglu_control`` command offers various options to get real-time information on fuglu internals 
+
+
+**statistics:**
+
+::
+
+
+	#$ fuglu_control stats
+	Fuglu statistics
+	---------------
+	Uptime:		19:33:56.119661
+	Avg scan time:	3.9657
+	Total msgs:	86667
+	Ham:		547
+	Spam:		86124
+	Virus:		8
+
+
+**Status of currently running scanner threads:**
+
+::
+
+	#fuglu_control workerlist
+	Total 10 Threads
+
+	[98]: Suspect 8790fa16a3733350baf02d5b4e7d98e1: from=<redacted> to=<redacted> size=1043 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0080', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0055'} : Running Plugin SAPlugin
+	*******
+	[99]: Suspect b6f3019df4da4170888e144f98eaa3ad: from=<redacted> to=<redacted> size=5187 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0088', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0161'} : Running Plugin SAPlugin
+	*******
+	[100]: waiting for task
+	*******
+	[101]: Suspect eefa38e4ae4a9c2938670a46d6b2b922: from=<redacted> to=<redacted> size=5203 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0086', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0092'} : Running Plugin SAPlugin
+	*******
+	[102]: waiting for task
+	*******
+	[103]: waiting for task
+	*******
+	[104]: waiting for task
+	*******
+	[105]: waiting for task
+	*******
+	[106]: Suspect b47e2ebf00e3f0d83dc1c7f64dad69e8: from=<redacted> to=<redacted> size=29442 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0240', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0240'} : Running Plugin SAPlugin
+	*******
+	[107]: waiting for task
+
+
+run fuglu_control without arguments to get a list of all supported commands. 
 
 Logs
 ....
 
-text
+Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed.. Fuglu logging is heavily configurable, eg. you can make individual plugins or parts of fuglu more verbose than others. 
+
+TODO: Logging Config
+
 
 MRTG
 ....
 
-text
+Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg ``/usr/local/fuglu/mrtg``) and set this in ``fuglu.conf``: 
+
+::
+
+	#Statistics
+	mrtgdir=/usr/local/fuglu/mrtg
+
+You'll need *mrtg* and a *webserver* for this to work... create a file called ``/etc/fuglu/fuglu_mrtg.cfg``  like this: 
+
+
+::
+
+	Interval: 5
+	WorkDir: /usr/local/fuglu/mrtg/output
+	WriteExpires: yes
+	Options[_]: growright,nopercent
+	LogFormat: rrdtool
+
+	#---------------------------------------------------------------
+	Target[inout]: `cat /usr/local/fuglu/mrtg/inout`
+	PageTop[inout]: <H1>Messages in/out</H1>
+	Options[inout]: growright,nopercent
+	Title[inout]: Messages in/out
+	ShortLegend[inout]: msgs/s
+	YLegend[inout]: messages
+	LegendI[inout]: in
+	Legend1[inout]: Incoming Messages
+	Legend2[inout]: Messages re-injected
+	LegendO[inout]: re-inject
+	MaxBytes[inout]: 60000000
+
+	Target[hamspam]: `cat /usr/local/fuglu/mrtg/hamspam`
+	Options[hamspam]: growright,nopercent
+	Title[hamspam]: Ham / Spam
+	PageTop[hamspam]: <H1>Ham / Spam</H1>
+	YLegend[hamspam]: messages/second
+	ShortLegend[hamspam]: msgs/s
+	LegendI[hamspam]: ham
+	Legend1[hamspam]: Clean Messages (ham)
+	LegendO[hamspam]: spam
+	Legend2[hamspam]: Messages detected as spam
+	MaxBytes[hamspam]: 600000
+	AbsMax[hamspam]: 600000
+
+	Target[scantime]: `cat /usr/local/fuglu/mrtg/scantime`
+	Options[scantime]: growright,nopercent,gauge
+	Title[scantime]: Scan Time
+	PageTop[scantime]: <H1>Scan Time</H1>
+	WithPeak[scantime]: ymwd
+	YLegend[scantime]: sec
+	ShortLegend[scantime]: sec
+	Legend1[scantime]: Time needed to analyze message
+	LegendI[scantime]: scantime
+	LegendO[scantime]:
+	Legend2[scantime]:
+	Legend3[scantime]: Peak Scantime
+	Legend4[scantime]:
+	MaxBytes[scantime]: 600000
+	AbsMax[scantime]: 600000
+
+
+	Target[threads]: `cat /usr/local/fuglu/mrtg/threads`
+	Options[threads]: growright,nopercent,gauge
+	Title[threads]: Threads
+	PageTop[threads]: <H1>Running Threads</H1>
+	YLegend[threads]: threads
+	ShortLegend[threads]: threads
+	LegendO[threads]:
+	Legend1[threads]: Number of running threads
+	Legend2[threads]:
+	LegendI[threads]: threads
+	MaxBytes[threads]: 600000
+	AbsMax[threads]: 600000
+
+
+	Target[virus]: `cat /usr/local/fuglu/mrtg/virus`
+	Options[virus]: growright,nopercent
+	Title[virus]: virus
+	PageTop[virus]: <H1>Virus</H1>
+	YLegend[virus]: virus
+	ShortLegend[virus]: virus
+	#LegendO[virus]: virus
+	LegendI[virus]: virus
+	Legend1[virus]: Number of viri detected
+	MaxBytes[virus]: 600000
+	AbsMax[virus]: 600000
+
+
+make sure, the path in WorkDir exists.
+
+then create a script ``/usr/local/bin/fuglu_mrtg.sh`` 
+
+::
+
+
+	#!/bin/sh
+	/usr/bin/env LANG=C /usr/bin/mrtg /etc/fuglu/fuglu_mrtg.cfg
+
+
+run ``fuglu_mrtg.sh`` to check for errors. 
+
+if all went well, add it to your crontab: 
+
+::
+
+	*/5 * * * * /usr/local/bin/fuglu_mrtg.sh >/dev/null 2>&1
+
+
+install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path to fuglu_mrtg.cfg correctly: 
+
+
+::
+
+	# EDIT THIS to reflect all your MRTG config files
+	BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }
+
+
+after pointing your browser to ``http://yourfuglubox.example.com/cgi-bin/fuglu.cgi`` you should see nice graphs. 
+
+
+TODO: screenshots
 
 
 ---------
