@@ -15,6 +15,7 @@ Contents:
 
    overview-index
    installation-index
+   config-index
    operation-index
    plugins-index
    help-index

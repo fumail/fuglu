@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="fuglu 1 documentation" href="index.html" />
-    <link rel="next" title="Operation" href="operation-index.html" />
+    <link rel="next" title="Configuration" href="config-index.html" />
     <link rel="prev" title="Overview" href="overview-index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="operation-index.html" title="Operation"
+          <a href="config-index.html" title="Configuration"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="overview-index.html" title="Overview"
@@ -94,125 +94,6 @@
 python setup.py install # ubuntu users: prepend sudo</pre>
 </div>
 </div>
-<div class="section" id="configuration">
-<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<p>First of all, rename remove the .dist ending from all files in <tt class="docutils literal"><span class="pre">/etc/fuglu</span></tt>, so you have a basic default configuration.</p>
-<p>edit <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> and change parameters if you like</p>
-<p>Note: If you don&#8217;t have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.</p>
-<p>eg, change</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">attachment</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">spamassassin</span>
-</pre></div>
-</div>
-<p>to</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">attachment</span>
-</pre></div>
-</div>
-<p>to disable both Antispam and Antivirus.</p>
-<p>Make sure the logging directory exists:</p>
-<div class="highlight-python"><pre>mkdir -p /var/log/fuglu
-chown nobody /var/log/fuglu</pre>
-</div>
-<p>Then check if fuglu is happy with your configuration:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">fuglu</span> <span class="o">--</span><span class="n">lint</span>
-</pre></div>
-</div>
-<p>example:</p>
-<div class="highlight-python"><pre>fuglu --lint
-
-Fuglu $Id: core.py 7 2009-04-09 06:51:25Z oli $
----------- LINT MODE ----------
-Loading plugins...
-Plugin loading complete
-Linting  main configuration
-OK
-
-Linting Plugin  ArchivePlugin
-OK
-
-Linting Plugin  Attachment Blocker
-OK
-
-Linting Plugin  ClamavPlugin
-Got Pong: PONG
-
-Clamav found virus {'stream': 'Eicar-Test-Signature FOUND'}
-OK
-
-Linting Plugin  SAPlugin
-Got: SPAMD/1.4 0 PONG
-
-GTUBE Has been detected correctly
-OK
-
-Linting Plugin  MessageDebugger
-OK
-
-Linting Plugin  PluginSkipper
-OK
-
-0 plugins reported errors.</pre>
-</div>
-<p>If all went fine, run <tt class="docutils literal"><span class="pre">fuglu</span></tt> without parameters to start the daemon.
-in <tt class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span></tt> you should then see output similar to this:</p>
-<div class="highlight-python"><pre>tail /var/log/fuglu/fuglu.log
-2009-04-16 16:14:54,738 root        : INFO Dropping Privileges. Before: root(0)/root(0) After: nobody(99)/nobody(99)
-2009-04-16 16:14:54,739 fuglu.plugin.FiletypePlugin.RulesCache: INFO Loaded 0 rules from 2 files
-2009-04-16 16:14:54,739 fuglu.MainController: INFO Init Stat Engine
-2009-04-16 16:14:54,740 fuglu.MainController: INFO Init Threadpool
-2009-04-16 16:14:54,740 fuglu.MainController: INFO Init SMTP Engine
-2009-04-16 16:14:54,741 fuglu.MainController: INFO Startup complete
-2009-04-16 16:14:54,742 fuglu.smtp.incoming.10025: INFO SMTP Server running on port 10025
-2009-04-16 16:14:54,743 fuglu.smtp.incoming.10099: INFO SMTP Server running on port 10099
-2009-04-16 16:14:54,743 fuglu.smtp.incoming.10888: INFO SMTP Server running on port 10888</pre>
-</div>
-<p>fuglu comes with a few example init scripts if you want to start fuglu like other system daemons</p>
-<p>Once fuglu is up and running, we need to tell Postfix to use it as an after queue filter.</p>
-<p>Detailed documentation is available on the <a class="reference external" href="http://www.postfix.org/FILTER_README.html">postfix</a> website, but here is a quick example.</p>
-<p>here is a quick example.</p>
-<p>add to <tt class="docutils literal"><span class="pre">master.cf</span></tt> :</p>
-<div class="highlight-python"><pre>#fuglu
-fuglu_default   unix  -       -       n       -       10      smtp
-        -o smtp_send_xforward_command=yes
-        -o disable_mime_output_conversion=yes
-
-fuglu_trusted   unix  -       -       n       -       10      smtp
-        -o smtp_send_xforward_command=yes
-        -o disable_mime_output_conversion=yes
-
-#
-localhost:10026 inet  n       -       n       -       10      smtpd
-        -o content_filter=
-        -o receive_override_options=no_unknown_recipient_checks,no_header_body_checks,no_milters,no_address_mappings
-        -o smtpd_helo_restrictions=
-        -o smtpd_client_restrictions=
-        -o smtpd_sender_restrictions=
-        -o smtpd_recipient_restrictions=permit_mynetworks,reject
-        -o mynetworks=127.0.0.0/8
-        -o smtpd_authorized_xforward_hosts=127.0.0.0/8</pre>
-</div>
-<p>This creates two filters <tt class="docutils literal"><span class="pre">fuglu_trusted</span></tt> for outgoing mail and <tt class="docutils literal"><span class="pre">fuglu_default</span></tt> for incoming mail. An additional postfix instance will listen on port <em>10026</em> where fuglu can re-inject filtered messages.</p>
-<p>create a new file <tt class="docutils literal"><span class="pre">/etc/postfix/filter_default</span></tt></p>
-<div class="highlight-python"><pre># filter for others
-/./ FILTER fuglu_default:[127.0.0.1]:10025</pre>
-</div>
-<p>this tells postfix to send untrusted messages to fuglu on port 10025</p>
-<p>create a new file <tt class="docutils literal"><span class="pre">/etc/postfix/filter_trusted</span></tt></p>
-<div class="highlight-python"><pre># filter for authenticated users
-/./ FILTER fuglu_trusted:[127.0.0.1]:10099</pre>
-</div>
-<p>this tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning</p>
-<p>in <tt class="docutils literal"><span class="pre">main.cf</span></tt> add</p>
-<div class="highlight-python"><pre>smtpd_recipient_restrictions =  check_client_access pcre:/etc/postfix/filter_trusted,
-                                                                permit_sasl_authenticated,
-                                                                permit_mynetworks,
-                                                                reject_unauth_destination,
-                                                                pcre:/etc/postfix/filter_default
-
-fuglu_trusted_destination_recipient_limit=1
-fuglu_default_destination_recipient_limit=1</pre>
-</div>
-<p>run <tt class="docutils literal"><span class="pre">postfix</span> <span class="pre">reload</span></tt> and check your maillog for errors. from now on, messages should be filtered by fuglu!</p>
-</div>
 </div>
 
 
@@ -231,7 +112,6 @@ fuglu_default_destination_recipient_limit=1</pre>
 </ul>
 </li>
 <li><a class="reference internal" href="#id1">Installation</a></li>
-<li><a class="reference internal" href="#configuration">Configuration</a></li>
 </ul>
 </li>
 </ul>
@@ -240,8 +120,8 @@ fuglu_default_destination_recipient_limit=1</pre>
   <p class="topless"><a href="overview-index.html"
                         title="previous chapter">Overview</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="operation-index.html"
-                        title="next chapter">Operation</a></p>
+  <p class="topless"><a href="config-index.html"
+                        title="next chapter">Configuration</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/installation-index.txt"
@@ -271,7 +151,7 @@ fuglu_default_destination_recipient_limit=1</pre>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="operation-index.html" title="Operation"
+          <a href="config-index.html" title="Configuration"
              >next</a> |</li>
         <li class="right" >
           <a href="overview-index.html" title="Overview"
