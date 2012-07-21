@@ -6,30 +6,71 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
----------------
+--------
+Overview
+--------
+
+The fuglu core does nothing except receiving mails from postfix and sending them back. All functionality 
+is written in plugins which can be enabled or disabled at will. Fuglu provides plugins for the most common
+mail filtering requirements, but if some functionality is missing, it is easy to add new plugins without knowing
+all of fuglu's internals.
+
+
+----------------
+Types of plugins
+----------------
+
+
 Scanner Plugins
----------------
+...............
 
-text
+Scanner plugins are the most important type of plugins. They do the actual mail content filtering.
+Plugins are run in the order specified in the ``plugins=`` configuration option. Each plugin returns an action
+for the message:
+
+ * **DUNNO**  : This plugin decides not to take any final action, continue with the next plugin (this is the most common case)
+ * **ACCEPT** : Whitelist this message, don't run any remaining plugins
+ * **DELETE** : Silently delete this message (The sender will think it has been delivered)
+ * **DEFER**  : Temporary Reject (4xx error), used for error conditions in after-queue mode or things like greylisting in before-queue mode
+ * **REJECT** : Reject this message, should only be used in before-queue mode (in after-queue mode this would produce a bounce / backscatter)
+
+If one of the plugins returns something other than *DUNNO*, all remaining scanner plugins are skipped.
+If all plugins return DUNNO, the message is accepted and re-injected to postfix.
 
 
------------------
 Prepender Plugins
------------------
+.................
 
-text
+Prepender plugins run before the scanner plugins and have the ability to alter the
+list of scanner plugins to be run. This can be used for example to have different plugins
+run for incoming or outgoing mails or to skip whitelisted messages.
 
 
-----------------
 Appender Plugins
-----------------
+................
 
-text
+Appender plugins are run after the scanner plugins when the message has alr
+eady been re-injected into postfix
+(or rejected or deleted or...) so they don't increase your scanning time . They are mostly used for statistical tasks, updating counters in database etc. 
+
+
+--------------------
+Plugin configuration
+--------------------
+
+Each plugin has its own configuration section in ``/etc/fuglu/fuglu.conf`` or any ``*.conf`` in ``/etc/fuglu/conf.d``. The section is usually
+named like the plugin itself.
+
+For example, the Spamassassin Plugin's Name is ``SAplugin``, so it would search for a ``[SAPlugin]`` config section.
+
+TODO: more examples, section override
 
 
 -------------------------
 Plugins included in Fuglu
 -------------------------
+
+TODO: scanner, prepender, appender, auto generated?
 
 text
 

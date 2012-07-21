@@ -58,20 +58,55 @@
 <ul class="simple">
 </ul>
 </div>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The fuglu core does nothing except receiving mails from postfix and sending them back. All functionality
+is written in plugins which can be enabled or disabled at will. Fuglu provides plugins for the most common
+mail filtering requirements, but if some functionality is missing, it is easy to add new plugins without knowing
+all of fuglu&#8217;s internals.</p>
+</div>
+<div class="section" id="types-of-plugins">
+<h2>Types of plugins<a class="headerlink" href="#types-of-plugins" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="scanner-plugins">
-<h2>Scanner Plugins<a class="headerlink" href="#scanner-plugins" title="Permalink to this headline">¶</a></h2>
-<p>text</p>
+<h3>Scanner Plugins<a class="headerlink" href="#scanner-plugins" title="Permalink to this headline">¶</a></h3>
+<p>Scanner plugins are the most important type of plugins. They do the actual mail content filtering.
+Plugins are run in the order specified in the <tt class="docutils literal"><span class="pre">plugins=</span></tt> configuration option. Each plugin returns an action
+for the message:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>DUNNO</strong>  : This plugin decides not to take any final action, continue with the next plugin (this is the most common case)</li>
+<li><strong>ACCEPT</strong> : Whitelist this message, don&#8217;t run any remaining plugins</li>
+<li><strong>DELETE</strong> : Silently delete this message (The sender will think it has been delivered)</li>
+<li><strong>DEFER</strong>  : Temporary Reject (4xx error), used for error conditions in after-queue mode or things like greylisting in before-queue mode</li>
+<li><strong>REJECT</strong> : Reject this message, should only be used in before-queue mode (in after-queue mode this would produce a bounce / backscatter)</li>
+</ul>
+</div></blockquote>
+<p>If one of the plugins returns something other than <em>DUNNO</em>, all remaining scanner plugins are skipped.
+If all plugins return DUNNO, the message is accepted and re-injected to postfix.</p>
 </div>
 <div class="section" id="prepender-plugins">
-<h2>Prepender Plugins<a class="headerlink" href="#prepender-plugins" title="Permalink to this headline">¶</a></h2>
-<p>text</p>
+<h3>Prepender Plugins<a class="headerlink" href="#prepender-plugins" title="Permalink to this headline">¶</a></h3>
+<p>Prepender plugins run before the scanner plugins and have the ability to alter the
+list of scanner plugins to be run. This can be used for example to have different plugins
+run for incoming or outgoing mails or to skip whitelisted messages.</p>
 </div>
 <div class="section" id="appender-plugins">
-<h2>Appender Plugins<a class="headerlink" href="#appender-plugins" title="Permalink to this headline">¶</a></h2>
-<p>text</p>
+<h3>Appender Plugins<a class="headerlink" href="#appender-plugins" title="Permalink to this headline">¶</a></h3>
+<p>Appender plugins are run after the scanner plugins when the message has alr
+eady been re-injected into postfix
+(or rejected or deleted or...) so they don&#8217;t increase your scanning time . They are mostly used for statistical tasks, updating counters in database etc.</p>
+</div>
+</div>
+<div class="section" id="plugin-configuration">
+<h2>Plugin configuration<a class="headerlink" href="#plugin-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Each plugin has its own configuration section in <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> or any <tt class="docutils literal"><span class="pre">*.conf</span></tt> in <tt class="docutils literal"><span class="pre">/etc/fuglu/conf.d</span></tt>. The section is usually
+named like the plugin itself.</p>
+<p>For example, the Spamassassin Plugin&#8217;s Name is <tt class="docutils literal"><span class="pre">SAplugin</span></tt>, so it would search for a <tt class="docutils literal"><span class="pre">[SAPlugin]</span></tt> config section.</p>
+<p>TODO: more examples, section override</p>
 </div>
 <div class="section" id="plugins-included-in-fuglu">
 <h2>Plugins included in Fuglu<a class="headerlink" href="#plugins-included-in-fuglu" title="Permalink to this headline">¶</a></h2>
+<p>TODO: scanner, prepender, appender, auto generated?</p>
 <p>text</p>
 </div>
 <div class="section" id="writing-your-own-plugins">
@@ -105,9 +140,14 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Plugins</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#types-of-plugins">Types of plugins</a><ul>
 <li><a class="reference internal" href="#scanner-plugins">Scanner Plugins</a></li>
 <li><a class="reference internal" href="#prepender-plugins">Prepender Plugins</a></li>
 <li><a class="reference internal" href="#appender-plugins">Appender Plugins</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plugin-configuration">Plugin configuration</a></li>
 <li><a class="reference internal" href="#plugins-included-in-fuglu">Plugins included in Fuglu</a></li>
 <li><a class="reference internal" href="#writing-your-own-plugins">Writing your own plugins</a><ul>
 <li><a class="reference internal" href="#tutorial">Tutorial</a></li>
