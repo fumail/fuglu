@@ -228,7 +228,8 @@ class Suspect(object):
                 return True
         return False
     
-    def addheader(self,key,value,immediate=False):
+    
+    def add_header(self,key,value,immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
         if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
         visible to later plugins (eg. for spamassassin rules), otherwise, leave as False which is faster.
@@ -242,7 +243,9 @@ class Suspect(object):
         else:
             self.addheaders[key]=value
         
-        
+    def addheader(self,key,value,immediate=False):
+        """old name for add_header"""
+        return self.add_header(key, value, immediate)
     
     def is_virus(self):
         """Returns True if ANY of the antivirus engines tagged this suspect as infected"""
@@ -293,7 +296,7 @@ class Suspect(object):
         astring="Suspect %s: from=%s to=%s size=%s spam=%s virus=%s modified=%s tags=%s"%(self.id,self.from_address, self.to_address,self.size,spamstring,virusstring,modifiedstring,tagscopy)
         return astring
     
-    def getMessageRep(self):
+    def get_message_rep(self):
         """returns the python email api representation of this suspect"""
         if self.source!=None:
             return email.message_from_string(self.source)
@@ -303,28 +306,44 @@ class Suspect(object):
             fh.close()
             return msgrep
     
-    def setMessageRep(self,msgrep):
+    def getMessageRep(self):
+        """old name for get_message_rep"""
+        return self.get_message_rep()
+    
+    def set_message_rep(self,msgrep):
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
         """
         self.setSource(msgrep.as_string())
-        #logging.warning("Message source has been modified by a plugin")
+    
+    def setMessageRep(self,msgrep):
+        """old name for set_message_rep"""
+        return self.set_message_rep(msgrep)
+    
         
     def is_modified(self):
         """returns true if the message source has been modified"""
         return self.source!=None
     
-    def getSource(self,maxbytes=None):
+    def get_source(self,maxbytes=None):
         """returns the current message source, possibly changed by plugins"""
         if self.source!=None:
             return self.source[:maxbytes]
         else:
-            return self.getOriginalSource(maxbytes)
+            return self.get_original_source(maxbytes)
         
-    def setSource(self,source):
+    def getSource(self,maxbytes=None):
+        """old name for get_source"""
+        return self.get_source(maxbytes)
+        
+    def set_source(self,source):
         self.source=source
-        
-    def getOriginalSource(self,maxbytes=None):
+    
+    def setSource(self,source):
+        """old name for set_source"""
+        return self.set_source(source)
+     
+    def get_original_source(self,maxbytes=None):
         """returns the original, unmodified message source"""
         readbytes=-1
         if maxbytes!=None:
@@ -334,7 +353,12 @@ class Suspect(object):
         except Exception,e:
             logging.getLogger('fuglu.suspect').error('Cannot retrieve original source from tempfile %s : %s'%(self.tempfile,str(e)))
             raise e
-        return source    
+        return source
+    
+    def getOriginalSource(self,maxbytes=None):
+        """old name for get_original_source"""
+        return self.get_original_source(maxbytes)
+
         
 ##it is important that this class explicitly extends from object, or __subclasses__() will not work!
 class BasicPlugin(object):
@@ -664,7 +688,7 @@ class SuspectFilter(object):
         self.logger.debug('No match found')
         return (False,None)
     
-    def getArgs(self,suspect):
+    def get_args(self,suspect):
         """returns all args of matched regexes in a list"""
         ret=[]
         self._reloadifnecessary()
@@ -684,7 +708,12 @@ class SuspectFilter(object):
                     self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
                     
         return ret
-       
+    
+    
+    def getArgs(self,suspect):
+        """old name for get_args"""
+        return self.get_args(suspect)
+    
     def filechanged(self):
         statinfo=os.stat(self.filename)
         ctime=statinfo.st_ctime
