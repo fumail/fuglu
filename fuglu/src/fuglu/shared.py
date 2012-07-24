@@ -359,6 +359,10 @@ class Suspect(object):
         """old name for get_original_source"""
         return self.get_original_source(maxbytes)
 
+    def get_headers(self):
+        """returns the message headers as string"""
+        headers=re.split('(?:\n\n)|(?:\r\n\r\n)',self.getSource(maxbytes=1048576),1)[0]
+        return headers
         
 ##it is important that this class explicitly extends from object, or __subclasses__() will not work!
 class BasicPlugin(object):
