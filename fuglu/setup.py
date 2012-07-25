@@ -1,11 +1,39 @@
 from distutils.core import setup, Command
 import glob
 import sys
+import os
 sys.path.insert(0,'src')
-from fuglu import FUGLU_VERSION
+
+#store old content of version file here
+#if we have git available, temporarily overwrite the file
+#so we can report the git commit id in fuglu --version 
+OLD_VERSFILE_CONTENT=None
+VERSFILE='src/fuglu/__init__.py'
+
+def git_version():
+    from fuglu import FUGLU_VERSION
+    global VERSFILE,OLD_VERSFILE_CONTENT
+    try:
+        import subprocess
+        x=subprocess.Popen(['git','describe'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        ret=x.wait()
+        if ret==0:
+            stdout,stderr=x.communicate()
+            vers=stdout.strip()
+            #replace fuglu version in file
+            if os.path.isfile(VERSFILE):
+                OLD_VERSFILE_CONTENT=open(VERSFILE,'r').read()
+                buff=OLD_VERSFILE_CONTENT.replace(FUGLU_VERSION,vers)
+                open(VERSFILE,'w').write(buff)
+            return vers
+        else:
+            return FUGLU_VERSION
+    except Exception,e:
+        return FUGLU_VERSION
+
 
 setup(name = "fuglu",
-    version = FUGLU_VERSION,
+    version = git_version(),
     description = "Fuglu Mail Content Scanner",
     author = "O. Schacher",
     url='http://www.fuglu.org',
@@ -20,6 +48,11 @@ setup(name = "fuglu",
                 ('/etc/fuglu/rules',glob.glob('conf/rules/*.dist')),
                 ]
 )
+
+#cleanup
+if OLD_VERSFILE_CONTENT!=None:
+    open(VERSFILE,'w').write(OLD_VERSFILE_CONTENT)
+    
 
 
 class DistroDefault(Command):
@@ -49,4 +82,6 @@ class DistroDefault(Command):
     def detect_distro(self):
         """returns a distribution name and version number if possible"""
         pass
+        
+        
         
