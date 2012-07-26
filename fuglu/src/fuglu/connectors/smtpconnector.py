@@ -59,8 +59,8 @@ class SMTPHandler(ProtocolHandler):
     def is_signed(self,suspect):
         msgrep=suspect.getMessageRep()
         if msgrep.has_key('Content-Type'):
-            ctype=msgrep['Content-Type']
-            if ctype.lower().find('multipart/signed')>-1:
+            ctype=msgrep['Content-Type'].lower()
+            if 'multipart/signed' in ctype or 'application/pkcs7-mime' in ctype:
                 return True
         return False
     
@@ -70,10 +70,10 @@ class SMTPHandler(ProtocolHandler):
             return 'message not re-injected by plugin request'
         
         if suspect.get_tag('reinjectoriginal'):
-            self.logger.info('Injecting original message source without modifications')
+            self.logger.info('%s: Injecting original message source without modifications'%suspect.id)
             msgcontent=suspect.getOriginalSource()
         elif self.is_signed(suspect):
-            self.logger.info('S/MIME signed message detected - sending original source without modifications')
+            self.logger.info('%s: S/MIME signed message detected - sending original source without modifications'%suspect.id)
             msgcontent=suspect.getOriginalSource()
         else:
             msgcontent=buildmsgsource(suspect)
