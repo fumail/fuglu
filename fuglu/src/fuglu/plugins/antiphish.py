@@ -1,5 +1,7 @@
 """
-DKIM Sign / Verify Plugin
+Antiphish / Forging Plugins (DKIM / SPF / SRS etc)
+
+EXPERIMENTAL, not ready for production!
 """
 
 from fuglu.shared import ScannerPlugin,apply_template,DUNNO,string_to_actioncode
@@ -155,6 +157,34 @@ class DKIMSign(ScannerPlugin):
         difftime=endtime-starttime
         suspect.tags['DKIMSign.time']="%.4f"%difftime
         
-
+class SPFCheck(ScannerPlugin):
+    """Check SPF"""
+    
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars={        
+        }
+    
+    def examine(self,suspect):
+        starttime=time.time()
+        endtime=time.time()
+        difftime=endtime-starttime
+        suspect.tags['SPFCheck.time']="%.4f"%difftime
+        
+    
+class SRSRewrite(ScannerPlugin):
+    """SRS Rewrites - would only work in after queue mode"""
+    
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars={        
+        }
+    
+    def examine(self,suspect):
+        starttime=time.time()
+        endtime=time.time()
+        difftime=endtime-starttime
+        suspect.tags['SPFCheck.time']="%.4f"%difftime
+        
 
 #TODO: unit tests   
