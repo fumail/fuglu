@@ -99,18 +99,13 @@ class MainController(object):
               'description':"what APPENDER plugins do we load, comma separated\nappender plugins are plugins run after the scanning plugins\nappenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message\n(unless a mail is deferred in which case running the appender would not make sense as it will come again)",
               'default':"",
             },
+            
             'bindaddress':{
               'section':'main',
               'description':"address fuglu should listen on. usually 127.0.0.1 so connections are accepted from local host only",
               'default':"127.0.0.1",
             },
-                           
-            'bindaddress':{
-              'section':'main',
-              'description':"address fuglu should listen on. usually 127.0.0.1 so connections are accepted from local host only",
-              'default':"127.0.0.1",
-            },
-                           
+                              
             'incomingport':{
               'section':'main',
               'description':"incoming port(s) (postfix connects here)\nyou can use multiple comma separated ports here\nf.ex. to separate incoming and outgoing mail and a special port for debugging messages\n10025: standard incoming mail\n10099: outgoing mail\n10888: debug port",
