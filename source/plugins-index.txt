@@ -131,7 +131,7 @@ Example:
 Plugins included in Fuglu
 -------------------------
 
-TODO: scanner, prepender, appender, auto generated?
+.. include:: includedplugins-autogen.txt
 
 
 ------------------------

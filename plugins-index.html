@@ -161,7 +161,439 @@ mime:Content-Type ^application\/x-msdos-program$</pre>
 </div>
 <div class="section" id="plugins-included-in-fuglu">
 <h2>Plugins included in Fuglu<a class="headerlink" href="#plugins-included-in-fuglu" title="Permalink to this headline">¶</a></h2>
-<p>TODO: scanner, prepender, appender, auto generated?</p>
+<div class="section" id="saplugin">
+<h3>SAPlugin<a class="headerlink" href="#saplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.sa.SAPlugin</p>
+<p>This plugin passes suspects to a spamassassin daemon.</p>
+<p>Prerequisites: SPAMD must be installed and running (not necessarily on the same box as fuglu)</p>
+<p>Notes for developers:</p>
+<p>if forwardoriginal=False, the message source will be completely replaced with the answer from spamd.</p>
+<p>Tags:</p>
+<blockquote>
+<div><ul class="simple">
+<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.skip</span></tt>, skips scanning if this is True</li>
+<li>sets <tt class="docutils literal"><span class="pre">spam['spamassassin']</span></tt> (boolean)</li>
+<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.spamscore</span></tt> (float) if possible</li>
+<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.time</span></tt> (float)</li>
+<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.skipreason</span></tt> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
+</ul>
+</div></blockquote>
+<div class="section" id="configuration">
+<h4>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[SAPlugin]
+#how often should fuglu retry the connection before giving up
+retries=3
+#action if there is a problem (DUNNO, DEFER)
+problemaction=DEFER
+#reject message template if running in pre-queue mode
+rejectmessage=message identified as spam
+#forward the original message or replace the content as returned by spamassassin
+if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
+"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
+message as retreived from previous plugins
+forwardoriginal=0
+#consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks
+requires the sql extension to be enabled
+check_sql_blacklist=0
+#sqlalchemy db connect string
+sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
+#SQL query to get the blacklist entries for a suspect
+you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
+sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
+#maximum size in bytes. larger messages will be skipped
+maxsize=256000
+#what header does sa set to indicate the spam status
+spamheader=X-Spam-Status
+#hostname where spamd runs
+host=localhost
+#what should we do with high spam (spam score above highspamlevel)
+highspamaction=DEFAULTHIGHSPAMACTION
+#how long should we wait for an answer from sa
+timeout=30
+#spamscore threshold to mark a message as high spam
+highspamlevel=15
+#enable SA user configuration
+peruserconfig=1
+#tcp port number
+port=783
+#should we scan the original message as retreived from postfix or scan the current state
+in fuglu (which might have been altered by previous plugins)
+only set this to disabled if you have a custom plugin that adds special headers to the message that will be
+used in spamassassin rules
+scanoriginal=1
+#what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
+lowspamaction=DEFAULTLOWSPAMACTION</pre>
+</div>
+</div>
+</div>
+<div class="section" id="clamavplugin">
+<h3>ClamavPlugin<a class="headerlink" href="#clamavplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.clamav.ClamavPlugin</p>
+<p>This plugin passes suspects to a clam daemon.</p>
+<p>Actions: This plugin will delete infected messages. If clamd is not reachable or times out, messages can be DEFERRED.</p>
+<p>Prerequisites: You must have clamd installed (for performance reasons I recommend it to be on the same box, but this is not absoluely necessary)</p>
+<p>Notes for developers:</p>
+<p>Tags:</p>
+<blockquote>
+<div><ul class="simple">
+<li>sets <tt class="docutils literal"><span class="pre">virus['ClamAV']</span></tt> (boolean)</li>
+<li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
+<li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.time</span></tt> (float)</li>
+</ul>
+</div></blockquote>
+<div class="section" id="id1">
+<h4>Configuration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[ClamavPlugin]
+#how often should fuglu retry the connection before giving up
+retries=3
+#hostname where clamd runs
+host=localhost
+#reject message template if running in pre-queue mode and virusaction=REJECT
+rejectmessage=threat detected: ${virusname}
+#socket timeout
+timeout=10
+#action if there is a problem (DUNNO, DEFER)
+problemaction=DEFER
+#maximum message size, larger messages will not be scanned.
+should match the 'StreamMaxLength' config option in clamd.conf
+maxsize=22000000
+#tcp port number or path to clamd.sock for unix domain sockets
+example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl
+port=3310
+#action if infection is detected (DUNNO, REJECT, DELETE)
+virusaction=DEFAULTVIRUSACTION</pre>
+</div>
+</div>
+</div>
+<div class="section" id="attachment-blocker">
+<h3>Attachment Blocker<a class="headerlink" href="#attachment-blocker" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.attachment.FiletypePlugin</p>
+<p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
+<p>Attachment rules can be defined globally, per domain or per user.</p>
+<p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
+<p>Prerequisites: You must have the python &#8216;&#8217;file&#8217;&#8217; or &#8216;&#8217;magic&#8217;&#8217; module installed</p>
+<p>The attachment configuration files are in /etc/fuglu/rules. You whould have two default files there: &#8216;&#8217;&#8216;default-filenames.conf&#8217;&#8216;&#8217; which defines what filenames are allowed and &#8216;&#8217;&#8216;default-filetypes.conf&#8217;&#8216;&#8217; which defines what content types a attachment may have.</p>
+<p>For domain rules, create a new file &#8216;&#8217;&#8216;&lt;domainname&gt;-filenames.conf&#8217;&#8216;&#8217; / &#8216;&#8217;&#8216;&lt;domainname&gt;-filetypes.conf&#8217;&#8216;&#8217; , eg. &#8216;&#8217;fuglu.org-filenames.conf&#8217;&#8217; / &#8216;&#8217;fuglu.org-filetypes.conf&#8217;&#8216;</p>
+<p>For individual user rules, create a new file &#8216;&#8217;&#8216;&lt;useremail&gt;-filenames.conf&#8217;&#8216;&#8217; / &#8216;&#8217;&#8216;&lt;useremail&gt;-filetypes.conf&#8217;&#8216;&#8217;, eg. <a class="reference external" href="mailto:{{{oli&#37;&#52;&#48;fuglu&#46;org-filenames&#46;conf">{{{oli<span>&#64;</span>fuglu<span>&#46;</span>org-filenames<span>&#46;</span>conf</a>}}} / <a class="reference external" href="mailto:{{{oli&#37;&#52;&#48;fuglu&#46;org-filetypes&#46;conf">{{{oli<span>&#64;</span>fuglu<span>&#46;</span>org-filetypes<span>&#46;</span>conf</a>}}}</p>
+<p>The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
+&lt;action&gt;    &lt;regular expression&gt;   &lt;description or error message&gt;</p>
+<dl class="docutils">
+<dt>&lt;action&gt; can be one of:</dt>
+<dd><ul class="first last simple">
+<li>allow : this file is ok, don&#8217;t do further checks (you might use it for safe content types like text). Do not blindly create &#8216;allow&#8217; rules. It&#8217;s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
+<li>deny : delete this message and send the error message/description back to the sender</li>
+<li>delete : silently delete the message, no error is sent back, and &#8216;blockaction&#8217; is ignored</li>
+</ul>
+</dd>
+</dl>
+<p>&lt;regular expression&gt; is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the &#8216;&#8217;file&#8217;&#8217; command.</p>
+<p>example of default-filetypes.conf:</p>
+<p>{{{
+allow    text        -
+allow    script    -
+allow    archive        -
+allow    postscript    -
+deny    self-extract    No self-extracting archives
+deny    executable    No programs allowed
+deny    ELF        No programs allowed
+deny    Registry    No Windows Registry files allowed
+}}}</p>
+<p>small extract from default-filenames.conf:</p>
+<p>{{{
+deny    .ico$            Windows icon file security vulnerability
+deny    .ani$            Windows animated cursor file security vulnerability
+deny    .cur$            Windows cursor file security vulnerability
+deny    .hlp$            Windows help file security vulnerability</p>
+<p>allow    .jpg$            -
+allow    .gif$            -
+}}}</p>
+<p>Note: The files will be reloaded automatically after a few secs (you do not need to kill -HUP / restart fuglu)</p>
+<p>The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:</p>
+<p>{{{
+To: ${from_address}
+Subject: Blocked attachment</p>
+<p>Your message to ${to_address} contains a blocked attachment and has been deleted.</p>
+<p>${blockinfo}</p>
+<p>You may add this file to a zip archive (or similar) and send it again.
+}}}</p>
+<p>eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.</p>
+<p>&#8216;&#8217;${blockinfo}&#8217;&#8217; will be replaced with the text you specified in the third column of the rule that blocked this message.
+See CommonTemplateVars for commonly available template variables in Fuglu.</p>
+<div class="section" id="id2">
+<h4>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[FiletypePlugin]
+#inform the sender about blocked attachments
+sendbounce=1
+#Mail template for the bounce to inform sender about blocked attachment
+template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+#what should the plugin do when a blocked attachment is detected
+REJECT : reject the message (recommended in pre-queue mode)
+DELETE : discard messages
+DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
+blockaction=DELETE
+#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
+dbconnectstring=
+#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
+:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
+query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
+#directory that contains attachment rules
+rulesdir=/etc/fuglu/rules</pre>
+</div>
+</div>
+</div>
+<div class="section" id="archiveplugin">
+<h3>ArchivePlugin<a class="headerlink" href="#archiveplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.archive.ArchivePlugin</p>
+<p>This plugins stores a copy of the message if it matches certain criteria (Suspect Filter).
+You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
+<p>Examples for the archive.regex filter file:</p>
+<p>archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
+<p><tt class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></tt></p>
+<p>archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
+<p><tt class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></tt></p>
+<p>you can also append &#8220;yes&#8221; and &#8220;no&#8221; to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
+<p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes
+envelope_from logwatch&#64;.*fuglu.org   no
+from <a class="reference external" href="mailto:backups&#37;&#52;&#48;fuglu&#46;org">backups<span>&#64;</span>fuglu<span>&#46;</span>org</a> no
+envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a>      yes</p>
+<div class="section" id="id3">
+<h4>Configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[ArchivePlugin]
+#create a subdirectory of the destination domain within archivedir
+makedomainsubdir=1
+#if true/1/yes: store original message
+if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
+storeoriginal=1
+#storage for archived messages
+archivedir=/tmp
+#Archiving SuspectFilter File
+archiverules=/etc/fuglu/archive.regex</pre>
+</div>
+</div>
+</div>
+<div class="section" id="vacationplugin">
+<h3>VacationPlugin<a class="headerlink" href="#vacationplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.vacation.VacationPlugin</p>
+<p>Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any &#8216;automated&#8217; messages (Mailingslists, Spams, Bounces etc)</p>
+<p>Requires: SQLAlechemy Extension</p>
+<dl class="docutils">
+<dt>Required DB Tables:</dt>
+<dd><ul class="first last simple">
+<li>vacation (fuglu reads this table only, must be filled from elsewhere)<ul>
+<li>id int : id of this vacation</li>
+<li>created timestamp :  creation timestamp</li>
+<li>enabled boolean (eg. tinyint) : if disabled, no vacation reply will be sent</li>
+<li>start timestamp: replies will only be sent after this point in time</li>
+<li>end timestamp: replies will only be sent before this point in time</li>
+<li>awayuser varchar: the email address of the user that is on vacation</li>
+<li>subject: subject of the vacation message</li>
+<li>body : body of the vacation message</li>
+<li>ignoresender: whitespace delimited list of domains or email addresses that should not receive vacation replies</li>
+</ul>
+</li>
+<li>vacationreply (this table is filled by fuglu)<ul>
+<li>id int: id of the reply</li>
+<li>vacation_id : id of the vacation</li>
+<li>sent timestamp: timestamp when the reply was sent</li>
+<li>recipient: recipient to whom the reply was sent</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<p>SQL Example for mysql:</p>
+<div class="highlight-python"><pre>CREATE TABLE `vacation` (
+  `id` int(11) NOT NULL auto_increment,
+  `created` timestamp NOT NULL default now(),
+  `start` timestamp NOT NULL,
+  `end` timestamp NOT NULL ,
+  `enabled` tinyint(1) NOT NULL default 1,
+  `awayuser` varchar(255) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `body` text NOT NULL,
+  `ignoresender` text NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE(`awayuser`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
+
+
+CREATE  TABLE `vacationreply` (
+  `id` int(11) NOT NULL auto_increment,
+  `recipient` varchar(255) NOT NULL,
+  `vacation_id` int(11) NOT NULL,
+     `sent` timestamp not null default now(),
+  PRIMARY KEY  (`id`),
+  KEY `vacation_id` (`vacation_id`),
+  CONSTRAINT `vacation_ibfk_1` FOREIGN KEY (`vacation_id`) REFERENCES `vacation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;</pre>
+</div>
+<div class="section" id="id4">
+<h4>Configuration<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[VacationPlugin]
+#sqlalchemy connectstring to load vacations
+dbconnectstring=</pre>
+</div>
+</div>
+</div>
+<div class="section" id="ssspplugin">
+<h3>SSSPPlugin<a class="headerlink" href="#ssspplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.sssp.SSSPPlugin</p>
+<blockquote>
+<div>This plugin scans the suspect using the sophos SSSP protocol.</div></blockquote>
+<p>Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)</p>
+<div class="section" id="id5">
+<h4>Configuration<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[SSSPPlugin]
+#how often should fuglu retry the connection before giving up
+retries=3
+#hostname where the SSSP server runs
+host=localhost
+#reject message template if running in pre-queue mode and virusaction=REJECT
+rejectmessage=threat detected: ${virusname}
+#socket timeout
+timeout=10
+#action if there is a problem (DUNNO, DEFER)
+problemaction=DEFER
+#maximum message size, larger messages will not be scanned.
+maxsize=22000000
+#tcp port or path to unix socket
+port=4010
+#action if infection is detected (DUNNO, REJECT, DELETE)
+virusaction=DEFAULTVIRUSACTION</pre>
+</div>
+</div>
+</div>
+<div class="section" id="f-prot-plugin">
+<h3>F-Prot Plugin<a class="headerlink" href="#f-prot-plugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.fprot.FprotPlugin</p>
+<blockquote>
+<div>This plugin passes suspects to a f-prot scan daemon</div></blockquote>
+<p>Prerequisites: f-protd must be installed and running, not necessarily on the same box as fuglu though.</p>
+<p>Notes for developers:</p>
+<p>Tags:</p>
+<blockquote>
+<div><ul class="simple">
+<li>sets <tt class="docutils literal"><span class="pre">virus['F-Prot']</span></tt> (boolean)</li>
+<li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
+<li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.time</span></tt> (float)</li>
+</ul>
+</div></blockquote>
+<div class="section" id="id6">
+<h4>Configuration<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[FprotPlugin]
+#maximum retries on failed connections
+retries=3
+#hostname where fpscand runs
+host=localhost
+#reject message template if running in pre-queue mode and virusaction=REJECT
+rejectmessage=threat detected: ${virusname}
+#if fpscand runs on a different host than fuglu, set this to 1 to send the message over the network instead of just the filename
+networkmode=0
+#network timeout
+timeout=20
+#plugin action if scan fails
+problemaction=DEFER
+#maximum message size to scan
+maxsize=10485000
+#fpscand port
+port=10200
+#plugin action if threat is detected
+virusaction=DEFAULTVIRUSACTION</pre>
+</div>
+</div>
+</div>
+<div class="section" id="icapplugin">
+<h3>ICAPPlugin<a class="headerlink" href="#icapplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.icap.ICAPPlugin</p>
+<p>ICAP Antivirus Plugin (Sophos / Symantec / ....)</p>
+<p>Prerequisites: requires an ICAP capable antivirus engine somewhere in your network</p>
+<div class="section" id="id7">
+<h4>Configuration<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[ICAPPlugin]
+#how often should fuglu retry the connection before giving up
+retries=3
+#hostname where the ICAP server runs
+host=localhost
+#reject message template if running in pre-queue mode and virusaction=REJECT
+rejectmessage=threat detected: ${virusname}
+#ICAP Av scan service, usually AVSCAN (sophos, symantec)
+service=AVSCAN
+#socket timeout
+timeout=10
+#action if there is a problem (DUNNO, DEFER)
+problemaction=DEFER
+#name of the virus engine behind the icap service. used to inform other plugins. can be anything like 'sophos', 'symantec', ...
+enginename=icap-generic
+#maximum message size, larger messages will not be scanned.
+maxsize=22000000
+#tcp port or path to unix socket
+port=1344
+#action if infection is detected (DUNNO, REJECT, DELETE)
+virusaction=DEFAULTVIRUSACTION</pre>
+</div>
+</div>
+</div>
+<div class="section" id="headerplugin">
+<h3>HeaderPlugin<a class="headerlink" href="#headerplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.headers.HeaderPlugin</p>
+<p>Removes specified headers from message</p>
+<div class="section" id="id8">
+<h4>Configuration<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[HeaderPlugin]
+#headers to remove from incoming messages, comma separated
+removeheaders=</pre>
+</div>
+</div>
+</div>
+<div class="section" id="actionoverrideplugin">
+<h3>ActionOverridePlugin<a class="headerlink" href="#actionoverrideplugin" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin</p>
+<blockquote>
+<div>override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
+<div class="section" id="id9">
+<h4>Configuration<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[ActionOverridePlugin]
+#Rules file
+actionrules=/etc/fuglu/actionrules.regex</pre>
+</div>
+</div>
+</div>
+<div class="section" id="pluginskipper">
+<h3>PluginSkipper<a class="headerlink" href="#pluginskipper" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.p_skipper.PluginSkipper</p>
+<p>Skips plugins based on standard filter file
+This can be used for example to skip spam filters on outgoing messages.
+eg. put this in /etc/fuglu/skipplugins.regex:</p>
+<p>&#64;incomingport    1099    SAPlugin</p>
+<div class="section" id="id10">
+<h4>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[PluginSkipper]
+filterfile=/etc/fuglu/skipplugins.regex</pre>
+</div>
+</div>
+</div>
+<div class="section" id="messagedebugger-debug">
+<h3>MessageDebugger(debug)<a class="headerlink" href="#messagedebugger-debug" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.p_debug.MessageDebugger</p>
+<p>Message Debugger Plugin (Prepender).</p>
+<p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
+<div class="section" id="id11">
+<h4>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[MessageDebugger]
+#messages incoming on this port will be debugged to a logfile
+Make sure the debugport is also set in the incomingport configuration option in the main section
+debugport=10888
+#debug log output
+debugfile=/tmp/fuglu_debug.log
+#don't re-inject debugged messages back to postfix
+noreinject=1
+#debugged message can not be bounced
+nobounce=1
+#don't run appender plugins for debugged messages
+noappender=1</pre>
+</div>
+</div>
+</div>
 </div>
 <div class="section" id="writing-your-own-plugins">
 <h2>Writing your own plugins<a class="headerlink" href="#writing-your-own-plugins" title="Permalink to this headline">¶</a></h2>
@@ -554,7 +986,57 @@ Debug Output written to:/tmp/fuglu-test.log</pre>
 <li><a class="reference internal" href="#suspect-filters">Suspect Filters</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugins-included-in-fuglu">Plugins included in Fuglu</a></li>
+<li><a class="reference internal" href="#plugins-included-in-fuglu">Plugins included in Fuglu</a><ul>
+<li><a class="reference internal" href="#saplugin">SAPlugin</a><ul>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#clamavplugin">ClamavPlugin</a><ul>
+<li><a class="reference internal" href="#id1">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#attachment-blocker">Attachment Blocker</a><ul>
+<li><a class="reference internal" href="#id2">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#archiveplugin">ArchivePlugin</a><ul>
+<li><a class="reference internal" href="#id3">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vacationplugin">VacationPlugin</a><ul>
+<li><a class="reference internal" href="#id4">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ssspplugin">SSSPPlugin</a><ul>
+<li><a class="reference internal" href="#id5">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#f-prot-plugin">F-Prot Plugin</a><ul>
+<li><a class="reference internal" href="#id6">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#icapplugin">ICAPPlugin</a><ul>
+<li><a class="reference internal" href="#id7">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#headerplugin">HeaderPlugin</a><ul>
+<li><a class="reference internal" href="#id8">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#actionoverrideplugin">ActionOverridePlugin</a><ul>
+<li><a class="reference internal" href="#id9">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pluginskipper">PluginSkipper</a><ul>
+<li><a class="reference internal" href="#id10">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#messagedebugger-debug">MessageDebugger(debug)</a><ul>
+<li><a class="reference internal" href="#id11">Configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#writing-your-own-plugins">Writing your own plugins</a><ul>
 <li><a class="reference internal" href="#common-tasks-api-faq">Common Tasks (&#8220;API&#8221; FAQ)</a><ul>
 <li><a class="reference internal" href="#define-configuration-options-for-your-plugin">define configuration options for your plugin</a></li>
