@@ -85,7 +85,7 @@ if __name__=='__main__':
                 
             if 'description' in infodic:
                 description=infodic['description']
-                description=description.replace('\n','\n'+tab)
+                description=description.replace('\n','\n'+tab+'#')
                 sphinxdoc+=tab+"#%s\n"%description
             sphinxdoc+=tab+optionname+"="+defaultval+"\n"
         
