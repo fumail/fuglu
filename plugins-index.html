@@ -188,17 +188,17 @@ problemaction=DEFER
 #reject message template if running in pre-queue mode
 rejectmessage=message identified as spam
 #forward the original message or replace the content as returned by spamassassin
-if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
-"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
-message as retreived from previous plugins
+#if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
+#"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
+#message as retreived from previous plugins
 forwardoriginal=0
 #consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks
-requires the sql extension to be enabled
+#requires the sql extension to be enabled
 check_sql_blacklist=0
 #sqlalchemy db connect string
 sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
 #SQL query to get the blacklist entries for a suspect
-you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
+#you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
 #maximum size in bytes. larger messages will be skipped
 maxsize=256000
@@ -217,9 +217,9 @@ peruserconfig=1
 #tcp port number
 port=783
 #should we scan the original message as retreived from postfix or scan the current state
-in fuglu (which might have been altered by previous plugins)
-only set this to disabled if you have a custom plugin that adds special headers to the message that will be
-used in spamassassin rules
+#in fuglu (which might have been altered by previous plugins)
+#only set this to disabled if you have a custom plugin that adds special headers to the message that will be
+#used in spamassassin rules
 scanoriginal=1
 #what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
 lowspamaction=DEFAULTLOWSPAMACTION</pre>
@@ -255,10 +255,10 @@ timeout=10
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
 #maximum message size, larger messages will not be scanned.
-should match the 'StreamMaxLength' config option in clamd.conf
+#should match the 'StreamMaxLength' config option in clamd.conf
 maxsize=22000000
 #tcp port number or path to clamd.sock for unix domain sockets
-example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl
+#example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl
 port=3310
 #action if infection is detected (DUNNO, REJECT, DELETE)
 virusaction=DEFAULTVIRUSACTION</pre>
@@ -327,14 +327,14 @@ sendbounce=1
 #Mail template for the bounce to inform sender about blocked attachment
 template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #what should the plugin do when a blocked attachment is detected
-REJECT : reject the message (recommended in pre-queue mode)
-DELETE : discard messages
-DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
+#REJECT : reject the message (recommended in pre-queue mode)
+#DELETE : discard messages
+#DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
 #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
 dbconnectstring=
 #sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
-:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
+#:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
 query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 #directory that contains attachment rules
 rulesdir=/etc/fuglu/rules</pre>
@@ -362,7 +362,7 @@ envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fug
 #create a subdirectory of the destination domain within archivedir
 makedomainsubdir=1
 #if true/1/yes: store original message
-if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
+#if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
 storeoriginal=1
 #storage for archived messages
 archivedir=/tmp
@@ -581,7 +581,7 @@ filterfile=/etc/fuglu/skipplugins.regex</pre>
 <h4>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><pre>[MessageDebugger]
 #messages incoming on this port will be debugged to a logfile
-Make sure the debugport is also set in the incomingport configuration option in the main section
+#Make sure the debugport is also set in the incomingport configuration option in the main section
 debugport=10888
 #debug log output
 debugfile=/tmp/fuglu_debug.log
