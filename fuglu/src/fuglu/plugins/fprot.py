@@ -22,7 +22,19 @@ import os
 import logging
 
 class FprotPlugin(ScannerPlugin):
-    """F-prot fpscand Plugin"""
+    """ This plugin passes suspects to a f-prot scan daemon 
+    
+Prerequisites: f-protd must be installed and running, not necessarily on the same box as fuglu though.
+
+Notes for developers:
+
+
+Tags:
+ 
+ * sets ``virus['F-Prot']`` (boolean)
+ * sets ``FprotPlugin.virus`` (list of strings) - virus names found in message
+ * sets ``FprotPlugin.time`` (float)
+"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         

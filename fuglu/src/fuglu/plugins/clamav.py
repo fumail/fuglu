@@ -24,7 +24,21 @@ import os
 
 
 class ClamavPlugin(ScannerPlugin):
-    """Clam Antivirus Plugin"""
+    """This plugin passes suspects to a clam daemon. 
+
+Actions: This plugin will delete infected messages. If clamd is not reachable or times out, messages can be DEFERRED.
+
+Prerequisites: You must have clamd installed (for performance reasons I recommend it to be on the same box, but this is not absoluely necessary)
+
+Notes for developers:
+
+
+Tags:
+ 
+ * sets ``virus['ClamAV']`` (boolean)
+ * sets ``ClamavPlugin.virus`` (list of strings) - virus names found in message
+ * sets ``ClamavPlugin.time`` (float)
+"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars={

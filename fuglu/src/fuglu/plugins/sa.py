@@ -22,7 +22,22 @@ import re
 import unittest
 
 class SAPlugin(ScannerPlugin):
-    """Spamassassin Plugin"""
+    """This plugin passes suspects to a spamassassin daemon.
+    
+Prerequisites: SPAMD must be installed and running (not necessarily on the same box as fuglu)
+
+Notes for developers:
+
+if forwardoriginal=False, the message source will be completely replaced with the answer from spamd.
+
+Tags:
+ 
+ * reads ``SAPlugin.skip``, skips scanning if this is True
+ * sets ``spam['spamassassin']`` (boolean)
+ * sets ``SAPlugin.spamscore`` (float) if possible
+ * sets ``SAPlugin.time`` (float)
+ * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
+"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars={

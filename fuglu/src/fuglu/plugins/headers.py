@@ -9,7 +9,7 @@ import unittest
 
 
 class HeaderPlugin(ScannerPlugin):
-    """Removes existing Headers"""
+    """Removes specified headers from message"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars={

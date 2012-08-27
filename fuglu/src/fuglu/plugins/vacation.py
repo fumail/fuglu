@@ -210,6 +210,62 @@ class VacationCache( object ):
         self.logger.debug('%s vacations loaded'%vaccounter)
         
 class VacationPlugin(ScannerPlugin):
+    """Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any 'automated' messages (Mailingslists, Spams, Bounces etc)
+
+Requires: SQLAlechemy Extension
+
+
+Required DB Tables: 
+ * vacation (fuglu reads this table only, must be filled from elsewhere)
+ 
+   * id int : id of this vacation
+   * created timestamp :  creation timestamp
+   * enabled boolean (eg. tinyint) : if disabled, no vacation reply will be sent
+   * start timestamp: replies will only be sent after this point in time
+   * end timestamp: replies will only be sent before this point in time
+   * awayuser varchar: the email address of the user that is on vacation
+   * subject: subject of the vacation message
+   * body : body of the vacation message
+   * ignoresender: whitespace delimited list of domains or email addresses that should not receive vacation replies
+
+ * vacationreply (this table is filled by fuglu)
+ 
+   * id int: id of the reply
+   * vacation_id : id of the vacation
+   * sent timestamp: timestamp when the reply was sent
+   * recipient: recipient to whom the reply was sent
+
+SQL Example for mysql:
+
+::
+
+    CREATE TABLE `vacation` (
+      `id` int(11) NOT NULL auto_increment,
+      `created` timestamp NOT NULL default now(),
+      `start` timestamp NOT NULL,
+      `end` timestamp NOT NULL ,
+      `enabled` tinyint(1) NOT NULL default 1,
+      `awayuser` varchar(255) NOT NULL,
+      `subject` varchar(255) NOT NULL,
+      `body` text NOT NULL,
+      `ignoresender` text NOT NULL,
+      PRIMARY KEY  (`id`),
+      UNIQUE(`awayuser`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
+
+
+    CREATE  TABLE `vacationreply` (
+      `id` int(11) NOT NULL auto_increment,
+      `recipient` varchar(255) NOT NULL,
+      `vacation_id` int(11) NOT NULL,
+         `sent` timestamp not null default now(),
+      PRIMARY KEY  (`id`),
+      KEY `vacation_id` (`vacation_id`),
+      CONSTRAINT `vacation_ibfk_1` FOREIGN KEY (`vacation_id`) REFERENCES `vacation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars={             

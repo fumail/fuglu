@@ -18,7 +18,7 @@ from fuglu.shared import ScannerPlugin,DUNNO,string_to_actioncode,SuspectFilter
 import os
 
 class ActionOverridePlugin(ScannerPlugin):
-    """Return arbitrary action based on suspect filter"""
+    """ override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. """
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.logger=self._logger()

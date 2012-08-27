@@ -133,7 +133,10 @@ def sayGoodbye (s):
 
 
 class SSSPPlugin(ScannerPlugin):
-    """SSSP Sophos Antivirus Plugin"""
+    """ This plugin scans the suspect using the sophos SSSP protocol. 
+    
+Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
+"""
     
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)

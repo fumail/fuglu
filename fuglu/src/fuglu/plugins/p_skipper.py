@@ -18,7 +18,12 @@ from fuglu.shared import PrependerPlugin,SuspectFilter
 import os
 
 class PluginSkipper(PrependerPlugin):
-    """Skips plugins based on standard filter file"""
+    """Skips plugins based on standard filter file
+This can be used for example to skip spam filters on outgoing messages.
+eg. put this in /etc/fuglu/skipplugins.regex:
+
+@incomingport    1099    SAPlugin
+"""
     def __init__(self,config,section=None):
         PrependerPlugin.__init__(self,config,section)
         self.filter=None

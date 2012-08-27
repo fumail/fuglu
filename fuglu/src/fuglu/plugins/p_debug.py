@@ -18,7 +18,10 @@ from fuglu.shared import PrependerPlugin
 
 
 class MessageDebugger(PrependerPlugin):
-    """Message Debugger Plugin"""
+    """Message Debugger Plugin (Prepender).
+
+This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.    
+"""
     def __init__(self,config,section=None):
         PrependerPlugin.__init__(self,config,section)
         if self.section=='MessageDebugger':

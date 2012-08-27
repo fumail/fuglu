@@ -23,7 +23,10 @@ import unittest
 import os
 
 class ICAPPlugin(ScannerPlugin):
-    """ICAP Antivirus Plugin (Sophos / Symantec / ....)"""
+    """ICAP Antivirus Plugin (Sophos / Symantec / ....)
+    
+Prerequisites: requires an ICAP capable antivirus engine somewhere in your network
+"""
     
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)

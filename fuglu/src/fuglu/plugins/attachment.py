@@ -204,7 +204,80 @@ class RulesCache( object ):
         return ret
         
 class FiletypePlugin(ScannerPlugin):
-    """Copy this to make a new plugin"""
+    """This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the '''file''' library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.
+
+Attachment rules can be defined globally, per domain or per user.
+
+Actions: This plugin will delete messages if they contain blocked attachments.
+
+Prerequisites: You must have the python ''file'' or ''magic'' module installed
+
+
+The attachment configuration files are in /etc/fuglu/rules. You whould have two default files there: '''default-filenames.conf''' which defines what filenames are allowed and '''default-filetypes.conf''' which defines what content types a attachment may have. 
+
+For domain rules, create a new file '''<domainname>-filenames.conf''' / '''<domainname>-filetypes.conf''' , eg. ''fuglu.org-filenames.conf'' / ''fuglu.org-filetypes.conf''
+
+For individual user rules, create a new file '''<useremail>-filenames.conf''' / '''<useremail>-filetypes.conf''', eg. {{{oli@fuglu.org-filenames.conf}}} / {{{oli@fuglu.org-filetypes.conf}}}
+
+The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
+<action>    <regular expression>   <description or error message>
+
+<action> can be one of:
+ * allow : this file is ok, don't do further checks (you might use it for safe content types like text). Do not blindly create 'allow' rules. It's safer to make no rule at all, if no other rules hit, the file will be accepted
+ * deny : delete this message and send the error message/description back to the sender
+ * delete : silently delete the message, no error is sent back, and 'blockaction' is ignored
+
+
+<regular expression> is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the ''file'' command.
+
+example of default-filetypes.conf:
+
+{{{
+allow    text        -        
+allow    \bscript    -        
+allow    archive        -            
+allow    postscript    -            
+deny    self-extract    No self-extracting archives
+deny    executable    No programs allowed
+deny    ELF        No programs allowed
+deny    Registry    No Windows Registry files allowed
+}}}
+
+
+small extract from default-filenames.conf:
+
+{{{
+deny    \.ico$            Windows icon file security vulnerability    
+deny    \.ani$            Windows animated cursor file security vulnerability    
+deny    \.cur$            Windows cursor file security vulnerability    
+deny    \.hlp$            Windows help file security vulnerability
+
+allow    \.jpg$            -    
+allow    \.gif$            -    
+}}}
+
+
+Note: The files will be reloaded automatically after a few secs (you do not need to kill -HUP / restart fuglu)
+
+The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:
+
+{{{
+To: ${from_address}
+Subject: Blocked attachment
+
+Your message to ${to_address} contains a blocked attachment and has been deleted.
+
+${blockinfo}
+
+You may add this file to a zip archive (or similar) and send it again.
+}}}
+
+eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.
+
+''${blockinfo}'' will be replaced with the text you specified in the third column of the rule that blocked this message.
+See CommonTemplateVars for commonly available template variables in Fuglu.
+
+"""
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars={
