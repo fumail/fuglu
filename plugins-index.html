@@ -383,7 +383,98 @@ with fuglu &gt;=0.6.0 you can also get the most recent exceptions with the follo
 </div>
 <div class="section" id="debug-a-plugin-without-running-fuglu">
 <h4>debug a plugin without running fuglu<a class="headerlink" href="#debug-a-plugin-without-running-fuglu" title="Permalink to this headline">¶</a></h4>
-<p>TODO: plugdummy....</p>
+<p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn&#8217;t require a running fuglu or postfix. it will create a dummy suspect, call the plugin&#8217;s examine method and print the result (and debug output).</p>
+<p>the generated input messag is stored as: <tt class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_in.eml</span></tt></p>
+<p>if your plugin modified the message source, the resulting message can be found at <tt class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_out.eml</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is located in the <tt class="docutils literal"><span class="pre">test</span></tt> directory.</p>
+<p>simple usage:</p>
+<p>assuming your plugin file (&#8216;myplugin.py&#8217;) is in <tt class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></tt> you can run <tt class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">&lt;pluginname&gt;</span></tt></p>
+<div class="highlight-python"><pre>#./plugdummy.py myplugin.ExamplePlugin
+
+INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+INFO:root:Running plugin: ExamplePlugin
+INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+INFO:root:Result: DUNNO
+INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}</pre>
+</div>
+<p>advanced usage:</p>
+<p>run <tt class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">--help</span></tt> to get a list of all options</p>
+<p>Examples:</p>
+<p>running plugins from a different directory</p>
+<div class="highlight-python"><pre>./plugdummy.py -p /tmp/ myplugin.ExamplePlugin</pre>
+</div>
+<p>change sender / recipient
+the &#8216;-s&#8217; and &#8216;-f&#8217; options change the envelope sender/recipient. -r can be specified multiple times to simulate a multi-recipient message</p>
+<div class="highlight-python"><pre>./plugdummy.py -s me@example.org -r you@example.net  myplugin.ExamplePlugin
+INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+INFO:root:Running plugin: ExamplePlugin
+INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!
+INFO:root:Result: DUNNO
+INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}</pre>
+</div>
+<p>adding headers to the input message</p>
+<div class="highlight-python"><pre>./plugdummy.py -h 'subject:yo! whassup' myplugin.ExamplePlugin
+[...]
+cat /tmp/fuglu_dummy_message_in.eml
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+From: sender@fuglu.local
+To: recipient@fuglu.local
+Subject: yo! whassup
+Date: Fri, 01 Jun 2012 12:58:34 -0000
+
+hello, world!</pre>
+</div>
+<p>adding tags:</p>
+<div class="highlight-python"><pre>./plugdummy.py -t 'mytag:myvalue' myplugin.ExamplePlugin
+INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+INFO:root:Running plugin: ExamplePlugin
+INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+INFO:root:Result: DUNNO
+INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'spam': {}, 'virus': {}, 'mytag': 'myvalue', 'ExamplePlugin.time': '0.0001', 'highspam': {}}</pre>
+</div>
+<p>setting a config option:</p>
+<div class="highlight-python"><pre>./plugdummy.py -o 'greeting:go away!'  myplugin.ExamplePlugin
+INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+INFO:root:Running plugin: ExamplePlugin
+INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: go away!
+[...]</pre>
+</div>
+<p>setting the message body:</p>
+<div class="highlight-python"><pre>#set body
+./plugdummy.py -b 'hi there, whassup!' myplugin.ExamplePlugin
+
+#read body from file
+./plugdummy.py -b bla.txt myplugin.ExamplePlugin
+
+#read headers &amp; body from eml file
+./plugdummy.py -e /tmp/bla.eml myplugin.ExamplePlugin</pre>
+</div>
+<p>running a interactive console in the dummy enrivonment:</p>
+<div class="highlight-python"><pre>./plugdummy.py -c  myplugin.ExamplePlugin
+INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+INFO:root:Running plugin: ExamplePlugin
+INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+INFO:root:Result: DUNNO
+INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+Fuglu Interactive Console started
+
+pre-defined locals:
+{'config': &lt;ConfigParser.ConfigParser instance at 0x1ac9e60&gt;, 'suspect': &lt;fuglu.shared.Suspect object at 0x1ac8750&gt;, 'result': 0, 'plugin': &lt;myplugin.ExamplePlugin object at 0x1ac8290&gt;}
+
+&gt;&gt;&gt; plugin.requiredvars
+{'greeting': {'default': 'hello world!', 'description': 'greeting the plugin should log to the console'}}
+&gt;&gt;&gt; plugin.examine(suspect)
+INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+0
+&gt;&gt;&gt; config.set('ExamplePlugin','greeting','Greetings, Earthling')
+&gt;&gt;&gt; suspect.from_address='me@example.org'
+&gt;&gt;&gt; plugin.examine(suspect)
+INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Greetings, Earthling
+0
+&gt;&gt;&gt;</pre>
+</div>
 </div>
 </div>
 <div class="section" id="deploying-plugins">

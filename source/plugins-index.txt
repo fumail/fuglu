@@ -432,8 +432,136 @@ run ``fuglu --console`` to enter an interactive python console after fuglu start
 debug a plugin without running fuglu
 ------------------------------------
 
-TODO: plugdummy....
+``plugdummy.py`` is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn't require a running fuglu or postfix. it will create a dummy suspect, call the plugin's examine method and print the result (and debug output). 
 
+the generated input messag is stored as: ``/tmp/fuglu_dummy_message_in.eml``
+
+if your plugin modified the message source, the resulting message can be found at ``/tmp/fuglu_dummy_message_out.eml``
+
+``plugdummy.py`` is located in the ``test`` directory.
+
+simple usage:
+
+assuming your plugin file ('myplugin.py') is in ``/usr/local/fuglu/plugins`` you can run ``plugdummy.py <pluginname>``
+
+
+::
+
+	#./plugdummy.py myplugin.ExamplePlugin
+
+	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+	INFO:root:Running plugin: ExamplePlugin
+	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+	INFO:root:Result: DUNNO 
+	INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+
+advanced usage:
+
+run ``plugdummy.py --help`` to get a list of all options
+
+Examples:
+
+
+running plugins from a different directory
+
+::
+
+	./plugdummy.py -p /tmp/ myplugin.ExamplePlugin
+
+
+change sender / recipient
+the '-s' and '-f' options change the envelope sender/recipient. -r can be specified multiple times to simulate a multi-recipient message
+
+::
+
+	./plugdummy.py -s me@example.org -r you@example.net  myplugin.ExamplePlugin                                                                                           
+	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml                                                                                                                                                   
+	INFO:root:Running plugin: ExamplePlugin                                                                                                                                                                           
+	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!                                                                                                                               
+	INFO:root:Result: DUNNO                                                                                                                                                                                           
+	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}  
+
+
+
+adding headers to the input message
+
+::
+
+	./plugdummy.py -h 'subject:yo! whassup' myplugin.ExamplePlugin
+	[...]
+	cat /tmp/fuglu_dummy_message_in.eml 
+	Content-Type: text/plain; charset="us-ascii"
+	MIME-Version: 1.0
+	Content-Transfer-Encoding: 7bit
+	From: sender@fuglu.local
+	To: recipient@fuglu.local
+	Subject: yo! whassup
+	Date: Fri, 01 Jun 2012 12:58:34 -0000
+
+	hello, world!
+
+
+adding tags:
+
+::
+
+	./plugdummy.py -t 'mytag:myvalue' myplugin.ExamplePlugin 
+	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+	INFO:root:Running plugin: ExamplePlugin
+	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+	INFO:root:Result: DUNNO 
+	INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'spam': {}, 'virus': {}, 'mytag': 'myvalue', 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+
+
+setting a config option:
+
+
+::
+
+	./plugdummy.py -o 'greeting:go away!'  myplugin.ExamplePlugin
+	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+	INFO:root:Running plugin: ExamplePlugin
+	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: go away!
+	[...]
+
+setting the message body:
+::
+
+	#set body	
+	./plugdummy.py -b 'hi there, whassup!' myplugin.ExamplePlugin
+
+	#read body from file
+	./plugdummy.py -b bla.txt myplugin.ExamplePlugin
+
+	#read headers & body from eml file
+	./plugdummy.py -e /tmp/bla.eml myplugin.ExamplePlugin
+
+running a interactive console in the dummy enrivonment:
+
+::
+
+	./plugdummy.py -c  myplugin.ExamplePlugin
+	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+	INFO:root:Running plugin: ExamplePlugin
+	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+	INFO:root:Result: DUNNO 
+	INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+	Fuglu Interactive Console started
+
+	pre-defined locals:
+	{'config': <ConfigParser.ConfigParser instance at 0x1ac9e60>, 'suspect': <fuglu.shared.Suspect object at 0x1ac8750>, 'result': 0, 'plugin': <myplugin.ExamplePlugin object at 0x1ac8290>}
+
+	>>> plugin.requiredvars  
+	{'greeting': {'default': 'hello world!', 'description': 'greeting the plugin should log to the console'}}
+	>>> plugin.examine(suspect)
+	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
+	0
+	>>> config.set('ExamplePlugin','greeting','Greetings, Earthling')
+	>>> suspect.from_address='me@example.org'
+	>>> plugin.examine(suspect)
+	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Greetings, Earthling
+	0
+	>>> 
 
 Deploying Plugins
 .................

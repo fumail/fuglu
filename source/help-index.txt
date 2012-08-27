@@ -10,15 +10,14 @@ Contents:
 FAQ
 ---
 
-text
-
-
+ * no questions asked frequently yet ;-)
 
 ------------
 Mailing list
 ------------
 
-text
+http://fuglu.org/mailman/listinfo/fuglu-users_fuglu.org
+
 
 
 
