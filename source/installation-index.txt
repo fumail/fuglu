@@ -17,8 +17,6 @@ the latest fuglu version is awailable on github.
 	git clone https://github.com/gryphius/fuglu.git
 
 
-TODO: packages
-
 -------------
 Prerequisites
 -------------
@@ -44,8 +42,13 @@ Installation
 
 ::
 
-	cd fuglu-x.y.z
-	python setup.py install # ubuntu users: prepend sudo
+	cd fuglu
+	python setup.py install
+
+(ubuntu users: ``sudo python setup.py install`` )
+
+
+
 
 
 

@@ -1,8 +1,6 @@
 Operation
 =========
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 
@@ -67,9 +65,65 @@ run fuglu_control without arguments to get a list of all supported commands.
 Logs
 ....
 
-Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed.. Fuglu logging is heavily configurable, eg. you can make individual plugins or parts of fuglu more verbose than others. 
+Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed.. 
 
-TODO: Logging Config
+
+Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, ...)
+
+Full documentation on the python logging configuration: http://docs.python.org/library/logging.html#configuring-logging
+
+Logging is configured in ``/etc/fuglu/logging.conf``
+
+in standard configuration, fuglu logs only INFO messages. Let's say you wanted to debug the spamassassin plugin. So you'd check if there is a section dealing with spamassassin and you'd find this:
+
+::
+
+
+	[logger_saplugin]
+	level=INFO
+	handlers=logfile
+	propagate=0
+	qualname=fuglu.plugin.SAPlugin
+
+
+
+
+You would change ``level=INFO`` to ``level=DEBUG``. Also you need to activate this special configuration for spamassassin by adding it to the loggers section at the top of the file:
+
+::
+
+	[loggers]
+	keys=root,saplugin
+
+
+after reloading fuglu, the spamassassin plugin should be very verbose:
+
+::
+
+	2009-04-08 17:11:07,693 fuglu.plugin.SAPlugin: DEBUG Contacting spamd localhost (Try 1 of 5)
+	2009-04-08 17:11:07,701 fuglu.plugin.SAPlugin: DEBUG Sent 4065 bytes to spamd
+	2009-04-08 17:11:10,033 fuglu.plugin.SAPlugin: DEBUG SPAMD/1.1 0 EX_OK
+
+	2009-04-08 17:11:10,034 fuglu.plugin.SAPlugin: DEBUG Got 4778 message bytes from back from spamd
+	2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Spamscore: 2.2
+	2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Message is not spam
+
+
+
+there should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this. 
+
+
+== Qualnames for new loggers ==
+Plugins usually use fuglu.plugin.<classname>
+
+fuglu internal qualnames:
+
+ * ``fuglu.SessionHandler`` - What plugins are being run, what are the results, ... 
+ * ``fuglu.smtp.incoming`` - Incoming smtp connections
+ * ``fuglu.smtp.incoming.<portnumber>`` - Incoming smtp sessions on port <portnumber>
+ * ``fuglu.smtpsession`` - information on the incoming smtp transaction 
+ * ``fuglu.threadpool`` - information when threads are created / destroyed 
+ * ``fuglu.headerfilter`` - debug info on parsing/applying the special header filter config files 
 
 
 MRTG
@@ -195,13 +249,57 @@ install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path 
 after pointing your browser to ``http://yourfuglubox.example.com/cgi-bin/fuglu.cgi`` you should see nice graphs. 
 
 
-TODO: screenshots
+---------------------------
+Troubleshooting & Debugging
+---------------------------
+
+Fuglu doesn't even start
+........................
+
+ * run ``fuglu --lint`` as root. are there any errors?
+ * did you create /etc/fuglu/logging.conf (by renaming the logging.conf.dist file) ?
+ * check if the log directory (/var/log/fuglu/ by default) exists an is writable by the user running fuglu
+ * check for errors in /var/log/fuglu.log
+ * run fuglu fuglu in foreground by setting ``daemonize=0`` in fuglu.conf
 
 
----------
-Debugging
----------
+Debug Trace a single message
+............................
 
-text
+Fuglu runs but you want to know what exactly would happen to a single email message?
+
+Make sure message debugging is enabled (it is by default, but if you screwed up your config...) :
+
+ * ``prependers=`` should start with ``debug`` to make sure the debugger plugin is loaded
+ * ``incomingport`` option should contian port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port 
+ * in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information 
+ * ``nobounce`` should be set to True, so debugged messages can not be bounced 
+ * ``noreinject`` shoud be set to True, so debugged messages are not re-injected to postfix for further processing 
+ * ``noappender`` should be set to True, so appenders are not run for debugged messages
+
+Save the message on the server (rfc822 format), and run
+
+::
+
+	fuglu_debug /path/to/message.eml
+
+you may add envelope sender and recipient if these are relevant for your test, eg:
+
+::
+
+	fuglu_debug /path/to/message.eml sender@example.org recipient@example.net
+
+
+then check ``/tmp/fuglu_debug.log``
+
+
+
+Debug the fuglu core
+....................
+
+If you are a python developer and would like to inspect fuglu at run-time, add the argument ``--console`` when starting fuglu.
+You will then get an interactive python console where all plugins etc are available from the 'mc' (MainController) object
+
+
 
 

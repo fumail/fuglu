@@ -1,8 +1,6 @@
 Plugins
 =======
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 
@@ -63,7 +61,70 @@ named like the plugin itself.
 
 For example, the Spamassassin Plugin's Name is ``SAplugin``, so it would search for a ``[SAPlugin]`` config section.
 
-TODO: more examples, section override
+
+Suspect Filters
+...............
+
+SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a suspects header or tag. 
+
+The format is : <headername> <regex> <optional argument> 
+
+<headername> can be any of...
+ * a email header name, eg ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
+ * ``mime:````<headeraneme>`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
+ * one of fuglus builtin names to get envelope data:
+
+  * ``envelope_from``  (the envelope from address) 
+  * ``from_domain`` (domain part of envelope_from)
+  * ``envelope_to`` (envelope to address)
+  * ``to_domain`` (domain part of envelope_to)
+
+ * a ``message Tag`` prepended by the @ symbol, eg. ``@incomingport``
+ * ``body:raw``' to match the the decoded message body (only applies to text/* partsl)
+ * ``body:stripped`` or just ``body`` to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)
+ * ``body:full`` to match the full body
+
+``<regex>`` is a standard python regular expression applied to <header>. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use ``\s``. all regexes that are not enclosed in forward slashes are automatically ``case insensitive`` and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.
+
+::
+
+	Subject /hello world/i match hello world, case insensitive
+
+
+
+``<optional argument>`` depends on the plugin that reads this header filter file, some don't need arguments at all. Please refer to the plugin documentation.
+
+Filter files are automatically reloaded if you change anything, so you don't need to restart fuglu.
+
+
+Example:
+
+::
+
+	#normal header test
+	Subject hello	Hello in the subject!
+	MIME-Version ^1\.0$ Mime Version is 1.0
+
+	#builtin special fields
+	to_domain	(\.)?fuglu.org$	Sent to fuglu.org or any subdomain
+	envelope_from ^sender@example.com$
+
+	#match a tag from a previous plugin
+	@SAPlugin.report MISSING_HEADER 
+
+	#wildcard
+	X-Spam-* .*     a X-Spam-<something> header exists
+
+	#decoded body text parts
+	body	Viagra
+
+	#full body
+	body:full ^--SPAMMY-MIME-BOUNDARY
+
+	#mime-headers
+	mime:Content-Type ^application\/x-msdos-program$
+
+
 
 
 -------------------------
@@ -72,36 +133,357 @@ Plugins included in Fuglu
 
 TODO: scanner, prepender, appender, auto generated?
 
-text
-
 
 ------------------------
 Writing your own plugins
 ------------------------
 
-text
-
-Tutorial
-........
+Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from ``ScannerPlugin``, override ``__str__`` to provide a nice human readable name and override ``examine`` to do the actual work of your plugins. ``examine`` should return one of the action codes above (DUNNO, DEFER, DELETE, ....). You probably only need stuff from ``fuglu.shared``, so it's probably a good idea to get familiar with that module. 
 
 
-text
+
+This is a quick example of how your plugin code skeleton would look like:
+
+::
+
+
+	from fuglu.shared import ScannerPlugin,DUNNO
+	import time
+
+	class DemoPlugin(ScannerPlugin):
+	    """Copy this to make a new plugin"""
+	    def __init__(self,config,section=None):
+		ScannerPlugin.__init__(self,config,section)
+		#config example
+		#self.requiredvars={
+		#    'maxsize':{
+		#        'default':'1337',
+		#        'description':'Maximum message size',
+		#    }                  
+		#}
+		
+	    def examine(self,suspect):
+		#config Example
+		#maxsize=self.config.getint(self.section, 'maxsize')
+		
+		#debug example
+		#self._logger().debug('hello world from StubPlugin')
+		  
+		starttime=time.time()
+		
+		
+		#PUT PLUGIN CODE HERE
+		
+		#For debugging, its good to know how long each plugin took
+		endtime=time.time()
+		difftime=endtime-starttime
+		suspect.tags['DemoPlugin.time']="%.4f"%difftime
+		return DUNNO
+
+
+First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, DUNNO might be enough depending on what your plugin does.
+
+::
+
+	from fuglu.shared import ScannerPlugin,DUNNO
+
+in __init__ you only call BasicPlugins __init__  for now. This sets self.config and self.section on the object where you later can read config options (eg. self.config.get(self.section,'somevalue').  Do NOT load the plugin configuration here. __init__ is only called once when fuglu starts up. Always load plugin config in ``examine``.
+
+::
+
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+
+
+then code your ``examine`` method. You will have to work with the ``suspect`` (TODO: LINK HERE) object, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it's probably a good idea to read FugluSuspect to get a list of things you can do with the suspect and FugluTags so see common tags that can have a influence on fuglu's behaviour.
+
 
 
 Common Tasks ("API" FAQ)
 ........................
 
-text
+
+define configuration options for your plugin
+--------------------------------------------
+
+in order to make 'lint' and 'fuglu_conf' work with your plugin it should tell the core what config options it expects. this is done by creating a dictionary named 'requiredvars' in the plugins init:
+
+Example:
+
+::
+
+	def __init__(self,config,section=None):
+		ScannerPlugin.__init__(self,config,section)
+		self.requiredvars={
+		    'host':{
+		        'default':'localhost',
+		        'description':'hostname',
+		    },
+		    
+		    'username':{
+		        'default':'root',
+		    },
+
+		    'password':{
+		        'default':``,
+		        'confidential':True,
+		    },
+
+	       }
+
+
+This would tell fuglu that your plugin has three config options: host, username and password. 
+
+The 'dict of dicts' uses your config option name as key for the outer dict. The inner dict supports the following keys:
+
+ * ``default`` - Default value, used if the option is not specified in the config file
+ * ``section`` - config section to check. by default fuglu assumes that the plugin reads its own config section. override this if your plugin requires a config option from a different plugin or from the main config
+ * ``confidential`` - set this to True if fuglu_conf should treat this option confidential and redact it in 'fuglu_conf -n' (passwords etc)
+ * ``validator`` - function that should be called to validate if the configured value is valid. the function will receive the value as argument and must return True or False
+ * ``deprecated`` - mark a config option as deprecated
+
+
+read the config
+---------------
+
+Configs in fuglu are stored in ``/etc/fuglu/fuglu.conf`` (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own Section named like the Plugin Class. 
+
+example:
+
+::
+
+	[DemoPlugin]
+	maxsize=10382
+
+
+you can then read the config in your plugin with the usual methods from a python ConfigParser object ( http://docs.python.org/library/configparser.html )
+
+::
+
+	maxsize=self.config.getint(self.section, 'maxsize')
+
+
+Important: always the configs in ``examine`` (and not in ``init`` !). reading the config in init breaks loading default values and prevents on-the-fly config reload
+
+
+
+get the message source
+----------------------
+
+use ``suspect.getSource()`` to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.
+
+from fuglu.shared import ScannerPlugin,DUNNO
+import time
+add headers
+-----------
+
+``suspect.addheader(headername,headervalue)``
+
+by default, headers are added to the message shortly before it is re-injected into postfix.
+add ``immediate=True`` to add the header immediately, so other plugins can see it.
+
+write to the log
+----------------
+
+your plugin has a _logger method that returns a standard python logger object, so you can use the info / debug / error / fatal methods.
+
+Example:
+
+::
+
+	self._logger().info('hello world from DemoPlugin')
+
+
+
+write debug info
+----------------
+
+to make the plugin write special debug info when ``fuglu_debug`` is used, use:
+
+::
+
+	suspect.debug('debug info from DemoPlugin!')
+
+
+make plugin '--lint'-able
+-------------------------
+
+by default, ``lint()`` only validates the plugin's configuration settings from ``self.requiredvars``. You can override ``lint()`` to do more stuff.
+
+ * use simple ``print`` in this method, no logging stuff. 
+ * if you override ``lint()`` you should run ``self.checkConfig()`` to test the configuration
+ * ``lint()`` must return True or False
+
+example of a plugin that would check if an imap account is available:
+
+
+::
+
+    def lint(self):
+        allok=(self.checkConfig() and self.lint_imap())
+        return allok
+    
+    def lint_imap(self):
+        try:
+            M=imaplib.IMAP4(self.config.get(self.section, 'host'))
+            (type,data)=M.login(self.config.get(self.section, 'user'),self.config.get(self.section, 'password'))
+            if type!='OK':
+                print('Could not login to imap review account: %s',data)
+                return False
+            return True
+        except Exception, e:
+            print "Could not login to imap host:%s - Error %s"%(self.config.get('StubPlugin', 'host'),e)
+        return False
+
+
+
+use the 'SuspectFilter'
+-----------------------
+
+SuspectFilters are a common way for all plugins to perform an action based on conditions defined in a filterfile . These files are automatically re-loaded if changed.
+
+ * import SuspectFilter from fuglu.shared
+ * define a config variable for your plugin which holds the name of the filter file (not strictly required, you could hardcode the path)
+ * create a plugin property for the filter
+
+::
+
+	from fuglu.shared import ScannerPlugin,SuspectFilter
+	[...]
+
+	class MyPlugin(ScannerPlugin):
+	    def __init__(self,config,section=None):
+		ScannerPlugin.__init__(self,config,section)
+		
+		self.requiredvars={
+		    'myrulesfile':{
+		        'default':'/etc/fuglu/mypluginrules.regex',
+		        'description':'Filter file for my plugin',
+		    },
+		                   
+		   [...]
+		}
+		self.filter=None
+
+
+
+
+in ``examine`` create the filter if necessary
+
+
+::
+
+        if self.filter==None:
+            self.filter=SuspectFilter(self.config.get(self.section, 'myrulesfile'))
+
+
+
+run the filter in examine: ``(match,arg)=self.filter.matches(suspect)``
+``match`` is a boolean, telling you if one of the rules matched
+`arg`` is an additional argument which have been appended to the filter rule in the config. lets say, the filter rule reads ``to_address example@fuglu.org hello world!``, you would get match=True and arg='Hello world!' if the message is sent to example@fuglu.org
+
+
+::
+     
+        (match,arg)=self.filter.matches(suspect)
+        if match:
+            if arg!=None:
+                self.logger.debug("""we got a match with arg %s"""%arg)
+            else:
+                self.logger.debug("""We got a match without an arg""")
+        else:
+            suspect.debug("no rule matches")
+
+
+
+
+
+use the sql extension
+---------------------
+
+TODO (DBFiles, sqlalchemy connections)
+
 
 Debugging
 .........
 
-plugdummy....
+
+get a stacktrace
+----------------
+
+if something went wrong you should see a stacktrace in the fuglu log (/var/log/fuglu/fuglu.log)
+with fuglu >=0.6.0 you can also get the most recent exceptions with the following command:
+
+::
+
+	fuglu_control exceptionlist
+
+
+debug the plugin while fuglu is runnig
+--------------------------------------
+
+run ``fuglu --console`` to enter an interactive python console after fuglu startup. Your plugin is then available via the list ``mc.plugins``
+
+
+
+
+
+
+debug a plugin without running fuglu
+------------------------------------
+
+TODO: plugdummy....
+
+
+Deploying Plugins
+.................
+
+ * if there is no ``plugindir`` set in fuglu.conf yet, define a new directory for custom plugins. eg ``/usr/local/fuglu/plugins``.
+ * copy your plugin file to this directory
+ * depending on the type of your plugin, add it to the plugin/prependers/appenders config option. Eg. if your scanner plugin class is ``MyHeloPlugin`` in the file myplugin.py you would add ``myplugin.MyHeloPlugin`` to the ``plugins`` config
+ * if your plugin reads configuration entries, make sure those are present in fuglu.conf or in a custom conf-file in /etc/fuglu/conf.d
+ * run ``fuglu --lint`` to check if fuglu is happy with your new plugin
+ * (re)start fuglu 
 
 
 Unit Tests
 ..........
 
-text
+You can easily integrate your unittests with the fuglu test script.
+ * create your testcase in the same file as your plugin resides (the testscript will search for all classes extending unittest.TestCase
+ * create a new directory '~/fuglu-dev'
+ * in ~/fuglu-dev create a new textfile ''test.conf''
+
+::
+
+	[test]
+	includemodules=myplugin
+
+(replace myplugin with your plugin module name)
+
+
+ * create a symlink in fuglu-dev to your real plugin file, eg ''ln -s /home/edgar/work/myplugin/myplugin.py ~/fuglu-dev/myplugin.py''
+ * checkout the fuglu code from svn
+ * cd to the test directory, then run the testscript with the modulename of your plugin as argument
+
+
+::
+
+	edgar@boscos:~/workspace/fuglu/test$ ./runtests.py myplugin
+	['../conf/fuglu.conf.dist', '/home/edgar/fuglu-dev/test.conf']
+	found 1 tests in myplugin
+	---------------------------
+	Total 1 tests in Testsuite
+
+	STARTING TESTS
+
+	fuglu.plugin.MyHeloPlugin: INFO     Hello world from sender@unittests.fuglu.org to recipient@unittests.fuglu.org!
+	.
+	----------------------------------------------------------------------
+	Ran 1 test in 0.010s
+
+	OK
+
+	Debug Output written to:/tmp/fuglu-test.log
 
 

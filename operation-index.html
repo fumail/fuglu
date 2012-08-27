@@ -27,7 +27,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="fuglu 1 documentation" href="index.html" />
     <link rel="next" title="Plugins" href="plugins-index.html" />
-    <link rel="prev" title="Installation" href="installation-index.html" /> 
+    <link rel="prev" title="Configuration" href="configuration-index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -40,7 +40,7 @@
           <a href="plugins-index.html" title="Plugins"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="installation-index.html" title="Installation"
+          <a href="configuration-index.html" title="Configuration"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li> 
       </ul>
@@ -53,7 +53,6 @@
             
   <div class="section" id="operation">
 <h1>Operation<a class="headerlink" href="#operation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
@@ -103,8 +102,46 @@ Total 10 Threads
 </div>
 <div class="section" id="logs">
 <h3>Logs<a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h3>
-<p>Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed.. Fuglu logging is heavily configurable, eg. you can make individual plugins or parts of fuglu more verbose than others.</p>
-<p>TODO: Logging Config</p>
+<p>Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed..</p>
+<p>Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, ...)</p>
+<p>Full documentation on the python logging configuration: <a class="reference external" href="http://docs.python.org/library/logging.html#configuring-logging">http://docs.python.org/library/logging.html#configuring-logging</a></p>
+<p>Logging is configured in <tt class="docutils literal"><span class="pre">/etc/fuglu/logging.conf</span></tt></p>
+<p>in standard configuration, fuglu logs only INFO messages. Let&#8217;s say you wanted to debug the spamassassin plugin. So you&#8217;d check if there is a section dealing with spamassassin and you&#8217;d find this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">logger_saplugin</span><span class="p">]</span>
+<span class="n">level</span><span class="o">=</span><span class="n">INFO</span>
+<span class="n">handlers</span><span class="o">=</span><span class="n">logfile</span>
+<span class="n">propagate</span><span class="o">=</span><span class="mi">0</span>
+<span class="n">qualname</span><span class="o">=</span><span class="n">fuglu</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">SAPlugin</span>
+</pre></div>
+</div>
+<p>You would change <tt class="docutils literal"><span class="pre">level=INFO</span></tt> to <tt class="docutils literal"><span class="pre">level=DEBUG</span></tt>. Also you need to activate this special configuration for spamassassin by adding it to the loggers section at the top of the file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">loggers</span><span class="p">]</span>
+<span class="n">keys</span><span class="o">=</span><span class="n">root</span><span class="p">,</span><span class="n">saplugin</span>
+</pre></div>
+</div>
+<p>after reloading fuglu, the spamassassin plugin should be very verbose:</p>
+<div class="highlight-python"><pre>2009-04-08 17:11:07,693 fuglu.plugin.SAPlugin: DEBUG Contacting spamd localhost (Try 1 of 5)
+2009-04-08 17:11:07,701 fuglu.plugin.SAPlugin: DEBUG Sent 4065 bytes to spamd
+2009-04-08 17:11:10,033 fuglu.plugin.SAPlugin: DEBUG SPAMD/1.1 0 EX_OK
+
+2009-04-08 17:11:10,034 fuglu.plugin.SAPlugin: DEBUG Got 4778 message bytes from back from spamd
+2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Spamscore: 2.2
+2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Message is not spam</pre>
+</div>
+<p>there should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this.</p>
+<p>== Qualnames for new loggers ==
+Plugins usually use fuglu.plugin.&lt;classname&gt;</p>
+<p>fuglu internal qualnames:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">fuglu.SessionHandler</span></tt> - What plugins are being run, what are the results, ...</li>
+<li><tt class="docutils literal"><span class="pre">fuglu.smtp.incoming</span></tt> - Incoming smtp connections</li>
+<li><tt class="docutils literal"><span class="pre">fuglu.smtp.incoming.&lt;portnumber&gt;</span></tt> - Incoming smtp sessions on port &lt;portnumber&gt;</li>
+<li><tt class="docutils literal"><span class="pre">fuglu.smtpsession</span></tt> - information on the incoming smtp transaction</li>
+<li><tt class="docutils literal"><span class="pre">fuglu.threadpool</span></tt> - information when threads are created / destroyed</li>
+<li><tt class="docutils literal"><span class="pre">fuglu.headerfilter</span></tt> - debug info on parsing/applying the special header filter config files</li>
+</ul>
+</div></blockquote>
 </div>
 <div class="section" id="mrtg">
 <h3>MRTG<a class="headerlink" href="#mrtg" title="Permalink to this headline">¶</a></h3>
@@ -202,12 +239,50 @@ AbsMax[virus]: 600000</pre>
 BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }</pre>
 </div>
 <p>after pointing your browser to <tt class="docutils literal"><span class="pre">http://yourfuglubox.example.com/cgi-bin/fuglu.cgi</span></tt> you should see nice graphs.</p>
-<p>TODO: screenshots</p>
 </div>
 </div>
-<div class="section" id="debugging">
-<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
-<p>text</p>
+<div class="section" id="troubleshooting-debugging">
+<h2>Troubleshooting &amp; Debugging<a class="headerlink" href="#troubleshooting-debugging" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fuglu-doesn-t-even-start">
+<h3>Fuglu doesn&#8217;t even start<a class="headerlink" href="#fuglu-doesn-t-even-start" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li>run <tt class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--lint</span></tt> as root. are there any errors?</li>
+<li>did you create /etc/fuglu/logging.conf (by renaming the logging.conf.dist file) ?</li>
+<li>check if the log directory (/var/log/fuglu/ by default) exists an is writable by the user running fuglu</li>
+<li>check for errors in /var/log/fuglu.log</li>
+<li>run fuglu fuglu in foreground by setting <tt class="docutils literal"><span class="pre">daemonize=0</span></tt> in fuglu.conf</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="debug-trace-a-single-message">
+<h3>Debug Trace a single message<a class="headerlink" href="#debug-trace-a-single-message" title="Permalink to this headline">¶</a></h3>
+<p>Fuglu runs but you want to know what exactly would happen to a single email message?</p>
+<p>Make sure message debugging is enabled (it is by default, but if you screwed up your config...) :</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">prependers=</span></tt> should start with <tt class="docutils literal"><span class="pre">debug</span></tt> to make sure the debugger plugin is loaded</li>
+<li><tt class="docutils literal"><span class="pre">incomingport</span></tt> option should contian port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port</li>
+<li>in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information</li>
+<li><tt class="docutils literal"><span class="pre">nobounce</span></tt> should be set to True, so debugged messages can not be bounced</li>
+<li><tt class="docutils literal"><span class="pre">noreinject</span></tt> shoud be set to True, so debugged messages are not re-injected to postfix for further processing</li>
+<li><tt class="docutils literal"><span class="pre">noappender</span></tt> should be set to True, so appenders are not run for debugged messages</li>
+</ul>
+</div></blockquote>
+<p>Save the message on the server (rfc822 format), and run</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fuglu_debug</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">message</span><span class="o">.</span><span class="n">eml</span>
+</pre></div>
+</div>
+<p>you may add envelope sender and recipient if these are relevant for your test, eg:</p>
+<div class="highlight-python"><pre>fuglu_debug /path/to/message.eml sender@example.org recipient@example.net</pre>
+</div>
+<p>then check <tt class="docutils literal"><span class="pre">/tmp/fuglu_debug.log</span></tt></p>
+</div>
+<div class="section" id="debug-the-fuglu-core">
+<h3>Debug the fuglu core<a class="headerlink" href="#debug-the-fuglu-core" title="Permalink to this headline">¶</a></h3>
+<p>If you are a python developer and would like to inspect fuglu at run-time, add the argument <tt class="docutils literal"><span class="pre">--console</span></tt> when starting fuglu.
+You will then get an interactive python console where all plugins etc are available from the &#8216;mc&#8217; (MainController) object</p>
+</div>
 </div>
 </div>
 
@@ -226,14 +301,19 @@ BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }</pre>
 <li><a class="reference internal" href="#mrtg">MRTG</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#debugging">Debugging</a></li>
+<li><a class="reference internal" href="#troubleshooting-debugging">Troubleshooting &amp; Debugging</a><ul>
+<li><a class="reference internal" href="#fuglu-doesn-t-even-start">Fuglu doesn&#8217;t even start</a></li>
+<li><a class="reference internal" href="#debug-trace-a-single-message">Debug Trace a single message</a></li>
+<li><a class="reference internal" href="#debug-the-fuglu-core">Debug the fuglu core</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="installation-index.html"
-                        title="previous chapter">Installation</a></p>
+  <p class="topless"><a href="configuration-index.html"
+                        title="previous chapter">Configuration</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="plugins-index.html"
                         title="next chapter">Plugins</a></p>
@@ -269,7 +349,7 @@ BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }</pre>
           <a href="plugins-index.html" title="Plugins"
              >next</a> |</li>
         <li class="right" >
-          <a href="installation-index.html" title="Installation"
+          <a href="configuration-index.html" title="Configuration"
              >previous</a> |</li>
         <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li> 
       </ul>

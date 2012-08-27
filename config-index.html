@@ -188,7 +188,16 @@ fuglu_default_destination_recipient_limit=1</pre>
 <p>text</p>
 <div class="section" id="running-a-plugin-multiple-times-with-different-config-sections">
 <h3>Running a plugin multiple times with different config sections<a class="headerlink" href="#running-a-plugin-multiple-times-with-different-config-sections" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<p>By default, plugins search your configfile for a section named like the Plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. This can be overridden which allows running plugin multiple times per scan with different config options:</p>
+<p>example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig1</span><span class="p">),</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig2</span><span class="p">)</span>
+
+<span class="p">[</span><span class="n">ArchiveConfig1</span><span class="p">]</span>
+<span class="o">....</span>
+
+<span class="p">[</span><span class="n">ArchiveConfig2</span><span class="p">]</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="fuglu-in-before-queue-mode">
 <h3>Fuglu in Before-Queue Mode<a class="headerlink" href="#fuglu-in-before-queue-mode" title="Permalink to this headline">¶</a></h3>
@@ -264,7 +273,7 @@ highspamlevel=10</pre>
 </div>
 <div class="section" id="running-fuglu-as-a-milter">
 <h3>Running fuglu as a milter<a class="headerlink" href="#running-fuglu-as-a-milter" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<p>TODo</p>
 </div>
 </div>
 </div>

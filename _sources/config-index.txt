@@ -205,7 +205,19 @@ text
 Running a plugin multiple times with different config sections
 ..............................................................
 
-text
+By default, plugins search your configfile for a section named like the Plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. This can be overridden which allows running plugin multiple times per scan with different config options:
+
+example:
+
+::
+
+	plugins=archive(ArchiveConfig1),spamassassin,clamav,archive(ArchiveConfig2)
+
+	[ArchiveConfig1]
+	....
+
+	[ArchiveConfig2]
+
 
 
 Fuglu in Before-Queue Mode
@@ -307,7 +319,7 @@ With this example pre-queue configuration fuglu will scan for spam, virus and bl
 Running fuglu as a milter
 .........................
 
-text
+TODo
 
 
 

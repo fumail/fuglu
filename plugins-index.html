@@ -53,7 +53,6 @@
             
   <div class="section" id="plugins">
 <h1>Plugins<a class="headerlink" href="#plugins" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
@@ -102,31 +101,344 @@ eady been re-injected into postfix
 <p>Each plugin has its own configuration section in <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> or any <tt class="docutils literal"><span class="pre">*.conf</span></tt> in <tt class="docutils literal"><span class="pre">/etc/fuglu/conf.d</span></tt>. The section is usually
 named like the plugin itself.</p>
 <p>For example, the Spamassassin Plugin&#8217;s Name is <tt class="docutils literal"><span class="pre">SAplugin</span></tt>, so it would search for a <tt class="docutils literal"><span class="pre">[SAPlugin]</span></tt> config section.</p>
-<p>TODO: more examples, section override</p>
+<div class="section" id="suspect-filters">
+<h3>Suspect Filters<a class="headerlink" href="#suspect-filters" title="Permalink to this headline">¶</a></h3>
+<p>SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a suspects header or tag.</p>
+<p>The format is : &lt;headername&gt; &lt;regex&gt; &lt;optional argument&gt;</p>
+<dl class="docutils">
+<dt>&lt;headername&gt; can be any of...</dt>
+<dd><ul class="first simple">
+<li>a email header name, eg <tt class="docutils literal"><span class="pre">Received</span></tt>, <tt class="docutils literal"><span class="pre">To</span></tt>, <tt class="docutils literal"><span class="pre">From</span></tt>, <tt class="docutils literal"><span class="pre">Subject</span></tt> ... also supports &#8216;*&#8217; as wildcard character</li>
+<li><tt class="docutils literal"><span class="pre">mime:````&lt;headeraneme&gt;</span></tt> to get mime Headers in the message payload  eg: <tt class="docutils literal"><span class="pre">mime:Content-Disposition</span></tt></li>
+<li>one of fuglus builtin names to get envelope data:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">envelope_from</span></tt>  (the envelope from address)</li>
+<li><tt class="docutils literal"><span class="pre">from_domain</span></tt> (domain part of envelope_from)</li>
+<li><tt class="docutils literal"><span class="pre">envelope_to</span></tt> (envelope to address)</li>
+<li><tt class="docutils literal"><span class="pre">to_domain</span></tt> (domain part of envelope_to)</li>
+</ul>
+</div></blockquote>
+<ul class="last simple">
+<li>a <tt class="docutils literal"><span class="pre">message</span> <span class="pre">Tag</span></tt> prepended by the &#64; symbol, eg. <tt class="docutils literal"><span class="pre">&#64;incomingport</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">body:raw</span></tt>&#8216; to match the the decoded message body (only applies to text/* partsl)</li>
+<li><tt class="docutils literal"><span class="pre">body:stripped</span></tt> or just <tt class="docutils literal"><span class="pre">body</span></tt> to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)</li>
+<li><tt class="docutils literal"><span class="pre">body:full</span></tt> to match the full body</li>
+</ul>
+</dd>
+</dl>
+<p><tt class="docutils literal"><span class="pre">&lt;regex&gt;</span></tt> is a standard python regular expression applied to &lt;header&gt;. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use <tt class="docutils literal"><span class="pre">\s</span></tt>. all regexes that are not enclosed in forward slashes are automatically <tt class="docutils literal"><span class="pre">case</span> <span class="pre">insensitive</span></tt> and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.</p>
+<div class="highlight-python"><pre>Subject /hello world/i match hello world, case insensitive</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt> depends on the plugin that reads this header filter file, some don&#8217;t need arguments at all. Please refer to the plugin documentation.</p>
+<p>Filter files are automatically reloaded if you change anything, so you don&#8217;t need to restart fuglu.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>#normal header test
+Subject hello   Hello in the subject!
+MIME-Version ^1\.0$ Mime Version is 1.0
+
+#builtin special fields
+to_domain       (\.)?fuglu.org$ Sent to fuglu.org or any subdomain
+envelope_from ^sender@example.com$
+
+#match a tag from a previous plugin
+@SAPlugin.report MISSING_HEADER
+
+#wildcard
+X-Spam-* .*     a X-Spam-&lt;something&gt; header exists
+
+#decoded body text parts
+body    Viagra
+
+#full body
+body:full ^--SPAMMY-MIME-BOUNDARY
+
+#mime-headers
+mime:Content-Type ^application\/x-msdos-program$</pre>
+</div>
+</div>
 </div>
 <div class="section" id="plugins-included-in-fuglu">
 <h2>Plugins included in Fuglu<a class="headerlink" href="#plugins-included-in-fuglu" title="Permalink to this headline">¶</a></h2>
 <p>TODO: scanner, prepender, appender, auto generated?</p>
-<p>text</p>
 </div>
 <div class="section" id="writing-your-own-plugins">
 <h2>Writing your own plugins<a class="headerlink" href="#writing-your-own-plugins" title="Permalink to this headline">¶</a></h2>
-<p>text</p>
-<div class="section" id="tutorial">
-<h3>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<p>Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from <tt class="docutils literal"><span class="pre">ScannerPlugin</span></tt>, override <tt class="docutils literal"><span class="pre">__str__</span></tt> to provide a nice human readable name and override <tt class="docutils literal"><span class="pre">examine</span></tt> to do the actual work of your plugins. <tt class="docutils literal"><span class="pre">examine</span></tt> should return one of the action codes above (DUNNO, DEFER, DELETE, ....). You probably only need stuff from <tt class="docutils literal"><span class="pre">fuglu.shared</span></tt>, so it&#8217;s probably a good idea to get familiar with that module.</p>
+<p>This is a quick example of how your plugin code skeleton would look like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="k">class</span> <span class="nc">DemoPlugin</span><span class="p">(</span><span class="n">ScannerPlugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copy this to make a new plugin&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
+        <span class="c">#config example</span>
+        <span class="c">#self.requiredvars={</span>
+        <span class="c">#    &#39;maxsize&#39;:{</span>
+        <span class="c">#        &#39;default&#39;:&#39;1337&#39;,</span>
+        <span class="c">#        &#39;description&#39;:&#39;Maximum message size&#39;,</span>
+        <span class="c">#    }</span>
+        <span class="c">#}</span>
+
+    <span class="k">def</span> <span class="nf">examine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="c">#config Example</span>
+        <span class="c">#maxsize=self.config.getint(self.section, &#39;maxsize&#39;)</span>
+
+        <span class="c">#debug example</span>
+        <span class="c">#self._logger().debug(&#39;hello world from StubPlugin&#39;)</span>
+
+        <span class="n">starttime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+
+        <span class="c">#PUT PLUGIN CODE HERE</span>
+
+        <span class="c">#For debugging, its good to know how long each plugin took</span>
+        <span class="n">endtime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">difftime</span><span class="o">=</span><span class="n">endtime</span><span class="o">-</span><span class="n">starttime</span>
+        <span class="n">suspect</span><span class="o">.</span><span class="n">tags</span><span class="p">[</span><span class="s">&#39;DemoPlugin.time&#39;</span><span class="p">]</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%.4f</span><span class="s">&quot;</span><span class="o">%</span><span class="n">difftime</span>
+        <span class="k">return</span> <span class="n">DUNNO</span>
+</pre></div>
 </div>
+<p>First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, DUNNO might be enough depending on what your plugin does.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
+</pre></div>
+</div>
+<p>in __init__ you only call BasicPlugins __init__  for now. This sets self.config and self.section on the object where you later can read config options (eg. self.config.get(self.section,&#8217;somevalue&#8217;).  Do NOT load the plugin configuration here. __init__ is only called once when fuglu starts up. Always load plugin config in <tt class="docutils literal"><span class="pre">examine</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>then code your <tt class="docutils literal"><span class="pre">examine</span></tt> method. You will have to work with the <tt class="docutils literal"><span class="pre">suspect</span></tt> (TODO: LINK HERE) object, which is a representation of the message being analyzed. The suspect has <tt class="docutils literal"><span class="pre">tags</span></tt> that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it&#8217;s probably a good idea to read FugluSuspect to get a list of things you can do with the suspect and FugluTags so see common tags that can have a influence on fuglu&#8217;s behaviour.</p>
 <div class="section" id="common-tasks-api-faq">
 <h3>Common Tasks (&#8220;API&#8221; FAQ)<a class="headerlink" href="#common-tasks-api-faq" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<div class="section" id="define-configuration-options-for-your-plugin">
+<h4>define configuration options for your plugin<a class="headerlink" href="#define-configuration-options-for-your-plugin" title="Permalink to this headline">¶</a></h4>
+<p>in order to make &#8216;lint&#8217; and &#8216;fuglu_conf&#8217; work with your plugin it should tell the core what config options it expects. this is done by creating a dictionary named &#8216;requiredvars&#8217; in the plugins init:</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars={
+            'host':{
+                'default':'localhost',
+                'description':'hostname',
+            },
+
+            'username':{
+                'default':'root',
+            },
+
+            'password':{
+                'default':``,
+                'confidential':True,
+            },
+
+       }</pre>
+</div>
+<p>This would tell fuglu that your plugin has three config options: host, username and password.</p>
+<p>The &#8216;dict of dicts&#8217; uses your config option name as key for the outer dict. The inner dict supports the following keys:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">default</span></tt> - Default value, used if the option is not specified in the config file</li>
+<li><tt class="docutils literal"><span class="pre">section</span></tt> - config section to check. by default fuglu assumes that the plugin reads its own config section. override this if your plugin requires a config option from a different plugin or from the main config</li>
+<li><tt class="docutils literal"><span class="pre">confidential</span></tt> - set this to True if fuglu_conf should treat this option confidential and redact it in &#8216;fuglu_conf -n&#8217; (passwords etc)</li>
+<li><tt class="docutils literal"><span class="pre">validator</span></tt> - function that should be called to validate if the configured value is valid. the function will receive the value as argument and must return True or False</li>
+<li><tt class="docutils literal"><span class="pre">deprecated</span></tt> - mark a config option as deprecated</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="read-the-config">
+<h4>read the config<a class="headerlink" href="#read-the-config" title="Permalink to this headline">¶</a></h4>
+<p>Configs in fuglu are stored in <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own Section named like the Plugin Class.</p>
+<p>example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">DemoPlugin</span><span class="p">]</span>
+<span class="n">maxsize</span><span class="o">=</span><span class="mi">10382</span>
+</pre></div>
+</div>
+<p>you can then read the config in your plugin with the usual methods from a python ConfigParser object ( <a class="reference external" href="http://docs.python.org/library/configparser.html">http://docs.python.org/library/configparser.html</a> )</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;maxsize&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Important: always the configs in <tt class="docutils literal"><span class="pre">examine</span></tt> (and not in <tt class="docutils literal"><span class="pre">init</span></tt> !). reading the config in init breaks loading default values and prevents on-the-fly config reload</p>
+</div>
+<div class="section" id="get-the-message-source">
+<h4>get the message source<a class="headerlink" href="#get-the-message-source" title="Permalink to this headline">¶</a></h4>
+<p>use <tt class="docutils literal"><span class="pre">suspect.getSource()</span></tt> to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.</p>
+<p>from fuglu.shared import ScannerPlugin,DUNNO
+import time
+add headers
+&#8212;&#8212;&#8212;&#8211;</p>
+<p><tt class="docutils literal"><span class="pre">suspect.addheader(headername,headervalue)</span></tt></p>
+<p>by default, headers are added to the message shortly before it is re-injected into postfix.
+add <tt class="docutils literal"><span class="pre">immediate=True</span></tt> to add the header immediately, so other plugins can see it.</p>
+</div>
+<div class="section" id="write-to-the-log">
+<h4>write to the log<a class="headerlink" href="#write-to-the-log" title="Permalink to this headline">¶</a></h4>
+<p>your plugin has a _logger method that returns a standard python logger object, so you can use the info / debug / error / fatal methods.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;hello world from DemoPlugin&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="write-debug-info">
+<h4>write debug info<a class="headerlink" href="#write-debug-info" title="Permalink to this headline">¶</a></h4>
+<p>to make the plugin write special debug info when <tt class="docutils literal"><span class="pre">fuglu_debug</span></tt> is used, use:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">suspect</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;debug info from DemoPlugin!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="make-plugin-lint-able">
+<h4>make plugin &#8216;&#8211;lint&#8217;-able<a class="headerlink" href="#make-plugin-lint-able" title="Permalink to this headline">¶</a></h4>
+<p>by default, <tt class="docutils literal"><span class="pre">lint()</span></tt> only validates the plugin&#8217;s configuration settings from <tt class="docutils literal"><span class="pre">self.requiredvars</span></tt>. You can override <tt class="docutils literal"><span class="pre">lint()</span></tt> to do more stuff.</p>
+<blockquote>
+<div><ul class="simple">
+<li>use simple <tt class="docutils literal"><span class="pre">print</span></tt> in this method, no logging stuff.</li>
+<li>if you override <tt class="docutils literal"><span class="pre">lint()</span></tt> you should run <tt class="docutils literal"><span class="pre">self.checkConfig()</span></tt> to test the configuration</li>
+<li><tt class="docutils literal"><span class="pre">lint()</span></tt> must return True or False</li>
+</ul>
+</div></blockquote>
+<p>example of a plugin that would check if an imap account is available:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">lint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">allok</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkConfig</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">lint_imap</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">allok</span>
+
+<span class="k">def</span> <span class="nf">lint_imap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">M</span><span class="o">=</span><span class="n">imaplib</span><span class="o">.</span><span class="n">IMAP4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;host&#39;</span><span class="p">))</span>
+        <span class="p">(</span><span class="nb">type</span><span class="p">,</span><span class="n">data</span><span class="p">)</span><span class="o">=</span><span class="n">M</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;user&#39;</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="o">!=</span><span class="s">&#39;OK&#39;</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Could not login to imap review account: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Could not login to imap host:</span><span class="si">%s</span><span class="s"> - Error </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;StubPlugin&#39;</span><span class="p">,</span> <span class="s">&#39;host&#39;</span><span class="p">),</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="use-the-suspectfilter">
+<h4>use the &#8216;SuspectFilter&#8217;<a class="headerlink" href="#use-the-suspectfilter" title="Permalink to this headline">¶</a></h4>
+<p>SuspectFilters are a common way for all plugins to perform an action based on conditions defined in a filterfile . These files are automatically re-loaded if changed.</p>
+<blockquote>
+<div><ul class="simple">
+<li>import SuspectFilter from fuglu.shared</li>
+<li>define a config variable for your plugin which holds the name of the filter file (not strictly required, you could hardcode the path)</li>
+<li>create a plugin property for the filter</li>
+</ul>
+</div></blockquote>
+<div class="highlight-python"><pre>from fuglu.shared import ScannerPlugin,SuspectFilter
+[...]
+
+class MyPlugin(ScannerPlugin):
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+
+        self.requiredvars={
+            'myrulesfile':{
+                'default':'/etc/fuglu/mypluginrules.regex',
+                'description':'Filter file for my plugin',
+            },
+
+           [...]
+        }
+        self.filter=None</pre>
+</div>
+<p>in <tt class="docutils literal"><span class="pre">examine</span></tt> create the filter if necessary</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">=</span><span class="n">SuspectFilter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;myrulesfile&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>run the filter in examine: <tt class="docutils literal"><span class="pre">(match,arg)=self.filter.matches(suspect)</span></tt>
+<tt class="docutils literal"><span class="pre">match</span></tt> is a boolean, telling you if one of the rules matched
+<cite>arg`</cite> is an additional argument which have been appended to the filter rule in the config. lets say, the filter rule reads <tt class="docutils literal"><span class="pre">to_address</span> <span class="pre">example&#64;fuglu.org</span> <span class="pre">hello</span> <span class="pre">world!</span></tt>, you would get match=True and arg=&#8217;Hello world!&#8217; if the message is sent to <a class="reference external" href="mailto:example&#37;&#52;&#48;fuglu&#46;org">example<span>&#64;</span>fuglu<span>&#46;</span>org</a></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">match</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">arg</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;&quot;&quot;we got a match with arg </span><span class="si">%s</span><span class="s">&quot;&quot;&quot;</span><span class="o">%</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;&quot;&quot;We got a match without an arg&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">suspect</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;no rule matches&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="use-the-sql-extension">
+<h4>use the sql extension<a class="headerlink" href="#use-the-sql-extension" title="Permalink to this headline">¶</a></h4>
+<p>TODO (DBFiles, sqlalchemy connections)</p>
+</div>
 </div>
 <div class="section" id="debugging">
 <h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
-<p>plugdummy....</p>
+<div class="section" id="get-a-stacktrace">
+<h4>get a stacktrace<a class="headerlink" href="#get-a-stacktrace" title="Permalink to this headline">¶</a></h4>
+<p>if something went wrong you should see a stacktrace in the fuglu log (/var/log/fuglu/fuglu.log)
+with fuglu &gt;=0.6.0 you can also get the most recent exceptions with the following command:</p>
+<div class="highlight-python"><pre>fuglu_control exceptionlist</pre>
+</div>
+</div>
+<div class="section" id="debug-the-plugin-while-fuglu-is-runnig">
+<h4>debug the plugin while fuglu is runnig<a class="headerlink" href="#debug-the-plugin-while-fuglu-is-runnig" title="Permalink to this headline">¶</a></h4>
+<p>run <tt class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--console</span></tt> to enter an interactive python console after fuglu startup. Your plugin is then available via the list <tt class="docutils literal"><span class="pre">mc.plugins</span></tt></p>
+</div>
+<div class="section" id="debug-a-plugin-without-running-fuglu">
+<h4>debug a plugin without running fuglu<a class="headerlink" href="#debug-a-plugin-without-running-fuglu" title="Permalink to this headline">¶</a></h4>
+<p>TODO: plugdummy....</p>
+</div>
+</div>
+<div class="section" id="deploying-plugins">
+<h3>Deploying Plugins<a class="headerlink" href="#deploying-plugins" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li>if there is no <tt class="docutils literal"><span class="pre">plugindir</span></tt> set in fuglu.conf yet, define a new directory for custom plugins. eg <tt class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></tt>.</li>
+<li>copy your plugin file to this directory</li>
+<li>depending on the type of your plugin, add it to the plugin/prependers/appenders config option. Eg. if your scanner plugin class is <tt class="docutils literal"><span class="pre">MyHeloPlugin</span></tt> in the file myplugin.py you would add <tt class="docutils literal"><span class="pre">myplugin.MyHeloPlugin</span></tt> to the <tt class="docutils literal"><span class="pre">plugins</span></tt> config</li>
+<li>if your plugin reads configuration entries, make sure those are present in fuglu.conf or in a custom conf-file in /etc/fuglu/conf.d</li>
+<li>run <tt class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--lint</span></tt> to check if fuglu is happy with your new plugin</li>
+<li>(re)start fuglu</li>
+</ul>
+</div></blockquote>
 </div>
 <div class="section" id="unit-tests">
 <h3>Unit Tests<a class="headerlink" href="#unit-tests" title="Permalink to this headline">¶</a></h3>
-<p>text</p>
+<dl class="docutils">
+<dt>You can easily integrate your unittests with the fuglu test script.</dt>
+<dd><ul class="first last simple">
+<li>create your testcase in the same file as your plugin resides (the testscript will search for all classes extending unittest.TestCase</li>
+<li>create a new directory &#8216;~/fuglu-dev&#8217;</li>
+<li>in ~/fuglu-dev create a new textfile &#8216;&#8217;test.conf&#8217;&#8216;</li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">test</span><span class="p">]</span>
+<span class="n">includemodules</span><span class="o">=</span><span class="n">myplugin</span>
+</pre></div>
+</div>
+<p>(replace myplugin with your plugin module name)</p>
+<blockquote>
+<div><ul class="simple">
+<li>create a symlink in fuglu-dev to your real plugin file, eg &#8216;&#8217;ln -s /home/edgar/work/myplugin/myplugin.py ~/fuglu-dev/myplugin.py&#8217;&#8216;</li>
+<li>checkout the fuglu code from svn</li>
+<li>cd to the test directory, then run the testscript with the modulename of your plugin as argument</li>
+</ul>
+</div></blockquote>
+<div class="highlight-python"><pre>edgar@boscos:~/workspace/fuglu/test$ ./runtests.py myplugin
+['../conf/fuglu.conf.dist', '/home/edgar/fuglu-dev/test.conf']
+found 1 tests in myplugin
+---------------------------
+Total 1 tests in Testsuite
+
+STARTING TESTS
+
+fuglu.plugin.MyHeloPlugin: INFO     Hello world from sender@unittests.fuglu.org to recipient@unittests.fuglu.org!
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.010s
+
+OK
+
+Debug Output written to:/tmp/fuglu-test.log</pre>
+</div>
 </div>
 </div>
 </div>
@@ -147,12 +459,30 @@ named like the plugin itself.</p>
 <li><a class="reference internal" href="#appender-plugins">Appender Plugins</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugin-configuration">Plugin configuration</a></li>
+<li><a class="reference internal" href="#plugin-configuration">Plugin configuration</a><ul>
+<li><a class="reference internal" href="#suspect-filters">Suspect Filters</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#plugins-included-in-fuglu">Plugins included in Fuglu</a></li>
 <li><a class="reference internal" href="#writing-your-own-plugins">Writing your own plugins</a><ul>
-<li><a class="reference internal" href="#tutorial">Tutorial</a></li>
-<li><a class="reference internal" href="#common-tasks-api-faq">Common Tasks (&#8220;API&#8221; FAQ)</a></li>
-<li><a class="reference internal" href="#debugging">Debugging</a></li>
+<li><a class="reference internal" href="#common-tasks-api-faq">Common Tasks (&#8220;API&#8221; FAQ)</a><ul>
+<li><a class="reference internal" href="#define-configuration-options-for-your-plugin">define configuration options for your plugin</a></li>
+<li><a class="reference internal" href="#read-the-config">read the config</a></li>
+<li><a class="reference internal" href="#get-the-message-source">get the message source</a></li>
+<li><a class="reference internal" href="#write-to-the-log">write to the log</a></li>
+<li><a class="reference internal" href="#write-debug-info">write debug info</a></li>
+<li><a class="reference internal" href="#make-plugin-lint-able">make plugin &#8216;&#8211;lint&#8217;-able</a></li>
+<li><a class="reference internal" href="#use-the-suspectfilter">use the &#8216;SuspectFilter&#8217;</a></li>
+<li><a class="reference internal" href="#use-the-sql-extension">use the sql extension</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debugging">Debugging</a><ul>
+<li><a class="reference internal" href="#get-a-stacktrace">get a stacktrace</a></li>
+<li><a class="reference internal" href="#debug-the-plugin-while-fuglu-is-runnig">debug the plugin while fuglu is runnig</a></li>
+<li><a class="reference internal" href="#debug-a-plugin-without-running-fuglu">debug a plugin without running fuglu</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#deploying-plugins">Deploying Plugins</a></li>
 <li><a class="reference internal" href="#unit-tests">Unit Tests</a></li>
 </ul>
 </li>

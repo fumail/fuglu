@@ -49,7 +49,6 @@
             
   <div class="section" id="fuglu-mail-content-scanner">
 <h1>FuGlu Mail Content Scanner<a class="headerlink" href="#fuglu-mail-content-scanner" title="Permalink to this headline">¶</a></h1>
-<p>!! This new python sphinx based documentation is still under development - see <a class="reference external" href="http://sourceforge.net/apps/trac/fuglu/">http://sourceforge.net/apps/trac/fuglu/</a> for current documentation !!</p>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -67,6 +66,20 @@
 <li class="toctree-l2"><a class="reference internal" href="installation-index.html#id1">Installation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-index.html">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration-index.html#basic-configuration">Basic Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="configuration-index.html#fuglu">Fuglu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration-index.html#postfix">Postfix</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="configuration-index.html#advanced-config">Advanced Config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="configuration-index.html#running-a-plugin-multiple-times-with-different-config-sections">Running a plugin multiple times with different config sections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration-index.html#fuglu-in-before-queue-mode">Fuglu in Before-Queue Mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="configuration-index.html#running-fuglu-as-a-milter">Running fuglu as a milter</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="operation-index.html">Operation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="operation-index.html#monitoring">Monitoring</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="operation-index.html#command-line-interface">Command Line Interface</a></li>
@@ -74,7 +87,12 @@
 <li class="toctree-l3"><a class="reference internal" href="operation-index.html#mrtg">MRTG</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="operation-index.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operation-index.html#troubleshooting-debugging">Troubleshooting &amp; Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="operation-index.html#fuglu-doesn-t-even-start">Fuglu doesn&#8217;t even start</a></li>
+<li class="toctree-l3"><a class="reference internal" href="operation-index.html#debug-trace-a-single-message">Debug Trace a single message</a></li>
+<li class="toctree-l3"><a class="reference internal" href="operation-index.html#debug-the-fuglu-core">Debug the fuglu core</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="plugins-index.html">Plugins</a><ul>
@@ -85,12 +103,15 @@
 <li class="toctree-l3"><a class="reference internal" href="plugins-index.html#appender-plugins">Appender Plugins</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="plugins-index.html#plugin-configuration">Plugin configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins-index.html#plugin-configuration">Plugin configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plugins-index.html#suspect-filters">Suspect Filters</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="plugins-index.html#plugins-included-in-fuglu">Plugins included in Fuglu</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plugins-index.html#writing-your-own-plugins">Writing your own plugins</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="plugins-index.html#tutorial">Tutorial</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plugins-index.html#common-tasks-api-faq">Common Tasks (&#8220;API&#8221; FAQ)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plugins-index.html#debugging">Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plugins-index.html#deploying-plugins">Deploying Plugins</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plugins-index.html#unit-tests">Unit Tests</a></li>
 </ul>
 </li>
