@@ -178,8 +178,8 @@ mime:Content-Type ^application\/x-msdos-program$</pre>
 </div>
 <div class="section" id="plugins-included-in-fuglu">
 <h2>Plugins included in Fuglu<a class="headerlink" href="#plugins-included-in-fuglu" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="saplugin">
-<h3>SAPlugin<a class="headerlink" href="#saplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="spamassassin">
+<h3>SpamAssassin<a class="headerlink" href="#spamassassin" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.sa.SAPlugin</p>
 <p>This plugin passes suspects to a spamassassin daemon.</p>
 <p>Prerequisites: SPAMD must be installed and running (not necessarily on the same box as fuglu)</p>
@@ -259,8 +259,8 @@ lowspamaction=DEFAULTLOWSPAMACTION</pre>
 </div>
 </div>
 </div>
-<div class="section" id="clamavplugin">
-<h3>ClamavPlugin<a class="headerlink" href="#clamavplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="clam-av">
+<h3>Clam AV<a class="headerlink" href="#clam-av" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.clamav.ClamavPlugin</p>
 <p>This plugin passes suspects to a clam daemon.</p>
 <p>Actions: This plugin will delete infected messages. If clamd is not reachable or times out, messages can be DEFERRED.</p>
@@ -387,8 +387,8 @@ rulesdir=/etc/fuglu/rules</pre>
 </div>
 </div>
 </div>
-<div class="section" id="archiveplugin">
-<h3>ArchivePlugin<a class="headerlink" href="#archiveplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="archive">
+<h3>Archive<a class="headerlink" href="#archive" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.archive.ArchivePlugin</p>
 <p>This plugins stores a copy of the message if it matches certain criteria (Suspect Filter).
 You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
@@ -420,8 +420,8 @@ archiverules=/etc/fuglu/archive.regex</pre>
 </div>
 </div>
 </div>
-<div class="section" id="vacationplugin">
-<h3>VacationPlugin<a class="headerlink" href="#vacationplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="vacation">
+<h3>Vacation<a class="headerlink" href="#vacation" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.vacation.VacationPlugin</p>
 <p>Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any &#8216;automated&#8217; messages (Mailingslists, Spams, Bounces etc)</p>
 <p>Requires: SQLAlechemy Extension</p>
@@ -484,8 +484,8 @@ dbconnectstring=</pre>
 </div>
 </div>
 </div>
-<div class="section" id="ssspplugin">
-<h3>SSSPPlugin<a class="headerlink" href="#ssspplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="sophos">
+<h3>Sophos<a class="headerlink" href="#sophos" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.sssp.SSSPPlugin</p>
 <blockquote>
 <div>This plugin scans the suspect using the sophos SSSP protocol.</div></blockquote>
@@ -519,8 +519,8 @@ virusaction=DEFAULTVIRUSACTION</pre>
 </div>
 </div>
 </div>
-<div class="section" id="f-prot-plugin">
-<h3>F-Prot Plugin<a class="headerlink" href="#f-prot-plugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="f-prot-av">
+<h3>F-Prot AV<a class="headerlink" href="#f-prot-av" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.fprot.FprotPlugin</p>
 <blockquote>
 <div>This plugin passes suspects to a f-prot scan daemon</div></blockquote>
@@ -566,10 +566,12 @@ virusaction=DEFAULTVIRUSACTION</pre>
 </div>
 </div>
 </div>
-<div class="section" id="icapplugin">
-<h3>ICAPPlugin<a class="headerlink" href="#icapplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="icap-av">
+<h3>ICAP AV<a class="headerlink" href="#icap-av" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.icap.ICAPPlugin</p>
-<p>ICAP Antivirus Plugin (Sophos / Symantec / ....)</p>
+<p>ICAP Antivirus Plugin
+This plugin allows Antivirus Scanning over the ICAP Protocol (<a class="reference external" href="http://tools.ietf.org/html/rfc3507">http://tools.ietf.org/html/rfc3507</a> )
+supported by some AV Scanners like Symantec and Sophos. For sophos, however, it is recommended to use the native SSSP Protocol.</p>
 <p>Prerequisites: requires an ICAP capable antivirus engine somewhere in your network</p>
 <div class="section" id="id7">
 <h4>Configuration<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
@@ -606,8 +608,8 @@ virusaction=DEFAULTVIRUSACTION</pre>
 </div>
 </div>
 </div>
-<div class="section" id="headerplugin">
-<h3>HeaderPlugin<a class="headerlink" href="#headerplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="remove-headers">
+<h3>remove Headers<a class="headerlink" href="#remove-headers" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.headers.HeaderPlugin</p>
 <p>Removes specified headers from message</p>
 <div class="section" id="id8">
@@ -618,8 +620,8 @@ removeheaders=</pre>
 </div>
 </div>
 </div>
-<div class="section" id="actionoverrideplugin">
-<h3>ActionOverridePlugin<a class="headerlink" href="#actionoverrideplugin" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="action-override">
+<h3>Action Override<a class="headerlink" href="#action-override" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin</p>
 <blockquote>
 <div>override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
@@ -631,8 +633,8 @@ actionrules=/etc/fuglu/actionrules.regex</pre>
 </div>
 </div>
 </div>
-<div class="section" id="pluginskipper">
-<h3>PluginSkipper<a class="headerlink" href="#pluginskipper" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="plugin-skipper">
+<h3>Plugin Skipper<a class="headerlink" href="#plugin-skipper" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.p_skipper.PluginSkipper</p>
 <p>Skips plugins based on standard filter file
 This can be used for example to skip spam filters on outgoing messages.
@@ -645,8 +647,8 @@ filterfile=/etc/fuglu/skipplugins.regex</pre>
 </div>
 </div>
 </div>
-<div class="section" id="messagedebugger-debug">
-<h3>MessageDebugger(debug)<a class="headerlink" href="#messagedebugger-debug" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="debugger">
+<h3>Debugger<a class="headerlink" href="#debugger" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.p_debug.MessageDebugger</p>
 <p>Message Debugger Plugin (Prepender).</p>
 <p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
@@ -1065,11 +1067,11 @@ Debug Output written to:/tmp/fuglu-test.log</pre>
 </ul>
 </li>
 <li><a class="reference internal" href="#plugins-included-in-fuglu">Plugins included in Fuglu</a><ul>
-<li><a class="reference internal" href="#saplugin">SAPlugin</a><ul>
+<li><a class="reference internal" href="#spamassassin">SpamAssassin</a><ul>
 <li><a class="reference internal" href="#configuration">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#clamavplugin">ClamavPlugin</a><ul>
+<li><a class="reference internal" href="#clam-av">Clam AV</a><ul>
 <li><a class="reference internal" href="#id1">Configuration</a></li>
 </ul>
 </li>
@@ -1077,39 +1079,39 @@ Debug Output written to:/tmp/fuglu-test.log</pre>
 <li><a class="reference internal" href="#id2">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#archiveplugin">ArchivePlugin</a><ul>
+<li><a class="reference internal" href="#archive">Archive</a><ul>
 <li><a class="reference internal" href="#id3">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#vacationplugin">VacationPlugin</a><ul>
+<li><a class="reference internal" href="#vacation">Vacation</a><ul>
 <li><a class="reference internal" href="#id4">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#ssspplugin">SSSPPlugin</a><ul>
+<li><a class="reference internal" href="#sophos">Sophos</a><ul>
 <li><a class="reference internal" href="#id5">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#f-prot-plugin">F-Prot Plugin</a><ul>
+<li><a class="reference internal" href="#f-prot-av">F-Prot AV</a><ul>
 <li><a class="reference internal" href="#id6">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#icapplugin">ICAPPlugin</a><ul>
+<li><a class="reference internal" href="#icap-av">ICAP AV</a><ul>
 <li><a class="reference internal" href="#id7">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#headerplugin">HeaderPlugin</a><ul>
+<li><a class="reference internal" href="#remove-headers">remove Headers</a><ul>
 <li><a class="reference internal" href="#id8">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#actionoverrideplugin">ActionOverridePlugin</a><ul>
+<li><a class="reference internal" href="#action-override">Action Override</a><ul>
 <li><a class="reference internal" href="#id9">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#pluginskipper">PluginSkipper</a><ul>
+<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
 <li><a class="reference internal" href="#id10">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#messagedebugger-debug">MessageDebugger(debug)</a><ul>
+<li><a class="reference internal" href="#debugger">Debugger</a><ul>
 <li><a class="reference internal" href="#id11">Configuration</a></li>
 </ul>
 </li>
