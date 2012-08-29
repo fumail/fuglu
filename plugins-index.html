@@ -158,6 +158,23 @@ body:full ^--SPAMMY-MIME-BOUNDARY
 mime:Content-Type ^application\/x-msdos-program$</pre>
 </div>
 </div>
+<div class="section" id="template-variables">
+<h3>Template Variables<a class="headerlink" href="#template-variables" title="Permalink to this headline">¶</a></h3>
+<p>Some plugins allow you to create templates (errormessages in bounces, Reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation.</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">${from_address}</span></tt> : Envelope Sender Address</li>
+<li><tt class="docutils literal"><span class="pre">${to_address}</span></tt>   : Envelope Recipient Address</li>
+<li><tt class="docutils literal"><span class="pre">${from_domain}</span></tt>  : Envelope Sender Domain</li>
+<li><tt class="docutils literal"><span class="pre">${to_domain}</span></tt>    : Envelope Recipient Domain</li>
+<li><tt class="docutils literal"><span class="pre">${timestamp}</span></tt>    : Unix Timestamp when the message was received</li>
+<li><tt class="docutils literal"><span class="pre">${subject}</span></tt>      : Message subject</li>
+<li><tt class="docutils literal"><span class="pre">${date}</span></tt>         : Current date</li>
+<li><tt class="docutils literal"><span class="pre">${time}</span></tt>         : Current time</li>
+<li><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt>    : Reason why this message was blocked (available in the attachment plugin)</li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="plugins-included-in-fuglu">
 <h2>Plugins included in Fuglu<a class="headerlink" href="#plugins-included-in-fuglu" title="Permalink to this headline">¶</a></h2>
@@ -1044,6 +1061,7 @@ Debug Output written to:/tmp/fuglu-test.log</pre>
 </li>
 <li><a class="reference internal" href="#plugin-configuration">Plugin configuration</a><ul>
 <li><a class="reference internal" href="#suspect-filters">Suspect Filters</a></li>
+<li><a class="reference internal" href="#template-variables">Template Variables</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#plugins-included-in-fuglu">Plugins included in Fuglu</a><ul>

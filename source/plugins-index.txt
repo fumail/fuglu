@@ -125,6 +125,20 @@ Example:
 	mime:Content-Type ^application\/x-msdos-program$
 
 
+Template Variables
+..................
+
+Some plugins allow you to create templates (errormessages in bounces, Reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation. 
+
+ * ``${from_address}`` : Envelope Sender Address
+ * ``${to_address}``   : Envelope Recipient Address
+ * ``${from_domain}``  : Envelope Sender Domain
+ * ``${to_domain}``    : Envelope Recipient Domain
+ * ``${timestamp}``    : Unix Timestamp when the message was received
+ * ``${subject}``      : Message subject
+ * ``${date}``         : Current date
+ * ``${time}``         : Current time
+ * ``${blockinfo}``    : Reason why this message was blocked (available in the attachment plugin)
 
 
 -------------------------
