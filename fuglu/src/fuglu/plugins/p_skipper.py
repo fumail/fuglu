@@ -33,7 +33,10 @@ eg. put this in /etc/fuglu/skipplugins.regex:
             }
         }
         self.logger=self._logger()
-        
+       
+    def __str__(self):
+        return "Plugin Skipper"
+     
     def pluginlist(self,suspect,pluginlist):
         """Removes scannerplugins based on filter file"""
         if not self._initfilter():

@@ -71,6 +71,9 @@ envelope_to support@fuglu\.org      yes
         
         self.filter=None
         self.logger=self._logger()
+    
+    def __str__(self):
+        return "Archive"
         
     def lint(self):
         allok=(self.checkConfig() and self.lint_dirs())

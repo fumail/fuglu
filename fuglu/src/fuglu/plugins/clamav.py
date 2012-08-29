@@ -84,6 +84,9 @@ Tags:
         }        
         self.logger=self._logger()
     
+    def __str__(self):
+        return "Clam AV"
+    
     def _problemcode(self):
         retcode=string_to_actioncode(self.config.get(self.section,'problemaction'), self.config)
         if retcode!=None:

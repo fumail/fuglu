@@ -23,6 +23,9 @@ class KillerPlugin(ScannerPlugin):
         ScannerPlugin.__init__(self,config,section)
         self.logger=self._logger()
         
+    def __str__(self):
+        return "delete Message"
+
     def examine(self,suspect):
         return DELETE
         

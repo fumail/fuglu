@@ -278,7 +278,10 @@ SQL Example for mysql:
         
         self.logger=self._logger()
         self.cache=None
-        
+    
+    def __str__(self):
+        return "Vacation"
+
     def _cache(self):
         if self.cache==None:
             self.cache=VacationCache(self.config)

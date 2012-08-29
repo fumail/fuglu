@@ -34,6 +34,9 @@ class ExamplePlugin(ScannerPlugin):
             }
         }
         #DO NOT call self.config.get .. here!
+     
+    def __str__(self):
+        return "Example"
         
     def examine(self,suspect):
         #config Example

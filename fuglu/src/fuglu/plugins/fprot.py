@@ -221,7 +221,7 @@ Tags:
         return s
     
     def __str__(self):
-        return 'F-Prot Plugin';
+        return 'F-Prot AV';
     
     def lint(self):
         allok=(self.checkConfig() and self.lint_eicar())

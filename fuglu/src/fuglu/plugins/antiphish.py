@@ -34,7 +34,9 @@ class DKIMVerify(ScannerPlugin):
                 },
         }
         self.logger=self._logger()
-    
+
+    def __str__(self):
+        return "DKIM Verify"    
     
     def examine(self,suspect):  
         
@@ -115,6 +117,9 @@ class DKIMSign(ScannerPlugin):
                   'default':'False',                
                 },
         }
+
+    def __str__(self):
+        return "DKIM Sign"
     
     def examine(self,suspect):
         starttime=time.time()
@@ -165,6 +170,10 @@ class SPFCheck(ScannerPlugin):
         self.requiredvars={        
         }
     
+    
+    def __str__(self):
+        return "SPF"
+
     def examine(self,suspect):
         starttime=time.time()
         endtime=time.time()
@@ -180,6 +189,9 @@ class SRSRewrite(ScannerPlugin):
         self.requiredvars={        
         }
     
+    def __str__(self):
+        return "SRS"
+
     def examine(self,suspect):
         starttime=time.time()
         endtime=time.time()

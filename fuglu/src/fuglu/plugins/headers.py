@@ -18,6 +18,9 @@ class HeaderPlugin(ScannerPlugin):
                 'description':'headers to remove from incoming messages, comma separated',
             },
         }
+    
+    def __str__(self):
+        return "remove Headers"
         
     def examine(self,suspect):
         removeheaders=self.config.get(self.section, 'removeheaders').split(',')

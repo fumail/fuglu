@@ -129,6 +129,9 @@ Tags:
         } 
         self.logger=self._logger()
         
+    def __str__(self):
+        return "SpamAssassin"
+        
     def lint(self):
         allok=(self.checkConfig()  and self.lint_ping() and self.lint_spam() and self.lint_blacklist())
         return allok

@@ -70,6 +70,9 @@ This plugin enables the fuglu_debug functionality. Make sure fuglu listens on th
 
         return allok
        
+    def __str__(self):
+        return "Debugger"
+       
     def pluginlist(self,suspect,pluginlist):
         debugport=self.config.getint(self.section,'debugport')
         if suspect.get_tag('incomingport')==debugport:

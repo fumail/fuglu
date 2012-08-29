@@ -23,7 +23,9 @@ import unittest
 import os
 
 class ICAPPlugin(ScannerPlugin):
-    """ICAP Antivirus Plugin (Sophos / Symantec / ....)
+    """ICAP Antivirus Plugin
+This plugin allows Antivirus Scanning over the ICAP Protocol (http://tools.ietf.org/html/rfc3507 )
+supported by some AV Scanners like Symantec and Sophos. For sophos, however, it is recommended to use the native SSSP Protocol.
     
 Prerequisites: requires an ICAP capable antivirus engine somewhere in your network
 """
@@ -82,6 +84,9 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             },
         }        
         self.logger=self._logger()
+    
+    def __str__(self):
+        return "ICAP AV"
     
     def _problemcode(self):
         retcode=string_to_actioncode(self.config.get(self.section,'problemaction'), self.config)

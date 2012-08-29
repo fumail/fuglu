@@ -29,7 +29,10 @@ class ActionOverridePlugin(ScannerPlugin):
             }                  
         }
         self.filter=None
-    
+
+    def __str__(self):
+        return "Action Override"
+        
     def lint(self):
         allok=(self.checkConfig() and self.lint_dirs())
         return allok

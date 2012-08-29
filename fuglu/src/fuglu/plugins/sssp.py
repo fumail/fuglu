@@ -183,6 +183,9 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
         }        
         self.logger=self._logger()
     
+    def __str__(self):
+        return "Sophos"    
+    
     def _problemcode(self):
         retcode=string_to_actioncode(self.config.get(self.section,'problemaction'), self.config)
         if retcode!=None:
