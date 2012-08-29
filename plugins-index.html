@@ -183,44 +183,60 @@ mime:Content-Type ^application\/x-msdos-program$</pre>
 <div class="highlight-python"><pre>[SAPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
+
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
+
 #reject message template if running in pre-queue mode
 rejectmessage=message identified as spam
+
 #forward the original message or replace the content as returned by spamassassin
 #if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
 #"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
 #message as retreived from previous plugins
 forwardoriginal=0
+
 #consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks
 #requires the sql extension to be enabled
 check_sql_blacklist=0
+
 #sqlalchemy db connect string
 sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
+
 #SQL query to get the blacklist entries for a suspect
 #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
+
 #maximum size in bytes. larger messages will be skipped
 maxsize=256000
+
 #what header does sa set to indicate the spam status
 spamheader=X-Spam-Status
+
 #hostname where spamd runs
 host=localhost
+
 #what should we do with high spam (spam score above highspamlevel)
 highspamaction=DEFAULTHIGHSPAMACTION
+
 #how long should we wait for an answer from sa
 timeout=30
+
 #spamscore threshold to mark a message as high spam
 highspamlevel=15
+
 #enable SA user configuration
 peruserconfig=1
+
 #tcp port number
 port=783
+
 #should we scan the original message as retreived from postfix or scan the current state
 #in fuglu (which might have been altered by previous plugins)
 #only set this to disabled if you have a custom plugin that adds special headers to the message that will be
 #used in spamassassin rules
 scanoriginal=1
+
 #what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
 lowspamaction=DEFAULTLOWSPAMACTION</pre>
 </div>
@@ -246,20 +262,27 @@ lowspamaction=DEFAULTLOWSPAMACTION</pre>
 <div class="highlight-python"><pre>[ClamavPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
+
 #hostname where clamd runs
 host=localhost
+
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
+
 #socket timeout
 timeout=10
+
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
+
 #maximum message size, larger messages will not be scanned.
 #should match the 'StreamMaxLength' config option in clamd.conf
 maxsize=22000000
+
 #tcp port number or path to clamd.sock for unix domain sockets
 #example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl
 port=3310
+
 #action if infection is detected (DUNNO, REJECT, DELETE)
 virusaction=DEFAULTVIRUSACTION</pre>
 </div>
@@ -271,10 +294,10 @@ virusaction=DEFAULTVIRUSACTION</pre>
 <p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
 <p>Attachment rules can be defined globally, per domain or per user.</p>
 <p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
-<p>Prerequisites: You must have the python &#8216;&#8217;file&#8217;&#8217; or &#8216;&#8217;magic&#8217;&#8217; module installed</p>
-<p>The attachment configuration files are in /etc/fuglu/rules. You whould have two default files there: &#8216;&#8217;&#8216;default-filenames.conf&#8217;&#8216;&#8217; which defines what filenames are allowed and &#8216;&#8217;&#8216;default-filetypes.conf&#8217;&#8216;&#8217; which defines what content types a attachment may have.</p>
-<p>For domain rules, create a new file &#8216;&#8217;&#8216;&lt;domainname&gt;-filenames.conf&#8217;&#8216;&#8217; / &#8216;&#8217;&#8216;&lt;domainname&gt;-filetypes.conf&#8217;&#8216;&#8217; , eg. &#8216;&#8217;fuglu.org-filenames.conf&#8217;&#8217; / &#8216;&#8217;fuglu.org-filetypes.conf&#8217;&#8216;</p>
-<p>For individual user rules, create a new file &#8216;&#8217;&#8216;&lt;useremail&gt;-filenames.conf&#8217;&#8216;&#8217; / &#8216;&#8217;&#8216;&lt;useremail&gt;-filetypes.conf&#8217;&#8216;&#8217;, eg. <a class="reference external" href="mailto:{{{oli&#37;&#52;&#48;fuglu&#46;org-filenames&#46;conf">{{{oli<span>&#64;</span>fuglu<span>&#46;</span>org-filenames<span>&#46;</span>conf</a>}}} / <a class="reference external" href="mailto:{{{oli&#37;&#52;&#48;fuglu&#46;org-filetypes&#46;conf">{{{oli<span>&#64;</span>fuglu<span>&#46;</span>org-filetypes<span>&#46;</span>conf</a>}}}</p>
+<p>Prerequisites: You must have the python <tt class="docutils literal"><span class="pre">file</span></tt> or <tt class="docutils literal"><span class="pre">magic</span></tt> module installed</p>
+<p>The attachment configuration files are in <tt class="docutils literal"><span class="pre">/etc/fuglu/rules</span></tt>. You whould have two default files there: <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt> which defines what filenames are allowed and <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> which defines what content types a attachment may have.</p>
+<p>For domain rules, create a new file <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></tt> , eg. <tt class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></tt></p>
+<p>For individual user rules, create a new file <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></tt>, eg. <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></tt></p>
 <p>The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
 &lt;action&gt;    &lt;regular expression&gt;   &lt;description or error message&gt;</p>
 <dl class="docutils">
@@ -286,56 +309,62 @@ virusaction=DEFAULTVIRUSACTION</pre>
 </ul>
 </dd>
 </dl>
-<p>&lt;regular expression&gt; is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the &#8216;&#8217;file&#8217;&#8217; command.</p>
+<p>&lt;regular expression&gt; is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the <tt class="docutils literal"><span class="pre">file</span></tt> command.</p>
 <p>example of default-filetypes.conf:</p>
-<p>{{{
-allow    text        -
+<div class="highlight-python"><pre>allow    text        -
 allow    script    -
 allow    archive        -
 allow    postscript    -
 deny    self-extract    No self-extracting archives
 deny    executable    No programs allowed
 deny    ELF        No programs allowed
-deny    Registry    No Windows Registry files allowed
-}}}</p>
+deny    Registry    No Windows Registry files allowed</pre>
+</div>
 <p>small extract from default-filenames.conf:</p>
-<p>{{{
-deny    .ico$            Windows icon file security vulnerability
-deny    .ani$            Windows animated cursor file security vulnerability
-deny    .cur$            Windows cursor file security vulnerability
-deny    .hlp$            Windows help file security vulnerability</p>
-<p>allow    .jpg$            -
-allow    .gif$            -
-}}}</p>
-<p>Note: The files will be reloaded automatically after a few secs (you do not need to kill -HUP / restart fuglu)</p>
+<div class="highlight-python"><pre>deny    \.ico$            Windows icon file security vulnerability
+deny    \.ani$            Windows animated cursor file security vulnerability
+deny    \.cur$            Windows cursor file security vulnerability
+deny    \.hlp$            Windows help file security vulnerability
+
+allow    \.jpg$            -
+allow    \.gif$            -</pre>
+</div>
+<p>Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)</p>
 <p>The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:</p>
-<p>{{{
-To: ${from_address}
-Subject: Blocked attachment</p>
-<p>Your message to ${to_address} contains a blocked attachment and has been deleted.</p>
-<p>${blockinfo}</p>
-<p>You may add this file to a zip archive (or similar) and send it again.
-}}}</p>
+<div class="highlight-python"><pre>To: ${from_address}
+Subject: Blocked attachment
+
+Your message to ${to_address} contains a blocked attachment and has been deleted.
+
+${blockinfo}
+
+You may add this file to a zip archive (or similar) and send it again.</pre>
+</div>
 <p>eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.</p>
-<p>&#8216;&#8217;${blockinfo}&#8217;&#8217; will be replaced with the text you specified in the third column of the rule that blocked this message.
-See CommonTemplateVars for commonly available template variables in Fuglu.</p>
+<p><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
+<p>See (TODO: link to template vars chapter) for commonly available template variables in Fuglu.</p>
 <div class="section" id="id2">
 <h4>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><pre>[FiletypePlugin]
 #inform the sender about blocked attachments
 sendbounce=1
+
 #Mail template for the bounce to inform sender about blocked attachment
 template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+
 #what should the plugin do when a blocked attachment is detected
 #REJECT : reject the message (recommended in pre-queue mode)
 #DELETE : discard messages
 #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
+
 #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
 dbconnectstring=
+
 #sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
 #:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
 query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
+
 #directory that contains attachment rules
 rulesdir=/etc/fuglu/rules</pre>
 </div>
@@ -361,11 +390,14 @@ envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fug
 <div class="highlight-python"><pre>[ArchivePlugin]
 #create a subdirectory of the destination domain within archivedir
 makedomainsubdir=1
+
 #if true/1/yes: store original message
 #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
 storeoriginal=1
+
 #storage for archived messages
 archivedir=/tmp
+
 #Archiving SuspectFilter File
 archiverules=/etc/fuglu/archive.regex</pre>
 </div>
@@ -446,18 +478,25 @@ dbconnectstring=</pre>
 <div class="highlight-python"><pre>[SSSPPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
+
 #hostname where the SSSP server runs
 host=localhost
+
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
+
 #socket timeout
 timeout=10
+
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
+
 #maximum message size, larger messages will not be scanned.
 maxsize=22000000
+
 #tcp port or path to unix socket
 port=4010
+
 #action if infection is detected (DUNNO, REJECT, DELETE)
 virusaction=DEFAULTVIRUSACTION</pre>
 </div>
@@ -483,20 +522,28 @@ virusaction=DEFAULTVIRUSACTION</pre>
 <div class="highlight-python"><pre>[FprotPlugin]
 #maximum retries on failed connections
 retries=3
+
 #hostname where fpscand runs
 host=localhost
+
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
+
 #if fpscand runs on a different host than fuglu, set this to 1 to send the message over the network instead of just the filename
 networkmode=0
+
 #network timeout
 timeout=20
+
 #plugin action if scan fails
 problemaction=DEFER
+
 #maximum message size to scan
 maxsize=10485000
+
 #fpscand port
 port=10200
+
 #plugin action if threat is detected
 virusaction=DEFAULTVIRUSACTION</pre>
 </div>
@@ -512,22 +559,31 @@ virusaction=DEFAULTVIRUSACTION</pre>
 <div class="highlight-python"><pre>[ICAPPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
+
 #hostname where the ICAP server runs
 host=localhost
+
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
+
 #ICAP Av scan service, usually AVSCAN (sophos, symantec)
 service=AVSCAN
+
 #socket timeout
 timeout=10
+
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
+
 #name of the virus engine behind the icap service. used to inform other plugins. can be anything like 'sophos', 'symantec', ...
 enginename=icap-generic
+
 #maximum message size, larger messages will not be scanned.
 maxsize=22000000
+
 #tcp port or path to unix socket
 port=1344
+
 #action if infection is detected (DUNNO, REJECT, DELETE)
 virusaction=DEFAULTVIRUSACTION</pre>
 </div>
@@ -583,12 +639,16 @@ filterfile=/etc/fuglu/skipplugins.regex</pre>
 #messages incoming on this port will be debugged to a logfile
 #Make sure the debugport is also set in the incomingport configuration option in the main section
 debugport=10888
+
 #debug log output
 debugfile=/tmp/fuglu_debug.log
+
 #don't re-inject debugged messages back to postfix
 noreinject=1
+
 #debugged message can not be bounced
 nobounce=1
+
 #don't run appender plugins for debugged messages
 noappender=1</pre>
 </div>
