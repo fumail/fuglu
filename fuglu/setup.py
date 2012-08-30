@@ -37,16 +37,32 @@ setup(name = "fuglu",
     description = "Fuglu Mail Content Scanner",
     author = "O. Schacher",
     url='http://www.fuglu.org',
+    download_url='http://github.com/gryphius/fuglu/tarball/master',
     author_email = "oli@fuglu.org",
     package_dir={'':'src'},
     packages = ['fuglu','fuglu.plugins','fuglu.extensions','fuglu.lib','fuglu.connectors'],
     scripts = ["src/startscript/fuglu","src/tools/fuglu_debug","src/tools/fuglu_control","src/tools/fuglu_conf"],
-    long_description = """Fuglu Mail Content Scanner""" ,
+    long_description = """Fuglu is  a modular pre/after queue content filter written in python. It can be used to filter spam, viruses, unwanted attachments etc..
+
+see http://gryphius.github.com/fuglu/ for more details.""" ,
     data_files=[
                 ('/etc/fuglu',glob.glob('conf/*.dist')),
                 ('/etc/fuglu/templates',glob.glob('conf/templates/*.dist')),
                 ('/etc/fuglu/rules',glob.glob('conf/rules/*.dist')),
-                ]
+                ],
+      
+      classifiers=[
+          'Development Status :: 4 - Beta',
+          'Environment :: No Input/Output (Daemon)',
+          'Intended Audience :: Developers',
+          'Intended Audience :: System Administrators',
+          'License :: OSI Approved :: Apache Software License',
+          'Operating System :: POSIX',
+          'Programming Language :: Python',
+          'Topic :: Communications :: Email',
+          'Topic :: Communications :: Email :: Filters',
+          'Topic :: Communications :: Email :: Mail Transport Agents',          
+          ],
 )
 
 #cleanup
