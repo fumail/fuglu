@@ -57,19 +57,6 @@
 <ul class="simple">
 </ul>
 </div>
-<div class="section" id="getting-fuglu">
-<h2>Getting Fuglu<a class="headerlink" href="#getting-fuglu" title="Permalink to this headline">¶</a></h2>
-<p>the latest fuglu version is awailable on github.</p>
-<div class="highlight-python"><pre>git clone https://github.com/gryphius/fuglu.git</pre>
-</div>
-<p>you can also download a packaged version of the current source if you don&#8217;t want to use git</p>
-<blockquote>
-<div><ul class="simple">
-<li>tar.gz : <a class="reference external" href="https://github.com/gryphius/fuglu/tarball/master">https://github.com/gryphius/fuglu/tarball/master</a></li>
-<li>zip: <a class="reference external" href="https://github.com/gryphius/fuglu/zipball/master">https://github.com/gryphius/fuglu/zipball/master</a></li>
-</ul>
-</div></blockquote>
-</div>
 <div class="section" id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="required">
@@ -93,12 +80,28 @@
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="id1">
-<h2>Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>cd fuglu/fuglu
+<div class="section" id="getting-and-installing-fuglu">
+<h2>Getting and installing Fuglu<a class="headerlink" href="#getting-and-installing-fuglu" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cloning-source-from-github">
+<h3>cloning source from github<a class="headerlink" href="#cloning-source-from-github" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre>git clone https://github.com/gryphius/fuglu.git
+cd fuglu/fuglu
 python setup.py install</pre>
 </div>
-<p>(ubuntu users: <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt> )</p>
+</div>
+<div class="section" id="latest-source-package-from-github">
+<h3>latest source package from github<a class="headerlink" href="#latest-source-package-from-github" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre>wget https://github.com/gryphius/fuglu/tarball/master -O fuglu-latest.tar.gz
+tar -xvzf fuglu-latest.tar.gz
+cd cd gryphius-fuglu-*
+python setup.py install</pre>
+</div>
+</div>
+<div class="section" id="latest-released-package-from-pypi">
+<h3>latest released package from pypi<a class="headerlink" href="#latest-released-package-from-pypi" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre>pip install fuglu</pre>
+</div>
+</div>
 </div>
 </div>
 
@@ -111,13 +114,17 @@ python setup.py install</pre>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#getting-fuglu">Getting Fuglu</a></li>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a><ul>
 <li><a class="reference internal" href="#required">required</a></li>
 <li><a class="reference internal" href="#recommended">recommended</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id1">Installation</a></li>
+<li><a class="reference internal" href="#getting-and-installing-fuglu">Getting and installing Fuglu</a><ul>
+<li><a class="reference internal" href="#cloning-source-from-github">cloning source from github</a></li>
+<li><a class="reference internal" href="#latest-source-package-from-github">latest source package from github</a></li>
+<li><a class="reference internal" href="#latest-released-package-from-pypi">latest released package from pypi</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
