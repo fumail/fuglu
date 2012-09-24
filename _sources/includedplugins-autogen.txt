@@ -1,0 +1,621 @@
+
+SpamAssassin
+............
+
+Plugin: fuglu.plugins.sa.SAPlugin
+
+This plugin passes suspects to a spamassassin daemon.
+    
+Prerequisites: SPAMD must be installed and running (not necessarily on the same box as fuglu)
+
+Notes for developers:
+
+if forwardoriginal=False, the message source will be completely replaced with the answer from spamd.
+
+Tags:
+ 
+ * reads ``SAPlugin.skip``, skips scanning if this is True
+ * sets ``spam['spamassassin']`` (boolean)
+ * sets ``SAPlugin.spamscore`` (float) if possible
+ * sets ``SAPlugin.time`` (float)
+ * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
+
+
+Configuration
+-------------
+
+::
+
+    [SAPlugin]
+    #how often should fuglu retry the connection before giving up
+    retries=3
+
+    #action if there is a problem (DUNNO, DEFER)
+    problemaction=DEFER
+
+    #reject message template if running in pre-queue mode
+    rejectmessage=message identified as spam
+
+    #forward the original message or replace the content as returned by spamassassin
+    #if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
+    #"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
+    #message as retreived from previous plugins 
+    forwardoriginal=0
+
+    #consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks
+    #requires the sql extension to be enabled
+    check_sql_blacklist=0
+
+    #sqlalchemy db connect string
+    sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
+
+    #SQL query to get the blacklist entries for a suspect
+    #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
+    sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
+
+    #maximum size in bytes. larger messages will be skipped
+    maxsize=256000
+
+    #what header does sa set to indicate the spam status
+    spamheader=X-Spam-Status
+
+    #hostname where spamd runs
+    host=localhost
+
+    #what should we do with high spam (spam score above highspamlevel)
+    highspamaction=DEFAULTHIGHSPAMACTION
+
+    #how long should we wait for an answer from sa
+    timeout=30
+
+    #spamscore threshold to mark a message as high spam
+    highspamlevel=15
+
+    #enable SA user configuration 
+    peruserconfig=1
+
+    #tcp port number 
+    port=783
+
+    #should we scan the original message as retreived from postfix or scan the current state 
+    #in fuglu (which might have been altered by previous plugins)
+    #only set this to disabled if you have a custom plugin that adds special headers to the message that will be 
+    #used in spamassassin rules
+    scanoriginal=1
+
+    #what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
+    lowspamaction=DEFAULTLOWSPAMACTION
+
+
+
+Clam AV
+.......
+
+Plugin: fuglu.plugins.clamav.ClamavPlugin
+
+This plugin passes suspects to a clam daemon. 
+
+Actions: This plugin will delete infected messages. If clamd is not reachable or times out, messages can be DEFERRED.
+
+Prerequisites: You must have clamd installed (for performance reasons I recommend it to be on the same box, but this is not absoluely necessary)
+
+Notes for developers:
+
+
+Tags:
+ 
+ * sets ``virus['ClamAV']`` (boolean)
+ * sets ``ClamavPlugin.virus`` (list of strings) - virus names found in message
+ * sets ``ClamavPlugin.time`` (float)
+
+
+Configuration
+-------------
+
+::
+
+    [ClamavPlugin]
+    #how often should fuglu retry the connection before giving up
+    retries=3
+
+    #hostname where clamd runs
+    host=localhost
+
+    #reject message template if running in pre-queue mode and virusaction=REJECT
+    rejectmessage=threat detected: ${virusname}
+
+    #socket timeout
+    timeout=10
+
+    #action if there is a problem (DUNNO, DEFER)
+    problemaction=DEFER
+
+    #maximum message size, larger messages will not be scanned.  
+    #should match the 'StreamMaxLength' config option in clamd.conf 
+    maxsize=22000000
+
+    #tcp port number or path to clamd.sock for unix domain sockets
+    #example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl 
+    port=3310
+
+    #action if infection is detected (DUNNO, REJECT, DELETE)
+    virusaction=DEFAULTVIRUSACTION
+
+
+
+Attachment Blocker
+..................
+
+Plugin: fuglu.plugins.attachment.FiletypePlugin
+
+This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the '''file''' library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.
+
+Attachment rules can be defined globally, per domain or per user.
+
+Actions: This plugin will delete messages if they contain blocked attachments.
+
+Prerequisites: You must have the python ``file`` or ``magic`` module installed
+
+
+The attachment configuration files are in ``/etc/fuglu/rules``. You whould have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have. 
+
+For domain rules, create a new file ``<domainname>-filenames.conf`` / ``<domainname>-filetypes.conf`` , eg. ``fuglu.org-filenames.conf`` / ``fuglu.org-filetypes.conf``
+
+For individual user rules, create a new file ``<useremail>-filenames.conf`` / ``<useremail>-filetypes.conf``, eg. ``oli@fuglu.org-filenames.conf`` / ``oli@fuglu.org-filetypes.conf``
+
+The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
+<action>    <regular expression>   <description or error message>
+
+<action> can be one of:
+ * allow : this file is ok, don't do further checks (you might use it for safe content types like text). Do not blindly create 'allow' rules. It's safer to make no rule at all, if no other rules hit, the file will be accepted
+ * deny : delete this message and send the error message/description back to the sender
+ * delete : silently delete the message, no error is sent back, and 'blockaction' is ignored
+
+
+<regular expression> is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
+
+example of default-filetypes.conf:
+
+::
+
+    allow    text        -        
+    allow    script    -        
+    allow    archive        -            
+    allow    postscript    -            
+    deny    self-extract    No self-extracting archives
+    deny    executable    No programs allowed
+    deny    ELF        No programs allowed
+    deny    Registry    No Windows Registry files allowed
+
+
+
+small extract from default-filenames.conf:
+
+::
+
+    deny    \.ico$            Windows icon file security vulnerability    
+    deny    \.ani$            Windows animated cursor file security vulnerability    
+    deny    \.cur$            Windows cursor file security vulnerability    
+    deny    \.hlp$            Windows help file security vulnerability
+    
+    allow    \.jpg$            -    
+    allow    \.gif$            -    
+
+
+
+Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)
+
+The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:
+
+::
+
+    To: ${from_address}
+    Subject: Blocked attachment
+    
+    Your message to ${to_address} contains a blocked attachment and has been deleted.
+    
+    ${blockinfo}
+    
+    You may add this file to a zip archive (or similar) and send it again.
+
+
+eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.
+
+``${blockinfo}`` will be replaced with the text you specified in the third column of the rule that blocked this message.
+
+See (TODO: link to template vars chapter) for commonly available template variables in Fuglu.
+
+
+
+Configuration
+-------------
+
+::
+
+    [FiletypePlugin]
+    #inform the sender about blocked attachments
+    sendbounce=1
+
+    #Mail template for the bounce to inform sender about blocked attachment
+    template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+
+    #what should the plugin do when a blocked attachment is detected
+    #REJECT : reject the message (recommended in pre-queue mode)
+    #DELETE : discard messages
+    #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
+    blockaction=DELETE
+
+    #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
+    dbconnectstring=
+
+    #sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
+    #:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
+    query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
+
+    #directory that contains attachment rules
+    rulesdir=/etc/fuglu/rules
+
+
+
+Archive
+.......
+
+Plugin: fuglu.plugins.archive.ArchivePlugin
+
+This plugins stores a copy of the message if it matches certain criteria (Suspect Filter). 
+You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.
+    
+Examples for the archive.regex filter file:
+
+archive messages to domain ''test.com'':
+
+``to_domain test\.com``
+
+
+archive messages from oli@fuglu.org:
+
+
+``envelope_from oli@fuglu\.org``
+
+
+you can also append "yes" and "no" to the rules to create a more advanced configuration. Lets say we want to archive all messages to sales@fuglu.org and all regular messages support@fuglu.org except the ones created by automated scripts like logwatch or daily backup messages etc.
+
+envelope_to sales@fuglu\.org yes
+envelope_from logwatch@.*fuglu.org   no
+from backups@fuglu.org no
+envelope_to support@fuglu\.org      yes
+
+
+
+
+Configuration
+-------------
+
+::
+
+    [ArchivePlugin]
+    #create a subdirectory of the destination domain within archivedir
+    makedomainsubdir=1
+
+    #if true/1/yes: store original message
+    #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
+    storeoriginal=1
+
+    #storage for archived messages
+    archivedir=/tmp
+
+    #Archiving SuspectFilter File
+    archiverules=/etc/fuglu/archive.regex
+
+
+
+Vacation
+........
+
+Plugin: fuglu.plugins.vacation.VacationPlugin
+
+Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any 'automated' messages (Mailingslists, Spams, Bounces etc)
+
+Requires: SQLAlechemy Extension
+
+
+Required DB Tables: 
+ * vacation (fuglu reads this table only, must be filled from elsewhere)
+ 
+   * id int : id of this vacation
+   * created timestamp :  creation timestamp
+   * enabled boolean (eg. tinyint) : if disabled, no vacation reply will be sent
+   * start timestamp: replies will only be sent after this point in time
+   * end timestamp: replies will only be sent before this point in time
+   * awayuser varchar: the email address of the user that is on vacation
+   * subject: subject of the vacation message
+   * body : body of the vacation message
+   * ignoresender: whitespace delimited list of domains or email addresses that should not receive vacation replies
+
+ * vacationreply (this table is filled by fuglu)
+ 
+   * id int: id of the reply
+   * vacation_id : id of the vacation
+   * sent timestamp: timestamp when the reply was sent
+   * recipient: recipient to whom the reply was sent
+
+SQL Example for mysql:
+
+::
+
+    CREATE TABLE `vacation` (
+      `id` int(11) NOT NULL auto_increment,
+      `created` timestamp NOT NULL default now(),
+      `start` timestamp NOT NULL,
+      `end` timestamp NOT NULL ,
+      `enabled` tinyint(1) NOT NULL default 1,
+      `awayuser` varchar(255) NOT NULL,
+      `subject` varchar(255) NOT NULL,
+      `body` text NOT NULL,
+      `ignoresender` text NOT NULL,
+      PRIMARY KEY  (`id`),
+      UNIQUE(`awayuser`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
+
+
+    CREATE  TABLE `vacationreply` (
+      `id` int(11) NOT NULL auto_increment,
+      `recipient` varchar(255) NOT NULL,
+      `vacation_id` int(11) NOT NULL,
+         `sent` timestamp not null default now(),
+      PRIMARY KEY  (`id`),
+      KEY `vacation_id` (`vacation_id`),
+      CONSTRAINT `vacation_ibfk_1` FOREIGN KEY (`vacation_id`) REFERENCES `vacation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+Configuration
+-------------
+
+::
+
+    [VacationPlugin]
+    #sqlalchemy connectstring to load vacations
+    dbconnectstring=
+
+
+
+Sophos
+......
+
+Plugin: fuglu.plugins.sssp.SSSPPlugin
+
+ This plugin scans the suspect using the sophos SSSP protocol. 
+    
+Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
+
+
+Configuration
+-------------
+
+::
+
+    [SSSPPlugin]
+    #how often should fuglu retry the connection before giving up
+    retries=3
+
+    #hostname where the SSSP server runs
+    host=localhost
+
+    #reject message template if running in pre-queue mode and virusaction=REJECT
+    rejectmessage=threat detected: ${virusname}
+
+    #socket timeout
+    timeout=10
+
+    #action if there is a problem (DUNNO, DEFER)
+    problemaction=DEFER
+
+    #maximum message size, larger messages will not be scanned. 
+    maxsize=22000000
+
+    #tcp port or path to unix socket
+    port=4010
+
+    #action if infection is detected (DUNNO, REJECT, DELETE)
+    virusaction=DEFAULTVIRUSACTION
+
+
+
+F-Prot AV
+.........
+
+Plugin: fuglu.plugins.fprot.FprotPlugin
+
+ This plugin passes suspects to a f-prot scan daemon 
+    
+Prerequisites: f-protd must be installed and running, not necessarily on the same box as fuglu though.
+
+Notes for developers:
+
+
+Tags:
+ 
+ * sets ``virus['F-Prot']`` (boolean)
+ * sets ``FprotPlugin.virus`` (list of strings) - virus names found in message
+ * sets ``FprotPlugin.time`` (float)
+
+
+Configuration
+-------------
+
+::
+
+    [FprotPlugin]
+    #maximum retries on failed connections
+    retries=3
+
+    #hostname where fpscand runs
+    host=localhost
+
+    #reject message template if running in pre-queue mode and virusaction=REJECT
+    rejectmessage=threat detected: ${virusname}
+
+    #if fpscand runs on a different host than fuglu, set this to 1 to send the message over the network instead of just the filename
+    networkmode=0
+
+    #network timeout
+    timeout=20
+
+    #plugin action if scan fails
+    problemaction=DEFER
+
+    #maximum message size to scan
+    maxsize=10485000
+
+    #fpscand port
+    port=10200
+
+    #plugin action if threat is detected
+    virusaction=DEFAULTVIRUSACTION
+
+
+
+ICAP AV
+.......
+
+Plugin: fuglu.plugins.icap.ICAPPlugin
+
+ICAP Antivirus Plugin
+This plugin allows Antivirus Scanning over the ICAP Protocol (http://tools.ietf.org/html/rfc3507 )
+supported by some AV Scanners like Symantec and Sophos. For sophos, however, it is recommended to use the native SSSP Protocol.
+    
+Prerequisites: requires an ICAP capable antivirus engine somewhere in your network
+
+
+Configuration
+-------------
+
+::
+
+    [ICAPPlugin]
+    #how often should fuglu retry the connection before giving up
+    retries=3
+
+    #hostname where the ICAP server runs
+    host=localhost
+
+    #reject message template if running in pre-queue mode and virusaction=REJECT
+    rejectmessage=threat detected: ${virusname}
+
+    #ICAP Av scan service, usually AVSCAN (sophos, symantec)
+    service=AVSCAN
+
+    #socket timeout
+    timeout=10
+
+    #action if there is a problem (DUNNO, DEFER)
+    problemaction=DEFER
+
+    #name of the virus engine behind the icap service. used to inform other plugins. can be anything like 'sophos', 'symantec', ...
+    enginename=icap-generic
+
+    #maximum message size, larger messages will not be scanned. 
+    maxsize=22000000
+
+    #tcp port or path to unix socket
+    port=1344
+
+    #action if infection is detected (DUNNO, REJECT, DELETE)
+    virusaction=DEFAULTVIRUSACTION
+
+
+
+remove Headers
+..............
+
+Plugin: fuglu.plugins.headers.HeaderPlugin
+
+Removes specified headers from message
+
+Configuration
+-------------
+
+::
+
+    [HeaderPlugin]
+    #headers to remove from incoming messages, comma separated
+    removeheaders=
+
+
+
+Action Override
+...............
+
+Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin
+
+ override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. 
+
+Configuration
+-------------
+
+::
+
+    [ActionOverridePlugin]
+    #Rules file
+    actionrules=/etc/fuglu/actionrules.regex
+
+
+
+Plugin Skipper
+..............
+
+Plugin: fuglu.plugins.p_skipper.PluginSkipper
+
+Skips plugins based on standard filter file
+This can be used for example to skip spam filters on outgoing messages.
+eg. put this in /etc/fuglu/skipplugins.regex:
+
+@incomingport    1099    SAPlugin
+
+
+Configuration
+-------------
+
+::
+
+    [PluginSkipper]
+    filterfile=/etc/fuglu/skipplugins.regex
+
+
+
+Debugger
+........
+
+Plugin: fuglu.plugins.p_debug.MessageDebugger
+
+Message Debugger Plugin (Prepender).
+
+This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.    
+
+
+Configuration
+-------------
+
+::
+
+    [MessageDebugger]
+    #messages incoming on this port will be debugged to a logfile
+    #Make sure the debugport is also set in the incomingport configuration option in the main section
+    debugport=10888
+
+    #debug log output
+    debugfile=/tmp/fuglu_debug.log
+
+    #don't re-inject debugged messages back to postfix
+    noreinject=1
+
+    #debugged message can not be bounced
+    nobounce=1
+
+    #don't run appender plugins for debugged messages
+    noappender=1
+
+

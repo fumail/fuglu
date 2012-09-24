@@ -1,0 +1,371 @@
+ISP Config
+==========
+
+So, you are a ISP and consider fuglu as your scan glue? Here's what you need to know.
+
+--------------
+Quarantine Gui
+--------------
+
+Fuglu itself does not ship any kind of quarantine web gui (like Mailwatch, Mailguard etc) for a simple reason: the requirements are too diverse. We are pretty sure you would spend the same amount of time adapting our gui to your needs as writing it from scratch.
+
+A few examples:
+
+ * programming language used in the web environment (python, php,perl, ....)
+ * ACL concepts
+ * some have a concept of "alias domains", some don't
+ * different antispam/antivirus backends
+ * different types of quarantine storage 
+   * distributed on scanning machine like mailscanner
+   * centralized nfs
+   * stored in a Cassandra/CouchDB cluster, ...)
+ * different types of reports (some want to show every detail to their clients, some others just want them to see number of  spam/ham/virus, etc)
+ * CRM/ERP integration
+
+We recommend you write your user interface the way you like and then let fuglu's plugin system interface to your gui, usually via a database. 
+
+--------------------
+The fuglu ISP plugin
+--------------------
+
+Your quarantine gui probaly reads some sort of maillog table which contains a list of all received messages. 
+In fuglu you'd write a plugin which fills this table.
+
+
+Below is a stripped down example of such a plugin. In a real setup you'd probably have more database fields, add blacklist/whitelist capabilities and support for per domain/per user configuration overrides.
+
+::
+
+	# -*- coding: UTF-8 -*-
+
+	from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,Suspect,string_to_actioncode
+	import time
+	import datetime
+	import os
+	import fuglu.extensions.sql
+	import re
+
+	from sqlalchemy import *
+	from sqlalchemy.ext.declarative import declarative_base
+	import logging
+
+	import socket
+	MYHOSTNAME=socket.gethostname()
+
+	DeclarativeBase = declarative_base()
+	metadata = DeclarativeBase.metadata
+
+	maillog = Table('maillog', metadata,
+	    Column('fugluid', Unicode(255), primary_key=True),
+	    Column('subject', Unicode(255),nullable=False),
+	    Column('from_address', Unicode(255)),
+	    Column('to_address', Unicode(255),nullable=False),
+	    Column('from_domain', Unicode(255)),
+	    Column('to_domain', Unicode(255),nullable=False),
+	    Column('spam', Boolean, default=False),
+	    Column('highspam', Boolean, default=False),
+	    Column('virus', Boolean, default=False),
+	    Column('date', Date, nullable=False),
+	    Column('time', TIME(10), nullable=False),
+	    Column('headers', UnicodeText, nullable=False),
+	    Column('size', Integer,nullable=False),
+	    Column('messageid',Unicode(255),nullable=True),
+	    Column('spamrules',TEXT, nullable=True),
+	    Column('virusinfo',TEXT, nullable=True),
+	    Column('blockedfile', Boolean, nullable=False, default=False),
+	    Column('blockinfo',TEXT, nullable=True),
+	    Column('sascore',Float, nullable=True),
+	    Column('quarantined', Boolean, nullable=False, default=False),
+	    Column('sascantime', Float, nullable=True),
+	    Column('scanhost', Unicode(255),nullable=True),
+	    mysql_engine='InnoDB',
+	    mysql_charset='utf8',
+	)
+
+		
+	class ISPPlugin(ScannerPlugin):
+	    """ISP Demo Plugin"""
+	    
+	    def __init__(self,config,section=None):
+		ScannerPlugin.__init__(self,config,section)
+		self.logger=self._logger()
+		self.requiredvars=((self.section,'dbconnectstring'),)
+
+		
+	    def needquarantine(self,suspect):
+		"""return True if message should be quarantined"""
+		if suspect.get_tag('debug'):
+		    return False
+		
+		#infected mails can't be whitelisted
+		if suspect.is_virus():
+		    return True
+		
+		#blocked attachments can't be whitelisted
+		blockinfo=suspect.get_tag('FiletypePlugin.errormessage')
+		if blockinfo!=None:
+		    return True
+		
+		#whitelisted -> no quarantine
+		#assuming you have a prevous plugin which sets a 'whitelisted' tag
+		if suspect.get_tag('whitelisted'):
+		    return False
+		
+		#blacklisted -> quarantine
+		#assuming you have a previous plugin which sets a 'blacklisted' tag
+		if suspect.get_tag('blacklisted'):
+		    return True
+
+		#spam -> quarantine
+		(spam,highspam)=self.is_spam_highspam(suspect)
+		if spam or highspam:
+		    return True
+		
+		#ham -> no quarantine
+		return False
+		 
+	    def should_tag_and_send(self,suspect):
+		"""return true if message should be tagged and sent to the recipient"""
+		
+		if suspect.is_virus():
+		    return False
+		
+		blockinfo=suspect.get_tag('FiletypePlugin.errormessage')
+		if blockinfo!=None:
+		    return False
+		
+		if suspect.get_tag('blacklisted'):
+		    return False
+		
+		(spam,highspam)=self.is_spam_highspam(suspect)
+
+		#here you could load user/domain individual configs and check if they have disabled the quarantine
+		#conf=get_filter_config(suspect,self.config.get(self.section,'dbconnectstring'))
+		#if (spam and conf.deliverspam) or (highspam and conf.deliverhighspam):
+		#    return True
+		
+		#fallback if quarantine was not available (set by examine method)
+		if (spam or highspam) and suspect.get_tag("tagandsend"):
+		    return True
+		
+		return False
+	    
+	    def examine(self,suspect):
+		starttime=time.time()
+		suspect.set_tag('ispquar',False)
+		action=DUNNO
+		if self.needquarantine(suspect):
+		    try:
+		        self.quarantine(suspect)
+		        suspect.set_tag('ispquar',True)
+		        self.logger.info('message quarantined: %s'%suspect.id)
+		        action=DELETE
+		    except Exception,e:
+		        try:
+		            self.logger.warn("quarantine failed")
+		            #you could use a fallback mechanism here, eg. store in a local directory
+		        except Exception,e:
+		            self.logger.error("Could not quarantine message %s : %s -> fallback to tag and send"%(suspect.id,str(e)))
+		            suspect.set_tag("tagandsend",True)
+		        
+		self.maillog(suspect)
+		self.logger.info('suspect %s logged to database'%suspect.id)
+		
+		#check for tag&send
+		if self.should_tag_and_send(suspect):
+		    suspect.set_tag("tagandsend",True)
+		    action=DUNNO
+		    tag="*** SPAM ***"
+		    msgrep=suspect.getMessageRep()
+		    oldsubj=msgrep.get("subject","")
+		    newsubj="%s%s"%(tag,oldsubj)
+		    del msgrep["subject"]
+		    msgrep["subject"]=newsubj
+		    suspect.setMessageRep(msgrep)
+		        
+		endtime=time.time()
+		difftime=endtime-starttime
+		suspect.tags['ISPPlugin.time']="%.4f"%difftime
+		return action
+
+	    
+	    def quarantine(self,suspect):
+		"""Store message source into quarantine"""
+		if suspect.get_tag('debug'):
+		    return
+		        
+		#your code here to store the message source in your quarantine (local file, database, ....)
+	
+	    
+	    def maillog(self,suspect):
+		"""Log this message into a mysql database table"""
+		if suspect.get_tag('debug'):
+		    return
+		msgrep=suspect.getMessageRep()
+		headers=re.split('(?:\n\n)|(?:\r\n\r\n)',suspect.getSource(maxbytes=1048576),1)[0]
+		subj=msgrep['X-Spam-Prev-Subject']
+		if subj==None:
+		    subj=msgrep['Subject']
+		if subj==None:
+		    subj=''
+		
+		try:
+		    subj=subj.decode('utf8','replace')
+		except:
+		    self.logger.warning("Could not decode subject - may be truncated")
+		
+		ts=suspect.timestamp
+		dt=datetime.datetime.fromtimestamp(ts)
+		datenow=dt.date()
+		timenow=dt.time()
+		
+		session=fuglu.extensions.sql.get_session(self.config.get(self.section,'dbconnectstring'))
+		metadata.bind=session
+		
+		#we can't use suspect.is_spam here since spamassassin or other plugins
+		#(maybe) don't know about individual isp user settings
+		spam,highspam=self.is_spam_highspam(suspect)
+		
+		#file block info
+		blocked=False
+		blockinfo=suspect.get_tag('FiletypePlugin.errormessage')
+		if blockinfo!=None:
+		    blocked=True
+		
+		messageid=msgrep['Message-Id']
+
+
+		#spam rules
+		ruletext=suspect.get_tag('SAPlugin.report')
+		
+		#virusinfo: only virusnames separated by space
+		allviruses=[]
+		
+		#clam
+		claminfo=suspect.get_tag('ClamavPlugin.virus')
+		if claminfo!=None:
+		    for infectedfile,virusname in claminfo.iteritems():
+		        allviruses.append(virusname)
+
+		# add other virus scanners here
+		
+		#remove duplicate viruses
+		univiruses=set(allviruses)
+		
+		#remove spaces in virusnames and concatenate into single string  
+		virusinfo=""
+		for virusname in univiruses:
+		    virusname=virusname.replace(' ','_').strip()
+		    virusinfo=virusinfo+" "+virusname
+		virusinfo=virusinfo.strip()
+		
+		#spamscore
+		try:
+		    sascore=float(suspect.get_tag('SAPlugin.spamscore'))
+		except:
+		    sascore=None
+
+		try:
+		    headers=headers.decode('utf8','replace')
+		except Exception,e:
+		    self.logger.warning("Could not decode headers to utf8 - output may be truncated")
+		
+		scantime=suspect.get_tag("SAPlugin.time")
+		if scantime!=None:
+		    try:
+		        scantime=float(scantime)
+		    except:
+		        scantime=None
+		
+		data={
+		     'fugluid':suspect.id.decode(),
+		     'from_address':suspect.from_address.decode(),
+		     'to_address':suspect.to_address.decode(),
+		     'from_domain':suspect.from_domain.decode(),
+		     'to_domain':suspect.to_domain.decode(),
+		     'date':datenow,
+		     'time':timenow,
+		     'spam':spam,
+		     'highspam':highspam,
+		     'virus':suspect.is_virus(),
+		     'size':suspect.size,
+		     'subject':subj,
+		     'headers':headers,
+		     'messageid':messageid,
+		     'virusinfo':virusinfo,
+		     'sascore':sascore,
+		     'blockedfile':blocked,
+		     'blockinfo':blockinfo,
+		     'quarantined':suspect.get_tag('ispquar')==True,
+		     'scanhost':MYHOSTNAME,
+		     'sascantime':scantime,
+		     # more fields here....
+		}
+		session.execute(maillog.insert().values(**data))
+		session.close()
+		
+		
+
+	       
+	    def is_spam_highspam(self,suspect):
+		"""Returns a tuple bool,bool for spam/highspam according to user or domain sa thresholds"""
+		if suspect.get_tag('whitelisted'):
+		    return (False,False)
+		
+		try:
+		    score=float( suspect.get_tag('SAPlugin.spamscore'))
+		except Exception,e:
+		    #subject was not sa scanned
+		    return (False,False)
+		
+		#here you would load per user/per domain individual spam scores
+		# user_scpamscore= ...
+		# user_highspamscore= ...
+
+		spam=False
+		highspam=False
+		
+		if score>=user_spamscore:
+		    spam=True
+		    
+		if score>=user_highspamscore:
+		    highspam=True
+		
+		return (spam,highspam)
+	    
+	    def __str__(self):
+		return u'ISP Quarantine/Maillog';
+	     
+
+
+------------------------------
+Configuration of other plugins
+------------------------------
+
+in a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins. 
+
+in your fuglu.conf you'd probably set:
+
+::
+
+	[spam]
+	defaultlowspamaction=DUNNO
+	defaulthighspamaction=DUNNO
+
+	[virus]
+	defaultvirusaction=DUNNO
+
+
+also, make sure the ISP Plugin is the last plugin
+
+::
+
+
+	[main]
+	plugins=attachment,clamav,<other virus scanners here>,spamassassin,<your isp plugin>
+
+
+
+so, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns "DELETE" after the infected message has been quarantined.
+
+

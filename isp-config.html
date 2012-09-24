@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ISP Config &mdash; fuglu 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="fuglu 1 documentation" href="index.html" />
+    <link rel="prev" title="Support" href="help-index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="help-index.html" title="Support"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="isp-config">
+<h1>ISP Config<a class="headerlink" href="#isp-config" title="Permalink to this headline">¶</a></h1>
+<p>So, you are a ISP and consider fuglu as your scan glue? Here&#8217;s what you need to know.</p>
+<div class="section" id="quarantine-gui">
+<h2>Quarantine Gui<a class="headerlink" href="#quarantine-gui" title="Permalink to this headline">¶</a></h2>
+<p>Fuglu itself does not ship any kind of quarantine web gui (like Mailwatch, Mailguard etc) for a simple reason: the requirements are too diverse. We are pretty sure you would spend the same amount of time adapting our gui to your needs as writing it from scratch.</p>
+<p>A few examples:</p>
+<blockquote>
+<div><ul class="simple">
+<li>programming language used in the web environment (python, php,perl, ....)</li>
+<li>ACL concepts</li>
+<li>some have a concept of &#8220;alias domains&#8221;, some don&#8217;t</li>
+<li>different antispam/antivirus backends</li>
+<li>different types of quarantine storage
+* distributed on scanning machine like mailscanner
+* centralized nfs
+* stored in a Cassandra/CouchDB cluster, ...)</li>
+<li>different types of reports (some want to show every detail to their clients, some others just want them to see number of  spam/ham/virus, etc)</li>
+<li>CRM/ERP integration</li>
+</ul>
+</div></blockquote>
+<p>We recommend you write your user interface the way you like and then let fuglu&#8217;s plugin system interface to your gui, usually via a database.</p>
+</div>
+<div class="section" id="the-fuglu-isp-plugin">
+<h2>The fuglu ISP plugin<a class="headerlink" href="#the-fuglu-isp-plugin" title="Permalink to this headline">¶</a></h2>
+<p>Your quarantine gui probaly reads some sort of maillog table which contains a list of all received messages.
+In fuglu you&#8217;d write a plugin which fills this table.</p>
+<p>Below is a stripped down example of such a plugin. In a real setup you&#8217;d probably have more database fields, add blacklist/whitelist capabilities and support for per domain/per user configuration overrides.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># -*- coding: UTF-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DELETE</span><span class="p">,</span><span class="n">DUNNO</span><span class="p">,</span><span class="n">DEFER</span><span class="p">,</span><span class="n">Suspect</span><span class="p">,</span><span class="n">string_to_actioncode</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">fuglu.extensions.sql</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="n">MYHOSTNAME</span><span class="o">=</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span>
+
+<span class="n">DeclarativeBase</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">DeclarativeBase</span><span class="o">.</span><span class="n">metadata</span>
+
+<span class="n">maillog</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="s">&#39;maillog&#39;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;fugluid&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;subject&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span><span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;from_address&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">)),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;to_address&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span><span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;from_domain&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">)),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;to_domain&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span><span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;spam&#39;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;highspam&#39;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;virus&#39;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;date&#39;</span><span class="p">,</span> <span class="n">Date</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;time&#39;</span><span class="p">,</span> <span class="n">TIME</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;headers&#39;</span><span class="p">,</span> <span class="n">UnicodeText</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;size&#39;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span><span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;messageid&#39;</span><span class="p">,</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span><span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;spamrules&#39;</span><span class="p">,</span><span class="n">TEXT</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;virusinfo&#39;</span><span class="p">,</span><span class="n">TEXT</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;blockedfile&#39;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;blockinfo&#39;</span><span class="p">,</span><span class="n">TEXT</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;sascore&#39;</span><span class="p">,</span><span class="n">Float</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;quarantined&#39;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;sascantime&#39;</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s">&#39;scanhost&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span><span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">mysql_engine</span><span class="o">=</span><span class="s">&#39;InnoDB&#39;</span><span class="p">,</span>
+    <span class="n">mysql_charset</span><span class="o">=</span><span class="s">&#39;utf8&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ISPPlugin</span><span class="p">(</span><span class="n">ScannerPlugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ISP Demo Plugin&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requiredvars</span><span class="o">=</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span><span class="s">&#39;dbconnectstring&#39;</span><span class="p">),)</span>
+
+
+    <span class="k">def</span> <span class="nf">needquarantine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;return True if message should be quarantined&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="c">#infected mails can&#39;t be whitelisted</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">is_virus</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="c">#blocked attachments can&#39;t be whitelisted</span>
+        <span class="n">blockinfo</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;FiletypePlugin.errormessage&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">blockinfo</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="c">#whitelisted -&gt; no quarantine</span>
+        <span class="c">#assuming you have a prevous plugin which sets a &#39;whitelisted&#39; tag</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;whitelisted&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="c">#blacklisted -&gt; quarantine</span>
+        <span class="c">#assuming you have a previous plugin which sets a &#39;blacklisted&#39; tag</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;blacklisted&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="c">#spam -&gt; quarantine</span>
+        <span class="p">(</span><span class="n">spam</span><span class="p">,</span><span class="n">highspam</span><span class="p">)</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_spam_highspam</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">spam</span> <span class="ow">or</span> <span class="n">highspam</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="c">#ham -&gt; no quarantine</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">should_tag_and_send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;return true if message should be tagged and sent to the recipient&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">is_virus</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">blockinfo</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;FiletypePlugin.errormessage&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">blockinfo</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;blacklisted&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="p">(</span><span class="n">spam</span><span class="p">,</span><span class="n">highspam</span><span class="p">)</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_spam_highspam</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+
+        <span class="c">#here you could load user/domain individual configs and check if they have disabled the quarantine</span>
+        <span class="c">#conf=get_filter_config(suspect,self.config.get(self.section,&#39;dbconnectstring&#39;))</span>
+        <span class="c">#if (spam and conf.deliverspam) or (highspam and conf.deliverhighspam):</span>
+        <span class="c">#    return True</span>
+
+        <span class="c">#fallback if quarantine was not available (set by examine method)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">spam</span> <span class="ow">or</span> <span class="n">highspam</span><span class="p">)</span> <span class="ow">and</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&quot;tagandsend&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">examine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="n">starttime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">suspect</span><span class="o">.</span><span class="n">set_tag</span><span class="p">(</span><span class="s">&#39;ispquar&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">DUNNO</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needquarantine</span><span class="p">(</span><span class="n">suspect</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">quarantine</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+                <span class="n">suspect</span><span class="o">.</span><span class="n">set_tag</span><span class="p">(</span><span class="s">&#39;ispquar&#39;</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;message quarantined: </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="n">suspect</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">DELETE</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;quarantine failed&quot;</span><span class="p">)</span>
+                    <span class="c">#you could use a fallback mechanism here, eg. store in a local directory</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Could not quarantine message </span><span class="si">%s</span><span class="s"> : </span><span class="si">%s</span><span class="s"> -&gt; fallback to tag and send&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">suspect</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                    <span class="n">suspect</span><span class="o">.</span><span class="n">set_tag</span><span class="p">(</span><span class="s">&quot;tagandsend&quot;</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maillog</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;suspect </span><span class="si">%s</span><span class="s"> logged to database&#39;</span><span class="o">%</span><span class="n">suspect</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c">#check for tag&amp;send</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">should_tag_and_send</span><span class="p">(</span><span class="n">suspect</span><span class="p">):</span>
+            <span class="n">suspect</span><span class="o">.</span><span class="n">set_tag</span><span class="p">(</span><span class="s">&quot;tagandsend&quot;</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">DUNNO</span>
+            <span class="n">tag</span><span class="o">=</span><span class="s">&quot;*** SPAM ***&quot;</span>
+            <span class="n">msgrep</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">getMessageRep</span><span class="p">()</span>
+            <span class="n">oldsubj</span><span class="o">=</span><span class="n">msgrep</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;subject&quot;</span><span class="p">,</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">newsubj</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span><span class="n">oldsubj</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">msgrep</span><span class="p">[</span><span class="s">&quot;subject&quot;</span><span class="p">]</span>
+            <span class="n">msgrep</span><span class="p">[</span><span class="s">&quot;subject&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">newsubj</span>
+            <span class="n">suspect</span><span class="o">.</span><span class="n">setMessageRep</span><span class="p">(</span><span class="n">msgrep</span><span class="p">)</span>
+
+        <span class="n">endtime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">difftime</span><span class="o">=</span><span class="n">endtime</span><span class="o">-</span><span class="n">starttime</span>
+        <span class="n">suspect</span><span class="o">.</span><span class="n">tags</span><span class="p">[</span><span class="s">&#39;ISPPlugin.time&#39;</span><span class="p">]</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%.4f</span><span class="s">&quot;</span><span class="o">%</span><span class="n">difftime</span>
+        <span class="k">return</span> <span class="n">action</span>
+
+
+    <span class="k">def</span> <span class="nf">quarantine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store message source into quarantine&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="c">#your code here to store the message source in your quarantine (local file, database, ....)</span>
+
+
+    <span class="k">def</span> <span class="nf">maillog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Log this message into a mysql database table&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">msgrep</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">getMessageRep</span><span class="p">()</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;(?:</span><span class="se">\n\n</span><span class="s">)|(?:</span><span class="se">\r\n\r\n</span><span class="s">)&#39;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">getSource</span><span class="p">(</span><span class="n">maxbytes</span><span class="o">=</span><span class="mi">1048576</span><span class="p">),</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">subj</span><span class="o">=</span><span class="n">msgrep</span><span class="p">[</span><span class="s">&#39;X-Spam-Prev-Subject&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">subj</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+            <span class="n">subj</span><span class="o">=</span><span class="n">msgrep</span><span class="p">[</span><span class="s">&#39;Subject&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">subj</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+            <span class="n">subj</span><span class="o">=</span><span class="s">&#39;&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subj</span><span class="o">=</span><span class="n">subj</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">,</span><span class="s">&#39;replace&#39;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Could not decode subject - may be truncated&quot;</span><span class="p">)</span>
+
+        <span class="n">ts</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">timestamp</span>
+        <span class="n">dt</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
+        <span class="n">datenow</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="n">timenow</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="n">session</span><span class="o">=</span><span class="n">fuglu</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span><span class="s">&#39;dbconnectstring&#39;</span><span class="p">))</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">bind</span><span class="o">=</span><span class="n">session</span>
+
+        <span class="c">#we can&#39;t use suspect.is_spam here since spamassassin or other plugins</span>
+        <span class="c">#(maybe) don&#39;t know about individual isp user settings</span>
+        <span class="n">spam</span><span class="p">,</span><span class="n">highspam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_spam_highspam</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+
+        <span class="c">#file block info</span>
+        <span class="n">blocked</span><span class="o">=</span><span class="bp">False</span>
+        <span class="n">blockinfo</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;FiletypePlugin.errormessage&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">blockinfo</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+            <span class="n">blocked</span><span class="o">=</span><span class="bp">True</span>
+
+        <span class="n">messageid</span><span class="o">=</span><span class="n">msgrep</span><span class="p">[</span><span class="s">&#39;Message-Id&#39;</span><span class="p">]</span>
+
+
+        <span class="c">#spam rules</span>
+        <span class="n">ruletext</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;SAPlugin.report&#39;</span><span class="p">)</span>
+
+        <span class="c">#virusinfo: only virusnames separated by space</span>
+        <span class="n">allviruses</span><span class="o">=</span><span class="p">[]</span>
+
+        <span class="c">#clam</span>
+        <span class="n">claminfo</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;ClamavPlugin.virus&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">claminfo</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">infectedfile</span><span class="p">,</span><span class="n">virusname</span> <span class="ow">in</span> <span class="n">claminfo</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="n">allviruses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">virusname</span><span class="p">)</span>
+
+        <span class="c"># add other virus scanners here</span>
+
+        <span class="c">#remove duplicate viruses</span>
+        <span class="n">univiruses</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">allviruses</span><span class="p">)</span>
+
+        <span class="c">#remove spaces in virusnames and concatenate into single string</span>
+        <span class="n">virusinfo</span><span class="o">=</span><span class="s">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">virusname</span> <span class="ow">in</span> <span class="n">univiruses</span><span class="p">:</span>
+            <span class="n">virusname</span><span class="o">=</span><span class="n">virusname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">virusinfo</span><span class="o">=</span><span class="n">virusinfo</span><span class="o">+</span><span class="s">&quot; &quot;</span><span class="o">+</span><span class="n">virusname</span>
+        <span class="n">virusinfo</span><span class="o">=</span><span class="n">virusinfo</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c">#spamscore</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sascore</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;SAPlugin.spamscore&#39;</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">sascore</span><span class="o">=</span><span class="bp">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">,</span><span class="s">&#39;replace&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Could not decode headers to utf8 - output may be truncated&quot;</span><span class="p">)</span>
+
+        <span class="n">scantime</span><span class="o">=</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&quot;SAPlugin.time&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scantime</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">scantime</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">scantime</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">scantime</span><span class="o">=</span><span class="bp">None</span>
+
+        <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+             <span class="s">&#39;fugluid&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span>
+             <span class="s">&#39;from_address&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_address</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span>
+             <span class="s">&#39;to_address&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">to_address</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span>
+             <span class="s">&#39;from_domain&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span>
+             <span class="s">&#39;to_domain&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">to_domain</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span>
+             <span class="s">&#39;date&#39;</span><span class="p">:</span><span class="n">datenow</span><span class="p">,</span>
+             <span class="s">&#39;time&#39;</span><span class="p">:</span><span class="n">timenow</span><span class="p">,</span>
+             <span class="s">&#39;spam&#39;</span><span class="p">:</span><span class="n">spam</span><span class="p">,</span>
+             <span class="s">&#39;highspam&#39;</span><span class="p">:</span><span class="n">highspam</span><span class="p">,</span>
+             <span class="s">&#39;virus&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">is_virus</span><span class="p">(),</span>
+             <span class="s">&#39;size&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+             <span class="s">&#39;subject&#39;</span><span class="p">:</span><span class="n">subj</span><span class="p">,</span>
+             <span class="s">&#39;headers&#39;</span><span class="p">:</span><span class="n">headers</span><span class="p">,</span>
+             <span class="s">&#39;messageid&#39;</span><span class="p">:</span><span class="n">messageid</span><span class="p">,</span>
+             <span class="s">&#39;virusinfo&#39;</span><span class="p">:</span><span class="n">virusinfo</span><span class="p">,</span>
+             <span class="s">&#39;sascore&#39;</span><span class="p">:</span><span class="n">sascore</span><span class="p">,</span>
+             <span class="s">&#39;blockedfile&#39;</span><span class="p">:</span><span class="n">blocked</span><span class="p">,</span>
+             <span class="s">&#39;blockinfo&#39;</span><span class="p">:</span><span class="n">blockinfo</span><span class="p">,</span>
+             <span class="s">&#39;quarantined&#39;</span><span class="p">:</span><span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;ispquar&#39;</span><span class="p">)</span><span class="o">==</span><span class="bp">True</span><span class="p">,</span>
+             <span class="s">&#39;scanhost&#39;</span><span class="p">:</span><span class="n">MYHOSTNAME</span><span class="p">,</span>
+             <span class="s">&#39;sascantime&#39;</span><span class="p">:</span><span class="n">scantime</span><span class="p">,</span>
+             <span class="c"># more fields here....</span>
+        <span class="p">}</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">maillog</span><span class="o">.</span><span class="n">insert</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+
+
+    <span class="k">def</span> <span class="nf">is_spam_highspam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a tuple bool,bool for spam/highspam according to user or domain sa thresholds&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;whitelisted&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">False</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">score</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="s">&#39;SAPlugin.spamscore&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span><span class="n">e</span><span class="p">:</span>
+            <span class="c">#subject was not sa scanned</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">False</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c">#here you would load per user/per domain individual spam scores</span>
+        <span class="c"># user_scpamscore= ...</span>
+        <span class="c"># user_highspamscore= ...</span>
+
+        <span class="n">spam</span><span class="o">=</span><span class="bp">False</span>
+        <span class="n">highspam</span><span class="o">=</span><span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">score</span><span class="o">&gt;=</span><span class="n">user_spamscore</span><span class="p">:</span>
+            <span class="n">spam</span><span class="o">=</span><span class="bp">True</span>
+
+        <span class="k">if</span> <span class="n">score</span><span class="o">&gt;=</span><span class="n">user_highspamscore</span><span class="p">:</span>
+            <span class="n">highspam</span><span class="o">=</span><span class="bp">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">spam</span><span class="p">,</span><span class="n">highspam</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">u&#39;ISP Quarantine/Maillog&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration-of-other-plugins">
+<h2>Configuration of other plugins<a class="headerlink" href="#configuration-of-other-plugins" title="Permalink to this headline">¶</a></h2>
+<p>in a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins.</p>
+<p>in your fuglu.conf you&#8217;d probably set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">spam</span><span class="p">]</span>
+<span class="n">defaultlowspamaction</span><span class="o">=</span><span class="n">DUNNO</span>
+<span class="n">defaulthighspamaction</span><span class="o">=</span><span class="n">DUNNO</span>
+
+<span class="p">[</span><span class="n">virus</span><span class="p">]</span>
+<span class="n">defaultvirusaction</span><span class="o">=</span><span class="n">DUNNO</span>
+</pre></div>
+</div>
+<p>also, make sure the ISP Plugin is the last plugin</p>
+<div class="highlight-python"><pre>[main]
+plugins=attachment,clamav,&lt;other virus scanners here&gt;,spamassassin,&lt;your isp plugin&gt;</pre>
+</div>
+<p>so, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns &#8220;DELETE&#8221; after the infected message has been quarantined.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">ISP Config</a><ul>
+<li><a class="reference internal" href="#quarantine-gui">Quarantine Gui</a></li>
+<li><a class="reference internal" href="#the-fuglu-isp-plugin">The fuglu ISP plugin</a></li>
+<li><a class="reference internal" href="#configuration-of-other-plugins">Configuration of other plugins</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="help-index.html"
+                        title="previous chapter">Support</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/isp-config.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="help-index.html" title="Support"
+             >previous</a> |</li>
+        <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, gryphius.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
