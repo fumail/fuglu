@@ -605,7 +605,7 @@ class MainController(object):
     def _load_all(self,configstring):
         """load all plugins from config string. returns tuple ([list of loaded instances],allOk)"""
         pluglist=[]
-        config_re=re.compile("""^(?P<structured_name>[a-zA-Z0-9\.\_\-]+)(?:\((?P<config_override>[a-zA-Z0-9\.\_]+)\))?$""")
+        config_re=re.compile("""^(?P<structured_name>[a-zA-Z0-9\.\_\-]+)(?:\((?P<config_override>[a-zA-Z0-9\.\_\-]+)\))?$""")
         allOK=True
         plugins=configstring.split(',')
         for plug in plugins:
