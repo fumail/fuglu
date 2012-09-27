@@ -19,6 +19,8 @@ import time
 import unittest
 import os
 import shutil
+import pwd
+import grp
 
 class ArchivePlugin(ScannerPlugin):
     """This plugins stores a copy of the message if it matches certain criteria (Suspect Filter). 
@@ -63,10 +65,23 @@ envelope_to support@fuglu\.org      yes
                 'default':'1',
                 'description':'create a subdirectory of the destination domain within archivedir',
             },
-             'storeoriginal':{
+            'storeoriginal':{
                 'default':'1',
                 'description':"if true/1/yes: store original message\nif false/0/no: store message probably altered by previous plugins, eg with spamassassin headers",
-            }
+            },            
+            'chown':{
+                'default':'',
+                'description':"change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)",
+            },
+            'chgrp':{
+                'default':'',
+                'description':"change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work",
+            },
+            'chmod':{
+                'default':'',
+                'description':"set file permissions of saved messages",
+            },
+                           
         }
         
         self.filter=None
@@ -99,7 +114,7 @@ envelope_to support@fuglu\.org      yes
             return DUNNO
         
         if not os.path.exists(archiverules):
-            self._logger().error('Archive Rules file does not exist : %s'%archiverules)
+            self.logger.error('Archive Rules file does not exist : %s'%archiverules)
             return DUNNO
         
         if self.filter==None:
@@ -129,7 +144,7 @@ envelope_to support@fuglu\.org      yes
     def archive(self,suspect):
         archivedir=self.config.get(self.section, 'archivedir')
         if archivedir=="":
-            self._logger().error('Archivedir is not specified')
+            self.logger.error('Archivedir is not specified')
             return
         
         finaldir=archivedir
@@ -148,10 +163,82 @@ envelope_to support@fuglu\.org      yes
             fp=open(filename,'w')
             fp.write(suspect.getSource())
             fp.close()
-            
-        self._logger().info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
+        
+        
+        chmod=self.config.get(self.section,'chmod')
+        chgrp=self.config.get(self.section,'chgrp')
+        chown=self.config.get(self.section,'chown')
+        if chmod or chgrp or chown:
+            self.setperms(filename,chmod,chgrp,chown)
+        
+        self.logger.info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
         return filename
 
+
+    def setperms(self,filename,chmod,chgrp,chown):
+        """Set file permissions and ownership
+        :param filename The target file
+        :param chmod string representing the permissions (example '640')
+        :param chgrp groupname or group id of the target group. the user running fuglu must be a member of this group for this to work
+        :param chown username or user id of the target user. fuglu must run as root for this to work (which is not recommended for security reasons)
+        """
+              
+        #chmod
+        if chmod:
+            perm=int(chmod,8)
+            try:
+                os.chmod(filename, perm)
+            except:
+                self.logger.error('could not set permission on file %s'%filename)
+
+        #chgrp
+        changetogroup=-1
+        if chgrp:
+            group=None
+            try:
+                group=grp.getgrnam(chgrp)
+            except KeyError:
+                pass
+            
+            try:
+                group=grp.getgrgid(int(chgrp))
+            except KeyError:
+                pass
+            except ValueError:
+                pass
+            
+            if group!=None:
+                changetogroup=group.gr_gid
+            else:
+                self.logger.warn("Group %s not found"%chgrp)
+
+        #chown
+        changetouser=-1
+        if chown:
+            user=None
+            try:
+                user=pwd.getpwnam(chown)
+            except KeyError:
+                pass
+            
+            try:
+                user=pwd.getpwuid(int(chown))
+            except KeyError:
+                pass
+            except ValueError:
+                pass
+            
+            if user!=None:
+                changetouser=user.pw_uid
+            else:
+                self.logger.warn("User %s not found"%chown)
+                
+        if changetogroup!=-1 or changetouser!=-1:
+            try:
+                os.chown(filename, changetouser, changetogroup)
+            except Exception,e:
+                self.logger.error("Could not change user/group of file %s : %s"%(filename,str(e)))
+        
 
 #### UNIT TESTS
 
