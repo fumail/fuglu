@@ -257,6 +257,9 @@ class ArchiveTestcase(unittest.TestCase):
         config.set('ArchivePlugin', 'archivedir', '/tmp')
         config.set('ArchivePlugin', 'makedomainsubdir', '0')
         config.set('ArchivePlugin', 'storeoriginal', '1')
+        config.set('ArchivePlugin', 'chmod', '700')
+        config.set('ArchivePlugin', 'chown', '')
+        config.set('ArchivePlugin', 'chgrp', '')
         
         tempfilename=tempfile.mktemp(suffix='archive', prefix='fuglu-unittest', dir='/tmp')
         fp=open(tempfilename,'w')
