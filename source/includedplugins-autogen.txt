@@ -294,8 +294,20 @@ Configuration
 ::
 
     [ArchivePlugin]
+    #Archiving SuspectFilter File
+    archiverules=/etc/fuglu/archive.regex
+
+    #set file permissions of saved messages
+    chmod=
+
+    #change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work
+    chgrp=
+
     #create a subdirectory of the destination domain within archivedir
     makedomainsubdir=1
+
+    #change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
+    chown=
 
     #if true/1/yes: store original message
     #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
@@ -303,9 +315,6 @@ Configuration
 
     #storage for archived messages
     archivedir=/tmp
-
-    #Archiving SuspectFilter File
-    archiverules=/etc/fuglu/archive.regex
 
 
 

@@ -318,12 +318,53 @@ With this example pre-queue configuration fuglu will scan for spam, virus and bl
 Running fuglu as a milter
 .........................
 
-TODO
+!! Warning, this is an EXPERIMENTAL feature - untested, may or may not work !!
+
+!! Note: fuglu milter does not currently support message header/body modification, just actions like REJECT/DEFER/DISCARD !!
+
+To run fuglu as a milter, add ``milter:<portnumber`` to the ``incomingport`` configuration option in fuglu.conf.
+
+::
+
+	incomingport=10025,10099,10888,milter:10028
+
+then enable milters in your MTA. postfix example (main.cf) :
+
+::
+
+	milter_protocol = 2
+	milter_default_action = accept
+	milter_content_timeout = 30s
+	smtpd_milters=inet:127.0.0.1:10028
+
 
 Running fuglu in netcat-mode
 ............................
 
-TODO
+fuglu supports message processing by simply "piping" them into a socket. To enable this socket, add ``netcat:<portnumber>`` to the ``incomingport`` configuration option in fuglu.conf.
+
+::
+
+	incomingport=10025,10099,10888,netcat:20099
+
+when restarting fuglu, you should see something like ``INFO NETCAT Server running on port 20099`` in the logs. you may then pipe an eml from the shell
+
+::
+
+	(sleep 0.1; cat eicar.eml) | nc -c localhost 20099
+
+
+in some special setups, people use fuglu as an after-delivery filter with this method.
+
+example procmail filter:
+
+::
+
+	# netcat send msg copy to fuglu
+	:0c
+	| nc localhost 20099
+
+Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value ``unknown@example.org`` for both envelope sender and recipient. 
 
 
 

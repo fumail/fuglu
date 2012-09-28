@@ -272,11 +272,33 @@ highspamlevel=10</pre>
 </div>
 <div class="section" id="running-fuglu-as-a-milter">
 <h3>Running fuglu as a milter<a class="headerlink" href="#running-fuglu-as-a-milter" title="Permalink to this headline">¶</a></h3>
-<p>TODO</p>
+<p>!! Warning, this is an EXPERIMENTAL feature - untested, may or may not work !!</p>
+<p>!! Note: fuglu milter does not currently support message header/body modification, just actions like REJECT/DEFER/DISCARD !!</p>
+<p>To run fuglu as a milter, add <tt class="docutils literal"><span class="pre">milter:&lt;portnumber</span></tt> to the <tt class="docutils literal"><span class="pre">incomingport</span></tt> configuration option in fuglu.conf.</p>
+<div class="highlight-python"><pre>incomingport=10025,10099,10888,milter:10028</pre>
+</div>
+<p>then enable milters in your MTA. postfix example (main.cf) :</p>
+<div class="highlight-python"><pre>milter_protocol = 2
+milter_default_action = accept
+milter_content_timeout = 30s
+smtpd_milters=inet:127.0.0.1:10028</pre>
+</div>
 </div>
 <div class="section" id="running-fuglu-in-netcat-mode">
 <h3>Running fuglu in netcat-mode<a class="headerlink" href="#running-fuglu-in-netcat-mode" title="Permalink to this headline">¶</a></h3>
-<p>TODO</p>
+<p>fuglu supports message processing by simply &#8220;piping&#8221; them into a socket. To enable this socket, add <tt class="docutils literal"><span class="pre">netcat:&lt;portnumber&gt;</span></tt> to the <tt class="docutils literal"><span class="pre">incomingport</span></tt> configuration option in fuglu.conf.</p>
+<div class="highlight-python"><pre>incomingport=10025,10099,10888,netcat:20099</pre>
+</div>
+<p>when restarting fuglu, you should see something like <tt class="docutils literal"><span class="pre">INFO</span> <span class="pre">NETCAT</span> <span class="pre">Server</span> <span class="pre">running</span> <span class="pre">on</span> <span class="pre">port</span> <span class="pre">20099</span></tt> in the logs. you may then pipe an eml from the shell</p>
+<div class="highlight-python"><pre>(sleep 0.1; cat eicar.eml) | nc -c localhost 20099</pre>
+</div>
+<p>in some special setups, people use fuglu as an after-delivery filter with this method.</p>
+<p>example procmail filter:</p>
+<div class="highlight-python"><pre># netcat send msg copy to fuglu
+:0c
+| nc localhost 20099</pre>
+</div>
+<p>Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value <tt class="docutils literal"><span class="pre">unknown&#64;example.org</span></tt> for both envelope sender and recipient.</p>
 </div>
 </div>
 </div>

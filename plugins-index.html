@@ -405,18 +405,27 @@ envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fug
 <div class="section" id="id3">
 <h4>Configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><pre>[ArchivePlugin]
+#Archiving SuspectFilter File
+archiverules=/etc/fuglu/archive.regex
+
+#set file permissions of saved messages
+chmod=
+
+#change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work
+chgrp=
+
 #create a subdirectory of the destination domain within archivedir
 makedomainsubdir=1
+
+#change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
+chown=
 
 #if true/1/yes: store original message
 #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
 storeoriginal=1
 
 #storage for archived messages
-archivedir=/tmp
-
-#Archiving SuspectFilter File
-archiverules=/etc/fuglu/archive.regex</pre>
+archivedir=/tmp</pre>
 </div>
 </div>
 </div>
