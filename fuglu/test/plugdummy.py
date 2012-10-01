@@ -62,6 +62,7 @@ if __name__=='__main__':
     parser.add_option("-t", action="append", dest="tags", help="set tag, format: name:value")
     parser.add_option("-b", "--body", action="store", dest="body", help="Body content (or path to textfile)")
     parser.add_option("-e", "--eml", action="store", dest="eml", help="use eml content as message file. if this is enabled, body is ignored")
+    parser.add_option("-d", "--defaultconfig", action="store_true",default=False, dest="defaultconfig", help="print plugin default config and exit")
     parser.add_option("-o", "--option", action="append",dest="config", help="set config option format: [section]option:value  ([section] is optional, uses plugins name by default")
     parser.add_option("-p", "--plugindir", action="store", dest="plugindir", default="/usr/local/fuglu/plugins", help="plugindir")
     parser.add_option("-c", action="store_true", dest="console", default=False, help="start an interactive console after the plugin has been run")
@@ -93,11 +94,26 @@ if __name__=='__main__':
     #load plugin
     mc=MainController(config)
     mc.propagate_core_defaults()
+        
     mc.load_extensions()
     ok=mc.load_plugins()
     if not ok:
         logging.error("Could not load plugin")
         sys.exit(1)
+    
+    if opts.defaultconfig:
+        if opts.appender:
+            sec=mc.appenders[0].section
+        else:
+            sec=mc.plugins[0].section
+
+        print "Default config options for %s\n"%sec
+        try:
+            for opt,val in config.items(sec):            
+                print "%s:%s"%(opt,val)
+        except ConfigParser.NoSectionError:
+            print "Plugin does not provide default options"
+        sys.exit(0)
     
     #now switch to debug
     logging.getLogger().setLevel(logging.DEBUG)
