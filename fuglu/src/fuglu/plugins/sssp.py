@@ -152,7 +152,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             },
                          
             'timeout':{
-                'default':'10',
+                'default':'30',
                 'description':'socket timeout',
             },
                            

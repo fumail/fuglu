@@ -48,7 +48,7 @@ Tags:
                 'description':"fpscand port",
             },
             'timeout':{
-                'default':'20',
+                'default':'30',
                 'description':"network timeout",
             },
             'networkmode':{
