@@ -95,14 +95,16 @@ class ESMTPHandler(ProtocolHandler):
         
     def defer(self,reason):
         self.sess.endsession(451, reason)
+        self.sess.finish_outgoing_connection()
         
     def discard(self,reason):
         self.sess.endsession(250, reason)
+        self.sess.finish_outgoing_connection()
         #self.sess=None
     
     def reject(self,reason):
         self.sess.endsession(550, reason)
-    
+        self.sess.finish_outgoing_connection()
 
 class ESMTPServer(object):    
     def __init__(self, controller,port=10025,address="127.0.0.1"):
@@ -179,6 +181,7 @@ class ESMTPPassthroughSession(object):
         self.forwardconn=None
         
     def endsession(self,code,message):
+        """End session with incoming postfix"""
         self.socket.send("%s %s\r\n"%(code,message))
         data = ''
         completeLine = 0
@@ -207,6 +210,7 @@ class ESMTPPassthroughSession(object):
         
         
     def closeconn(self):
+        """clocke socket to incoming postfix"""
         self.socket.close()
         
     def getincomingmail(self):
@@ -248,6 +252,7 @@ class ESMTPPassthroughSession(object):
     
     
     def forwardCommand(self,command):
+        """forward a esmtp command to outgoing postfix instance"""
         command=command.strip()
         if self.forwardconn==None:
             self.forwardconn=smtplib.SMTP('127.0.0.1',self.config.getint('main', 'outgoingport'))
@@ -268,6 +273,14 @@ class ESMTPPassthroughSession(object):
             ret='\r\n'.join(temprv)
         self.logger.debug("""RECEIVE: "%s" """%ret)
         return ret.strip()
+    
+    def finish_outgoing_connection(self):
+        """Try to gracefully end the connection to the outgoing postfix"""
+        try:
+            self.forwardconn.quit()
+        except:
+            self.logger.info("Quit failed")
+        self.forwardconn=None
     
     def doCommand(self, data):
         """Process a single SMTP Command"""
