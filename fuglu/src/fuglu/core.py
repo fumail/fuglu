@@ -285,6 +285,39 @@ class MainController(object):
         loggername="fuglu.%s"%(myclass,)
         return logging.getLogger(loggername)
     
+    
+    def start_connector(self,portspec):
+        port=portspec.strip()
+        protocol='smtp'
+        
+        if port.find(':')>0:
+            (protocol,port)=port.split(':')
+            
+            
+        self.logger.error("starting connector %s/%s"%(protocol,port))
+        try:
+            port=int(port)
+            if protocol=='smtp':
+                smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(smtpserver.serve, ())
+                self.servers.append(smtpserver)
+            elif protocol=='esmtp':
+                esmtpserver=ESMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(esmtpserver.serve, ())
+                self.servers.append(esmtpserver)
+            elif protocol=='milter':
+                milterserver=MilterServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(milterserver.serve, ())
+                self.servers.append(milterserver)
+            elif protocol=='netcat':
+                ncserver=NCServer(self,port=port,address=self.config.get('main', 'bindaddress'))
+                thread.start_new_thread(ncserver.serve, ())
+                self.servers.append(ncserver)
+            else:
+                self.logger.error('Unknown Interface Protocol: %s, ignoring server on port %s'%(protocol,port))
+        except Exception,e:
+            self.logger.error("could not start connector %s/%s : %s"%(protocol,port,str(e)))
+    
     def startup(self):
         self.load_extensions()
         ok=self.load_plugins()
@@ -312,31 +345,7 @@ class MainController(object):
         self.logger.info("Starting interface sockets...")
         ports=self.config.get('main', 'incomingport')
         for port in ports.split(','):
-            port=port.strip()
-            protocol='smtp'
-            
-            if port.find(':')>0:
-                (protocol,port)=port.split(':')
-            
-            port=int(port)
-            if protocol=='smtp':
-                smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(smtpserver.serve, ())
-                self.servers.append(smtpserver)
-            elif protocol=='esmtp': #experimental
-                esmtpserver=ESMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(esmtpserver.serve, ())
-                self.servers.append(esmtpserver)
-            elif protocol=='milter': #experimental
-                milterserver=MilterServer(self,port=port,address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(milterserver.serve, ())
-                self.servers.append(milterserver)
-            elif protocol=='netcat':
-                ncserver=NCServer(self,port=port,address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(ncserver.serve, ())
-                self.servers.append(ncserver)
-            else:
-                self.logger.error('Unknown Interface Protocol: %s, ignoring server on port %s'%(protocol,port))
+            self.start_connector(port)
             
             
         #control socket
@@ -393,9 +402,16 @@ class MainController(object):
             
         #smtp engine changes?
         ports=self.config.get('main', 'incomingport')
-        portlist=map(int,ports.split(','))
+        portspeclist=ports.split(',')
+        portlist=[]
         
-        for port in portlist:
+        for portspec in portspeclist:
+            if portspec.find(':')>0:
+                (protocol,port)=portspec.split(':')
+                port=int(port)
+            else:
+                port=int(portspec)
+            portlist.append(port)
             alreadyRunning=False
             for serv in self.servers:
                 if serv.port==port:
@@ -403,11 +419,9 @@ class MainController(object):
                     break
             
             if not alreadyRunning:
-                smtpserver=SMTPServer(self,port=port,address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(smtpserver.serve, ())
-                self.servers.append(smtpserver)
+                self.start_connector(portspec)
         
-        servercopy=self.servers[:] 
+        servercopy=self.servers[:]
         for serv in servercopy:
             if serv.port not in portlist:
                 self.logger.info('Closing server socket on port %s'%serv.port)
