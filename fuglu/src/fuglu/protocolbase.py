@@ -17,7 +17,6 @@
 import logging
 import socket
 import threading
-import sys
 from fuglu.scansession import SessionHandler
 import traceback
 
@@ -55,7 +54,7 @@ class BasicTCPServer(object):
         self.logger.debug('Starting incoming Server on Port %s, protocol=%s'%(port,self.protohandlerclass.protoname))
         self.port=port
         self.controller=controller
-        self.stayalive=1
+        self.stayalive=True
         
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,7 +63,7 @@ class BasicTCPServer(object):
             self._socket.listen(5)
         except Exception,e:
             self.logger.error('Could not start incoming Server on port %s: %s'%(port,e))
-            sys.exit(1)
+            self.stayalive=False
    
    
     def shutdown(self):
