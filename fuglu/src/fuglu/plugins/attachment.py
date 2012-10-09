@@ -66,7 +66,7 @@ KEY_NAME=u"name"
 KEY_CTYPE=u"ctype"
 
 class RulesCache( object ):
-    """caches rule files and compiled regex patterns"""
+    """caches rule files"""
     
     __shared_state = {}
 
@@ -74,9 +74,6 @@ class RulesCache( object ):
         self.__dict__ = self.__shared_state
         if not hasattr(self, 'rules'):
             self.rules={}
-        if not hasattr(self,'regexcache'):
-            self.regexcache={}
-
         if not hasattr(self, 'lock'):
             self.lock=Lock()
         if not hasattr(self,'logger'):
@@ -85,17 +82,6 @@ class RulesCache( object ):
             self.lastreload=0
         self.rulesdir=rulesdir
         self.reloadifnecessary()
-
-    def getRegex(self,regex):
-        """compile regex and return cached object"""
-        if self.regexcache.has_key(regex):
-            return self.regexcache[regex]
-        try:
-            prog=re.compile(regex, re.IGNORECASE)
-        except Exception,e:
-            self.logger.error('Regex compilation error for %s : %s'%(regex,e))
-        self.regexcache[regex]=prog
-        return prog
 
     def getRules(self,type,key):
         self.logger.debug('Rule cache request: [%s] [%s]'%(type,key))
@@ -376,7 +362,7 @@ See (TODO: link to template vars chapter) for commonly available template variab
             return ATTACHMENT_DUNNO
 
         for regex in ruleset.keys():
-            prog=self.rulescache.getRegex(regex)
+            prog=re.compile(regex,re.I)
             if self.extremeverbosity:
                 self._logger().debug('Attachment %s Rule %s'%(object,regex))
             if prog.search( object):

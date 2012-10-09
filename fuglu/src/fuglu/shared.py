@@ -466,7 +466,6 @@ class SuspectFilter(object):
         self.lastreload=0
         self.logger=logging.getLogger('fuglu.suspectfilter')
         self._reloadifnecessary()
-        self.recache={}
         self.stripre=re.compile(r'<[^>]*?>')
         
     def _reloadifnecessary(self):
@@ -652,12 +651,8 @@ class SuspectFilter(object):
         if '*' in headername:
             regex=re.escape(headername)
             regex=regex.replace('\*','.*')
-            if regex in self.recache:
-                patt=self.recache[regex]
-            else:
-                patt=re.compile(regex,re.IGNORECASE)
-                self.recache[regex]=patt
-            
+            patt=re.compile(regex,re.IGNORECASE)
+
             for h in payload.keys():
                 if re.match(patt, h)!=None:
                     valuelist.extend(payload.get_all(h))

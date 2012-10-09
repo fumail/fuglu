@@ -156,9 +156,6 @@ class VacationCache( object ):
         self.__dict__ = self.__shared_state
         if not hasattr(self, 'vacations'):
             self.vacations={}
-        if not hasattr(self,'regexcache'):
-            self.regexcache={}
-
         if not hasattr(self, 'lock'):
             self.lock=Lock()
         if not hasattr(self,'logger'):
@@ -168,17 +165,6 @@ class VacationCache( object ):
         self.config=config
         self.reloadifnecessary()
    
-    def getRegex(self,regex):
-        """compile regex and return cached object"""
-        if self.regexcache.has_key(regex):
-            return self.regexcache[regex]
-        try:
-            prog=re.compile(regex, re.IGNORECASE)
-        except Exception,e:
-            self.logger.error('Regex compilation error for %s : %s'%(regex,e))
-        self.regexcache[regex]=prog
-        return prog
-
     def reloadifnecessary(self):
         """reload vacation if older than 60 seconds"""
         if not time.time()-self.lastreload>60:
@@ -369,7 +355,7 @@ SQL Example for mysql:
             return True
         
         for ignoregex in vacation_ignoresenderregex:
-            if re.search(self._cache().getRegex(ignoregex),suspect.from_address):
+            if re.search(ignoregex,suspect.from_address,re.I):
                 self.logger.debug('Blacklisted sender: %s'%sender)
                 return True
         
@@ -380,12 +366,12 @@ SQL Example for mysql:
                 return True
         
         for header,restring in vacation_ignoreheaderregex.items():
-            patt=self._cache().getRegex(restring)
+            #self.logger.info("searching for header %s"%header)
             vals=messagerep.get_all(header)
             if vals!=None:
                 for val in vals:
                     print "checking header %s val %s"%(header,val)
-                    if re.search(patt,val):
+                    if re.search(restring,val,re.I):
                         self.logger.debug('Blacklisted header value: %s: %s'%(header,val))
                         return True
 
