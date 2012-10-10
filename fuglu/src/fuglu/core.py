@@ -294,7 +294,7 @@ class MainController(object):
             (protocol,port)=port.split(':')
             
             
-        self.logger.error("starting connector %s/%s"%(protocol,port))
+        self.logger.info("starting connector %s/%s"%(protocol,port))
         try:
             port=int(port)
             if protocol=='smtp':
