@@ -445,12 +445,32 @@ class MainController(object):
         self.logger.info('Shutdown complete')
         self.logger.info('Remaining threads: %s' %threading.enumerate())
         
-   
-   
+    def _lint_dependencies(self,fc):
+        print fc.strcolor('Checking dependencies...','magenta')
+        try:
+            import sqlalchemy
+            print fc.strcolor('sqlalchemy: installed','green')
+        except:
+            print fc.strcolor('sqlalchemy: not installed','yellow')+" Optional dependency, required if you want to enable any database lookups"
+             
+        try:
+            import BeautifulSoup
+            print fc.strcolor('BeautifulSoup: installed','green')
+        except:
+            print fc.strcolor('BeautifulSoup: not installed','yellow')+" Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config"
+        
+        try:
+            import magic
+            print fc.strcolor('magic: installed','green')
+        except:
+            print fc.strcolor('magic: not installed','yellow')+" Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled"
+       
     def lint(self):
         errors=0
         from fuglu.funkyconsole import FunkyConsole
         fc=FunkyConsole()
+        self._lint_dependencies(fc)
+        
         print fc.strcolor('Loading extensions...','magenta')
         exts=self.load_extensions()
         for ext in exts:
