@@ -212,7 +212,7 @@ envelope_to support@fuglu\.org      yes
             self.setperms(requested_path,chmod,chgrp,chown)
         
         self.logger.info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,requested_path))
-        return filename
+        return requested_path
 
 
     def setperms(self,filename,chmod,chgrp,chown):
@@ -295,7 +295,8 @@ class ArchiveTestcase(unittest.TestCase):
         
         config.add_section('ArchivePlugin')
         config.set('ArchivePlugin', 'archivedir', '/tmp')
-        config.set('ArchivePlugin', 'makedomainsubdir', '0')
+        config.set('ArchivePlugin', 'subdirtemplate', '')
+        config.set('ArchivePlugin', 'filenametemplate', '${id}.eml')
         config.set('ArchivePlugin', 'storeoriginal', '1')
         config.set('ArchivePlugin', 'chmod', '700')
         config.set('ArchivePlugin', 'chown', '')
