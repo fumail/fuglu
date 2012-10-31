@@ -14,7 +14,8 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,SuspectFilter
+from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,SuspectFilter,\
+    apply_template
 import time
 import unittest
 import os
@@ -61,9 +62,9 @@ envelope_to support@fuglu\.org      yes
                 'default':'/tmp',
                 'description':'storage for archived messages',
             },
-            'makedomainsubdir':{
-                'default':'1',
-                'description':'create a subdirectory of the destination domain within archivedir',
+            'subdirtemplate':{
+                'default':'${to_domain}',
+                'description':'subdirectory within archivedir',
             },
             'storeoriginal':{
                 'default':'1',
@@ -91,8 +92,17 @@ envelope_to support@fuglu\.org      yes
         return "Archive"
         
     def lint(self):
-        allok=(self.checkConfig() and self.lint_dirs())
+        allok=(self.checkConfig() and self.check_deprecated() and self.lint_dirs())
         return allok
+    
+    def check_deprecated(self):
+        if self.config.has_option(self.section,'makedomainsubdir'):
+            print "the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' "
+            print "please update your config"
+            print "makedomainsubdir=1 -> subdirtemplate=${to_domain}"
+            print "makedomainsubdir=0 -> subdirtemplate="
+            return False
+        return True
     
     def lint_dirs(self):
         archivedir=self.config.get(self.section, 'archivedir')
@@ -147,31 +157,54 @@ envelope_to support@fuglu\.org      yes
             self.logger.error('Archivedir is not specified')
             return
         
-        finaldir=archivedir
+        subdirtemplate=self.config.get(self.section,'subdirtemplate')
         
-        makedomainsubdir=self.config.getboolean(self.section,'makedomainsubdir')
-        if makedomainsubdir:
-            finaldir="%s/%s"%(archivedir,suspect.to_domain)
+        if self.config.has_option(self.section,'makedomainsubdir') and subdirtemplate==self.requiredvars['subdirtemplate']['default']:
+            self.logger.warning("Archive config is using deprecated 'makedomainsubdir' config option. Emulating old behaviour. Update your config(subdirtemplate)")
+            if self.config.getboolean(self.section,'makedomainsubdir'):
+                subdirtemplate="${to_domain}"
+            else:
+                subdirtemplate=""
         
+        #the archive root dir    
+        startdir=os.path.abspath(archivedir)
+        
+        #relative dir within archive root
+        subdir=apply_template(subdirtemplate, suspect)
+        if subdir.endswith('/'):
+            subdir=subdir[:-1]
+            
+        #filename without dir
+        filename="%s.eml"%(suspect.id)
+        
+        #full relative filepath within archive dir
+        fpath="%s/%s"%(subdir,filename)
+        
+        #absolute final filepath
+        requested_path = os.path.abspath("%s/%s"%(startdir,fpath))
+        
+        if not os.path.commonprefix([requested_path,startdir]).startswith(startdir):
+            self.logger.error("file path '%s' seems to be outside archivedir '%s' - storing to archivedir"%(requested_path,startdir))
+            requested_path="%s/%s"%(startdir,filename)
+        
+        finaldir=os.path.dirname(requested_path)
         if not os.path.isdir(finaldir):
             os.makedirs(finaldir,0755)
         
-        filename="%s/%s.eml"%(finaldir,suspect.id)
         if self.config.getboolean(self.section,'storeoriginal'):
-            shutil.copy(suspect.tempfile, filename)
+            shutil.copy(suspect.tempfile, requested_path)
         else:
-            fp=open(filename,'w')
+            fp=open(requested_path,'w')
             fp.write(suspect.getSource())
             fp.close()
-        
         
         chmod=self.config.get(self.section,'chmod')
         chgrp=self.config.get(self.section,'chgrp')
         chown=self.config.get(self.section,'chown')
         if chmod or chgrp or chown:
-            self.setperms(filename,chmod,chgrp,chown)
+            self.setperms(requested_path,chmod,chgrp,chown)
         
-        self.logger.info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,filename))
+        self.logger.info('Message from %s to %s archived as %s'%(suspect.from_address,suspect.to_address,requested_path))
         return filename
 
 
