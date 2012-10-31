@@ -66,6 +66,10 @@ envelope_to support@fuglu\.org      yes
                 'default':'${to_domain}',
                 'description':'subdirectory within archivedir',
             },
+            'filenametemplate':{
+               'default':'${id}.eml',
+               'description':'filename template for the archived messages', 
+            },
             'storeoriginal':{
                 'default':'1',
                 'description':"if true/1/yes: store original message\nif false/0/no: store message probably altered by previous plugins, eg with spamassassin headers",
@@ -175,7 +179,10 @@ envelope_to support@fuglu\.org      yes
             subdir=subdir[:-1]
             
         #filename without dir
-        filename="%s.eml"%(suspect.id)
+        filenametemplate=self.config.get(self.section,'filenametemplate')
+        filename=apply_template(filenametemplate, suspect)
+        #make sure filename can't create new folders
+        filename=filename.replace('/','_')
         
         #full relative filepath within archive dir
         fpath="%s/%s"%(subdir,filename)
