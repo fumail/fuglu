@@ -287,7 +287,7 @@ host=localhost
 rejectmessage=threat detected: ${virusname}
 
 #socket timeout
-timeout=10
+timeout=30
 
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
@@ -405,27 +405,30 @@ envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fug
 <div class="section" id="id3">
 <h4>Configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><pre>[ArchivePlugin]
+#change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
+chown=
+
 #Archiving SuspectFilter File
 archiverules=/etc/fuglu/archive.regex
 
-#set file permissions of saved messages
-chmod=
+#filename template for the archived messages
+filenametemplate=${id}.eml
 
-#change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work
-chgrp=
-
-#create a subdirectory of the destination domain within archivedir
-makedomainsubdir=1
-
-#change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
-chown=
+#subdirectory within archivedir
+subdirtemplate=${to_domain}
 
 #if true/1/yes: store original message
 #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
 storeoriginal=1
 
 #storage for archived messages
-archivedir=/tmp</pre>
+archivedir=/tmp
+
+#set file permissions of saved messages
+chmod=
+
+#change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work
+chgrp=</pre>
 </div>
 </div>
 </div>
@@ -512,7 +515,7 @@ host=localhost
 rejectmessage=threat detected: ${virusname}
 
 #socket timeout
-timeout=10
+timeout=30
 
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
@@ -559,7 +562,7 @@ rejectmessage=threat detected: ${virusname}
 networkmode=0
 
 #network timeout
-timeout=20
+timeout=30
 
 #plugin action if scan fails
 problemaction=DEFER
@@ -642,6 +645,44 @@ actionrules=/etc/fuglu/actionrules.regex</pre>
 </div>
 </div>
 </div>
+<div class="section" id="scriptfilter">
+<h3>ScriptFilter<a class="headerlink" href="#scriptfilter" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.script.ScriptFilter</p>
+<blockquote>
+<div>This plugins executes scripts found in a specified directory.</div></blockquote>
+<p>This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
+<p>Filterscripts must be written in standard python but with the file ending <tt class="docutils literal"><span class="pre">.fgf</span></tt> (&#8220;fuglu filter&#8221;)</p>
+<p>scripts are reloaded for every message executed in alphabetic order</p>
+<p>The API is basically the same as for normal plugins within the <tt class="docutils literal"><span class="pre">examine()</span></tt> method, with a few special cases:</p>
+<p>there is no &#8216;self&#8217; which means:</p>
+<blockquote>
+<div><ul class="simple">
+<li>access the configuration by using <tt class="docutils literal"><span class="pre">config</span></tt> directly (instead of <tt class="docutils literal"><span class="pre">self.config</span></tt>)</li>
+<li>use d``ebug(&#8216;hello world&#8217;)`` instead of <tt class="docutils literal"><span class="pre">self.logger.debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
+</ul>
+</div></blockquote>
+<p>the script should not return anything, but change the available variables <tt class="docutils literal"><span class="pre">action</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt> instead
+(<tt class="docutils literal"><span class="pre">DUNNO</span></tt>, <tt class="docutils literal"><span class="pre">REJECT</span></tt>, <tt class="docutils literal"><span class="pre">DEFER</span></tt>, <tt class="docutils literal"><span class="pre">ACCEPT</span></tt>, <tt class="docutils literal"><span class="pre">DELETE</span></tt> are already imported)</p>
+<p>use <tt class="docutils literal"><span class="pre">stop()</span></tt> to exit the script</p>
+<p>example script:
+(put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#block all messages from evilsender.example.com</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="o">==</span><span class="s">&#39;evilsender.example.com&#39;</span><span class="p">:</span>
+    <span class="n">suspect</span><span class="o">.</span><span class="n">addheader</span><span class="p">(</span><span class="s">&quot;x-fuglu-SenderDomain&quot;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="p">,</span><span class="n">immediate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">stop</span><span class="p">()</span>
+<span class="n">debug</span><span class="p">(</span><span class="s">&quot;hello world&quot;</span><span class="p">)</span>
+<span class="n">action</span><span class="o">=</span><span class="n">REJECT</span>
+<span class="n">message</span><span class="o">=</span><span class="s">&quot;you shall not pass&quot;</span>
+</pre></div>
+</div>
+<div class="section" id="id10">
+<h4>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python"><pre>[ScriptFilter]
+#Dir that contains the scripts (*.fgf files)
+scriptdir=/etc/fuglu/scriptfilter</pre>
+</div>
+</div>
+</div>
 <div class="section" id="plugin-skipper">
 <h3>Plugin Skipper<a class="headerlink" href="#plugin-skipper" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.p_skipper.PluginSkipper</p>
@@ -649,8 +690,8 @@ actionrules=/etc/fuglu/actionrules.regex</pre>
 This can be used for example to skip spam filters on outgoing messages.
 eg. put this in /etc/fuglu/skipplugins.regex:</p>
 <p>&#64;incomingport    1099    SAPlugin</p>
-<div class="section" id="id10">
-<h4>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id11">
+<h4>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><pre>[PluginSkipper]
 filterfile=/etc/fuglu/skipplugins.regex</pre>
 </div>
@@ -661,8 +702,8 @@ filterfile=/etc/fuglu/skipplugins.regex</pre>
 <p>Plugin: fuglu.plugins.p_debug.MessageDebugger</p>
 <p>Message Debugger Plugin (Prepender).</p>
 <p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
-<div class="section" id="id11">
-<h4>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id12">
+<h4>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><pre>[MessageDebugger]
 #messages incoming on this port will be debugged to a logfile
 #Make sure the debugport is also set in the incomingport configuration option in the main section
@@ -1116,12 +1157,16 @@ Debug Output written to:/tmp/fuglu-test.log</pre>
 <li><a class="reference internal" href="#id9">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
+<li><a class="reference internal" href="#scriptfilter">ScriptFilter</a><ul>
 <li><a class="reference internal" href="#id10">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#debugger">Debugger</a><ul>
+<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
 <li><a class="reference internal" href="#id11">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debugger">Debugger</a><ul>
+<li><a class="reference internal" href="#id12">Configuration</a></li>
 </ul>
 </li>
 </ul>
