@@ -130,6 +130,9 @@ class Suspect(object):
         self.source = None
         """holds the message source if set directly"""
         
+        self._msgrep=None
+        """holds a copy of the message representation"""
+        
         #tags set by plugins
         self.tags={}
         self.tags['virus']={}
@@ -239,7 +242,7 @@ class Suspect(object):
             hdr=Header(val, header_name=key, continuation_ws=' ')
             hdrline="%s: %s\n"%(key,hdr.encode())
             src=hdrline+self.getSource()
-            self.setSource(src)
+            self.set_source(src)
         else:
             self.addheaders[key]=value
         
@@ -298,12 +301,19 @@ class Suspect(object):
     
     def get_message_rep(self):
         """returns the python email api representation of this suspect"""
+        #do we have a cached instance already?
+        if self._msgrep!=None:
+            return self._msgrep
+        
         if self.source!=None:
-            return email.message_from_string(self.source)
+            msgrep=email.message_from_string(self.source)
+            self._msgrep=msgrep
+            return msgrep
         else:
             fh=open(self.tempfile,'r')
             msgrep=email.message_from_file(fh)
             fh.close()
+            self._msgrep=msgrep
             return msgrep
     
     def getMessageRep(self):
@@ -314,7 +324,9 @@ class Suspect(object):
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
         """
-        self.setSource(msgrep.as_string())
+        self.set_source(msgrep.as_string())
+        #order is important, set_source sets source to None
+        self._msgrep=msgrep
     
     def setMessageRep(self,msgrep):
         """old name for set_message_rep"""
@@ -338,6 +350,7 @@ class Suspect(object):
         
     def set_source(self,source):
         self.source=source
+        self._msgrep=None
     
     def setSource(self,source):
         """old name for set_source"""
