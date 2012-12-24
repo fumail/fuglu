@@ -14,7 +14,8 @@ if forwardoriginal=False, the message source will be completely replaced with th
 
 Tags:
  
- * reads ``SAPlugin.skip``, skips scanning if this is True
+ * reads ``SAPlugin.skip``, (boolean) skips scanning if this is True
+ * reads ``SAPlugin.tempheader``, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.time`` (float)
@@ -593,7 +594,7 @@ The API is basically the same as for normal plugins within the ``examine()`` met
 there is no 'self' which means:
 
     * access the configuration by using ``config`` directly (instead of ``self.config``)
-    * use d``ebug('hello world')`` instead of ``self.logger.debug('hello world')``, this will also automatically write to the message debug channel
+    * use ``debug('hello world')`` instead of ``self.logger.debug('hello world')``, this will also automatically write to the message debug channel
 
 the script should not return anything, but change the available variables ``action`` and ``message`` instead
 (``DUNNO``, ``REJECT``, ``DEFER``, ``ACCEPT``, ``DELETE`` are already imported)

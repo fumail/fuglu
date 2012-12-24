@@ -188,7 +188,8 @@ mime:Content-Type ^application\/x-msdos-program$</pre>
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.skip</span></tt>, skips scanning if this is True</li>
+<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.skip</span></tt>, (boolean) skips scanning if this is True</li>
+<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.tempheader</span></tt>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
 <li>sets <tt class="docutils literal"><span class="pre">spam['spamassassin']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">SAPlugin.spamscore</span></tt> (float) if possible</li>
 <li>sets <tt class="docutils literal"><span class="pre">SAPlugin.time</span></tt> (float)</li>
@@ -658,7 +659,7 @@ actionrules=/etc/fuglu/actionrules.regex</pre>
 <blockquote>
 <div><ul class="simple">
 <li>access the configuration by using <tt class="docutils literal"><span class="pre">config</span></tt> directly (instead of <tt class="docutils literal"><span class="pre">self.config</span></tt>)</li>
-<li>use d``ebug(&#8216;hello world&#8217;)`` instead of <tt class="docutils literal"><span class="pre">self.logger.debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
+<li>use <tt class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></tt> instead of <tt class="docutils literal"><span class="pre">self.logger.debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
 </ul>
 </div></blockquote>
 <p>the script should not return anything, but change the available variables <tt class="docutils literal"><span class="pre">action</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt> instead
