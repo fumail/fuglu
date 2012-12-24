@@ -267,6 +267,11 @@ class MainController(object):
             'fprot':{
                 'default':"fuglu.plugins.fprot.FprotPlugin",
                 'section':'PluginAlias',
+            }, 
+                           
+            'scriptfilter':{
+                'default':"fuglu.plugins.script.ScriptFilter",
+                'section':'PluginAlias',
             },         
         }
         
