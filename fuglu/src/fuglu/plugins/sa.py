@@ -32,7 +32,8 @@ if forwardoriginal=False, the message source will be completely replaced with th
 
 Tags:
  
- * reads ``SAPlugin.skip``, skips scanning if this is True
+ * reads ``SAPlugin.skip``, (boolean) skips scanning if this is True
+ * reads ``SAPlugin.tempheader``, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.time`` (float)
@@ -330,6 +331,14 @@ Subject: test scanner
             spam=suspect.getOriginalSource()
         else:
             spam=suspect.getSource()
+            
+        #prepend temporary headers set by other plugins
+        tempheader=suspect.get_tag('SAPlugin.tempheader')
+        if tempheader!=None:
+            if not tempheader.enswith('\n'):
+                tempheader=tempheader+'\n'
+            spam=tempheader+spam
+            
             
         if forwardoriginal:
             ret=self.safilter_report(spam, suspect.to_address)
