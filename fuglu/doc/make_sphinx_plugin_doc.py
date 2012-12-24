@@ -3,6 +3,7 @@
 #./make_sphinx_plugin_doc.py > /home/gryphius/gitspace/fuglu.gh-pages/source/includedplugins-autogen.txt
 #cd /home/gryphius/gitspace/fuglu.gh-pages/
 #make html
+#firefox index.html
 ##check for errors, update docstring in plugin if necessary!
 #git commit -a -m 'updated doc'
 #git push
@@ -36,6 +37,7 @@ if __name__=='__main__':
        icap.ICAPPlugin(config),
        headers.HeaderPlugin(config),
        actionoverride.ActionOverridePlugin(config),
+       script.ScriptFilter(config),
        
        #prependers
        p_skipper.PluginSkipper(config),
