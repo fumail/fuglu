@@ -19,7 +19,7 @@ The API is basically the same as for normal plugins within the ``examine()`` met
 there is no 'self' which means:
 
     * access the configuration by using ``config`` directly (instead of ``self.config``)
-    * use d``ebug('hello world')`` instead of ``self.logger.debug('hello world')``, this will also automatically write to the message debug channel
+    * use ``debug('hello world')`` instead of ``self.logger.debug('hello world')``, this will also automatically write to the message debug channel
 
 the script should not return anything, but change the available variables ``action`` and ``message`` instead
 (``DUNNO``, ``REJECT``, ``DEFER``, ``ACCEPT``, ``DELETE`` are already imported)
@@ -74,6 +74,29 @@ example script:
         suspect.tags['ScriptFilter.time']="%.4f"%difftime
         return retaction,retmessage
     
+    
+    def lint(self):
+        allok=(self.checkConfig() and self.lint_code())
+        return allok
+    
+    def lint_code(self):
+        scriptdir=self.config.get(self.section,'scriptdir')
+        if not os.path.isdir(scriptdir):
+            print "Script dir %s does not exist"%scriptdir
+            return False
+        scripts=self.get_scripts()
+        counter=0
+        for script in scripts:
+            counter+=1
+            try:
+                source=open(script,'r').read()
+                compile(source,script,'exec')
+            except:
+                trb=traceback.format_exc()
+                print "Script %s failed to compile: %s"%(script,trb)
+                return False
+        print "%s scripts found"%counter
+        return True
     
     def _debug(self,suspect,message):
         suspect.debug(message)
