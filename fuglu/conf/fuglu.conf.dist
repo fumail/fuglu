@@ -1,24 +1,30 @@
 
 [main]
 
+#where should fuglu search for additional plugins
+plugindir=
+
+#what SCANNER plugins do we load, comma separated
+plugins=archive,attachment,clamav,spamassassin
+
+#what PREPENDER plugins do we load, comma separated
+prependers=debug,skip
+
+#what APPENDER plugins do we load, comma separated
+#appender plugins are plugins run after the scanning plugins
+#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
+#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
+appenders=
+
 ##outgoing helo we should use for re-injects
 #leave empty to auto-detect current hostname
 outgoinghelo=
-
-#where should fuglu search for additional plugins
-plugindir=
 
 #String to prepend to added headers
 prependaddedheaders=X-Fuglu-
 
 #run as user
 user=nobody
-
-#what PREPENDER plugins do we load, comma separated
-prependers=debug,skip
-
-#what SCANNER plugins do we load, comma separated
-plugins=archive,attachment,clamav,spamassassin
 
 #write debug info header to every mail
 debuginfoheader=0
@@ -29,12 +35,6 @@ trashdir=
 
 #run as group
 group=nobody
-
-#what APPENDER plugins do we load, comma separated
-#appender plugins are plugins run after the scanning plugins
-#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
-#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
-appenders=
 
 #list all deleted messages in 00-fuglutrash.log in the trashdir
 trashlog=0
@@ -70,6 +70,20 @@ incomingport=10025,10099,10888
 #this helps making sure the correct config is loaded. this identifier will be printed out when fuglu is reloading its config
 identifier=dist
 
+[PluginAlias]
+skip=fuglu.plugins.p_skipper.PluginSkipper
+clamav=fuglu.plugins.clamav.ClamavPlugin
+debug=fuglu.plugins.p_debug.MessageDebugger
+sssp=fuglu.plugins.sssp.SSSPPlugin
+fprot=fuglu.plugins.fprot.FprotPlugin
+icap=fuglu.plugins.icap.ICAPPlugin
+archive=fuglu.plugins.archive.ArchivePlugin
+spamassassin=fuglu.plugins.sa.SAPlugin
+vacation=fuglu.plugins.vacation.VacationPlugin
+actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
+attachment=fuglu.plugins.attachment.FiletypePlugin
+scriptfilter=fuglu.plugins.script.ScriptFilter
+
 [performance]
 
 #maximum scanner threads
@@ -97,19 +111,6 @@ defaulthighspamaction=DUNNO
 # a individual override
 defaultlowspamaction=DUNNO
 
-[PluginAlias]
-skip=fuglu.plugins.p_skipper.PluginSkipper
-clamav=fuglu.plugins.clamav.ClamavPlugin
-debug=fuglu.plugins.p_debug.MessageDebugger
-sssp=fuglu.plugins.sssp.SSSPPlugin
-fprot=fuglu.plugins.fprot.FprotPlugin
-icap=fuglu.plugins.icap.ICAPPlugin
-archive=fuglu.plugins.archive.ArchivePlugin
-spamassassin=fuglu.plugins.sa.SAPlugin
-vacation=fuglu.plugins.vacation.VacationPlugin
-actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
-attachment=fuglu.plugins.attachment.FiletypePlugin
-
 [virus]
 
 ##what to do with messages if a plugin detects a virus
@@ -126,8 +127,17 @@ requeuetemplate=FUGLU REQUEUE(${id}): ${injectanswer}
 
 [ArchivePlugin]
 
-#create a subdirectory of the destination domain within archivedir
-makedomainsubdir=1
+#change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
+chown=
+
+#Archiving SuspectFilter File
+archiverules=/etc/fuglu/archive.regex
+
+#filename template for the archived messages
+filenametemplate=${id}.eml
+
+#subdirectory within archivedir
+subdirtemplate=${to_domain}
 
 #if true/1/yes: store original message
 #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
@@ -136,8 +146,11 @@ storeoriginal=1
 #storage for archived messages
 archivedir=/tmp
 
-#Archiving SuspectFilter File
-archiverules=/etc/fuglu/archive.regex
+#set file permissions of saved messages
+chmod=
+
+#change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work
+chgrp=
 
 [FiletypePlugin]
 
@@ -175,7 +188,7 @@ host=localhost
 rejectmessage=threat detected: ${virusname}
 
 #socket timeout
-timeout=10
+timeout=30
 
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
