@@ -693,11 +693,13 @@ class SuspectFilter(object):
                 #self.logger.debug("""Checking headername %s (arg '%s') regex '%s' against value %s"""%(headername,arg,pattern.pattern,val))
                 if pattern.search(str(val)):   
                     self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
+                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s"%(self.filename,headername,arg,pattern.pattern,val))
                     return (True,arg)
                 else:
                     self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
                     
         self.logger.debug('No match found')
+        suspect.debug("message does not match any rule in %s"%self.filename)
         return (False,None)
     
     def get_args(self,suspect):
@@ -715,6 +717,7 @@ class SuspectFilter(object):
                     continue
                 if pattern.search(str(val))!=None:
                     self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
+                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s"%(self.filename,headername,arg,pattern.pattern,val))
                     ret.append (arg)
                 else:
                     self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
