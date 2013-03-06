@@ -161,9 +161,18 @@ class DKIMSign(ScannerPlugin):
         endtime=time.time()
         difftime=endtime-starttime
         suspect.tags['DKIMSign.time']="%.4f"%difftime
-        
+       
 class SPFCheck(ScannerPlugin):
-    """Check SPF"""
+    """Check SPF, RFC 4408 implementation"""
+    
+    SPF_NONE="None"
+    SPF_NEUTRAL="Neutral"
+    SPF_PASS="Pass"
+    SPF_FAIL="Fail"
+    SPF_SOFTFAIL="SoftFail"
+    SPF_TEMPERROR="TempError"
+    SPF_PERMERROR="PermError"
+    
     
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
@@ -180,6 +189,25 @@ class SPFCheck(ScannerPlugin):
         difftime=endtime-starttime
         suspect.tags['SPFCheck.time']="%.4f"%difftime
         
+
+    def check_spf(self,suspect):
+        pass
+    
+    
+    def check_host(self,ip,domain,sender):
+        """check_host according to rfc4408 section 4"""
+        
+        #TODO:
+        """If the <domain> is malformed (label longer than 63 characters, zero-length label not at the end, etc.) or is not a fully qualified domain name, or if the DNS lookup returns "domain does not exist" (RCODE 3), check_host() immediately returns the result "None"."""
+        
+        #TODO:
+        """If the <sender> has no localpart, substitute the string "postmaster" for the localpart."""
+        
+        #TODO: get records
+        
+        
+        pass
+    
     
 class SRSRewrite(ScannerPlugin):
     """SRS Rewrites - would only work in after queue mode"""
