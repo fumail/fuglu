@@ -108,7 +108,7 @@ def apply_template(templatecontent,suspect,values=None):
     values['to_address']=suspect.to_address
     values['from_domain']=suspect.from_domain
     values['to_domain']=suspect.to_domain
-    values['subject']=suspect.getMessageRep()['subject']
+    values['subject']=suspect.get_message_rep()['subject']
     values['date']=str(datetime.date.today())
     values['time']=time.strftime('%X')
     
@@ -611,9 +611,9 @@ class SuspectFilter(object):
                 textparts.append(part.get_payload(None,True))
         return textparts
     
-    def _getField(self,suspect,headername,messagerep=None):
+    def _get_field(self,suspect,headername,messagerep=None):
         """return mail header value or special value. msgrep should be the cached suspects messagerep
-        so we don't have to load it for every call to _getField
+        so we don't have to load it for every call to _get_field
         """         
         #builtins
         if headername=='envelope_from' or headername=='from_address':
@@ -638,7 +638,7 @@ class SuspectFilter(object):
             return [compareval,]
         
         if messagerep==None:
-            messagerep=suspect.getMessageRep()
+            messagerep=suspect.get_message_rep()
         
         #body rules on decoded text parts
         if headername=='body:raw':
@@ -678,11 +678,11 @@ class SuspectFilter(object):
     def matches(self,suspect):
         """returns (True,arg) if any regex matches, (False,None) otherwise"""
         self._reloadifnecessary()
-        messagerep=suspect.getMessageRep()
+        messagerep=suspect.get_message_rep()
         
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._getField(suspect,headername,messagerep=messagerep)
+            vals=self._get_field(suspect,headername,messagerep=messagerep)
             if vals==None:
                 self.logger.debug('No header %s found'%headername)
                 continue
@@ -708,7 +708,7 @@ class SuspectFilter(object):
         self._reloadifnecessary()
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._getField(suspect,headername)
+            vals=self._get_field(suspect,headername)
             if vals==None:
                 self.logger.debug('No field %s found'%headername)
                 continue
@@ -752,7 +752,7 @@ class SuspectFilterTestCase(unittest.TestCase):
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','testdata/helloworld.eml')
         suspect.tags['testtag']='testvalue'
         
-        headermatches= self.candidate.getArgs(suspect)
+        headermatches= self.candidate.get_args(suspect)
         self.failUnless('Sent to unittest domain!' in headermatches, "To_domain not found in headercheck")
         self.failUnless('Envelope sender is sender@unittests.fuglu.org' in headermatches,"Envelope Sender not matched in header chekc")
         self.failUnless('Mime Version is 1.0' in headermatches,"Standard header Mime Version not found")

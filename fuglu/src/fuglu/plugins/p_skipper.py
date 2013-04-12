@@ -42,7 +42,7 @@ eg. put this in /etc/fuglu/skipplugins.regex:
         if not self._initfilter():
             return None
         
-        args=self.filter.getArgs(suspect)
+        args=self.filter.get_args(suspect)
         #each arg should be a comma separated list of classnames to skip
         
         skippluginlist=[]

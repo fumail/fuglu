@@ -805,7 +805,7 @@ Don't dare you change any of my bytes or even remove one!"""
         self.failIf(gotback ==None, "Did not get message from dummy smtp server")
         
         #check a few things on the received message
-        msgrep=gotback.getMessageRep()
+        msgrep=gotback.get_message_rep()
         self.failUnless(msgrep.has_key('X-Fuglutest-Spamstatus'), "Fuglu SPAM Header not found in message")
         payload=msgrep.get_payload()
         outbytes=len(payload)
