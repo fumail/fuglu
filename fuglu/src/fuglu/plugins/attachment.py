@@ -14,8 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO, REJECT,\
-    string_to_actioncode, actioncode_to_string
+from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO, string_to_actioncode, actioncode_to_string
 from fuglu.bounce import Bounce
 import fuglu.extensions.sql
 import time
@@ -83,16 +82,16 @@ class RulesCache( object ):
         self.rulesdir=rulesdir
         self.reloadifnecessary()
 
-    def getRules(self,type,key):
-        self.logger.debug('Rule cache request: [%s] [%s]'%(type,key))
-        if not self.rules.has_key(type):
-            self.logger.error('Invalid rule type requested: %s'%type)
-        if not self.rules[type].has_key(key):
-            self.logger.debug('Ruleset not found : [%s] [%s]'%(type,key))
+    def getRules(self,ruletype,key):
+        self.logger.debug('Rule cache request: [%s] [%s]'%(ruletype,key))
+        if not self.rules.has_key(ruletype):
+            self.logger.error('Invalid rule type requested: %s'%ruletype)
+        if not self.rules[ruletype].has_key(key):
+            self.logger.debug('Ruleset not found : [%s] [%s]'%(ruletype,key))
             return None
-        self.logger.debug('Ruleset found : [%s] [%s] '%(type,key))
+        self.logger.debug('Ruleset found : [%s] [%s] '%(ruletype,key))
 
-        ret=self.rules[type][key]
+        ret=self.rules[ruletype][key]
         return ret
 
     def getCTYPERules(self,key):
@@ -145,13 +144,13 @@ class RulesCache( object ):
                 continue
             rulesloaded=len(ruleset)
             self.logger.debug('%s rules loaded from file %s'%(rulesloaded,filename))
-            type=KEY_NAME
+            ruletype=KEY_NAME
             key=filename[0:-len(FUATT_NAMESCONFENDING)]
             if(filename.endswith(FUATT_CTYPESCONFENDING)):
-                type=KEY_CTYPE
+                ruletype=KEY_CTYPE
                 key=filename[0:-len(FUATT_CTYPESCONFENDING)]
-            newruleset[type][key]=ruleset
-            self.logger.debug('Updating cache: [%s][%s]'%(type,key))
+            newruleset[ruletype][key]=ruleset
+            self.logger.debug('Updating cache: [%s][%s]'%(ruletype,key))
             rulecounter+=rulesloaded
 
         totalfiles=len(filelist)
@@ -176,10 +175,10 @@ class RulesCache( object ):
             line=line.strip()
             if line.startswith('#') or line=='':
                 continue
-            tuple=line.split(None,2)
-            if (len(tuple)!=3):
-                self.logger.debug('Ignoring invalid line  (length %s): %s'%(len(tuple),line))
-            (action,regex,description)=tuple
+            tpl=line.split(None,2)
+            if (len(tpl)!=3):
+                self.logger.debug('Ignoring invalid line  (length %s): %s'%(len(tpl),line))
+            (action,regex,description)=tpl
             action=action.lower()
             if action not in [FUATT_ACTION_ALLOW,FUATT_ACTION_DENY,FUATT_ACTION_DELETE]:
                 self.logger.error('Invalid rule action: %s'%action)
@@ -329,30 +328,30 @@ See (TODO: link to template vars chapter) for commonly available template variab
 
     def getFiletype(self,path):
         if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
-            type=self.ms.file(path)
+            ftype=self.ms.file(path)
         elif MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
-            type=magic.from_file(path,mime=True)
-        return type
+            ftype=magic.from_file(path,mime=True)
+        return ftype
 
-    def getBuffertype(self,buffer):
+    def getBuffertype(self,buffercontent):
         if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
-            type=self.ms.buffer(buffer)
+            btype=self.ms.buffer(buffercontent)
         elif MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
-            type=magic.from_buffer(buffer, mime=True)
-        return type
+            btype=magic.from_buffer(buffercontent, mime=True)
+        return btype
 
     def asciionly(self,stri):
         """return stri with all non-ascii chars removed"""
         return "".join([x for x in stri if ord(x) < 128])
         
 
-    def matchRules(self,ruleset,object,suspect,attachmentname=None):
+    def matchRules(self,ruleset,obj,suspect,attachmentname=None):
         if attachmentname==None:
             attachmentname=""
         attachmentname=self.asciionly(attachmentname)
         
         # remove non ascii chars
-        asciirep=self.asciionly(object)
+        asciirep=self.asciionly(obj)
         
         displayname=attachmentname
         if asciirep==attachmentname:
@@ -364,13 +363,13 @@ See (TODO: link to template vars chapter) for commonly available template variab
         for regex in ruleset.keys():
             prog=re.compile(regex,re.I)
             if self.extremeverbosity:
-                self._logger().debug('Attachment %s Rule %s'%(object,regex))
-            if prog.search( object):
+                self._logger().debug('Attachment %s Rule %s'%(obj,regex))
+            if prog.search( obj):
                 info=ruleset[regex]
                 action=info[0]
                 description=info[2]
-                self._logger().debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(object,regex,description,action))
-                suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(object,regex,description,action))
+                self._logger().debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
+                suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
                 if action=='deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s'%(suspect.id,displayname,asciirep))
                     blockinfo="%s %s: %s"%(displayname,asciirep,description)
@@ -390,11 +389,11 @@ See (TODO: link to template vars chapter) for commonly available template variab
         return ATTACHMENT_DUNNO
 
 
-    def matchMultipleSets(self,setlist,object,suspect,attachmentname=None):
-        """run through multiple sets and return the first action which matches object"""
-        self._logger().debug('Checking Object %s against attachment rulesets'%object)
+    def matchMultipleSets(self,setlist,obj,suspect,attachmentname=None):
+        """run through multiple sets and return the first action which matches obj"""
+        self._logger().debug('Checking object %s against attachment rulesets'%obj)
         for ruleset in setlist:
-            res=self.matchRules(ruleset, object,suspect,attachmentname)
+            res=self.matchRules(ruleset, obj,suspect,attachmentname)
             if res!=ATTACHMENT_DUNNO:
                 return res
         return ATTACHMENT_DUNNO
