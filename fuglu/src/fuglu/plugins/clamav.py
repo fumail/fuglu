@@ -133,11 +133,11 @@ Tags:
         content=None
         return self._problemcode()
   
-    def scan_stream(self,buffer):
+    def scan_stream(self,buff):
         """
         Scan a buffer
     
-        buffer (string) : buffer to scan
+        buff (string) : buffer to scan
     
         return either :
           - (dict) : {filename1: "virusname"}
@@ -155,7 +155,7 @@ Tags:
         self.logger.debug('Sending stream to clamd on host %s port %s'%(self.config.get(self.section,'host'),port))
         n=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         n.connect((self.config.get(self.section,'host'), port))
-        sent = n.sendall(buffer)
+        sent = n.sendall(buff)
         n.close()
 
         result='...'
