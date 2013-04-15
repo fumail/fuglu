@@ -183,4 +183,3 @@ if __name__=='__main__':
         t.add_task(SessionMock())
     print "done adding tasks"
     
-      
