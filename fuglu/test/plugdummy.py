@@ -68,7 +68,7 @@ if __name__=='__main__':
     parser.add_option("-c", action="store_true", dest="console", default=False, help="start an interactive console after the plugin has been run")
     parser.add_option("--help", action="store_true", dest="help", default=False, help="show options")
     parser.add_option("-a",action="store_true",dest="appender",default=False,help="run this as an appender plugin")
-    
+    parser.add_option("-l",action="store_true",dest="lint",default=False,help="run lint instead of examine/process")
     (opts,args)=parser.parse_args()
     if opts.help:
         print parser.format_help().strip()
@@ -143,6 +143,11 @@ if __name__=='__main__':
             if not config.has_section(section):
                 config.add_section(section)
             config.set(section,option,value)
+    
+    if opts.lint:
+        ret=pluginstance.lint()
+        print "Lint success: %s"%ret
+        sys.exit(0)
     
     #prepare the suspect
     if opts.recipients==None or len(opts.recipients)==0:
