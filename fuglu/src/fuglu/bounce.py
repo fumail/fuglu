@@ -12,18 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id$
-#
 
 import smtplib
-import traceback
 import logging
 import os
-import unittest
 
 from fuglu.shared import apply_template
 
-class Bounce:
+class Bounce(object):
     """Send Mail (Bounces)"""
     
     def __init__(self,config):
