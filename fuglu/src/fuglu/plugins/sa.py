@@ -308,9 +308,7 @@ Subject: test scanner
             suspect.set_tag('SAPlugin.skipreason','requested by previous plugin')
             return
         
-        spamsize=suspect.size
-        suspect.debug('Message size: %s'%spamsize)
-        
+        spamsize=suspect.size        
         maxsize=self.config.getint(self.section, 'maxsize')
         spamheadername=self.config.get(self.section,'spamheader')
         
