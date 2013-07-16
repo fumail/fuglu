@@ -321,7 +321,10 @@ smtpd_milters=inet:127.0.0.1:10028</pre>
 </ul>
 </div></blockquote>
 <p>enable configuration lookups by providing a standard sql alchemy connectstring in you configuration (section <cite>databaseconfig</cite> option <cite>dbconnectstring</cite>)</p>
-<p>if you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work.</p>
+<div class="highlight-python"><pre>[databaseconfig]
+dbconnectstring=mysql://root@localhost/fuglu</pre>
+</div>
+<p>if you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (<cite>sql=SELECT ....</cite> in the same section.  ) use <cite>:section</cite>, <cite>:option</cite> and the usual suspect variables like <cite>:to_domain</cite> and <cite>:to_address</cite> as placeholders.</p>
 <p>Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: <cite>lowspamaction</cite>, <cite>highspamaction</cite>, <cite>highspamlevel</cite></p>
 </div>
 </div>
