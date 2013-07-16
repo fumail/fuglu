@@ -15,6 +15,7 @@
 # $Id$
 #
 from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,REJECT,Suspect,string_to_actioncode,apply_template
+from fuglu.extensions.sql import DBConfig
 import time
 from socket import *
 import email
@@ -308,6 +309,8 @@ Subject: test scanner
             suspect.set_tag('SAPlugin.skipreason','requested by previous plugin')
             return
         
+        runtimeconfig=DBConfig(self.config, suspect)
+        
         spamsize=suspect.size        
         maxsize=self.config.getint(self.section, 'maxsize')
         spamheadername=self.config.get(self.section,'spamheader')
@@ -391,7 +394,8 @@ Subject: test scanner
         if isspam:
             self.logger.debug('Message is spam')
             suspect.debug('Message is spam')
-            configaction=string_to_actioncode(self.config.get(self.section,'lowspamaction'),self.config)
+            
+            configaction=string_to_actioncode(runtimeconfig.get(self.section,'lowspamaction'),self.config)
             if configaction!=None:
                 action=configaction
             values=dict(spamscore=spamscore)
@@ -405,9 +409,10 @@ Subject: test scanner
         suspect.tags['highspam']['SpamAssassin']=False
         if spamscore != None:
             suspect.tags['SAPlugin.spamscore']=spamscore
-            if spamscore>=self.config.getint(self.section,'highspamlevel'):
+            highspamlevel=runtimeconfig.getint(self.section,'highspamlevel')
+            if spamscore>=highspamlevel:
                 suspect.tags['highspam']['SpamAssassin']=True
-                configaction=string_to_actioncode(self.config.get(self.section,'highspamaction'),self.config)
+                configaction=string_to_actioncode(runtimeconfig.get(self.section,'highspamaction'),self.config)
                 if configaction!=None:
                     action=configaction
         

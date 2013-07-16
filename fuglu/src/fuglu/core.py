@@ -213,6 +213,19 @@ class MainController(object):
                 'description':"""confirmation template sent back to the connecting client for accepted messages""",
             },
             
+             # databaseconfig
+            'dbconnectstring':{
+                'default':"",
+                'section':'databaseconfig',
+                'description':"""read runtime configuration values from a database. requires sqlalchemy to be installed""",
+            },
+                           
+            'sql':{
+                'default':"""SELECT value FROM fugluconfig WHERE section=:section AND option=:option AND scope IN ('$GLOBAL',CONCAT('%',:to_domain),:to_address) ORDER BY SCOPE DESC""",
+                'section':'databaseconfig',
+                'description':"""sql query that returns a configuration value override. sql placeholders are ':section',':option' in addition the usual suspect filter default values like ':to_domain', ':to_address' etc\nif the statement returns more than one row/value only the first value in the first row is used""",
+            },
+            
             #  plugin alias
              'debug':{
                 'default':"fuglu.plugins.p_debug.MessageDebugger",
@@ -504,6 +517,19 @@ class MainController(object):
             if not os.path.isdir(trashdir):
                 print fc.strcolor("Trashdir %s does not exist"%trashdir,'red')
               
+        #sql config override
+        sqlconfigdbconnectstring=self.config.get('databaseconfig','dbconnectstring')
+        if sqlconfigdbconnectstring.strip()!='':
+            print ""
+            print "Linting ",fc.strcolor("sql configuration",'cyan')
+            try:
+                from fuglu.extensions.sql import get_session
+                sess=get_session(sqlconfigdbconnectstring)
+                sess.execute(self.config.get('databaseconfig','sql'),{})
+                sess.remove()
+                print  fc.strcolor("OK",'green')
+            except Exception,e:
+                print  fc.strcolor("Failed %s"%str(e),'red')
         
         allplugins=self.plugins+self.prependers+self.appenders
         

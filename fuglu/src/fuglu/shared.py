@@ -109,15 +109,7 @@ def apply_template(templatecontent,suspect,values=None,valuesfunction=None):
     if values==None:
         values={}
 
-    values['id']=suspect.id
-    values['timestamp']=suspect.timestamp
-    values['from_address']=suspect.from_address
-    values['to_address']=suspect.to_address
-    values['from_domain']=suspect.from_domain
-    values['to_domain']=suspect.to_domain
-    values['subject']=suspect.get_message_rep()['subject']
-    values['date']=str(datetime.date.today())
-    values['time']=time.strftime('%X')
+    default_template_values(suspect, values)
     
     if valuesfunction!=None:
         values=valuesfunction(values)
@@ -127,6 +119,23 @@ def apply_template(templatecontent,suspect,values=None,valuesfunction=None):
     message= template.safe_substitute(values)
     return message
 
+def default_template_values(suspect,values=None):
+    """Return a dict with default template variables applicable for this suspect
+    if values is not none, fill the values dict instead of returning a new one"""
+    
+    if values==None:
+        values={}
+    
+    values['id']=suspect.id
+    values['timestamp']=suspect.timestamp
+    values['from_address']=suspect.from_address
+    values['to_address']=suspect.to_address
+    values['from_domain']=suspect.from_domain
+    values['to_domain']=suspect.to_domain
+    values['subject']=suspect.get_message_rep()['subject']
+    values['date']=str(datetime.date.today())
+    values['time']=time.strftime('%X')
+    return values
 
 HOSTNAME=socket.gethostname()
 
