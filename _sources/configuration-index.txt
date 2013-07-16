@@ -367,6 +367,39 @@ example procmail filter:
 Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value ``unknown@example.org`` for both envelope sender and recipient. 
 
 
+Fetching scan-time configuration values from a database
+.......................................................
+
+(experimental feature) It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.
+
+For this to work you need to have sqlalchemy installed ( running `fuglu --lint` should show `enabled` for the sql extension)
+
+SQL script to create the the table:
+
+::
+
+	CREATE TABLE `fugluconfig` (
+	  `scope` varchar(255) NOT NULL,
+	  `section` varchar(255) NOT NULL,
+	  `option` varchar(255) NOT NULL,
+	  `value` varchar(255) NOT NULL
+	)
+
+
+The process is very similar to spamassassin's SQL configuration  (http://wiki.apache.org/spamassassin/UsingSQL ), with a few minor differences:
+
+ * we require two columns to identify a preference: `section` and `option`
+ * username is called `scope`
+ * fuglu does not load the full configuration per user, only the actual config options requested by plugins supporting db overrides
+ 
+
+
+enable configuration lookups by providing a standard sql alchemy connectstring in you configuration (section `databaseconfig` option `dbconnectstring`)
+ 
+if you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work.
+
+
+Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: `lowspamaction`, `highspamaction`, `highspamlevel`
 
 
 

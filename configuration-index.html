@@ -300,6 +300,30 @@ smtpd_milters=inet:127.0.0.1:10028</pre>
 </div>
 <p>Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value <tt class="docutils literal"><span class="pre">unknown&#64;example.org</span></tt> for both envelope sender and recipient.</p>
 </div>
+<div class="section" id="fetching-scan-time-configuration-values-from-a-database">
+<h3>Fetching scan-time configuration values from a database<a class="headerlink" href="#fetching-scan-time-configuration-values-from-a-database" title="Permalink to this headline">¶</a></h3>
+<p>(experimental feature) It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.</p>
+<p>For this to work you need to have sqlalchemy installed ( running <cite>fuglu &#8211;lint</cite> should show <cite>enabled</cite> for the sql extension)</p>
+<p>SQL script to create the the table:</p>
+<div class="highlight-python"><pre>CREATE TABLE `fugluconfig` (
+  `scope` varchar(255) NOT NULL,
+  `section` varchar(255) NOT NULL,
+  `option` varchar(255) NOT NULL,
+  `value` varchar(255) NOT NULL
+)</pre>
+</div>
+<p>The process is very similar to spamassassin&#8217;s SQL configuration  (<a class="reference external" href="http://wiki.apache.org/spamassassin/UsingSQL">http://wiki.apache.org/spamassassin/UsingSQL</a> ), with a few minor differences:</p>
+<blockquote>
+<div><ul class="simple">
+<li>we require two columns to identify a preference: <cite>section</cite> and <cite>option</cite></li>
+<li>username is called <cite>scope</cite></li>
+<li>fuglu does not load the full configuration per user, only the actual config options requested by plugins supporting db overrides</li>
+</ul>
+</div></blockquote>
+<p>enable configuration lookups by providing a standard sql alchemy connectstring in you configuration (section <cite>databaseconfig</cite> option <cite>dbconnectstring</cite>)</p>
+<p>if you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work.</p>
+<p>Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: <cite>lowspamaction</cite>, <cite>highspamaction</cite>, <cite>highspamlevel</cite></p>
+</div>
 </div>
 </div>
 
@@ -322,6 +346,7 @@ smtpd_milters=inet:127.0.0.1:10028</pre>
 <li><a class="reference internal" href="#fuglu-in-before-queue-mode">Fuglu in Before-Queue Mode</a></li>
 <li><a class="reference internal" href="#running-fuglu-as-a-milter">Running fuglu as a milter</a></li>
 <li><a class="reference internal" href="#running-fuglu-in-netcat-mode">Running fuglu in netcat-mode</a></li>
+<li><a class="reference internal" href="#fetching-scan-time-configuration-values-from-a-database">Fetching scan-time configuration values from a database</a></li>
 </ul>
 </li>
 </ul>
