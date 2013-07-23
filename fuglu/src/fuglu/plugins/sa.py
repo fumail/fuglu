@@ -243,7 +243,7 @@ Subject: test scanner
         
         return sql,params
     
-    def check_sql_blacklist(self,suspect):
+    def check_sql_blacklist(self,suspect,runtimeconfig=None):
         """Check this message against the SQL blacklist. returns highspamaction on hit, DUNNO otherwise"""    
         #work in progress
         if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section,'check_sql_blacklist'):
@@ -282,7 +282,10 @@ Subject: test scanner
                 
                 if pattern.search(suspect.from_address):
                     self.logger.debug('Blacklist match : %s for sa pref %s'%(suspect.from_address,blvalue))
-                    configaction=string_to_actioncode(self.config.get(self.section,'highspamaction'),self.config)
+                    confcheck=self.config
+                    if runtimeconfig!=None:
+                        confcheck=runtimeconfig
+                    configaction=string_to_actioncode(confcheck.get(self.section,'highspamaction'),self.config)
                     suspect.tags['spam']['SpamAssassin']=True
                     prependheader=self.config.get('main','prependaddedheaders')
                     suspect.addheader("%sBlacklisted"%prependheader, blvalue)
