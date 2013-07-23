@@ -221,7 +221,7 @@ class MainController(object):
             },
                            
             'sql':{
-                'default':"""SELECT value FROM fugluconfig WHERE section=:section AND option=:option AND scope IN ('$GLOBAL',CONCAT('%',:to_domain),:to_address) ORDER BY SCOPE DESC""",
+                'default':"""SELECT value FROM fugluconfig WHERE `section`=:section AND `option`=:option AND `scope` IN ('$GLOBAL',CONCAT('%',:to_domain),:to_address) ORDER BY `scope` DESC""",
                 'section':'databaseconfig',
                 'description':"""sql query that returns a configuration value override. sql placeholders are ':section',':option' in addition the usual suspect filter default values like ':to_domain', ':to_address' etc\nif the statement returns more than one row/value only the first value in the first row is used""",
             },
