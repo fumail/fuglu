@@ -525,7 +525,10 @@ class MainController(object):
             try:
                 from fuglu.extensions.sql import get_session
                 sess=get_session(sqlconfigdbconnectstring)
-                sess.execute(self.config.get('databaseconfig','sql'),{})
+                tempsuspect=Suspect('sender@example.com', 'recipient@example.com', '/dev/null')
+                sqlvars=dict(section='testsection',option='testoption',scope='$GLOBAL')
+                default_template_values(tempsuspect,sqlvars)
+                sess.execute(self.config.get('databaseconfig','sql'),sqlvars)
                 sess.remove()
                 print  fc.strcolor("OK",'green')
             except Exception,e:
