@@ -124,7 +124,7 @@ Tags:
                 'confidential':True,
             },                 
             'sql_blacklist_sql':{
-                'default':"""SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})""",
+                'default':"""SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})""",
                 'description':"SQL query to get the blacklist entries for a suspect\nyou may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}",
             }, 
             
