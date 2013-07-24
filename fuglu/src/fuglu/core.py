@@ -218,6 +218,7 @@ class MainController(object):
                 'default':"",
                 'section':'databaseconfig',
                 'description':"""read runtime configuration values from a database. requires sqlalchemy to be installed""",
+                'confidential':True,
             },
                            
             'sql':{
