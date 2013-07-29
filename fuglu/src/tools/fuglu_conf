@@ -56,6 +56,8 @@ def cloneConfig(config):
 
 def config_equals(default,actual):
     """return true if default and actual mean the same thing, eg. """
+    if default==None:
+        default=""
     default=default.strip().lower()
     actual=actual.strip().lower()
     #we use '1' because 1 could be a numeric config as well which would be 
@@ -92,7 +94,7 @@ def print_overrides(defaultconfig,userconfig,controller):
                         have_printed_section=True
                     
                     pdef=defaultval
-                    if defaultval.strip()=='':
+                    if defaultval==None or defaultval.strip()=='':
                         pdef='empty'
                     MAXCHARS=15
                     if len(pdef)>MAXCHARS:
