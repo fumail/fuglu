@@ -165,6 +165,12 @@ class MainController(object):
               'description':"write mrtg statistics",
               'default':"",
             },
+                           
+            'controlport':{
+              'section':'main',
+              'description':"port where fuglu provides statistics etc (used by fuglu_control). Can also be a path to a unix socket",
+              'default':"/tmp/fuglu_control.sock",
+            },
           
             #performance section
             'minthreads':{
@@ -365,15 +371,9 @@ class MainController(object):
         ports=self.config.get('main', 'incomingport')
         for port in ports.split(','):
             self.start_connector(port)
-            
-            
+        
         #control socket
-        if self.config.has_option('main', 'controlport'):
-            controlport=self.config.getint('main','controlport')
-        else:
-            controlport=None
-            
-        control=ControlServer(self,address=self.config.get('main', 'bindaddress'),port=controlport)
+        control=ControlServer(self,address=self.config.get('main', 'bindaddress'),port=self.config.get('main','controlport'))
         thread.start_new_thread(control.serve, ())
         self.controlserver=control
         

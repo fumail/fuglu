@@ -20,21 +20,47 @@ import logging
 import datetime
 import traceback
 import string
+import os
 
 class ControlServer(object):    
     def __init__(self, controller,port=None,address="127.0.0.1"):
         if port==None:
-            port=10010
-        self.logger=logging.getLogger("fuglu.control.%s"%port)
-        self.logger.debug('Starting Control/Info server on port %s'%port)
+            port="/tmp/fuglu_control.sock"
+        
+        if type(port)==str:
+            try:
+                port=int(port)
+                porttype="inet4"
+            except:
+                porttype="unix"
+                pass
+        
+        if type(port)==int:
+            porttype="inet4"
+            self.logger=logging.getLogger("fuglu.control.%s"%port)
+            self.logger.debug('Starting Control/Info server on port %s'%port)
+        else:
+            porttype="unix"
+            self.logger=logging.getLogger("fuglu.control.%s"%os.path.basename(port))
+            self.logger.debug('Starting Control/Info server on %s'%port)
+        
         self.port=port
         self.controller=controller
         self.stayalive=1
         
         try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self._socket.bind((address, port))
+            if porttype=="inet4":
+                self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._socket.bind((address, port))
+            else:
+                try:
+                    os.remove(port)
+                except:
+                    pass
+                self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                self._socket.bind(port)
+                
             self._socket.listen(5)
         except Exception,e:
             self.logger.error('Could not start control server: %s'%e)

@@ -20,28 +20,52 @@
 
 import sys
 import socket
+from optparse import OptionParser
 
-if len(sys.argv)<2:
-    print ""
-    print "Usage fuglu_control <command> [<args>]"
-    print "Available commands:"
-    print "stats : show statistics"
-    print "uptime: show long fuglu has been running"
-    print "workerlist: show current status of all mail scanning threads"
-    print "threadlist: show current status of ALL threads (core + workers)"
-    print "exceptionlist: last 10 exception tracebacks"
+def usage():
+    return """
+    
+    Usage fuglu_control <command> [<args>]
+    Available commands:"
+    stats : show statistics"
+    uptime: show long fuglu has been running"
+    workerlist: show current status of all mail scanning threads"
+    threadlist: show current status of ALL threads (core + workers)"
+    exceptionlist: last 10 exception tracebacks"
+    """
+
+optionparser=OptionParser(usage=usage())
+optionparser.add_option("-p",dest="port",action="store",default="/tmp/fuglu_control.sock",help="Unix socket or port to connect to")
+(options,pargs) = optionparser.parse_args()
+
+
+
+if len(pargs)<1:
+    optionparser.print_usage()
     sys.exit(1)
 
 
-localport=10010
-
-cmd=" ".join(sys.argv[1:])
-#connect to debug port
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+localport=options.port
+iport=None
 try:
-    s.connect(('127.0.0.1', localport))
+    iport=int(localport)
+except:
+    pass
+
+cmd=" ".join(pargs)
+#connect to debug port
+if iport!=None:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+else:
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+try:
+    if iport!=None:
+        s.connect(('127.0.0.1', iport))
+    else:
+        s.connect(localport)
 except Exception,e:
-    print "Cannot connect to fuglu control deamon on port %s - is fuglu running?"%localport
+    print "Cannot connect to fuglu control deamon (%s) - is fuglu running?"%localport
     print str(e)
     sys.exit(1)
     
