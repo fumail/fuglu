@@ -367,19 +367,19 @@ See (TODO: link to template vars chapter) for commonly available template variab
         for regex in ruleset.keys():
             prog=re.compile(regex,re.I)
             if self.extremeverbosity:
-                self._logger().debug('Attachment %s Rule %s'%(obj,regex))
+                self.logger.debug('Attachment %s Rule %s'%(obj,regex))
             if prog.search( obj):
                 info=ruleset[regex]
                 action=info[0]
                 description=info[2]
-                self._logger().debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
+                self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
                 suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
                 if action=='deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s'%(suspect.id,displayname,asciirep))
                     blockinfo="%s %s: %s"%(displayname,asciirep,description)
                     suspect.tags['FiletypePlugin.errormessage']=blockinfo
                     if self.config.getboolean(self.section,'sendbounce'):
-                        self._logger().info("Sending attachment block bounce to %s"%suspect.from_address)
+                        self.logger.info("Sending attachment block bounce to %s"%suspect.from_address)
                         bounce=Bounce(self.config)
                         bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
                     return ATTACHMENT_BLOCK
@@ -395,7 +395,7 @@ See (TODO: link to template vars chapter) for commonly available template variab
 
     def matchMultipleSets(self,setlist,obj,suspect,attachmentname=None):
         """run through multiple sets and return the first action which matches obj"""
-        self._logger().debug('Checking object %s against attachment rulesets'%obj)
+        self.logger.debug('Checking object %s against attachment rulesets'%obj)
         for ruleset in setlist:
             res=self.matchRules(ruleset, obj,suspect,attachmentname)
             if res!=ATTACHMENT_DUNNO:
