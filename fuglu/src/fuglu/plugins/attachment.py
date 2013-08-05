@@ -350,6 +350,10 @@ See (TODO: link to template vars chapter) for commonly available template variab
             attachmentname=""
         attachmentname=self.asciionly(attachmentname)
         
+        if obj==None:
+            self.logger.warning("%s: message has unknown name or content-type attachment %s"%(suspect.id,attachmentname))
+            return ATTACHMENT_DUNNO
+        
         # remove non ascii chars
         asciirep=self.asciionly(obj)
         
