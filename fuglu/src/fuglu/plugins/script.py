@@ -129,7 +129,8 @@ example script:
             action=scriptlocals['action']
             message=scriptlocals['message']
         except Stopped:
-            pass
+            action=scriptlocals['action']
+            message=scriptlocals['message']
         except:
             trb=traceback.format_exc()
             self.logger.error("Script %s failed: %s"%(filename,trb))
