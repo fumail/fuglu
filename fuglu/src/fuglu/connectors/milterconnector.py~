@@ -62,7 +62,7 @@ class MilterHandler(ProtocolHandler):
         
     def defer(self,reason):
         #apparently milter wants extended status codes (at least milter-test-server does)
-        if not reason.startswith("4."):
+        if not reason.startswith("5."):
             reason="4.7.1 %s"%reason
         self.logger.info("Defer...%s"%reason)
         self.sess.answer=self.sess.CustomReply(450, reason)
