@@ -633,7 +633,8 @@ class SuspectFilter(object):
         return textparts
     
     def get_field(self,suspect,headername):
-        """return a list of mail header values or special values.
+        """return a list of mail header values or special values. If the value can not be found, an empty list is returned.
+        
         headers:
             just the headername for normal headers
             mime:headername for attached mime part headers
@@ -671,10 +672,11 @@ class SuspectFilter(object):
             tagname=headername[1:]
             tagval=suspect.get_tag(tagname)
             if tagval==None:
-                compareval=''
-            else:
-                compareval=str(tagval)
-            return [compareval,]
+                return []
+            if type(tagval)==list:
+                return tagval
+            return [tagval]
+            
         
         messagerep=suspect.get_message_rep()
         
@@ -720,7 +722,7 @@ class SuspectFilter(object):
         for tup in self.patterns:
             (headername,pattern,arg)=tup
             vals=self.get_field(suspect,headername)
-            if vals==None:
+            if vals==None or len(vals)==0:
                 self.logger.debug('No header %s found'%headername)
                 continue
             
@@ -746,7 +748,7 @@ class SuspectFilter(object):
         for tup in self.patterns:
             (headername,pattern,arg)=tup
             vals=self.get_field(suspect,headername)
-            if vals==None:
+            if vals==None or len(vals)==0:
                 self.logger.debug('No field %s found'%headername)
                 continue
             for val in vals:
