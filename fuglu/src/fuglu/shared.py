@@ -497,7 +497,9 @@ class SuspectFilter(object):
         self.reloadinterval=30
         self.lastreload=0
         self.logger=logging.getLogger('fuglu.suspectfilter')
-        self._reloadifnecessary()
+        
+        if filename!=None:
+            self._reloadifnecessary()
         self.stripre=re.compile(r'<[^>]*?>')
         
     def _reloadifnecessary(self):
@@ -630,9 +632,27 @@ class SuspectFilter(object):
                 textparts.append(part.get_payload(None,True))
         return textparts
     
-    def _get_field(self,suspect,headername,messagerep=None):
-        """return mail header value or special value. msgrep should be the cached suspects messagerep
-        so we don't have to load it for every call to _get_field
+    def get_field(self,suspect,headername):
+        """return a list of mail header values or special values.
+        headers:
+            just the headername for normal headers
+            mime:headername for attached mime part headers
+            
+        envelope data:
+            envelope_from (or from_address)
+            envelope_to (or to_address)
+            from_domain
+            to_domain
+        
+        tags
+            @tagname
+        
+        body source:
+            body:full -> (full source, encoded)
+            body:stripped (or just 'body') : -> returns text/* bodyparts with tags and newlines stripped
+            body:raw -> decoded raw message body parts
+            
+        
         """         
         #builtins
         if headername=='envelope_from' or headername=='from_address':
@@ -656,8 +676,7 @@ class SuspectFilter(object):
                 compareval=str(tagval)
             return [compareval,]
         
-        if messagerep==None:
-            messagerep=suspect.get_message_rep()
+        messagerep=suspect.get_message_rep()
         
         #body rules on decoded text parts
         if headername=='body:raw':
@@ -697,11 +716,10 @@ class SuspectFilter(object):
     def matches(self,suspect):
         """returns (True,arg) if any regex matches, (False,None) otherwise"""
         self._reloadifnecessary()
-        messagerep=suspect.get_message_rep()
         
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._get_field(suspect,headername,messagerep=messagerep)
+            vals=self.get_field(suspect,headername)
             if vals==None:
                 self.logger.debug('No header %s found'%headername)
                 continue
@@ -727,7 +745,7 @@ class SuspectFilter(object):
         self._reloadifnecessary()
         for tup in self.patterns:
             (headername,pattern,arg)=tup
-            vals=self._get_field(suspect,headername)
+            vals=self.get_field(suspect,headername)
             if vals==None:
                 self.logger.debug('No field %s found'%headername)
                 continue
