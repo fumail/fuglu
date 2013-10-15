@@ -370,7 +370,6 @@ SQL Example for mysql:
             vals=messagerep.get_all(header)
             if vals!=None:
                 for val in vals:
-                    print "checking header %s val %s"%(header,val)
                     if re.search(restring,val,re.I):
                         self.logger.debug('Blacklisted header value: %s: %s'%(header,val))
                         return True
