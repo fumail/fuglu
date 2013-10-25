@@ -108,6 +108,8 @@ example script:
         action=DUNNO
         message=''
         debug = lambda message: self._debug(suspect,message)
+        info = lambda message: self.logger.info(message)
+        warn = lambda message: self.logger.warn(message)
         
         def stop():
             raise Stopped()
@@ -117,6 +119,8 @@ example script:
                     message=message,
                     suspect=suspect,
                     debug=debug,
+                    info=info,
+                    warn=warn,
                     config=self.config,
                     stop=stop,
                     DUNNO=DUNNO,ACCEPT=ACCEPT,DELETE=DELETE,DEFER=DEFER,REJECT=REJECT,
