@@ -741,28 +741,36 @@ class SuspectFilter(object):
         suspect.debug("message does not match any rule in %s"%self.filename)
         return (False,None)
     
-    def get_args(self,suspect):
-        """returns all args of matched regexes in a list"""
+    def get_args(self,suspect,extended=False):
+        """returns all args of matched regexes in a list
+        if extended=True, but returns a list of tuples with all available information:
+        (fieldname, matchedvalue, arg, regex)
+        """
         ret=[]
         self._reloadifnecessary()
         for tup in self.patterns:
-            (headername,pattern,arg)=tup
-            vals=self.get_field(suspect,headername)
+            (fieldname,pattern,arg)=tup
+            vals=self.get_field(suspect,fieldname)
             if vals==None or len(vals)==0:
-                self.logger.debug('No field %s found'%headername)
+                self.logger.debug('No field %s found'%fieldname)
                 continue
             for val in vals:
                 if val==None:
                     continue
-                if pattern.search(str(val))!=None:
-                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
-                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s"%(self.filename,headername,arg,pattern.pattern,val))
-                    ret.append (arg)
+                strval=str(val)
+                if pattern.search(strval)!=None:
+                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(fieldname,arg,pattern.pattern,val))
+                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s"%(self.filename,fieldname,arg,pattern.pattern,val))
+                    if extended:
+                        ret.append((fieldname,strval,arg,pattern.pattern))
+                    else:
+                        ret.append (arg)
                 else:
-                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
+                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(fieldname,arg,pattern.pattern,val))
                     
         return ret
-    
+        
+        
     
     def getArgs(self,suspect):
         """old name for get_args"""
