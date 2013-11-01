@@ -202,12 +202,12 @@ class Suspect(object):
         should be sufficiently unique for the quarantine
         """
         uni="%s%s%s"%(HOSTNAME,time.time(),random.randint(1,10000))
-        id=None
+        suspectid=None
         if MD5LIB==_HASHLIB:
-            id=hashlib.md5(uni).hexdigest()
+            suspectid=hashlib.md5(uni).hexdigest()
         else:
-            id=md5.new(uni).hexdigest()
-        return id
+            suspectid=md5.new(uni).hexdigest()
+        return suspectid
     
     
     def debug(self,message):
