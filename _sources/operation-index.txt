@@ -113,8 +113,9 @@ after reloading fuglu, the spamassassin plugin should be very verbose:
 there should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this. 
 
 
-== Qualnames for new loggers ==
-Plugins usually use fuglu.plugin.<classname>
+**Qualnames for new loggers** :
+
+Plugins usually use ``fuglu.plugin.<classname>``
 
 fuglu internal qualnames:
 
