@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,8 +11,9 @@
     
     <title>Configuration &mdash; fuglu 1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -25,11 +27,16 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="top" title="fuglu 1 documentation" href="index.html" />
     <link rel="next" title="Operation" href="operation-index.html" />
     <link rel="prev" title="Installation" href="installation-index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
+    <div class="relbar-top">
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -38,13 +45,16 @@
              accesskey="I">index</a></li>
         <li class="right" >
           <a href="operation-index.html" title="Operation"
-             accesskey="N">next</a> |</li>
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
         <li class="right" >
           <a href="installation-index.html" title="Installation"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li> 
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li>
+ 
       </ul>
-    </div>  
+    </div>
+    </div>
+  
 
     <div class="document">
       <div class="documentwrapper">
@@ -309,7 +319,8 @@ smtpd_milters=inet:127.0.0.1:10028</pre>
   `scope` varchar(255) NOT NULL,
   `section` varchar(255) NOT NULL,
   `option` varchar(255) NOT NULL,
-  `value` varchar(255) NOT NULL
+  `value` varchar(255) NOT NULL,
+  PRIMARY KEY (scope,section,option)
 )</pre>
 </div>
 <p>The process is very similar to spamassassin&#8217;s SQL configuration  (<a class="reference external" href="http://wiki.apache.org/spamassassin/UsingSQL">http://wiki.apache.org/spamassassin/UsingSQL</a> ), with a few minor differences:</p>
@@ -336,6 +347,7 @@ dbconnectstring=mysql://root@localhost/fuglu</pre>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Configuration</a><ul>
@@ -356,6 +368,7 @@ dbconnectstring=mysql://root@localhost/fuglu</pre>
 </li>
 </ul>
 
+  </div>
   <h4>Previous topic</h4>
   <p class="topless"><a href="installation-index.html"
                         title="previous chapter">Installation</a></p>
@@ -384,6 +397,8 @@ dbconnectstring=mysql://root@localhost/fuglu</pre>
       </div>
       <div class="clearer"></div>
     </div>
+    <div class="relbar-bottom">
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -392,16 +407,20 @@ dbconnectstring=mysql://root@localhost/fuglu</pre>
              >index</a></li>
         <li class="right" >
           <a href="operation-index.html" title="Operation"
-             >next</a> |</li>
+             >next</a> &nbsp; &nbsp;</li>
         <li class="right" >
           <a href="installation-index.html" title="Installation"
-             >previous</a> |</li>
-        <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li> 
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">fuglu 1 documentation</a> &raquo;</li>
+ 
       </ul>
     </div>
+    </div>
+
     <div class="footer">
         &copy; Copyright 2012, gryphius.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
+    <!-- cloud_sptheme 1.4 -->
   </body>
 </html>
