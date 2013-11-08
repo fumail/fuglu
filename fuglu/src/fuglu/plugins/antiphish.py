@@ -127,12 +127,12 @@ If fuglu handles both incoming and outgoing mails you should make sure that this
                            
                 'canonicalizeheaders':{
                  'description':"Type of header canonicalization (simple or relaxed)",
-                 'default':"relaxed",                  
+                 'default':"relaxed",
                 },
                            
                 'canonicalizebody':{
                  'description':"Type of body canonicalization (simple or relaxed)",
-                 'default':"relaxed",                  
+                 'default':"relaxed",
                 },
                            
                 'selector':{
