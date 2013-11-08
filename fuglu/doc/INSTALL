@@ -9,9 +9,6 @@ while (you see errors in the output)
 add a content filter to postfix config on tcp port 10025
 run fuglu
 
-For the a little more patient:
-https://sourceforge.net/apps/trac/fuglu/wiki/FugluInstall
-
 UPGRADE
 --------
 #python compareconfig.py
@@ -19,5 +16,3 @@ UPGRADE
 #python setup.py install
 #fuglu --lint
 restart fuglu
-
-https://sourceforge.net/apps/trac/fuglu/wiki/FugluUprade
