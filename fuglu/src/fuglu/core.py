@@ -292,7 +292,17 @@ class MainController(object):
             'scriptfilter':{
                 'default':"fuglu.plugins.script.ScriptFilter",
                 'section':'PluginAlias',
-            },         
+            },
+                           
+            'dkimsign':{
+                'default':"fuglu.plugins.antiphish.DKIMSignPlugin",
+                'section':'PluginAlias',
+            }, 
+                           
+            'dkimverify':{
+                'default':"fuglu.plugins.antiphish.DKIMVerifyPlugin",
+                'section':'PluginAlias',
+            },          
         }
         
         self.config=config

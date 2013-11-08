@@ -45,7 +45,11 @@ class DKIMVerifyPlugin(ScannerPlugin):
 This plugin checks the DKIM signature of the message and sets tags...
 DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
 the tag is not set if there was no dkim header at all
-    
+
+The plugin does not take any action based on the DKIM test result since a failed DKIM validation by itself
+should not cause a message to be treated any differently. Other plugins might use the DKIM result
+in combination with other factors to take action (for example a "DMARC" plugin could use this information)
+
 DKIMVerify.skipreason: set if the verification has been skipped
     """
     def __init__(self,config,section=None):
