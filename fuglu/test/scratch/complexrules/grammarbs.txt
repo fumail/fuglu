@@ -1,0 +1,17 @@
+- headers
+- body
+- envelope data
+
+- arrays (multiple recipient adresses, multiple headers)
+- how do we handle the case when the requested field does not exist?
+
+
+functions:
+rbl lookup
+
+
+regex checks
+size comparison
+
+string (startswith/endswith/contains)
+
