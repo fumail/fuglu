@@ -642,8 +642,13 @@ Setting up your keys:
 ::
 
     mkdir -p /etc/fuglu/dkim
-    openssl genrsa -out /etc/fuglu/dkim/example.com.key 1024
-    openssl rsa -in /etc/fuglu/dkim/example.com.key -out /etc/fuglu/dkim/example.com.pub -pubout -outform PEM
+    domain=example.com
+    openssl genrsa -out /etc/fuglu/dkim/${domain}.key 1024
+    openssl rsa -in /etc/fuglu/dkim/${domain}.key -out /etc/fuglu/dkim/${domain}.pub -pubout -outform PEM
+    # print out the DNS record:
+    echo -n "default._domainkey TXT  "v=DKIM1; k=rsa; p=" ; cat /etc/fuglu/dkim/${domain}.pub | grep -v 'PUBLIC KEY' | tr -d '
+' ; echo ";""
+
     
 If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails
     
@@ -670,7 +675,7 @@ Configuration
     canonicalizebody=relaxed
 
     #Type of header canonicalization (simple or relaxed)
-    canonicalizeheaders=simple
+    canonicalizeheaders=relaxed
 
 
 
@@ -684,11 +689,13 @@ This plugin checks the DKIM signature of the message and sets tags...
 DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
 the tag is not set if there was no dkim header at all
 
+DKIMVerify.skipreason: set if the verification has been skipped
+
 The plugin does not take any action based on the DKIM test result since a failed DKIM validation by itself
 should not cause a message to be treated any differently. Other plugins might use the DKIM result
 in combination with other factors to take action (for example a "DMARC" plugin could use this information)
 
-DKIMVerify.skipreason: set if the verification has been skipped
+It is currently recommended to leave both header and body canonicalization as 'relaxed'. Using 'simple' can cause the signature to fail.
     
 
 Configuration

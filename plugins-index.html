@@ -700,9 +700,13 @@ scriptdir=/etc/fuglu/scriptfilter</pre>
 Add DKIM Signature to outgoing mails</p>
 <p>Setting up your keys:</p>
 <div class="highlight-python"><pre>mkdir -p /etc/fuglu/dkim
-openssl genrsa -out /etc/fuglu/dkim/example.com.key 1024
-openssl rsa -in /etc/fuglu/dkim/example.com.key -out /etc/fuglu/dkim/example.com.pub -pubout -outform PEM</pre>
+domain=example.com
+openssl genrsa -out /etc/fuglu/dkim/${domain}.key 1024
+openssl rsa -in /etc/fuglu/dkim/${domain}.key -out /etc/fuglu/dkim/${domain}.pub -pubout -outform PEM
+# print out the DNS record:
+echo -n "default._domainkey TXT  "v=DKIM1; k=rsa; p=" ; cat /etc/fuglu/dkim/${domain}.pub | grep -v 'PUBLIC KEY' | tr -d '</pre>
 </div>
+<p>&#8216; ; echo &#8221;;&#8221;&#8220;</p>
 <p>If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails</p>
 <div class="section" id="id11">
 <h4>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
@@ -723,7 +727,7 @@ privatekeyfile=/etc/fuglu/dkim/${header_from_domain}.key
 canonicalizebody=relaxed
 
 #Type of header canonicalization (simple or relaxed)
-canonicalizeheaders=simple</pre>
+canonicalizeheaders=relaxed</pre>
 </div>
 </div>
 </div>
@@ -734,10 +738,11 @@ canonicalizeheaders=simple</pre>
 This plugin checks the DKIM signature of the message and sets tags...
 DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
 the tag is not set if there was no dkim header at all</p>
+<p>DKIMVerify.skipreason: set if the verification has been skipped</p>
 <p>The plugin does not take any action based on the DKIM test result since a failed DKIM validation by itself
 should not cause a message to be treated any differently. Other plugins might use the DKIM result
 in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
-<p>DKIMVerify.skipreason: set if the verification has been skipped</p>
+<p>It is currently recommended to leave both header and body canonicalization as &#8216;relaxed&#8217;. Using &#8216;simple&#8217; can cause the signature to fail.</p>
 <div class="section" id="id12">
 <h4>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
