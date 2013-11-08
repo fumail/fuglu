@@ -38,6 +38,8 @@ if __name__=='__main__':
        headers.HeaderPlugin(config),
        actionoverride.ActionOverridePlugin(config),
        script.ScriptFilter(config),
+       antiphish.DKIMSignPlugin(config),
+       antiphish.DKIMVerifyPlugin(config),
        
        #prependers
        p_skipper.PluginSkipper(config),
