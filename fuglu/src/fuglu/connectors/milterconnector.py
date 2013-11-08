@@ -48,8 +48,8 @@ class MilterHandler(ProtocolHandler):
         toaddr=sess.to_address
         tempfilename=sess.tempfilename
         body=open(tempfilename).read()
-        self.logger.info("BODY=%s"%body)
-        self.logger.info("MILTER: from=%s to=%s"%(fromaddr,toaddr))
+        #self.logger.info("BODY=%s"%body)
+        #self.logger.info("MILTER: from=%s to=%s"%(fromaddr,toaddr))
         suspect=Suspect(fromaddr,toaddr,tempfilename)
         suspect.recipients=set(sess.recipients)
         return suspect
@@ -64,7 +64,7 @@ class MilterHandler(ProtocolHandler):
         #apparently milter wants extended status codes (at least milter-test-server does)
         if not reason.startswith("4."):
             reason="4.7.1 %s"%reason
-        self.logger.info("Defer...%s"%reason)
+        #self.logger.info("Defer...%s"%reason)
         self.sess.answer=self.sess.CustomReply(450, reason)
         self.sess.finish()
         self.sess=None
@@ -73,7 +73,7 @@ class MilterHandler(ProtocolHandler):
         #apparently milter wants extended status codes (at least milter-test-server does)
         if not reason.startswith("5."):
             reason="5.7.1 %s"%reason
-        self.logger.info("reject...%s"%reason)
+        #self.logger.info("reject...%s"%reason)
         self.sess.answer=self.sess.CustomReply(550, reason)
         self.sess.finish()
         self.sess=None
