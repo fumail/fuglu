@@ -52,7 +52,7 @@ Configuration
 
     #SQL query to get the blacklist entries for a suspect
     #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
-    sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('@GLOBAL',concat('%',${to_domain}),${to_address})
+    sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})
 
     #maximum size in bytes. larger messages will be skipped
     maxsize=256000
@@ -582,7 +582,7 @@ ScriptFilter
 
 Plugin: fuglu.plugins.script.ScriptFilter
 
- This plugins executes scripts found in a specified directory.
+This plugins executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.
 
 Filterscripts must be written in standard python but with the file ending ``.fgf`` ("fuglu filter")
@@ -627,6 +627,76 @@ Configuration
     #Dir that contains the scripts (*.fgf files)
     scriptdir=/etc/fuglu/scriptfilter
 
+
+
+DKIM Sign
+.........
+
+Plugin: fuglu.plugins.antiphish.DKIMSignPlugin
+
+**EXPERIMENTAL**
+Add DKIM Signature to outgoing mails
+    
+Setting up your keys:
+
+::
+
+    mkdir -p /etc/fuglu/dkim
+    openssl genrsa -out /etc/fuglu/dkim/example.com.key 1024
+    openssl rsa -in /etc/fuglu/dkim/example.com.key -out /etc/fuglu/dkim/example.com.pub -pubout -outform PEM
+    
+If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails
+    
+
+Configuration
+-------------
+
+::
+
+    [DKIMSignPlugin]
+    #comma separated list of headers to sign. empty string=sign all headers
+    signheaders=
+
+    #include l= tag in dkim header
+    signbodylength=False
+
+    #selector to use when signing, supports templates
+    selector=default
+
+    #Location of the private key file. supports standard template variables plus additional ${header_from_domain} which extracts the domain name from the From: -Header
+    privatekeyfile=/etc/fuglu/dkim/${header_from_domain}.key
+
+    #Type of body canonicalization (simple or relaxed)
+    canonicalizebody=relaxed
+
+    #Type of header canonicalization (simple or relaxed)
+    canonicalizeheaders=simple
+
+
+
+DKIM Verify
+...........
+
+Plugin: fuglu.plugins.antiphish.DKIMVerifyPlugin
+
+**EXPERIMENTAL**
+This plugin checks the DKIM signature of the message and sets tags...
+DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
+the tag is not set if there was no dkim header at all
+
+The plugin does not take any action based on the DKIM test result since a failed DKIM validation by itself
+should not cause a message to be treated any differently. Other plugins might use the DKIM result
+in combination with other factors to take action (for example a "DMARC" plugin could use this information)
+
+DKIMVerify.skipreason: set if the verification has been skipped
+    
+
+Configuration
+-------------
+
+::
+
+    [DKIMVerifyPlugin]
 
 
 Plugin Skipper
