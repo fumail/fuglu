@@ -7,7 +7,7 @@ class Stopped(Exception):
     pass
 
 class ScriptFilter(ScannerPlugin):
-    """ This plugins executes scripts found in a specified directory.
+    """This plugins executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.
 
 Filterscripts must be written in standard python but with the file ending ``.fgf`` ("fuglu filter")
