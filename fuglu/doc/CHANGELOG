@@ -1,16 +1,18 @@
 -- Fuglu 0.6.1, not released
  * new Plugin: ScriptFilter (dynamically loaded filter scripts)
- * new (experimental) Plugins: DKIM Sign / Verify
+ * new (experimental) domain authentication plugins: DKIM Sign / Verify. 
  * Archive Plugin: 
     * new options chown/chgrp/chmod to change owner/permissions of archived file
     * storage directory and filename are now configurable using templates. "makedomainsubdir" option is deprecated
  * fuglu start script has now more options like --foreground, --pidfile, -c <configfile>
  * milter protocol: some improvements. It "should work" but is not used in production so far
  * Antivirus plugins: Increased default timeout to 30 sec
- * Prequeue: correctly close connection to 2nd postfix instance when message is deferred/rejected/discarded
+ * Prequeue Bugfix: correctly close connection to 2nd postfix instance when message is deferred/rejected/discarded
  * Fuglu doesn't completely shut down anymore if one connector fails to start
- * SQL extension: Some configuration values can now be dynamically loaded from a database TODO: doc
- 
+ * SQL extension: Some configuration values can now be dynamically loaded from a database
+   see: http://gryphius.github.io/fuglu/configuration-index.html#fetching-scan-time-configuration-values-from-a-database
+ * Reduce log and header noise: The log template is now configurable, removed tag logging by default (use ${tags} in logtemplate to get the old behaviour)
+   The suspect-id header can now be disabled
 
 Developers:
  * plugdummy.py has new options (show default plugin config, lint plugin)
@@ -18,6 +20,8 @@ Developers:
  * apply_template now takes a callbackfunction which allows modifying the built-in values before the template is applied
  * to add support for configuration domain/user overrides from a database use a fuglu.extension.sql.DBConfig object instead of self.config
  * suspectfilter get_args can now optionally return extended info about a match (matched field, used regex, matched value)
+ * suspect has a new method get_client_info which tries to extract helo, ip and reverse dns information from received headers
+ 
  
 -- Fuglu 0.6.0, 2012-07-04
  * various bugfixes and improvements in before-queue support
