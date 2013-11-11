@@ -307,12 +307,17 @@ class MainController(object):
             },
                            
             'dkimsign':{
-                'default':"fuglu.plugins.antiphish.DKIMSignPlugin",
+                'default':"fuglu.plugins.domainauth.DKIMSignPlugin",
                 'section':'PluginAlias',
             }, 
                            
             'dkimverify':{
-                'default':"fuglu.plugins.antiphish.DKIMVerifyPlugin",
+                'default':"fuglu.plugins.domainauth.DKIMVerifyPlugin",
+                'section':'PluginAlias',
+            },
+                           
+            'spf':{
+                'default':"fuglu.plugins.domainauth.SPFPlugin",
                 'section':'PluginAlias',
             },          
         }

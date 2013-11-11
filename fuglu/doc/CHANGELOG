@@ -1,6 +1,6 @@
 -- Fuglu 0.6.1, not released
  * new Plugin: ScriptFilter (dynamically loaded filter scripts)
- * new (experimental) domain authentication plugins: DKIM Sign / Verify. 
+ * new (experimental) domain authentication plugins: DKIM Sign / Verify, SPF Check 
  * Archive Plugin: 
     * new options chown/chgrp/chmod to change owner/permissions of archived file
     * storage directory and filename are now configurable using templates. "makedomainsubdir" option is deprecated

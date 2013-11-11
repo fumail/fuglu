@@ -1,10 +1,27 @@
+#   Copyright 2013 Oli Schacher
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 """
 Antiphish / Forging Plugins (DKIM / SPF / SRS etc)
 
-EXPERIMENTAL, not ready for production!
+EXPERIMENTAL plugins
+
+TODO: SRS, DKIM
 
 requires: dkimpy (not pydkim!!)
-
+requires: pyspf
+requires: pydns (or alternatively dnspython if only dkim is used) 
 """
 
 from fuglu.shared import ScannerPlugin,apply_template,DUNNO,string_to_actioncode
@@ -15,29 +32,44 @@ import pkg_resources
 import re
 
 DKIMPY_AVAILABLE=False
+PYSPF_AVAILABLE=False
+PYDNS_AVAILABLE=False
+DNSPYTHON_AVAILABLE=False
+
+# check dns libraries
+try:
+    import dns
+    DNSPYTHON_AVAILABLE=True
+except ImportError:
+    pass
+    
+try:
+    import DNS
+    PYDNS_AVAILABLE=True
+except ImportError:
+    pass
+
+
 try:
     pkg_resources.get_distribution("dkimpy")
     from dkim import DKIM,sign,Simple,Relaxed,DKIMException
     
-    ANY_DNSLIB_AVAILABLE=False
-    try:
-        import dns
-        ANY_DNSLIB_AVAILABLE=True
-    except ImportError:
-        pass
-    
-    try:
-        import DNS
-        ANY_DNSLIB_AVAILABLE=True
-    except ImportError:
-        pass
-    
-    if not ANY_DNSLIB_AVAILABLE:
+    if not (PYDNS_AVAILABLE or DNSPYTHON_AVAILABLE):
         raise Exception("no supported dns library available")
     
     DKIMPY_AVAILABLE=True
 except:
     pass
+
+
+try:
+    if not PYDNS_AVAILABLE:
+        raise Exception("pydns not available")
+    import spf
+    PYSPF_AVAILABLE=True
+except:
+    pass
+    
     
 
 class DKIMVerifyPlugin(ScannerPlugin):
@@ -233,74 +265,57 @@ If fuglu handles both incoming and outgoing mails you should make sure that this
         
         return self.checkConfig()
 
+class SPFPlugin(ScannerPlugin):
+    """**EXPERIMENTAL**
+This plugin checks the SPF status and sets tag 'SPF.status' to one of the official states 'pass', 'fail', 'neutral',
+'softfail, 'permerror', 'temperror' or 'skipped' if the SPF check could not be peformed.
 
-# class SPFCheck(ScannerPlugin):
-#     """Check SPF, RFC 4408 implementation"""
-#     
-#     SPF_NONE="None"
-#     SPF_NEUTRAL="Neutral"
-#     SPF_PASS="Pass"
-#     SPF_FAIL="Fail"
-#     SPF_SOFTFAIL="SoftFail"
-#     SPF_TEMPERROR="TempError"
-#     SPF_PERMERROR="PermError"
-#     
-#     
-#     def __init__(self,config,section=None):
-#         ScannerPlugin.__init__(self,config,section)
-#         self.requiredvars={        
-#         }
-#     
-#     
-#     def __str__(self):
-#         return "SPF"
-# 
-#     def examine(self,suspect):
-#         starttime=time.time()
-#         endtime=time.time()
-#         difftime=endtime-starttime
-#         suspect.tags['SPFCheck.time']="%.4f"%difftime
-#         
-# 
-#     def check_spf(self,suspect):
-#         pass
-#     
-#     
-#     def check_host(self,ip,domain,sender):
-#         """check_host according to rfc4408 section 4"""
-#         
-#         #TODO:
-#         """If the <domain> is malformed (label longer than 63 characters, zero-length label not at the end, etc.) or is not a fully qualified domain name, or if the DNS lookup returns "domain does not exist" (RCODE 3), check_host() immediately returns the result "None"."""
-#         
-#         #TODO:
-#         """If the <sender> has no localpart, substitute the string "postmaster" for the localpart."""
-#         
-#         #TODO: get records
-#         
-#         
-#         pass
-#     
-#     
-# class SRSRewrite(ScannerPlugin):
-#     """SRS Rewrites - would only work in after queue mode"""
-#     
-#     def __init__(self,config,section=None):
-#         ScannerPlugin.__init__(self,config,section)
-#         self.requiredvars={        
-#         }
-#     
-#     def __str__(self):
-#         return "SRS"
-# 
-#     def examine(self,suspect):
-#         starttime=time.time()
-#         endtime=time.time()
-#         difftime=endtime-starttime
-#         suspect.tags['SPFCheck.time']="%.4f"%difftime
-#         
-# 
-# 
-# class DMARC(ScannerPlugin):
-#     """Check DMARC and make sure either SPF or DKIM pass ok"""
+The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
+in combination with other factors to take action (for example a "DMARC" plugin could use this information)
+    """
+    def __init__(self,config,section=None):
+        ScannerPlugin.__init__(self,config,section)
+        self.requiredvars={
+
+        }
+        self.logger=self._logger()
+        #TODO: we'll either need a plugin or global configuration for 'internal networks'?
+
+    def __str__(self):
+        return "SPF Check"    
+    
+    def examine(self,suspect):  
+        if not PYSPF_AVAILABLE:
+            suspect.debug("pyspf not available, can not check")
+            self._logger().warning("%s: SPF Check skipped, pyspf unavailable"%(suspect.id))
+            suspect.set_tag('SPF.status','skipped')
+            return DUNNO
+        
+        starttime=time.time()
+        clientinfo=suspect.get_client_info()
+        if clientinfo==None:
+            suspect.debug("pyspf not available, can not check")
+            self._logger().warning("%s: SPF Check skipped, could not get client info"%(suspect.id))
+            suspect.set_tag('SPF.status','skipped')
+            return DUNNO
+        
+        helo,ip,revdns=clientinfo
+        tag,code,info=spf.check(i=ip,s=suspect.from_address,h=helo)   
+        suspect.set_tag("SPF.status",tag)
+        suspect.debug("SPF status: %s (%s)"%(tag,info))
+        
+        endtime=time.time()
+        difftime=endtime-starttime
+        suspect.tags['SPFCheck.time']="%.4f"%difftime
+        return DUNNO
+    
+    def lint(self):
+        if not PYSPF_AVAILABLE:
+            print "Missing dependency: pyspf"
+            print "(also requires pydns)"
+            return False
+        
+        return self.checkConfig()
+
     
 #TODO: unit tests   
