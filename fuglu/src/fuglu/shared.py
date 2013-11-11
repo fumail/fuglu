@@ -194,7 +194,10 @@ class Suspect(object):
                 (user, self.from_domain) = self.from_address.rsplit('@',1)
             except Exception, e:
                 raise ValueError,"invalid from email address: '%s'"%self.from_address
-    
+            
+        self.clientinfo=None
+        """holds client info tuple: hostname, ip, reversedns"""
+        
     def _generate_id(self):
         """
         generate a new id for a message. 
@@ -395,6 +398,67 @@ class Suspect(object):
         """returns the message headers as string"""
         headers=re.split('(?:\n\n)|(?:\r\n\r\n)',self.getSource(maxbytes=1048576),1)[0]
         return headers
+    
+    def get_client_info(self,ignoreregex=None,index=0):
+        """returns information about the client that submitted this message.
+        (helo,ip,reversedns)
+        
+        This information is extracted from the message Received: headers and therefore probably not 100% reliable
+        all information is returned as-is, this means for example, that non-fcrdns client will show 'unknown' as reverse dns value.
+        
+        if ignoreregex is not None, all results which match this regex in either helo,ip or reversedns will be ignored
+        By default, returns the first non-ignored match (index=0), set a higher index to return information from a received headers further down
+        
+        both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA
+        
+        returns None if the client info can not be found or if all applicable values are filtered by index/ignoreregex
+        """
+        if self.clientinfo!=None:
+            return self.clientinfo
+        
+        ignorere=None
+        if ignoreregex!=None:
+            ignorere=re.compile(ignoreregex)
+        
+        
+        unknown=None
+        
+        receivedpattern=re.compile('^from\s(?P<helo>[^\s]+)\s\((?P<revdns>[^\s]+)\s\[(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\]\)')
+        
+        receivedheaders=self.get_message_rep().get_all('Received')
+        if receivedheaders==None:
+            return unknown
+        
+        matchindex=0
+        for rcvdline in receivedheaders:
+            match=receivedpattern.search(rcvdline)
+            if match==None:
+                return unknown
+            helo,revdns,ip=match.groups()
+            
+            #check if hostname or ip matches the ignore re, try next header if it does
+            if ignorere!=None:
+                excludematch=ignorere.search(ip)
+                if excludematch!=None:
+                    continue
+            
+                excludematch=ignorere.search(revdns)
+                if excludematch!=None:
+                    continue
+                
+                excludematch=ignorere.search(helo)
+                if excludematch!=None:
+                    continue
+            
+            if index>matchindex:
+                matchindex+=1
+                continue
+            else:
+                clientinfo=helo,ip,revdns
+                self.clientinfo=clientinfo
+                return clientinfo
+        #we should only land here if we only have received headers in mynetworks
+        return unknown
         
 ##it is important that this class explicitly extends from object, or __subclasses__() will not work!
 class BasicPlugin(object):
