@@ -159,6 +159,12 @@ class MainController(object):
               'description':"write debug info header to every mail",
               'default':"0",
             },
+            
+            'suspectidheader':{
+              'section':'main',
+              'description':"write suspect ID to every mail",
+              'default':"1",
+            },
                            
             'mrtgdir':{
               'section':'main',
@@ -170,6 +176,12 @@ class MainController(object):
               'section':'main',
               'description':"port where fuglu provides statistics etc (used by fuglu_control). Can also be a path to a unix socket",
               'default':"/tmp/fuglu_control.sock",
+            },
+                           
+            'logtemplate':{
+             'section':'main',
+             'description':"Log pattern to use for all suspects in fuglu log. set empty string to disable logging generic suspect info. Supports the usual template variables plus: ${size}, ${spam} ${highspam}, ${modified} ${decision} ${tags} (short tags representagion) ${fulltags} full tags output, ${decision}",
+             'default':'Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}',
             },
           
             #performance section

@@ -94,10 +94,13 @@ class SessionHandler(object):
                 suspect.addheader("%sDebuginfo"%prependheader, debuginfo)
             
             #add suspect id for tracking
-            suspect.addheader('%sSuspect'%prependheader,suspect.id)
+            if self.config.getboolean('main','suspectidheader'):
+                suspect.addheader('%sSuspect'%prependheader,suspect.id)
             
             #checks done.. print out suspect status
-            self.logger.info(suspect)
+            logformat=self.config.get('main','logtemplate')
+            if logformat.strip()!='':
+                self.logger.info(suspect.log_format(logformat))
             suspect.debug(suspect)
             
             #check if one of the plugins made a decision

@@ -139,6 +139,13 @@ def default_template_values(suspect,values=None):
 
 HOSTNAME=socket.gethostname()
 
+def yesno(val):
+    """returns the string 'yes' for values that evaluate to True, 'no' otherwise"""
+    if val:
+        return 'yes'
+    else:
+        return 'no'
+
 class Suspect(object):
     """
     The suspect represents the message to be scanned. Each scannerplugin will be presented
@@ -280,20 +287,20 @@ class Suspect(object):
                 return True
         return False
     
-    def __str__(self):
-        """representation good for logging"""
-        virusstring="no"
-        if self.is_virus():
-            virusstring="yes"
-        spamstring="no"
-        if self.is_spam():
-            spamstring="yes"
-        
-        modifiedstring="no"
-        if self.is_modified():
-            modifiedstring="yes"
-        
-        
+
+    
+    def get_current_decision_code(self):
+        dectag=self.get_tag('decisions')
+        if dectag==None:
+            return DUNNO
+        try:
+            pluginname,code=dectag[-1]
+            return code
+        except:
+            return DUNNO
+    
+    def _short_tag_rep(self):
+        """return a tag representation suitable for logging, with some tags stripped, some shortened"""
         blacklist=['decisions',]
         tagscopy={}
         
@@ -317,9 +324,26 @@ class Suspect(object):
                 therep="%.2f"%v
             
             tagscopy[k]=therep
-                
-        astring="Suspect %s: from=%s to=%s size=%s spam=%s virus=%s modified=%s tags=%s"%(self.id,self.from_address, self.to_address,self.size,spamstring,virusstring,modifiedstring,tagscopy)
-        return astring
+        return str(tagscopy)   
+        
+    def log_format(self,template=None):
+        addvals={
+         'size':self.size,
+         'spam':yesno(self.is_spam()),
+         'highspam':yesno(self.is_highspam()),
+         'virus':yesno(self.is_virus()),
+         'modified':yesno(self.is_modified()),
+         'decision':actioncode_to_string(self.get_current_decision_code()),
+         'tags':self._short_tag_rep(),
+         'fulltags':str(self.tags),
+        }
+        return apply_template(template, self, addvals)
+    
+    
+    def __str__(self):
+        """representation good for logging"""
+        return self.log_format("Suspect ${id}: from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision} tags=${tags}")
+
     
     def get_message_rep(self):
         """returns the python email api representation of this suspect"""
