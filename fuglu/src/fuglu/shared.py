@@ -219,7 +219,6 @@ class Suspect(object):
             suspectid=md5.new(uni).hexdigest()
         return suspectid
     
-    
     def debug(self,message):
         """Add a line to the debug log if debugging is enabled for this message"""
         if not self.get_tag('debug'):
@@ -231,9 +230,7 @@ class Suspect(object):
             fp.flush()
         except Exception,e:
             logging.getLogger('suspect').error('Could not write to logfile: %s'%e)
-            
-        
-          
+
     def get_tag(self,key):
         """returns the tag value"""
         if not self.tags.has_key(key):
@@ -260,7 +257,6 @@ class Suspect(object):
                 return True
         return False
     
-    
     def add_header(self,key,value,immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
         if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
@@ -286,8 +282,6 @@ class Suspect(object):
             if val:
                 return True
         return False
-    
-
     
     def get_current_decision_code(self):
         dectag=self.get_tag('decisions')
@@ -423,7 +417,27 @@ class Suspect(object):
         headers=re.split('(?:\n\n)|(?:\r\n\r\n)',self.getSource(maxbytes=1048576),1)[0]
         return headers
     
-    def get_client_info(self,ignoreregex=None,index=0):
+    def get_client_info(self,config=None):
+        """returns information about the client that submitted this message.
+        (helo,ip,reversedns)
+        
+        This information is extracted from the message Received: headers and therefore probably not 100% reliable
+        all information is returned as-is, this means for example, that non-fcrdns client will show 'unknown' as reverse dns value.
+        
+        if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA
+        """
+        if self.clientinfo!=None:
+            return self.clientinfo
+        
+        if config==None:
+            clientinfo= self.client_info_from_rcvd()
+            
+        else:
+            clientinfo= self.client_info_from_rcvd(config.get('environment','trustedhostsregex'), config.get('environment','boundarydistance'))
+        self.clientinfo=clientinfo
+        return clientinfo
+    
+    def client_info_from_rcvd(self,ignoreregex=None,skip=0):
         """returns information about the client that submitted this message.
         (helo,ip,reversedns)
         
@@ -431,19 +445,16 @@ class Suspect(object):
         all information is returned as-is, this means for example, that non-fcrdns client will show 'unknown' as reverse dns value.
         
         if ignoreregex is not None, all results which match this regex in either helo,ip or reversedns will be ignored
-        By default, returns the first non-ignored match (index=0), set a higher index to return information from a received headers further down
+        
+        By default, this method starts searching at the top Received Header. Set a higher skip value to start searching further down.
         
         both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA
         
-        returns None if the client info can not be found or if all applicable values are filtered by index/ignoreregex
+        returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex
         """
-        if self.clientinfo!=None:
-            return self.clientinfo
-        
         ignorere=None
         if ignoreregex!=None:
             ignorere=re.compile(ignoreregex)
-        
         
         unknown=None
         
@@ -453,8 +464,7 @@ class Suspect(object):
         if receivedheaders==None:
             return unknown
         
-        matchindex=0
-        for rcvdline in receivedheaders:
+        for rcvdline in receivedheaders[skip:]:
             match=receivedpattern.search(rcvdline)
             if match==None:
                 return unknown
@@ -474,13 +484,8 @@ class Suspect(object):
                 if excludematch!=None:
                     continue
             
-            if index>matchindex:
-                matchindex+=1
-                continue
-            else:
-                clientinfo=helo,ip,revdns
-                self.clientinfo=clientinfo
-                return clientinfo
+            clientinfo=helo,ip,revdns
+            return clientinfo
         #we should only land here if we only have received headers in mynetworks
         return unknown
         
@@ -944,4 +949,32 @@ class TemplateTestcase(unittest.TestCase):
         result=apply_template(template, suspect, dict(reason=reason))
         expected="""Your message 'Hello world!' from sender@unittests.fuglu.org to recipient@unittests.fuglu.org could not be delivered because a three-headed monkey stole it"""
         self.assertEquals(result,expected),"Got unexpected template result: %s"%result       
+
+
+class ClientInfoTestCase(unittest.TestCase):
+    """Test client info detection"""
+    
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+    
+    def test_client_info(self):
+        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','testdata/helloworld.eml')
+        helo,ip,revdns=suspect.client_info_from_rcvd(None,0)
+        self.assertEquals(helo,'helo1')
+        self.assertEquals(ip, '10.0.0.1')
+        self.assertEquals(revdns,'rdns1')
+        
+        helo,ip,revdns=suspect.client_info_from_rcvd(None,1)
+        self.assertEquals(helo,'helo2')
+        self.assertEquals(ip, '10.0.0.2')
+        self.assertEquals(revdns,'rdns2')
+        
+        helo,ip,revdns=suspect.client_info_from_rcvd('10\.0\.0\.2',1)
+        self.assertEquals(helo,'helo3')
+        self.assertEquals(ip, '10.0.0.3')
+        self.assertEquals(revdns,'rdns3')
+        
         

@@ -231,7 +231,7 @@ class MainController(object):
                 'description':"""confirmation template sent back to the connecting client for accepted messages""",
             },
             
-             # databaseconfig
+            # databaseconfig
             'dbconnectstring':{
                 'default':"",
                 'section':'databaseconfig',
@@ -243,6 +243,18 @@ class MainController(object):
                 'default':"""SELECT value FROM fugluconfig WHERE `section`=:section AND `option`=:option AND `scope` IN ('$GLOBAL',CONCAT('%',:to_domain),:to_address) ORDER BY `scope` DESC""",
                 'section':'databaseconfig',
                 'description':"""sql query that returns a configuration value override. sql placeholders are ':section',':option' in addition the usual suspect filter default values like ':to_domain', ':to_address' etc\nif the statement returns more than one row/value only the first value in the first row is used""",
+            },
+                           
+            # environment               
+            'boundarydistance':{
+                'default':"0",
+                'section':'environment',
+                'description':"""Distance to the boundary MTA ("how many received headers should fuglu skip to determine the last untrusted host information"). Only required if plugins need to have information about the last untrusted host(SPFPlugin)""",
+            },
+            'trustedhostsregex':{
+                'default':"",
+                'section':'environment',
+                'description':"""Optional regex that should be applied to received headers to skip trusted (local) mta helo/ip/reverse dns.\nOnly required if plugins need to have information about the last untrusted host and the message doesn't pass a fixed amount of hops to reach this system in your network""",
             },
             
             #  plugin alias
