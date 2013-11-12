@@ -9,7 +9,7 @@
  * Antivirus plugins: Increased default timeout to 30 sec
  * Prequeue Bugfix: correctly close connection to 2nd postfix instance when message is deferred/rejected/discarded
  * Fuglu doesn't completely shut down anymore if one connector fails to start
- * SQL extension: Some configuration values can now be dynamically loaded from a database
+ * SQL extension: (experimental) Some configuration values can now be dynamically loaded from a database
    see: http://gryphius.github.io/fuglu/configuration-index.html#fetching-scan-time-configuration-values-from-a-database
  * Reduce log and header noise: The log template is now configurable, removed tag logging by default (use ${tags} in logtemplate to get the old behaviour)
    The suspect-id header can now be disabled
