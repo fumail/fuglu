@@ -447,11 +447,11 @@ class MainController(object):
         old_stdout=sys.stdout
         old_stderr=sys.stderr
         
-        s = socket.socket()
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind((bind, port))
-        s.listen(1)
-        c,address = s.accept() # client socket
+        serversocket = socket.socket()
+        serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        serversocket.bind((bind, port))
+        serversocket.listen(1)
+        clientsocket,address = serversocket.accept() # client socket
         self.logger.info("Interactive python connection from %s/%s"%address)
         class sw: # socket wrapper
             def __init__(self, s):
@@ -462,21 +462,28 @@ class MainController(object):
                     return self.s.send(st)
             def readline(self):
                     return self.read(256)
-        c = sw(c)
-        sys.stdin = c
-        sys.stdout = c
-        sys.stderr = c
+        sw = sw(clientsocket)
+        sys.stdin = sw
+        sys.stdout = sw
+        sys.stderr = sw
         mc=self
         terp=code.InteractiveConsole(locals())
-        terp.interact("Fuglu Python Shell - MainController available as 'mc'")
-        self.logger.info("client %s disconnected - closing interactive shell on %s/%s"%(address[0],bind,port))
         try:
-            sys.stdin=old_stdin
-            sys.stdout=old_stdout
-            sys.stderr=old_stderr
-            s.close()
+            terp.interact("Fuglu Python Shell - MainController available as 'mc'")
+        except:
+            pass
+        self.logger.info("done talking to %s - closing interactive shell on %s/%s"%(address[0],bind,port))
+        sys.stdin=old_stdin
+        sys.stdout=old_stdout
+        sys.stderr=old_stderr
+        try:
+            clientsocket.close()
         except Exception,e:
-            self.logger.warning(e)
+            self.logger.warning("Failed to close shell client socket: %s"%str(e))
+        try:
+            serversocket.close()
+        except Exception,e:
+            self.logger.warning("Failed to close shell server socket: %s"%str(e))
     
     def reload(self):
         """apply config changes"""
