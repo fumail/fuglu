@@ -21,6 +21,7 @@ import datetime
 import traceback
 import string
 import os
+import thread
 
 class ControlServer(object):    
     def __init__(self, controller,port=None,address="127.0.0.1"):
@@ -93,7 +94,8 @@ class ControlServer(object):
                 engine.handlesession()
                 
             except Exception,e:
-                self.logger.error('Exception in serve(): %s'%str(e))     
+                fmt=traceback.format_exc()
+                self.logger.error('Exception in serve(): %s'%fmt)     
 
 
 class ControlSession(object):
@@ -106,6 +108,7 @@ class ControlSession(object):
                        'uptime':self.uptime,
                        'stats':self.stats,
                        'exceptionlist':self.exceptionlist,
+                       'netconsole':self.netconsole,
                        }
         self.logger=logging.getLogger('fuglu.controlsession')
         
@@ -128,6 +131,16 @@ class ControlSession(object):
         res=self.commands[command](args)
         return res
     
+    def netconsole(self,args):
+        port=1337
+        bind="127.0.0.1"
+        if len(args)>0:
+            port=int(args[0])
+        if len(args)>1:
+            bind=args[1]
+        thread.start_new_thread(self.controller.run_netconsole, (port,bind))
+        return "Python interactive console starting on %s port %s"%(bind,port)
+        
     def workerlist(self,args):
         """list of mail scanning workers"""
         threadpool=self.controller.threadpool

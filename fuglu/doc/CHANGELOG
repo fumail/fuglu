@@ -21,7 +21,7 @@ Developers:
  * to add support for configuration domain/user overrides from a database use a fuglu.extension.sql.DBConfig object instead of self.config
  * suspectfilter get_args can now optionally return extended info about a match (matched field, used regex, matched value)
  * suspect has a new method get_client_info which tries to extract helo, ip and reverse dns information from received headers
- 
+ * fuglu_control has a new command 'netconsole' which starts a python interactive shell on a network socket. This allows runtime debugging of plugins or fuglu itself.
  
 -- Fuglu 0.6.0, 2012-07-04
  * various bugfixes and improvements in before-queue support

@@ -28,7 +28,8 @@ from threadpool import ThreadPool
 import inspect
 import traceback
 import time
-
+import readline
+import code
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncblackholeconnector import NCServer
@@ -429,8 +430,6 @@ class MainController(object):
         self.shutdown()
     
     def run_debugconsole(self):
-        import readline
-        import code
         from fuglu.shared import DUNNO,ACCEPT,DELETE,REJECT,DEFER,Suspect
         print "Fuglu Interactive Console started"
         print ""
@@ -442,6 +441,42 @@ class MainController(object):
         terp=code.InteractiveConsole(locals())
         terp.interact("")
         
+    def run_netconsole(self,port=1337,bind="0.0.0.0"):
+        """start a network console"""
+        old_stdin=sys.stdin
+        old_stdout=sys.stdout
+        old_stderr=sys.stderr
+        
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((bind, port))
+        s.listen(1)
+        c,address = s.accept() # client socket
+        self.logger.info("Interactive python connection from %s/%s"%address)
+        class sw: # socket wrapper
+            def __init__(self, s):
+                self.s = s
+            def read(self, length):
+                    return self.s.recv(length)
+            def write(self, st):
+                    return self.s.send(st)
+            def readline(self):
+                    return self.read(256)
+        c = sw(c)
+        sys.stdin = c
+        sys.stdout = c
+        sys.stderr = c
+        mc=self
+        terp=code.InteractiveConsole(locals())
+        terp.interact("Fuglu Python Shell - MainController available as 'mc'")
+        self.logger.info("client %s disconnected - closing interactive shell on %s/%s"%(address[0],bind,port))
+        try:
+            sys.stdin=old_stdin
+            sys.stdout=old_stdout
+            sys.stderr=old_stderr
+            s.close()
+        except Exception,e:
+            self.logger.warning(e)
     
     def reload(self):
         """apply config changes"""

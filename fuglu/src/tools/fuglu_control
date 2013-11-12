@@ -26,12 +26,13 @@ def usage():
     return """
     
     Usage fuglu_control <command> [<args>]
-    Available commands:"
-    stats : show statistics"
-    uptime: show long fuglu has been running"
-    workerlist: show current status of all mail scanning threads"
-    threadlist: show current status of ALL threads (core + workers)"
-    exceptionlist: last 10 exception tracebacks"
+    Available commands:
+    stats : show statistics
+    uptime: show long fuglu has been running
+    workerlist: show current status of all mail scanning threads
+    threadlist: show current status of ALL threads (core + workers)
+    exceptionlist: last 10 exception tracebacks
+    netconsole [<port> [<bind address>]] : start a python interactive shell on a network socket
     """
 
 optionparser=OptionParser(usage=usage())
