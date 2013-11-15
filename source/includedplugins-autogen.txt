@@ -632,7 +632,7 @@ Configuration
 DKIM Sign
 .........
 
-Plugin: fuglu.plugins.antiphish.DKIMSignPlugin
+Plugin: fuglu.plugins.domainauth.DKIMSignPlugin
 
 **EXPERIMENTAL**
 Add DKIM Signature to outgoing mails
@@ -682,7 +682,7 @@ Configuration
 DKIM Verify
 ...........
 
-Plugin: fuglu.plugins.antiphish.DKIMVerifyPlugin
+Plugin: fuglu.plugins.domainauth.DKIMVerifyPlugin
 
 **EXPERIMENTAL**
 This plugin checks the DKIM signature of the message and sets tags...
@@ -704,6 +704,27 @@ Configuration
 ::
 
     [DKIMVerifyPlugin]
+
+
+SPF Check
+.........
+
+Plugin: fuglu.plugins.domainauth.SPFPlugin
+
+**EXPERIMENTAL**
+This plugin checks the SPF status and sets tag 'SPF.status' to one of the official states 'pass', 'fail', 'neutral',
+'softfail, 'permerror', 'temperror' or 'skipped' if the SPF check could not be peformed.
+
+The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
+in combination with other factors to take action (for example a "DMARC" plugin could use this information)
+    
+
+Configuration
+-------------
+
+::
+
+    [SPFPlugin]
 
 
 Plugin Skipper

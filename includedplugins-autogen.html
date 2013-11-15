@@ -560,7 +560,7 @@ scriptdir=/etc/fuglu/scriptfilter</pre>
 </div>
 <div class="section" id="dkim-sign">
 <h1>DKIM Sign<a class="headerlink" href="#dkim-sign" title="Permalink to this headline">¶</a></h1>
-<p>Plugin: fuglu.plugins.antiphish.DKIMSignPlugin</p>
+<p>Plugin: fuglu.plugins.domainauth.DKIMSignPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
 Add DKIM Signature to outgoing mails</p>
 <p>Setting up your keys:</p>
@@ -598,7 +598,7 @@ canonicalizeheaders=relaxed</pre>
 </div>
 <div class="section" id="dkim-verify">
 <h1>DKIM Verify<a class="headerlink" href="#dkim-verify" title="Permalink to this headline">¶</a></h1>
-<p>Plugin: fuglu.plugins.antiphish.DKIMVerifyPlugin</p>
+<p>Plugin: fuglu.plugins.domainauth.DKIMVerifyPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
 This plugin checks the DKIM signature of the message and sets tags...
 DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
@@ -615,6 +615,21 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 </div>
 </div>
 </div>
+<div class="section" id="spf-check">
+<h1>SPF Check<a class="headerlink" href="#spf-check" title="Permalink to this headline">¶</a></h1>
+<p>Plugin: fuglu.plugins.domainauth.SPFPlugin</p>
+<p><strong>EXPERIMENTAL</strong>
+This plugin checks the SPF status and sets tag &#8216;SPF.status&#8217; to one of the official states &#8216;pass&#8217;, &#8216;fail&#8217;, &#8216;neutral&#8217;,
+&#8216;softfail, &#8216;permerror&#8217;, &#8216;temperror&#8217; or &#8216;skipped&#8217; if the SPF check could not be peformed.</p>
+<p>The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
+in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
+<div class="section" id="id13">
+<h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="plugin-skipper">
 <h1>Plugin Skipper<a class="headerlink" href="#plugin-skipper" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.p_skipper.PluginSkipper</p>
@@ -622,8 +637,8 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 This can be used for example to skip spam filters on outgoing messages.
 eg. put this in /etc/fuglu/skipplugins.regex:</p>
 <p>&#64;incomingport    1099    SAPlugin</p>
-<div class="section" id="id13">
-<h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id14">
+<h2>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[PluginSkipper]
 filterfile=/etc/fuglu/skipplugins.regex</pre>
 </div>
@@ -634,8 +649,8 @@ filterfile=/etc/fuglu/skipplugins.regex</pre>
 <p>Plugin: fuglu.plugins.p_debug.MessageDebugger</p>
 <p>Message Debugger Plugin (Prepender).</p>
 <p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
-<div class="section" id="id14">
-<h2>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id15">
+<h2>Configuration<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[MessageDebugger]
 #messages incoming on this port will be debugged to a logfile
 #Make sure the debugport is also set in the incomingport configuration option in the main section
@@ -717,12 +732,16 @@ noappender=1</pre>
 <li><a class="reference internal" href="#id12">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
+<li><a class="reference internal" href="#spf-check">SPF Check</a><ul>
 <li><a class="reference internal" href="#id13">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#debugger">Debugger</a><ul>
+<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
 <li><a class="reference internal" href="#id14">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debugger">Debugger</a><ul>
+<li><a class="reference internal" href="#id15">Configuration</a></li>
 </ul>
 </li>
 </ul>
