@@ -1,11 +1,11 @@
--- Fuglu 0.6.1, not released
+-- Fuglu 0.6.1, 2013-11-15
  * new Plugin: ScriptFilter (dynamically loaded filter scripts)
  * new (experimental) domain authentication plugins: DKIM Sign / Verify, SPF Check 
  * Archive Plugin: 
     * new options chown/chgrp/chmod to change owner/permissions of archived file
     * storage directory and filename are now configurable using templates. "makedomainsubdir" option is deprecated
- * fuglu start script has now more options like --foreground, --pidfile, -c <configfile>
- * milter protocol: some improvements. It "should work" but is not used in production so far
+ * fuglu start script has more common options like --foreground, --pidfile, -c <configfile>
+ * milter protocol: some improvements. It "should work" but has not received much testing
  * Antivirus plugins: Increased default timeout to 30 sec
  * Prequeue Bugfix: correctly close connection to 2nd postfix instance when message is deferred/rejected/discarded
  * Fuglu doesn't completely shut down anymore if one connector fails to start
