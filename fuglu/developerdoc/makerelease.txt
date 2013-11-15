@@ -30,7 +30,8 @@ deploy
 * update version in fuglu/__init__.py, commit to git
 
 * tag release
-git tag
+git tag -a 0.6.1 -m 'tag 0.6.1'
+git push --tags origin master
 
 * build
 python setup.py sdist
