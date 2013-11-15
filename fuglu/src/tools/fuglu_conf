@@ -207,7 +207,6 @@ if __name__=='__main__':
     activecontroller.propagate_core_defaults()
     activecontroller.load_plugins()
     
-    
     if options.notdefaults:
         print_overrides(defaultconfig,userconfig,activecontroller)
     elif options.make:
