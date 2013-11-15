@@ -261,7 +261,7 @@ Fuglu doesn't even start
  * did you create /etc/fuglu/logging.conf (by renaming the logging.conf.dist file) ?
  * check if the log directory (/var/log/fuglu/ by default) exists an is writable by the user running fuglu
  * check for errors in /var/log/fuglu.log
- * run fuglu fuglu in foreground by setting ``daemonize=0`` in fuglu.conf
+ * run fuglu fuglu in foreground using ``fuglu --foreground`` or by setting ``daemonize=0`` in fuglu.conf and check for errors
 
 
 Debug Trace a single message
@@ -301,6 +301,25 @@ Debug the fuglu core
 If you are a python developer and would like to inspect fuglu at run-time, add the argument ``--console`` when starting fuglu.
 You will then get an interactive python console where all plugins etc are available from the 'mc' (MainController) object
 
+starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command ``fuglu_control netconsole [<port> [<bindaddress>]]``
+
+Example:
+on the host running fuglu:
+
+::
+
+	# fuglu_control netconsole 9999 0.0.0.0
+	Python interactive console starting on 0.0.0.0 port 9999
+
+
+on your host:
+
+::
+
+	$ nc 192.168.1.40 9999
+	Fuglu Python Shell - MainController available as 'mc'
+	>>> 
+	
 
 
 
