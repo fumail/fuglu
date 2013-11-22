@@ -59,4 +59,4 @@ format=%(asctime)s %(name)-12s: %(levelname)s %(message)s
 format=%(asctime)s %(levelname)s %(message)s
 
 [formatter_syslogformatter]
-format=postomaat[%(process)d]: %(message)s
+format=fuglu[%(process)d]: %(message)s
