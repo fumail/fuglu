@@ -433,7 +433,7 @@ class Suspect(object):
             clientinfo= self.client_info_from_rcvd()
             
         else:
-            clientinfo= self.client_info_from_rcvd(config.get('environment','trustedhostsregex'), config.get('environment','boundarydistance'))
+            clientinfo= self.client_info_from_rcvd(config.get('environment','trustedhostsregex'), config.getint('environment','boundarydistance'))
         self.clientinfo=clientinfo
         return clientinfo
     
@@ -453,7 +453,7 @@ class Suspect(object):
         returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex
         """
         ignorere=None
-        if ignoreregex!=None:
+        if ignoreregex!=None and ignoreregex!='':
             ignorere=re.compile(ignoreregex)
         
         unknown=None
@@ -463,7 +463,7 @@ class Suspect(object):
         receivedheaders=self.get_message_rep().get_all('Received')
         if receivedheaders==None:
             return unknown
-        
+
         for rcvdline in receivedheaders[skip:]:
             match=receivedpattern.search(rcvdline)
             if match==None:
