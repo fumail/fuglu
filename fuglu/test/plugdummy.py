@@ -174,8 +174,10 @@ if __name__=='__main__':
     if opts.headers:
         for hdrpair in opts.headers:
             name,val=hdrpair.split(':',1)
-            h=Header(val)
-            mailmessage.replace_header(name, h)
+            try:
+                mailmessage.replace_header(name, val)
+            except KeyError:
+                mailmessage.add_header(name, val)
 
     #create tempfile...
     tmpfile='/tmp/fuglu_dummy_message_in.eml'
