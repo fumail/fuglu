@@ -35,7 +35,6 @@ if __name__=='__main__':
        sssp.SSSPPlugin(config),
        fprot.FprotPlugin(config),
        icap.ICAPPlugin(config),
-       headers.HeaderPlugin(config),
        actionoverride.ActionOverridePlugin(config),
        script.ScriptFilter(config),
        domainauth.DKIMSignPlugin(config),

@@ -14,4 +14,4 @@
 #
 # $Id$
 #
-__all__ = ['archive','attachment','actionoverride','clamav','sa','headers','p_debug','p_skipper','vacation','icap','sssp','fprot','domainauth','script']
+__all__ = ['archive','attachment','actionoverride','clamav','sa','p_debug','p_skipper','vacation','icap','sssp','fprot','domainauth','script']

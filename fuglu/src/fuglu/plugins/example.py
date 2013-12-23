@@ -45,15 +45,20 @@ class ExamplePlugin(ScannerPlugin):
         starttime=time.time()
         
         
-        #PUT PLUGIN CODE HERE
-        #debug info in the plugin
+        #debug info is helpful when the message is run through fuglu_debug
         suspect.debug("Greeting: %s"%greeting)
         
         #log example
         self._logger().info("%s greets %s: %s"%(suspect.from_address,suspect.to_address,greeting))
         
+        #header access example
+        msgrep=suspect.get_message_rep()
+        if msgrep.has_key("From"):
+            self._logger().info("Message from: %s"%msgrep['From'])
+        else:
+            self._logger().warning("Message has no 'From' header!")
         
-        #For debugging, its good to know how long each plugin took
+        #For debugging, it's good to know how long each plugin took
         endtime=time.time()
         difftime=endtime-starttime
         suspect.tags['ExamplePlugin.time']="%.4f"%difftime
