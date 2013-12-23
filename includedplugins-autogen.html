@@ -496,25 +496,13 @@ virusaction=DEFAULTVIRUSACTION</pre>
 </div>
 </div>
 </div>
-<div class="section" id="remove-headers">
-<h1>remove Headers<a class="headerlink" href="#remove-headers" title="Permalink to this headline">¶</a></h1>
-<p>Plugin: fuglu.plugins.headers.HeaderPlugin</p>
-<p>Removes specified headers from message</p>
-<div class="section" id="id8">
-<h2>Configuration<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>[HeaderPlugin]
-#headers to remove from incoming messages, comma separated
-removeheaders=</pre>
-</div>
-</div>
-</div>
 <div class="section" id="action-override">
 <h1>Action Override<a class="headerlink" href="#action-override" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin</p>
 <blockquote>
 <div>override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
-<div class="section" id="id9">
-<h2>Configuration<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id8">
+<h2>Configuration<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[ActionOverridePlugin]
 #Rules file
 actionrules=/etc/fuglu/actionrules.regex</pre>
@@ -550,8 +538,8 @@ This can be used to quickly add a custom filter script without changing the fugl
 <span class="n">message</span><span class="o">=</span><span class="s">&quot;you shall not pass&quot;</span>
 </pre></div>
 </div>
-<div class="section" id="id10">
-<h2>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h2>Configuration<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[ScriptFilter]
 #Dir that contains the scripts (*.fgf files)
 scriptdir=/etc/fuglu/scriptfilter</pre>
@@ -573,8 +561,8 @@ echo -n "default._domainkey TXT  "v=DKIM1; k=rsa; p=" ; cat /etc/fuglu/dkim/${do
 </div>
 <p>&#8216; ; echo &#8221;;&#8221;&#8220;</p>
 <p>If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails</p>
-<div class="section" id="id11">
-<h2>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h2>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[DKIMSignPlugin]
 #comma separated list of headers to sign. empty string=sign all headers
 signheaders=
@@ -608,8 +596,8 @@ the tag is not set if there was no dkim header at all</p>
 should not cause a message to be treated any differently. Other plugins might use the DKIM result
 in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
 <p>It is currently recommended to leave both header and body canonicalization as &#8216;relaxed&#8217;. Using &#8216;simple&#8217; can cause the signature to fail.</p>
-<div class="section" id="id12">
-<h2>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id11">
+<h2>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -623,8 +611,8 @@ This plugin checks the SPF status and sets tag &#8216;SPF.status&#8217; to one o
 &#8216;softfail, &#8216;permerror&#8217;, &#8216;temperror&#8217; or &#8216;skipped&#8217; if the SPF check could not be peformed.</p>
 <p>The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
 in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
-<div class="section" id="id13">
-<h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id12">
+<h2>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -637,8 +625,8 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 This can be used for example to skip spam filters on outgoing messages.
 eg. put this in /etc/fuglu/skipplugins.regex:</p>
 <p>&#64;incomingport    1099    SAPlugin</p>
-<div class="section" id="id14">
-<h2>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id13">
+<h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[PluginSkipper]
 filterfile=/etc/fuglu/skipplugins.regex</pre>
 </div>
@@ -649,8 +637,8 @@ filterfile=/etc/fuglu/skipplugins.regex</pre>
 <p>Plugin: fuglu.plugins.p_debug.MessageDebugger</p>
 <p>Message Debugger Plugin (Prepender).</p>
 <p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
-<div class="section" id="id15">
-<h2>Configuration<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id14">
+<h2>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>[MessageDebugger]
 #messages incoming on this port will be debugged to a logfile
 #Make sure the debugport is also set in the incomingport configuration option in the main section
@@ -712,36 +700,32 @@ noappender=1</pre>
 <li><a class="reference internal" href="#id7">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#remove-headers">remove Headers</a><ul>
+<li><a class="reference internal" href="#action-override">Action Override</a><ul>
 <li><a class="reference internal" href="#id8">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#action-override">Action Override</a><ul>
+<li><a class="reference internal" href="#scriptfilter">ScriptFilter</a><ul>
 <li><a class="reference internal" href="#id9">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#scriptfilter">ScriptFilter</a><ul>
+<li><a class="reference internal" href="#dkim-sign">DKIM Sign</a><ul>
 <li><a class="reference internal" href="#id10">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#dkim-sign">DKIM Sign</a><ul>
+<li><a class="reference internal" href="#dkim-verify">DKIM Verify</a><ul>
 <li><a class="reference internal" href="#id11">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#dkim-verify">DKIM Verify</a><ul>
+<li><a class="reference internal" href="#spf-check">SPF Check</a><ul>
 <li><a class="reference internal" href="#id12">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#spf-check">SPF Check</a><ul>
+<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
 <li><a class="reference internal" href="#id13">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
-<li><a class="reference internal" href="#id14">Configuration</a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#debugger">Debugger</a><ul>
-<li><a class="reference internal" href="#id15">Configuration</a></li>
+<li><a class="reference internal" href="#id14">Configuration</a></li>
 </ul>
 </li>
 </ul>

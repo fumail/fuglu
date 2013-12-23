@@ -541,24 +541,6 @@ Configuration
 
 
 
-remove Headers
-..............
-
-Plugin: fuglu.plugins.headers.HeaderPlugin
-
-Removes specified headers from message
-
-Configuration
--------------
-
-::
-
-    [HeaderPlugin]
-    #headers to remove from incoming messages, comma separated
-    removeheaders=
-
-
-
 Action Override
 ...............
 
