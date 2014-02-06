@@ -95,7 +95,7 @@ Tags:
             self._logger().info('Not scanning - message too big (message %s  bytes > config %s bytes )'%(suspect.size,self.config.getint('FprotPlugin','maxsize')))
             return DUNNO
         
-        content=suspect.getMessageRep().as_string()
+        content=suspect.get_message_rep().as_string()
 
         for i in range(0,self.config.getint('FprotPlugin','retries')):
             try:

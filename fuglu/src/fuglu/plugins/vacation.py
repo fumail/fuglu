@@ -359,7 +359,7 @@ SQL Example for mysql:
                 self.logger.debug('Blacklisted sender: %s'%sender)
                 return True
         
-        messagerep=suspect.getMessageRep()
+        messagerep=suspect.get_message_rep()
         for ignoheader in vacation_ignoreheaderexists:
             if ignoheader in messagerep:
                 self.logger.debug('Blacklisted header: %s'%ignoheader)

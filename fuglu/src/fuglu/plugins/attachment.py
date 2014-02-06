@@ -436,7 +436,7 @@ See (TODO: link to template vars chapter) for commonly available template variab
         default_names=self.rulescache.getNAMERules(FUATT_DEFAULT)
         default_ctypes=self.rulescache.getCTYPERules(FUATT_DEFAULT)
 
-        m=suspect.getMessageRep()
+        m=suspect.get_message_rep()
         for i in m.walk():
             if i.is_multipart():
                 continue

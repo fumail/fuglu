@@ -332,7 +332,7 @@ class ArchiveTestcase(unittest.TestCase):
         origmessage=suspect.getSource()
         
         #modify the mesg
-        msgrep= suspect.getMessageRep()
+        msgrep= suspect.get_message_rep()
         msgrep['X-Changed-Something']='Yes'
         suspect.setMessageRep(msgrep)
         
@@ -361,7 +361,7 @@ class ArchiveTestcase(unittest.TestCase):
         suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
         origmessage=suspect.getSource()
         #modify the mesg
-        msgrep= suspect.getMessageRep()
+        msgrep= suspect.get_message_rep()
         msgrep['X-Changed-Something']='Yes'
         suspect.setMessageRep(msgrep)
         
