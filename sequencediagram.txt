@@ -1,0 +1,16 @@
+# http://bramp.github.io/js-sequence-diagrams/
+Title: Mail Flow
+participant postfix
+participant FuGlu
+participant Spamfilter
+participant Antivirus
+postfix->FuGlu: 
+FuGlu->Spamfilter: 
+Spamfilter->FuGlu: 
+FuGlu->Antivirus: 
+Antivirus->FuGlu: 
+FuGlu->Other plugins: 
+Other plugins->FuGlu: 
+FuGlu->postfix: ACCEPT/REJECT
+Note over Other plugins: Archiving, DKIM, SPF, Attachment filter, ...
+

@@ -1,5 +1,0 @@
-#http://python3porting.com/
-
--start using print as function
-- determine which strings are unicode and which are byte (connectors...!) 
-- support two branches or run 2to3 each time?
