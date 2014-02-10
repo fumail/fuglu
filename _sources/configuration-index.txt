@@ -204,7 +204,8 @@ Advanced Config
 Running a plugin multiple times with different config sections
 ..............................................................
 
-By default, plugins search your configfile for a section named like the Plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. This can be overridden which allows running plugin multiple times per scan with different config options:
+By default, plugins search your configfile for a section named like the 
+plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. This can be overridden which allows running plugin multiple times per scan with different config options:
 
 example:
 
@@ -393,7 +394,7 @@ The process is very similar to spamassassin's SQL configuration  (http://wiki.ap
  * username is called `scope`
  * fuglu does not load the full configuration per user, only the actual config options requested by plugins supporting db overrides
  
-enable configuration lookups by providing a standard sql alchemy connectstring in you configuration (section `databaseconfig` option `dbconnectstring`)
+enable configuration lookups by providing a standard sql alchemy connectstring in your configuration (section `databaseconfig` option `dbconnectstring`)
  
 ::
 

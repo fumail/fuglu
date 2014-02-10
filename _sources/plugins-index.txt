@@ -284,14 +284,14 @@ Important: always the configs in ``examine`` (and not in ``init`` !). reading th
 get the message source
 ----------------------
 
-use ``suspect.getSource()`` to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.
+use ``suspect.get_source()`` to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.
 
 from fuglu.shared import ScannerPlugin,DUNNO
 import time
 add headers
 -----------
 
-``suspect.addheader(headername,headervalue)``
+``suspect.add_header(headername,headervalue)``
 
 by default, headers are added to the message shortly before it is re-injected into postfix.
 add ``immediate=True`` to add the header immediately, so other plugins can see it.

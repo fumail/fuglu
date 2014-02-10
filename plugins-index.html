@@ -895,12 +895,12 @@ noappender=1</pre>
 </div>
 <div class="section" id="get-the-message-source">
 <h4>get the message source<a class="headerlink" href="#get-the-message-source" title="Permalink to this headline">¶</a></h4>
-<p>use <tt class="docutils literal"><span class="pre">suspect.getSource()</span></tt> to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.</p>
+<p>use <tt class="docutils literal"><span class="pre">suspect.get_source()</span></tt> to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.</p>
 <p>from fuglu.shared import ScannerPlugin,DUNNO
 import time
 add headers
 &#8212;&#8212;&#8212;&#8211;</p>
-<p><tt class="docutils literal"><span class="pre">suspect.addheader(headername,headervalue)</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">suspect.add_header(headername,headervalue)</span></tt></p>
 <p>by default, headers are added to the message shortly before it is re-injected into postfix.
 add <tt class="docutils literal"><span class="pre">immediate=True</span></tt> to add the header immediately, so other plugins can see it.</p>
 </div>
