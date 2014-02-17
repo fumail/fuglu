@@ -808,27 +808,35 @@ class SuspectFilter(object):
         return valuelist
            
            
-    def matches(self,suspect):
-        """returns (True,arg) if any regex matches, (False,None) otherwise"""
+    def matches(self,suspect,extended=False):
+        """returns (True,arg) if any regex matches, (False,None) otherwise
+        
+        if extended=True, returns all available info about the match in a tuple:
+        True, (fieldname, matchedvalue, arg, regex)
+        """
         self._reloadifnecessary()
         
         for tup in self.patterns:
-            (headername,pattern,arg)=tup
-            vals=self.get_field(suspect,headername)
+            (fieldname,pattern,arg)=tup
+            vals=self.get_field(suspect,fieldname)
             if vals==None or len(vals)==0:
-                self.logger.debug('No header %s found'%headername)
+                self.logger.debug('No field %s found'%fieldname)
                 continue
             
             for val in vals:
                 if val==None:
                     continue
-                #self.logger.debug("""Checking headername %s (arg '%s') regex '%s' against value %s"""%(headername,arg,pattern.pattern,val))
-                if pattern.search(str(val)):   
-                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
-                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s"%(self.filename,headername,arg,pattern.pattern,val))
-                    return (True,arg)
+                
+                strval=str(val)
+                if pattern.search(strval):   
+                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(fieldname,arg,pattern.pattern,val))
+                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s"%(self.filename,fieldname,arg,pattern.pattern,val))
+                    if extended:
+                        return True,(fieldname,strval,arg,pattern.pattern)
+                    else:
+                        return (True,arg)
                 else:
-                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(headername,arg,pattern.pattern,val))
+                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'"""%(fieldname,arg,pattern.pattern,val))
                     
         self.logger.debug('No match found')
         suspect.debug("message does not match any rule in %s"%self.filename)
@@ -836,7 +844,7 @@ class SuspectFilter(object):
     
     def get_args(self,suspect,extended=False):
         """returns all args of matched regexes in a list
-        if extended=True, but returns a list of tuples with all available information:
+        if extended=True:  returns a list of tuples with all available information:
         (fieldname, matchedvalue, arg, regex)
         """
         ret=[]
@@ -909,8 +917,16 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failIf('this should not match' in headermatches,"rule flag ignorecase was not detected")
         
         #TODO: raw body rules
-        (match,arg)=self.candidate.matches(suspect)
+        
+        #extended
+        (match,info)=self.candidate.matches(suspect,extended=True)
         self.failUnless(match,'Match should return True')
+        field,matchedvalue,arg,regex=info
+        self.failUnless(field=='to_domain')
+        self.failUnless(matchedvalue=='unittests.fuglu.org')
+        self.failUnless(arg=='Sent to unittest domain!')
+        self.failUnless(regex=='unittests\.fuglu\.org')
+        
 
 class ActionCodeTestCase(unittest.TestCase):
     def test_defaultcodes(self):
