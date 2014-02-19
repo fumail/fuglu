@@ -1,4 +1,4 @@
-#   Copyright 2009 Oli Schacher
+#   Copyright 2009-2014 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id$
-#
 from fuglu.shared import ScannerPlugin,string_to_actioncode,DEFER,DUNNO,actioncode_to_string,\
     DELETE, Suspect, apply_template
 import socket
@@ -21,7 +19,7 @@ import string
 import time
 import unittest
 import os
-
+import struct
 
 class ClamavPlugin(ScannerPlugin):
     """This plugin passes suspects to a clam daemon. 
@@ -135,34 +133,42 @@ Tags:
   
     def scan_stream(self,buff):
         """
-        Scan a buffer
-    
-        buff (string) : buffer to scan
-    
+        Scan byte buffer
+            
         return either :
           - (dict) : {filename1: "virusname"}
           - None if no virus found
-    
-        May raise :
-          - BufferTooLong : if the buffer size exceeds clamd limits
-          - ScanError : in case of communication problem
+          - raises Exception if something went wrong
         """
-    
         s = self.__init_socket__()
     
-        s.send('STREAM')
-        port = int(s.recv(200).strip().split(' ')[1])
-        self.logger.debug('Sending stream to clamd on host %s port %s'%(self.config.get(self.section,'host'),port))
-        n=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        n.connect((self.config.get(self.section,'host'), port))
-        sent = n.sendall(buff)
-        n.close()
-
+        s.send('nINSTREAM\n')
+        
+        default_chunk_size=2048
+        
+        remainingbytes=buff
+        
+        while len(remainingbytes)>0:
+            chunklength=min(default_chunk_size,len(remainingbytes))
+            self.logger.debug('sending %s byte chunk'%chunklength)
+            chunkdata=remainingbytes[:chunklength]
+            
+            remainingbytes=remainingbytes[chunklength:]
+            
+            s.send(struct.pack('!L',chunklength))
+            s.send(chunkdata)
+            
+        s.send(struct.pack('!L', 0))
         result='...'
         dr={}
         while result!='':
             result = s.recv(20000)
             if len(result)>0:
+                if result.startswith('INSTREAM size limit exceeded'):
+                    raise Exception("Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
+                if result.startswith('UNKNOWN'):
+                    raise Exception("Clamd doesn't understand INSTREAM command. very old version?")
+                
                 filenm = result.strip().split(':')[0]
                 virusname = result.strip().split(':')[1].strip()
                 if virusname[-5:]=='ERROR':
