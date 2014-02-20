@@ -269,6 +269,11 @@ class MainController(object):
                 'section':'PluginAlias',
             },
                            
+            'fraction':{
+                'default':"fuglu.plugins.p_fraction.PluginFraction",
+                'section':'PluginAlias',
+            },
+            
             'archive':{
                 'default':"fuglu.plugins.archive.ArchivePlugin",
                 'section':'PluginAlias',

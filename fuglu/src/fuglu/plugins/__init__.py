@@ -1,4 +1,4 @@
-#   Copyright 2009 Oli Schacher
+#   Copyright 2014 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id$
-#
-__all__ = ['archive','attachment','actionoverride','clamav','sa','p_debug','p_skipper','vacation','icap','sssp','fprot','domainauth','script']
+__all__ = ['archive','attachment','actionoverride','clamav','sa','p_debug','p_skipper','p_fraction','vacation','icap','sssp','fprot','domainauth','script']
