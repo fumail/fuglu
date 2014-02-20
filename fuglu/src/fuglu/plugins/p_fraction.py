@@ -43,16 +43,18 @@ eg. put this in /etc/fuglu/pluginfraction.regex:
         args=self.filter.get_args(suspect)
         #each arg should be a comma separated list of classnames to skip
         
-        skippluginlist=[]
+        if len(args)==0:
+            return None
+        includepluginlist=[]
         
         for arg in args:
-            skippluginlist.extend(arg.split(','))
+            includepluginlist.extend(arg.split(','))
         
         
         listcopy=pluginlist[:]
         for plug in pluginlist:
             name=plug.__class__.__name__
-            if name not in skippluginlist:
+            if name not in includepluginlist:
                 listcopy.remove(plug)
         return listcopy
     
