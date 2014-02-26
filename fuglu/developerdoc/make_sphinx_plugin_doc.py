@@ -43,6 +43,7 @@ if __name__=='__main__':
        
        #prependers
        p_skipper.PluginSkipper(config),
+       p_fraction.PluginFraction(config),
        p_debug.MessageDebugger(config),
     ]
 
