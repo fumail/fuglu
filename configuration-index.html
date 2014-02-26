@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -17,7 +16,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -85,15 +84,16 @@
 </div>
 <p>to disable both Antispam and Antivirus.</p>
 <p>Make sure the logging directory exists:</p>
-<div class="highlight-python"><pre>mkdir -p /var/log/fuglu
-chown nobody /var/log/fuglu</pre>
+<div class="highlight-python"><div class="highlight"><pre>mkdir -p /var/log/fuglu
+chown nobody /var/log/fuglu
+</pre></div>
 </div>
 <p>Then check if fuglu is happy with your configuration:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">fuglu</span> <span class="o">--</span><span class="n">lint</span>
 </pre></div>
 </div>
 <p>example:</p>
-<div class="highlight-python"><pre>fuglu --lint
+<div class="highlight-python"><div class="highlight"><pre>fuglu --lint
 
 Fuglu $Id: core.py 7 2009-04-09 06:51:25Z oli $
 ---------- LINT MODE ----------
@@ -111,7 +111,7 @@ OK
 Linting Plugin  ClamavPlugin
 Got Pong: PONG
 
-Clamav found virus {'stream': 'Eicar-Test-Signature FOUND'}
+Clamav found virus {&#39;stream&#39;: &#39;Eicar-Test-Signature FOUND&#39;}
 OK
 
 Linting Plugin  SAPlugin
@@ -126,11 +126,12 @@ OK
 Linting Plugin  PluginSkipper
 OK
 
-0 plugins reported errors.</pre>
+0 plugins reported errors.
+</pre></div>
 </div>
 <p>If all went fine, run <tt class="docutils literal"><span class="pre">fuglu</span></tt> without parameters to start the daemon.
 in <tt class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span></tt> you should then see output similar to this:</p>
-<div class="highlight-python"><pre>tail /var/log/fuglu/fuglu.log
+<div class="highlight-python"><div class="highlight"><pre>tail /var/log/fuglu/fuglu.log
 2009-04-16 16:14:54,738 root        : INFO Dropping Privileges. Before: root(0)/root(0) After: nobody(99)/nobody(99)
 2009-04-16 16:14:54,739 fuglu.plugin.FiletypePlugin.RulesCache: INFO Loaded 0 rules from 2 files
 2009-04-16 16:14:54,739 fuglu.MainController: INFO Init Stat Engine
@@ -139,7 +140,8 @@ in <tt class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span
 2009-04-16 16:14:54,741 fuglu.MainController: INFO Startup complete
 2009-04-16 16:14:54,742 fuglu.smtp.incoming.10025: INFO SMTP Server running on port 10025
 2009-04-16 16:14:54,743 fuglu.smtp.incoming.10099: INFO SMTP Server running on port 10099
-2009-04-16 16:14:54,743 fuglu.smtp.incoming.10888: INFO SMTP Server running on port 10888</pre>
+2009-04-16 16:14:54,743 fuglu.smtp.incoming.10888: INFO SMTP Server running on port 10888
+</pre></div>
 </div>
 <p>fuglu comes with a few example init scripts if you want to start fuglu like other system daemons</p>
 </div>
@@ -149,7 +151,7 @@ in <tt class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span
 <p>Detailed documentation is available on the <a class="reference external" href="http://www.postfix.org/FILTER_README.html">postfix</a> website, but here is a quick example.</p>
 <p>here is a quick example.</p>
 <p>add to <tt class="docutils literal"><span class="pre">master.cf</span></tt> :</p>
-<div class="highlight-python"><pre>#fuglu
+<div class="highlight-python"><div class="highlight"><pre>#fuglu
 fuglu_default   unix  -       -       n       -       10      smtp
         -o smtp_send_xforward_command=yes
         -o disable_mime_output_conversion=yes
@@ -167,28 +169,32 @@ localhost:10026 inet  n       -       n       -       10      smtpd
         -o smtpd_sender_restrictions=
         -o smtpd_recipient_restrictions=permit_mynetworks,reject
         -o mynetworks=127.0.0.0/8
-        -o smtpd_authorized_xforward_hosts=127.0.0.0/8</pre>
+        -o smtpd_authorized_xforward_hosts=127.0.0.0/8
+</pre></div>
 </div>
 <p>This creates two filters <tt class="docutils literal"><span class="pre">fuglu_trusted</span></tt> for outgoing mail and <tt class="docutils literal"><span class="pre">fuglu_default</span></tt> for incoming mail. An additional postfix instance will listen on port <em>10026</em> where fuglu can re-inject filtered messages.</p>
 <p>create a new file <tt class="docutils literal"><span class="pre">/etc/postfix/filter_default</span></tt></p>
-<div class="highlight-python"><pre># filter for others
-/./ FILTER fuglu_default:[127.0.0.1]:10025</pre>
+<div class="highlight-python"><div class="highlight"><pre># filter for others
+/./ FILTER fuglu_default:[127.0.0.1]:10025
+</pre></div>
 </div>
 <p>this tells postfix to send untrusted messages to fuglu on port 10025</p>
 <p>create a new file <tt class="docutils literal"><span class="pre">/etc/postfix/filter_trusted</span></tt></p>
-<div class="highlight-python"><pre># filter for authenticated users
-/./ FILTER fuglu_trusted:[127.0.0.1]:10099</pre>
+<div class="highlight-python"><div class="highlight"><pre># filter for authenticated users
+/./ FILTER fuglu_trusted:[127.0.0.1]:10099
+</pre></div>
 </div>
 <p>this tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning</p>
 <p>in <tt class="docutils literal"><span class="pre">main.cf</span></tt> add</p>
-<div class="highlight-python"><pre>smtpd_recipient_restrictions =  check_client_access pcre:/etc/postfix/filter_trusted,
+<div class="highlight-python"><div class="highlight"><pre>smtpd_recipient_restrictions =  check_client_access pcre:/etc/postfix/filter_trusted,
                                                                 permit_sasl_authenticated,
                                                                 permit_mynetworks,
                                                                 reject_unauth_destination,
                                                                 pcre:/etc/postfix/filter_default
 
 fuglu_trusted_destination_recipient_limit=1
-fuglu_default_destination_recipient_limit=1</pre>
+fuglu_default_destination_recipient_limit=1
+</pre></div>
 </div>
 <p>run <tt class="docutils literal"><span class="pre">postfix</span> <span class="pre">reload</span></tt> and check your maillog for errors. from now on, messages should be filtered by fuglu!</p>
 </div>
@@ -214,7 +220,7 @@ plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] sectio
 <p>The fuglu ESMTP Connector enables fuglu to run in before-queue mode, i.e. while the smtp session with the remote system is still active. This allows  rejecting spam / infected mails for example.</p>
 <p><strong>Postfix config</strong>:
 edit <tt class="docutils literal"><span class="pre">master.cf</span></tt> as described in <a class="reference external" href="http://www.postfix.org/SMTPD_PROXY_README.html">http://www.postfix.org/SMTPD_PROXY_README.html</a></p>
-<div class="highlight-python"><pre># Before-filter SMTP server. Receive mail from the network and
+<div class="highlight-python"><div class="highlight"><pre># Before-filter SMTP server. Receive mail from the network and
 # pass it to the content filter on localhost port 10025.
 #
 smtp      inet  n       -       n       -       20      smtpd
@@ -234,11 +240,13 @@ smtp      inet  n       -       n       -       20      smtpd
     -o smtpd_recipient_restrictions=permit_mynetworks,reject
     -o smtpd_data_restrictions=
     -o mynetworks=127.0.0.0/8
-    -o receive_override_options=no_unknown_recipient_checks</pre>
+    -o receive_override_options=no_unknown_recipient_checks
+</pre></div>
 </div>
 <p>fuglu config:</p>
 <p>enable the esmtp connector on the incoming port (10025) in <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt>:</p>
-<div class="highlight-python"><pre>incomingport=esmtp:10025,10099,10888</pre>
+<div class="highlight-python"><div class="highlight"><pre>incomingport=esmtp:10025,10099,10888
+</pre></div>
 </div>
 <p><strong>rejecting spam</strong>:</p>
 <p>in the fuglu configuration set <tt class="docutils literal"><span class="pre">DEFAULTHIGHSPAMACTION=REJECT</span></tt> (do the same for <tt class="docutils literal"><span class="pre">DEFAULTLOWSPAMACTION</span></tt> if you want to reject all spam). in the Spamassassin Pluginconfiguration, you can configure a custom reject message which supports various template variables:</p>
@@ -255,13 +263,14 @@ smtp      inet  n       -       n       -       20      smtpd
 </ul>
 </div></blockquote>
 <p>Esample:</p>
-<div class="highlight-python"><pre>rejectmessage=message from ${from_address} to ${to_domain} identified as spam (score=${spamscore})</pre>
+<div class="highlight-python"><div class="highlight"><pre>rejectmessage=message from ${from_address} to ${to_domain} identified as spam (score=${spamscore})
+</pre></div>
 </div>
 <p><strong>rejecting viruses</strong>:</p>
 <p>this works the same way as rejecting spam, by setting <tt class="docutils literal"><span class="pre">DEFAULTVIRUSACTION=REJECT</span></tt> and configuring the <tt class="docutils literal"><span class="pre">rejectmessage</span></tt> in the antivirus plugin section.</p>
 <p><strong>Example fuglu configuration</strong></p>
 <p>With this example pre-queue configuration fuglu will scan for spam, virus and blocked attachments. low spam will be tagged, high spam (level&gt;=10) will be rejected.</p>
-<div class="highlight-python"><pre>[main]
+<div class="highlight-python"><div class="highlight"><pre>[main]
 plugins=attachment,clamav,spamassassin
 incomingport=esmtp:10025,10099,10888
 
@@ -278,7 +287,8 @@ blockaction=REJECT
 
 [SAPlugin]
 rejectmessage=Sorry, this message looks like spam to me!
-highspamlevel=10</pre>
+highspamlevel=10
+</pre></div>
 </div>
 </div>
 <div class="section" id="running-fuglu-as-a-milter">
@@ -286,28 +296,33 @@ highspamlevel=10</pre>
 <p>!! Warning, this is an EXPERIMENTAL feature - untested, may or may not work !!</p>
 <p>!! Note: fuglu milter does not currently support message header/body modification, just actions like REJECT/DEFER/DISCARD !!</p>
 <p>To run fuglu as a milter, add <tt class="docutils literal"><span class="pre">milter:&lt;portnumber</span></tt> to the <tt class="docutils literal"><span class="pre">incomingport</span></tt> configuration option in fuglu.conf.</p>
-<div class="highlight-python"><pre>incomingport=10025,10099,10888,milter:10028</pre>
+<div class="highlight-python"><div class="highlight"><pre>incomingport=10025,10099,10888,milter:10028
+</pre></div>
 </div>
 <p>then enable milters in your MTA. postfix example (main.cf) :</p>
-<div class="highlight-python"><pre>milter_protocol = 2
+<div class="highlight-python"><div class="highlight"><pre>milter_protocol = 2
 milter_default_action = accept
 milter_content_timeout = 30s
-smtpd_milters=inet:127.0.0.1:10028</pre>
+smtpd_milters=inet:127.0.0.1:10028
+</pre></div>
 </div>
 </div>
 <div class="section" id="running-fuglu-in-netcat-mode">
 <h3>Running fuglu in netcat-mode<a class="headerlink" href="#running-fuglu-in-netcat-mode" title="Permalink to this headline">¶</a></h3>
 <p>fuglu supports message processing by simply &#8220;piping&#8221; them into a socket. To enable this socket, add <tt class="docutils literal"><span class="pre">netcat:&lt;portnumber&gt;</span></tt> to the <tt class="docutils literal"><span class="pre">incomingport</span></tt> configuration option in fuglu.conf.</p>
-<div class="highlight-python"><pre>incomingport=10025,10099,10888,netcat:20099</pre>
+<div class="highlight-python"><div class="highlight"><pre>incomingport=10025,10099,10888,netcat:20099
+</pre></div>
 </div>
 <p>when restarting fuglu, you should see something like <tt class="docutils literal"><span class="pre">INFO</span> <span class="pre">NETCAT</span> <span class="pre">Server</span> <span class="pre">running</span> <span class="pre">on</span> <span class="pre">port</span> <span class="pre">20099</span></tt> in the logs. you may then pipe an eml from the shell</p>
-<div class="highlight-python"><pre>(sleep 0.1; cat eicar.eml) | nc -c localhost 20099</pre>
+<div class="highlight-python"><div class="highlight"><pre>(sleep 0.1; cat eicar.eml) | nc -c localhost 20099
+</pre></div>
 </div>
 <p>in some special setups, people use fuglu as an after-delivery filter with this method.</p>
 <p>example procmail filter:</p>
-<div class="highlight-python"><pre># netcat send msg copy to fuglu
+<div class="highlight-python"><div class="highlight"><pre># netcat send msg copy to fuglu
 :0c
-| nc localhost 20099</pre>
+| nc localhost 20099
+</pre></div>
 </div>
 <p>Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value <tt class="docutils literal"><span class="pre">unknown&#64;example.org</span></tt> for both envelope sender and recipient.</p>
 </div>
@@ -316,13 +331,14 @@ smtpd_milters=inet:127.0.0.1:10028</pre>
 <p>(experimental feature) It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.</p>
 <p>For this to work you need to have sqlalchemy installed ( running <cite>fuglu &#8211;lint</cite> should show <cite>enabled</cite> for the sql extension)</p>
 <p>SQL script to create the the table:</p>
-<div class="highlight-python"><pre>CREATE TABLE `fugluconfig` (
+<div class="highlight-python"><div class="highlight"><pre>CREATE TABLE `fugluconfig` (
   `scope` varchar(255) NOT NULL,
   `section` varchar(255) NOT NULL,
   `option` varchar(255) NOT NULL,
   `value` varchar(255) NOT NULL,
   PRIMARY KEY (scope,section,option)
-)</pre>
+)
+</pre></div>
 </div>
 <p>The process is very similar to spamassassin&#8217;s SQL configuration  (<a class="reference external" href="http://wiki.apache.org/spamassassin/UsingSQL">http://wiki.apache.org/spamassassin/UsingSQL</a> ), with a few minor differences:</p>
 <blockquote>
@@ -333,8 +349,9 @@ smtpd_milters=inet:127.0.0.1:10028</pre>
 </ul>
 </div></blockquote>
 <p>enable configuration lookups by providing a standard sql alchemy connectstring in your configuration (section <cite>databaseconfig</cite> option <cite>dbconnectstring</cite>)</p>
-<div class="highlight-python"><pre>[databaseconfig]
-dbconnectstring=mysql://root@localhost/fuglu</pre>
+<div class="highlight-python"><div class="highlight"><pre>[databaseconfig]
+dbconnectstring=mysql://root@localhost/fuglu
+</pre></div>
 </div>
 <p>if you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (<cite>sql=SELECT ....</cite> in the same section.  ) use <cite>:section</cite>, <cite>:option</cite> and the usual suspect variables like <cite>:to_domain</cite> and <cite>:to_address</cite> as placeholders.</p>
 <p>Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: <cite>lowspamaction</cite>, <cite>highspamaction</cite>, <cite>highspamlevel</cite></p>
@@ -420,7 +437,7 @@ dbconnectstring=mysql://root@localhost/fuglu</pre>
 
     <div class="footer">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

@@ -731,6 +731,28 @@ Configuration
 
 
 
+Plugin Fraction
+...............
+
+Plugin: fuglu.plugins.p_fraction.PluginFraction
+
+Runs only a fraction of loaded scanner plugins based on standard filter file
+Use this if you only want to run a fraction of the standard plugins on a specific port for example
+eg. put this in /etc/fuglu/pluginfraction.regex:
+
+@incomingport    1100    SAPlugin,AttachmentPlugin
+
+
+Configuration
+-------------
+
+::
+
+    [PluginFraction]
+    filterfile=/etc/fuglu/pluginfraction.regex
+
+
+
 Debugger
 ........
 

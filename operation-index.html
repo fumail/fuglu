@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -17,7 +16,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -74,7 +73,7 @@
 <h3>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h3>
 <p>The <tt class="docutils literal"><span class="pre">fuglu_control</span></tt> command offers various options to get real-time information on fuglu internals</p>
 <p><strong>statistics:</strong></p>
-<div class="highlight-python"><pre>#$ fuglu_control stats
+<div class="highlight-python"><div class="highlight"><pre>#$ fuglu_control stats
 Fuglu statistics
 ---------------
 Uptime:         19:33:56.119661
@@ -82,19 +81,20 @@ Avg scan time:  3.9657
 Total msgs:     86667
 Ham:            547
 Spam:           86124
-Virus:          8</pre>
+Virus:          8
+</pre></div>
 </div>
 <p><strong>Status of currently running scanner threads:</strong></p>
-<div class="highlight-python"><pre>#fuglu_control workerlist
+<div class="highlight-python"><div class="highlight"><pre>#fuglu_control workerlist
 Total 10 Threads
 
-[98]: Suspect 8790fa16a3733350baf02d5b4e7d98e1: from=&lt;redacted&gt; to=&lt;redacted&gt; size=1043 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0080', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0055'} : Running Plugin SAPlugin
+[98]: Suspect 8790fa16a3733350baf02d5b4e7d98e1: from=&lt;redacted&gt; to=&lt;redacted&gt; size=1043 , spam=no, virus=no tags={&#39;virus&#39;: {&#39;F-Prot&#39;: False, &#39;ClamAV&#39;: False}, &#39;FprotPlugin.time&#39;: &#39;0.0080&#39;, &#39;spam&#39;: {}, &#39;incomingport&#39;: 10025, &#39;decisions&#39;: [(&#39;F-Prot Plugin&#39;, 0), (&#39;ClamavPlugin&#39;, 0)], &#39;ClamavPlugin.time&#39;: &#39;0.0055&#39;} : Running Plugin SAPlugin
 *******
-[99]: Suspect b6f3019df4da4170888e144f98eaa3ad: from=&lt;redacted&gt; to=&lt;redacted&gt; size=5187 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0088', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0161'} : Running Plugin SAPlugin
+[99]: Suspect b6f3019df4da4170888e144f98eaa3ad: from=&lt;redacted&gt; to=&lt;redacted&gt; size=5187 , spam=no, virus=no tags={&#39;virus&#39;: {&#39;F-Prot&#39;: False, &#39;ClamAV&#39;: False}, &#39;FprotPlugin.time&#39;: &#39;0.0088&#39;, &#39;spam&#39;: {}, &#39;incomingport&#39;: 10025, &#39;decisions&#39;: [(&#39;F-Prot Plugin&#39;, 0), (&#39;ClamavPlugin&#39;, 0)], &#39;ClamavPlugin.time&#39;: &#39;0.0161&#39;} : Running Plugin SAPlugin
 *******
 [100]: waiting for task
 *******
-[101]: Suspect eefa38e4ae4a9c2938670a46d6b2b922: from=&lt;redacted&gt; to=&lt;redacted&gt; size=5203 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0086', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0092'} : Running Plugin SAPlugin
+[101]: Suspect eefa38e4ae4a9c2938670a46d6b2b922: from=&lt;redacted&gt; to=&lt;redacted&gt; size=5203 , spam=no, virus=no tags={&#39;virus&#39;: {&#39;F-Prot&#39;: False, &#39;ClamAV&#39;: False}, &#39;FprotPlugin.time&#39;: &#39;0.0086&#39;, &#39;spam&#39;: {}, &#39;incomingport&#39;: 10025, &#39;decisions&#39;: [(&#39;F-Prot Plugin&#39;, 0), (&#39;ClamavPlugin&#39;, 0)], &#39;ClamavPlugin.time&#39;: &#39;0.0092&#39;} : Running Plugin SAPlugin
 *******
 [102]: waiting for task
 *******
@@ -104,9 +104,10 @@ Total 10 Threads
 *******
 [105]: waiting for task
 *******
-[106]: Suspect b47e2ebf00e3f0d83dc1c7f64dad69e8: from=&lt;redacted&gt; to=&lt;redacted&gt; size=29442 , spam=no, virus=no tags={'virus': {'F-Prot': False, 'ClamAV': False}, 'FprotPlugin.time': '0.0240', 'spam': {}, 'incomingport': 10025, 'decisions': [('F-Prot Plugin', 0), ('ClamavPlugin', 0)], 'ClamavPlugin.time': '0.0240'} : Running Plugin SAPlugin
+[106]: Suspect b47e2ebf00e3f0d83dc1c7f64dad69e8: from=&lt;redacted&gt; to=&lt;redacted&gt; size=29442 , spam=no, virus=no tags={&#39;virus&#39;: {&#39;F-Prot&#39;: False, &#39;ClamAV&#39;: False}, &#39;FprotPlugin.time&#39;: &#39;0.0240&#39;, &#39;spam&#39;: {}, &#39;incomingport&#39;: 10025, &#39;decisions&#39;: [(&#39;F-Prot Plugin&#39;, 0), (&#39;ClamavPlugin&#39;, 0)], &#39;ClamavPlugin.time&#39;: &#39;0.0240&#39;} : Running Plugin SAPlugin
 *******
-[107]: waiting for task</pre>
+[107]: waiting for task
+</pre></div>
 </div>
 <p>run fuglu_control without arguments to get a list of all supported commands.</p>
 </div>
@@ -130,13 +131,14 @@ Total 10 Threads
 </pre></div>
 </div>
 <p>after reloading fuglu, the spamassassin plugin should be very verbose:</p>
-<div class="highlight-python"><pre>2009-04-08 17:11:07,693 fuglu.plugin.SAPlugin: DEBUG Contacting spamd localhost (Try 1 of 5)
+<div class="highlight-python"><div class="highlight"><pre>2009-04-08 17:11:07,693 fuglu.plugin.SAPlugin: DEBUG Contacting spamd localhost (Try 1 of 5)
 2009-04-08 17:11:07,701 fuglu.plugin.SAPlugin: DEBUG Sent 4065 bytes to spamd
 2009-04-08 17:11:10,033 fuglu.plugin.SAPlugin: DEBUG SPAMD/1.1 0 EX_OK
 
 2009-04-08 17:11:10,034 fuglu.plugin.SAPlugin: DEBUG Got 4778 message bytes from back from spamd
 2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Spamscore: 2.2
-2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Message is not spam</pre>
+2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Message is not spam
+</pre></div>
 </div>
 <p>there should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this.</p>
 <p><strong>Qualnames for new loggers</strong> :</p>
@@ -156,11 +158,12 @@ Total 10 Threads
 <div class="section" id="mrtg">
 <h3>MRTG<a class="headerlink" href="#mrtg" title="Permalink to this headline">¶</a></h3>
 <p>Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg <tt class="docutils literal"><span class="pre">/usr/local/fuglu/mrtg</span></tt>) and set this in <tt class="docutils literal"><span class="pre">fuglu.conf</span></tt>:</p>
-<div class="highlight-python"><pre>#Statistics
-mrtgdir=/usr/local/fuglu/mrtg</pre>
+<div class="highlight-python"><div class="highlight"><pre>#Statistics
+mrtgdir=/usr/local/fuglu/mrtg
+</pre></div>
 </div>
 <p>You&#8217;ll need <em>mrtg</em> and a <em>webserver</em> for this to work... create a file called <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu_mrtg.cfg</span></tt>  like this:</p>
-<div class="highlight-python"><pre>Interval: 5
+<div class="highlight-python"><div class="highlight"><pre>Interval: 5
 WorkDir: /usr/local/fuglu/mrtg/output
 WriteExpires: yes
 Options[_]: growright,nopercent
@@ -233,20 +236,24 @@ ShortLegend[virus]: virus
 LegendI[virus]: virus
 Legend1[virus]: Number of viri detected
 MaxBytes[virus]: 600000
-AbsMax[virus]: 600000</pre>
+AbsMax[virus]: 600000
+</pre></div>
 </div>
 <p>make sure, the path in WorkDir exists.</p>
 <p>then create a script <tt class="docutils literal"><span class="pre">/usr/local/bin/fuglu_mrtg.sh</span></tt></p>
-<div class="highlight-python"><pre>#!/bin/sh
-/usr/bin/env LANG=C /usr/bin/mrtg /etc/fuglu/fuglu_mrtg.cfg</pre>
+<div class="highlight-python"><div class="highlight"><pre>#!/bin/sh
+/usr/bin/env LANG=C /usr/bin/mrtg /etc/fuglu/fuglu_mrtg.cfg
+</pre></div>
 </div>
 <p>run <tt class="docutils literal"><span class="pre">fuglu_mrtg.sh</span></tt> to check for errors.</p>
 <p>if all went well, add it to your crontab:</p>
-<div class="highlight-python"><pre>*/5 * * * * /usr/local/bin/fuglu_mrtg.sh &gt;/dev/null 2&gt;&amp;1</pre>
+<div class="highlight-python"><div class="highlight"><pre>*/5 * * * * /usr/local/bin/fuglu_mrtg.sh &gt;/dev/null 2&gt;&amp;1
+</pre></div>
 </div>
 <p>install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path to fuglu_mrtg.cfg correctly:</p>
-<div class="highlight-python"><pre># EDIT THIS to reflect all your MRTG config files
-BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }</pre>
+<div class="highlight-python"><div class="highlight"><pre># EDIT THIS to reflect all your MRTG config files
+BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }
+</pre></div>
 </div>
 <p>after pointing your browser to <tt class="docutils literal"><span class="pre">http://yourfuglubox.example.com/cgi-bin/fuglu.cgi</span></tt> you should see nice graphs.</p>
 </div>
@@ -284,9 +291,28 @@ BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }</pre>
 </pre></div>
 </div>
 <p>you may add envelope sender and recipient if these are relevant for your test, eg:</p>
-<div class="highlight-python"><pre>fuglu_debug /path/to/message.eml sender@example.org recipient@example.net</pre>
+<div class="highlight-python"><div class="highlight"><pre>fuglu_debug /path/to/message.eml sender@example.org recipient@example.net
+</pre></div>
 </div>
 <p>then check <tt class="docutils literal"><span class="pre">/tmp/fuglu_debug.log</span></tt></p>
+</div>
+<div class="section" id="debug-a-suspect-filter">
+<span id="debug-suspect-filter"></span><h3>Debug a suspect filter<a class="headerlink" href="#debug-a-suspect-filter" title="Permalink to this headline">¶</a></h3>
+<p>So you have this filter in a plugin with hundreds of rules and you just don&#8217;t know which one matched a specific message?</p>
+<p>fuglu_suspectfilter to the rescue! just pass a rule file and a message eml file as arguments and it will list all matches.</p>
+<div class="highlight-python"><div class="highlight"><pre>fuglu_suspectfilter /etc/fuglu/myfilterfile.regex /tmp/testmessage.eml
+INFO:fuglu.suspectfilter:Reloading Rulefile /home/gryphius/Documents/skipreviewfilter.regex
+INFO:root:194 valid rules found
+INFO:root:1 matches found
+
+Match #1:
+Matched header/field: From
+Matched value in message: &quot;Edgar&quot; &lt;edgarmail@example.com&gt;
+Regex : edgarmail@example\.com
+Rule argument : Messages from Edgar
+</pre></div>
+</div>
+<p>add a <cite>-D</cite> argument for a full debug trace of the suspect filter.</p>
 </div>
 <div class="section" id="debug-the-fuglu-core">
 <h3>Debug the fuglu core<a class="headerlink" href="#debug-the-fuglu-core" title="Permalink to this headline">¶</a></h3>
@@ -295,13 +321,15 @@ You will then get an interactive python console where all plugins etc are availa
 <p>starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command <tt class="docutils literal"><span class="pre">fuglu_control</span> <span class="pre">netconsole</span> <span class="pre">[&lt;port&gt;</span> <span class="pre">[&lt;bindaddress&gt;]]</span></tt></p>
 <p>Example:
 on the host running fuglu:</p>
-<div class="highlight-python"><pre># fuglu_control netconsole 9999 0.0.0.0
-Python interactive console starting on 0.0.0.0 port 9999</pre>
+<div class="highlight-python"><div class="highlight"><pre># fuglu_control netconsole 9999 0.0.0.0
+Python interactive console starting on 0.0.0.0 port 9999
+</pre></div>
 </div>
 <p>on your host:</p>
-<div class="highlight-python"><pre>$ nc 192.168.1.40 9999
-Fuglu Python Shell - MainController available as 'mc'
-&gt;&gt;&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ nc 192.168.1.40 9999
+Fuglu Python Shell - MainController available as &#39;mc&#39;
+&gt;&gt;&gt;
+</pre></div>
 </div>
 </div>
 </div>
@@ -326,6 +354,7 @@ Fuglu Python Shell - MainController available as 'mc'
 <li><a class="reference internal" href="#troubleshooting-debugging">Troubleshooting &amp; Debugging</a><ul>
 <li><a class="reference internal" href="#fuglu-doesn-t-even-start">Fuglu doesn&#8217;t even start</a></li>
 <li><a class="reference internal" href="#debug-trace-a-single-message">Debug Trace a single message</a></li>
+<li><a class="reference internal" href="#debug-a-suspect-filter">Debug a suspect filter</a></li>
 <li><a class="reference internal" href="#debug-the-fuglu-core">Debug the fuglu core</a></li>
 </ul>
 </li>
@@ -384,7 +413,7 @@ Fuglu Python Shell - MainController available as 'mc'
 
     <div class="footer">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

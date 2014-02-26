@@ -293,7 +293,31 @@ you may add envelope sender and recipient if these are relevant for your test, e
 
 then check ``/tmp/fuglu_debug.log``
 
+.. _debug-suspect-filter:
 
+Debug a suspect filter
+......................
+
+So you have this filter in a plugin with hundreds of rules and you just don't know which one matched a specific message?
+
+fuglu_suspectfilter to the rescue! just pass a rule file and a message eml file as arguments and it will list all matches.
+
+
+::
+
+  fuglu_suspectfilter /etc/fuglu/myfilterfile.regex /tmp/testmessage.eml
+  INFO:fuglu.suspectfilter:Reloading Rulefile /home/gryphius/Documents/skipreviewfilter.regex
+  INFO:root:194 valid rules found
+  INFO:root:1 matches found
+
+  Match #1:
+  Matched header/field: From
+  Matched value in message: "Edgar" <edgarmail@example.com>
+  Regex : edgarmail@example\.com
+  Rule argument : Messages from Edgar
+
+
+add a `-D` argument for a full debug trace of the suspect filter.
 
 Debug the fuglu core
 ....................

@@ -124,6 +124,7 @@ Example:
 	#mime-headers
 	mime:Content-Type ^application\/x-msdos-program$
 
+see :ref:`debug-suspect-filter` for info on how to debug suspect filter files on specific messages.
 
 Template Variables
 ..................
