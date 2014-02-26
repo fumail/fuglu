@@ -1,6 +1,7 @@
 -- Next release
  * new Prepender: PluginFraction (like PluginSkipper but include instead of exclude list)
-
+ * new tool: fuglu_suspectfilter . Use this to find out which rules in a suspect filter match a sample message
+ 
 -- Fuglu 0.6.1, 2013-11-15
  * new Plugin: ScriptFilter (dynamically loaded filter scripts)
  * new (experimental) domain authentication plugins: DKIM Sign / Verify, SPF Check 
