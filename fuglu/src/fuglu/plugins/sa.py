@@ -339,10 +339,8 @@ Subject: test scanner
         #prepend temporary headers set by other plugins
         tempheader=suspect.get_tag('SAPlugin.tempheader')
         if tempheader!=None:
-            if not tempheader.endswith('\n'):
-                tempheader=tempheader+'\n'
+            tempheader=tempheader.strip()+'\r\n'
             spam=tempheader+spam
-            
             
         if forwardoriginal:
             ret=self.safilter_report(spam, suspect.to_address)
