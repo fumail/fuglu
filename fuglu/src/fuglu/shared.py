@@ -231,10 +231,10 @@ class Suspect(object):
         except Exception,e:
             logging.getLogger('suspect').error('Could not write to logfile: %s'%e)
 
-    def get_tag(self,key):
-        """returns the tag value"""
+    def get_tag(self,key,defaultvalue=None):
+        """returns the tag value. if the tag is not found, return defaultvalue instead (None if no defaultvalue passed)"""
         if not self.tags.has_key(key):
-            return None
+            return defaultvalue
         return self.tags[key]
     
     def set_tag(self,key,value):
