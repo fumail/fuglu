@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Startup script for fuglu
+#
+# chkconfig: 2345 65 38
+# description: Mail Content Scanner Interface
+# processname: fuglu
+# pidfile: /var/run/fuglu.pid
+
+### BEGIN INIT INFO
+# Provides:          fuglu
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog $network
+# Should-Start:      $named $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: fuglu Mail Content Scanner
+# Description:       fuglu Mail Content Scanner Interface
+### END INIT INFO
+
+. /etc/rc.status
+
+# Reset status of this service
+rc_reset
+
+FUGLU_BIN=/usr/bin/fuglu
+FUGLU_PID=/var/run/fuglu.pid
+test -x $FUGLU_BIN || {
+        echo "$FUGLU_BIN not installed";
+        if [ "$1" = "stop" ] ; then
+                exit 0
+        else
+                exit 5
+        fi
+        }
+
+case "$1" in
+        start)
+                echo -n "Starting fuglu "
+                startproc $FUGLU_BIN
+                rc_status -v
+                ;;
+        stop)
+                echo -n "Stopping fuglu "
+                killproc -TERM $FUGLU_BIN
+				rm -f $FUGLU_PID
+                rc_status -v
+                ;;
+        restart)
+                $0 stop
+                $0 start
+                rc_status
+                ;;
+        reload)
+                echo -n "Reload fuglu config: "
+                killproc -HUP $FUGLU_BIN
+                rc_status -v
+                ;;
+        status)
+                echo -n "Checking for service fuglu "
+                checkproc $FUGLU_BIN
+                rc_status -v
+                ;;
+        *)
+                echo "Usage: $0 {start|stop|status|restart|reload}"
+        exit 1
+        ;;
+esac
+rc_exit
