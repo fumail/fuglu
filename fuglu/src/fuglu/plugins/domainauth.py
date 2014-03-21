@@ -144,7 +144,7 @@ Setting up your keys:
     openssl genrsa -out /etc/fuglu/dkim/${domain}.key 1024
     openssl rsa -in /etc/fuglu/dkim/${domain}.key -out /etc/fuglu/dkim/${domain}.pub -pubout -outform PEM
     # print out the DNS record:
-    echo -n "default._domainkey TXT  \"v=DKIM1; k=rsa; p=" ; cat /etc/fuglu/dkim/${domain}.pub | grep -v 'PUBLIC KEY' | tr -d '\n' ; echo ";\""
+    echo -n "default._domainkey TXT  \\"v=DKIM1; k=rsa; p=" ; cat /etc/fuglu/dkim/${domain}.pub | grep -v 'PUBLIC KEY' | tr -d '\\n' ; echo ";\\""
 
     
 If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails
