@@ -708,10 +708,9 @@ domain=example.com
 openssl genrsa -out /etc/fuglu/dkim/${domain}.key 1024
 openssl rsa -in /etc/fuglu/dkim/${domain}.key -out /etc/fuglu/dkim/${domain}.pub -pubout -outform PEM
 # print out the DNS record:
-echo -n &quot;default._domainkey TXT  &quot;v=DKIM1; k=rsa; p=&quot; ; cat /etc/fuglu/dkim/${domain}.pub | grep -v &#39;PUBLIC KEY&#39; | tr -d &#39;
+echo -n &quot;default._domainkey TXT  \&quot;v=DKIM1; k=rsa; p=&quot; ; cat /etc/fuglu/dkim/${domain}.pub | grep -v &#39;PUBLIC KEY&#39; | tr -d &#39;\n&#39; ; echo &quot;;\&quot;&quot;
 </pre></div>
 </div>
-<p>&#8216; ; echo &#8221;;&#8221;&#8220;</p>
 <p>If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails</p>
 <div class="section" id="id10">
 <h4>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
@@ -1378,7 +1377,7 @@ Debug Output written to:/tmp/fuglu-test.log
 
     <div class="footer">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
