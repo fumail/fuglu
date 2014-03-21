@@ -1,7 +1,7 @@
 FuGlu
 =====
 
-FuGlu is a mail scanning daemon for Postfix written in Python. It acts as a glue application between the MTA, spam checkers and antivirus software. 
+FuGlu is a mail scanning daemon for Postfix written in Python. It acts as the glue application between the MTA and spam checkers and antivirus software. FuGlu focuses on being solid, easy to manage, debug and monitor. 
 
  * `Overview and Documentation on github <http://gryphius.github.io/fuglu/>`_
  * `Source on github <https://github.com/gryphius/fuglu>`_
