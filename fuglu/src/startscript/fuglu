@@ -103,6 +103,7 @@ if opts.pidfile:
 
 if opts.configfile:
     theconfigfile=opts.configfile
+    theloggingfile=os.path.join(os.path.split(theconfigfile)[0], os.path.split(theloggingfile)[1])
     dconfdir=None
 
 config=ConfigParser.ConfigParser()
@@ -111,7 +112,7 @@ if not os.path.exists(theconfigfile):
     sys.exit(1)
 readconfig=config.readfp(open(theconfigfile))
 #load conf.d
-if os.path.isdir(dconfdir):
+if dconfdir and os.path.isdir(dconfdir):
     filelist=os.listdir(dconfdir)
     configfiles=[dconfdir+'/'+c for c in filelist if c.endswith('.conf')]
     readfiles=config.read(configfiles)
