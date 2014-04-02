@@ -23,3 +23,7 @@ branches:
 
 notifications:
   email: true
+  
+cache:
+  apt: true
+ 
