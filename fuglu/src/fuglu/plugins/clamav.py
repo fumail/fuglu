@@ -275,7 +275,18 @@ class ClamavPluginTestCase(unittest.TestCase):
         config.set('virus','defaultvirusaction','DELETE')
         config.add_section('ClamavPlugin')
         config.set('ClamavPlugin', 'host','127.0.0.1')
+        
         config.set('ClamavPlugin', 'port','3310')
+        #try local socket:
+        knownpaths=[
+          '/var/lib/clamav/clamd.sock',
+          '/var/run/clamav/clamd.ctl',
+        ]
+        for p in knownpaths:
+            if os.path.exists(p):
+                config.set('ClamavPlugin', 'port',p)
+                break
+        
         config.set('ClamavPlugin', 'timeout','5')
         config.set('ClamavPlugin', 'retries','3')
         config.set('ClamavPlugin', 'maxsize','22000000')

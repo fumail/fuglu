@@ -1,0 +1,3 @@
+BeautifulSoup
+python-magic
+SQLAlchemy
