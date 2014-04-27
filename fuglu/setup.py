@@ -68,10 +68,3 @@ see http://gryphius.github.com/fuglu/ for more details.""" ,
 #cleanup
 if OLD_VERSFILE_CONTENT!=None:
     open(VERSFILE,'w').write(OLD_VERSFILE_CONTENT)
-    
-
-
-
-        
-        
-        
