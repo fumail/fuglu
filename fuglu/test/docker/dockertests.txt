@@ -1,0 +1,10 @@
+Run fuglu tests in docker containers.
+
+Centos:
+sudo docker build -t=fuglu-centos centos
+sudo docker run fuglu-centos
+
+Ubuntu:
+sudo docker build -t=fuglu-ubuntu ubuntu
+sudo docker run fuglu-ubuntu
+
