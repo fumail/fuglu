@@ -223,7 +223,7 @@ if __name__=='__main__':
     if suspect.is_modified():
         outfilename='/tmp/fuglu_dummy_message_out.eml'
         out=open(outfilename,'wb')
-        out.write(suspect.getSource())
+        out.write(suspect.get_source())
         out.close()
         logging.info("Plugin modified the source -> modified message available as %s"%outfilename)
         
