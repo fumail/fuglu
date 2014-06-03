@@ -76,18 +76,18 @@ if __name__=='__main__':
     #start with INFO, so we don't have fuglus internal debug noise
     logging.basicConfig(level=logging.INFO)
     
-    if len(args)!=1:
-        print "usage: plugdummy.py [options] [plugin]"
+    if len(args)<1:
+        print "usage: plugdummy.py [options] [plugin] [plugin...]"
         sys.exit(1)
-    plugin=args[0]
+    pluginlist=args
     
     #prepare config
     config=ConfigParser.ConfigParser()
     config.add_section('main')
     if opts.appender:
-        config.set('main','appenders',plugin)
+        config.set('main','appenders',','.join(pluginlist))
     else:
-        config.set('main', 'plugins', plugin)
+        config.set('main', 'plugins', ','.join(pluginlist))
     config.set('main','plugindir', opts.plugindir)
     
     
@@ -98,14 +98,14 @@ if __name__=='__main__':
     mc.load_extensions()
     ok=mc.load_plugins()
     if not ok:
-        logging.error("Could not load plugin")
+        logging.error("Could not load plugin(s)")
         sys.exit(1)
     
     if opts.defaultconfig:
         if opts.appender:
-            sec=mc.appenders[0].section
+            sec=mc.appenders[-1].section
         else:
-            sec=mc.plugins[0].section
+            sec=mc.plugins[-1].section
 
         print "Default config options for %s\n"%sec
         try:
@@ -120,34 +120,34 @@ if __name__=='__main__':
     
     #check if the controller successfully added the plugin to the list
     if opts.appender:
-        if len(mc.appenders)!=1:
+        if len(mc.appenders)!=len(pluginlist):
             logging.error("Appender Plugin instantiate failed")
             sys.exit(1)
-        pluginstance=mc.appenders[0]
+        pluginstancelist=mc.appenders
         
     else:
-        if len(mc.plugins)!=1:
+        if len(mc.plugins)!=len(pluginlist):
             logging.error("Scanner Plugin instantiate failed")
             sys.exit(1)
-        pluginstance=mc.plugins[0]
+        pluginstancelist=mc.plugins
     
-
-    if opts.config:
-        for confpair in opts.config:
-            section=pluginstance.section
-            option,value=confpair.split(':',1)
-            if option.startswith('['):
-                ind=option.find(']')
-                section=option[1:ind]
-                option=option[ind+1:]
-            if not config.has_section(section):
-                config.add_section(section)
-            config.set(section,option,value)
-    
-    if opts.lint:
-        ret=pluginstance.lint()
-        print "Lint success: %s"%ret
-        sys.exit(0)
+    for pluginstance in pluginstancelist:
+        if opts.config:
+            for confpair in opts.config:
+                section=pluginstance.section
+                option,value=confpair.split(':',1)
+                if option.startswith('['):
+                    ind=option.find(']')
+                    section=option[1:ind]
+                    option=option[ind+1:]
+                if not config.has_section(section):
+                    config.add_section(section)
+                config.set(section,option,value)
+        
+        if opts.lint:
+            ret=pluginstance.lint()
+            print "Lint success: %s"%ret
+            sys.exit(0)
     
     #prepare the suspect
     if opts.recipients==None or len(opts.recipients)==0:
@@ -199,32 +199,33 @@ if __name__=='__main__':
             suspect.set_tag(nme, val)
     
     #now run examine
-    logging.info("Running plugin: %s"%pluginstance)
+    for pluginstance in pluginstancelist:
+        logging.info("*** Running plugin: %s ***"%pluginstance)
     
-    if opts.appender:
-        #todo: maybe make DUNNO configurable? 2nd argument?
-        pluginstance.process(suspect,DUNNO)
-        
-    else:
-        ans = pluginstance.examine(suspect)
-        message=""
-        if type(ans) is tuple:
-            result,message=ans
+        if opts.appender:
+            #todo: maybe make DUNNO configurable? 2nd argument?
+            pluginstance.process(suspect,DUNNO)
+            
         else:
-            result=ans
-        
-        if result==None:
-            result=DUNNO
+            ans = pluginstance.examine(suspect)
+            message=""
+            if type(ans) is tuple:
+                result,message=ans
+            else:
+                result=ans
+            
+            if result==None:
+                result=DUNNO
     
         logging.info("Result: %s %s",actioncode_to_string(result), message)
         logging.info(suspect)
         
-        if suspect.is_modified():
-            outfilename='/tmp/fuglu_dummy_message_out.eml'
-            out=open(outfilename,'wb')
-            out.write(suspect.getSource())
-            out.close()
-            logging.info("Plugin modified the source -> modified message available as %s"%outfilename)
+    if suspect.is_modified():
+        outfilename='/tmp/fuglu_dummy_message_out.eml'
+        out=open(outfilename,'wb')
+        out.write(suspect.getSource())
+        out.close()
+        logging.info("Plugin modified the source -> modified message available as %s"%outfilename)
         
     if opts.console:
         run_debugconsole(suspect=suspect, plugin=pluginstance, result=result, config=config)
