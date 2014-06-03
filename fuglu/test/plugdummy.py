@@ -34,7 +34,8 @@ workdir=os.path.dirname(os.path.abspath(this_file))
 os.chdir(workdir)
 sys.path.insert(0,'../src')
 
-from fuglu.shared import Suspect, ScannerPlugin,DUNNO, actioncode_to_string
+from fuglu.shared import Suspect, ScannerPlugin,DUNNO, actioncode_to_string,\
+    AppenderPlugin
 from fuglu.core import MainController
 
 def run_debugconsole(**kwargs):
@@ -64,10 +65,9 @@ if __name__=='__main__':
     parser.add_option("-e", "--eml", action="store", dest="eml", help="use eml content as message file. if this is enabled, body is ignored")
     parser.add_option("-d", "--defaultconfig", action="store_true",default=False, dest="defaultconfig", help="print plugin default config and exit")
     parser.add_option("-o", "--option", action="append",dest="config", help="set config option format: [section]option:value  ([section] is optional, uses plugins name by default")
-    parser.add_option("-p", "--plugindir", action="store", dest="plugindir", default="/usr/local/fuglu/plugins", help="plugindir")
+    parser.add_option("-p", "--plugindir", action="append", dest="plugindirs", help="plugindir(s)")
     parser.add_option("-c", action="store_true", dest="console", default=False, help="start an interactive console after the plugin has been run")
     parser.add_option("--help", action="store_true", dest="help", default=False, help="show options")
-    parser.add_option("-a",action="store_true",dest="appender",default=False,help="run this as an appender plugin")
     parser.add_option("-l",action="store_true",dest="lint",default=False,help="run lint instead of examine/process")
     (opts,args)=parser.parse_args()
     if opts.help:
@@ -81,15 +81,35 @@ if __name__=='__main__':
         sys.exit(1)
     pluginlist=args
     
+    for plugindir in opts.plugindirs:
+        if plugindir not in sys.path:
+            sys.path.insert(0,plugindir)
+    
     #prepare config
     config=ConfigParser.ConfigParser()
     config.add_section('main')
-    if opts.appender:
-        config.set('main','appenders',','.join(pluginlist))
-    else:
-        config.set('main', 'plugins', ','.join(pluginlist))
-    config.set('main','plugindir', opts.plugindir)
     
+    scanners=[]
+    appenders=[]
+    
+    #autodetect plugin type
+    tempmc=MainController(config)
+    for plugin in pluginlist:
+        try:
+            pluginstance=tempmc._load_component(plugin)
+        except Exception,e:
+            print "Could not load plugin %s: %s"%(plugin,str(e))
+            sys.exit(1)
+        
+        if isinstance(pluginstance,ScannerPlugin):
+            scanners.append(plugin)
+        elif isinstance(pluginstance,AppenderPlugin):
+            appenders.append(plugin)
+        else:
+            print "%s doesn't seem to be a fuglu plugin - ignoring"
+         
+    config.set('main', 'plugins', ','.join(scanners))
+    config.set('main','appenders',','.join(appenders))
     
     #load plugin
     mc=MainController(config)
@@ -117,21 +137,8 @@ if __name__=='__main__':
     
     #now switch to debug
     logging.getLogger().setLevel(logging.DEBUG)
-    
-    #check if the controller successfully added the plugin to the list
-    if opts.appender:
-        if len(mc.appenders)!=len(pluginlist):
-            logging.error("Appender Plugin instantiate failed")
-            sys.exit(1)
-        pluginstancelist=mc.appenders
         
-    else:
-        if len(mc.plugins)!=len(pluginlist):
-            logging.error("Scanner Plugin instantiate failed")
-            sys.exit(1)
-        pluginstancelist=mc.plugins
-    
-    for pluginstance in pluginstancelist:
+    for pluginstance in mc.plugins+mc.appenders:
         if opts.config:
             for confpair in opts.config:
                 section=pluginstance.section
@@ -199,27 +206,27 @@ if __name__=='__main__':
             suspect.set_tag(nme, val)
     
     #now run examine
-    for pluginstance in pluginstancelist:
+    for pluginstance in mc.plugins:
         logging.info("*** Running plugin: %s ***"%pluginstance)
-    
-        if opts.appender:
-            #todo: maybe make DUNNO configurable? 2nd argument?
-            pluginstance.process(suspect,DUNNO)
-            
+        ans = pluginstance.examine(suspect)
+        message=""
+        if type(ans) is tuple:
+            result,message=ans
         else:
-            ans = pluginstance.examine(suspect)
-            message=""
-            if type(ans) is tuple:
-                result,message=ans
-            else:
-                result=ans
-            
-            if result==None:
-                result=DUNNO
+            result=ans
+        
+        if result==None:
+            result=DUNNO
     
         logging.info("Result: %s %s",actioncode_to_string(result), message)
         logging.info(suspect)
-        
+    
+    for pluginstance in mc.appenders:
+        logging.info("*** Running appender: %s ***"%pluginstance)
+        pluginstance.process(suspect,DUNNO)
+        message=""
+        logging.info(suspect)
+    
     if suspect.is_modified():
         outfilename='/tmp/fuglu_dummy_message_out.eml'
         out=open(outfilename,'wb')
