@@ -202,7 +202,7 @@ envelope_to support@fuglu\.org      yes
             shutil.copy(suspect.tempfile, requested_path)
         else:
             fp=open(requested_path,'w')
-            fp.write(suspect.getSource())
+            fp.write(suspect.get_source())
             fp.close()
         
         chmod=self.config.get(self.section,'chmod')
@@ -329,7 +329,7 @@ class ArchiveTestcase(unittest.TestCase):
         self.config.set('ArchivePlugin', 'storeoriginal', '1')
         candidate=ArchivePlugin(self.config)
         suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-        origmessage=suspect.getSource()
+        origmessage=suspect.get_source()
         
         #modify the mesg
         msgrep= suspect.get_message_rep()
@@ -359,7 +359,7 @@ class ArchiveTestcase(unittest.TestCase):
         self.config.set('ArchivePlugin', 'storeoriginal', '0')
         candidate=ArchivePlugin(self.config)
         suspect=Suspect('sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-        origmessage=suspect.getSource()
+        origmessage=suspect.get_source()
         #modify the mesg
         msgrep= suspect.get_message_rep()
         msgrep['X-Changed-Something']='Yes'

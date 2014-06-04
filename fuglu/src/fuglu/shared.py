@@ -271,7 +271,7 @@ class Suspect(object):
             val=unicode(value,errors='ignore')  # is ignore the right thing to do here?
             hdr=Header(val, header_name=key, continuation_ws=' ')
             hdrline="%s: %s\n"%(key,hdr.encode())
-            src=hdrline+self.getSource()
+            src=hdrline+self.get_source()
             self.set_source(src)
         else:
             self.addheaders[key]=value
@@ -419,7 +419,7 @@ class Suspect(object):
 
     def get_headers(self):
         """returns the message headers as string"""
-        headers=re.split('(?:\n\n)|(?:\r\n\r\n)',self.getSource(maxbytes=1048576),1)[0]
+        headers=re.split('(?:\n\n)|(?:\r\n\r\n)',self.get_source(maxbytes=1048576),1)[0]
         return headers
     
     def get_client_info(self,config=None):
@@ -763,7 +763,7 @@ class SuspectFilter(object):
         if headername=='to_domain':
             return [suspect.to_domain,]
         if headername=='body:full':
-            return [suspect.getOriginalSource()]
+            return [suspect.get_original_source()]
         
         #if it starts with a @ we return a tag, not a header
         if headername[0:1]=='@':

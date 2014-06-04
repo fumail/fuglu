@@ -35,7 +35,7 @@ def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
     
     #we must prepend headers manually as we can't set a header order in email objects
-    origmsgtxt=suspect.getSource()
+    origmsgtxt=suspect.get_source()
     newheaders=""
     
     for key in suspect.addheaders:
@@ -71,10 +71,10 @@ class SMTPHandler(ProtocolHandler):
         
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info('%s: Injecting original message source without modifications'%suspect.id)
-            msgcontent=suspect.getOriginalSource()
+            msgcontent=suspect.get_original_source()
         elif self.is_signed(suspect):
             self.logger.info('%s: S/MIME signed message detected - sending original source without modifications'%suspect.id)
-            msgcontent=suspect.getOriginalSource()
+            msgcontent=suspect.get_original_source()
         else:
             msgcontent=buildmsgsource(suspect)
         

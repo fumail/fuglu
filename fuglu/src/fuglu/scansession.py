@@ -181,7 +181,7 @@ class SessionHandler(object):
         try:
             (handle,trashfilename)=tempfile.mkstemp(prefix=suspect.id,dir=self.config.get('main','trashdir'))
             trashfile=os.fdopen(handle,'w+b')
-            trashfile.write(suspect.getSource())
+            trashfile.write(suspect.get_source())
             trashfile.close()
             self.logger.debug('Message stored to trash: %s'%trashfilename)
         except Exception,e:

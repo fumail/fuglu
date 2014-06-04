@@ -332,9 +332,9 @@ Subject: test scanner
         forwardoriginal=self.config.getboolean(self.section,'forwardoriginal')
         
         if self.config.getboolean(self.section,'scanoriginal'):
-            spam=suspect.getOriginalSource()
+            spam=suspect.get_original_source()
         else:
-            spam=suspect.getSource()
+            spam=suspect.get_source()
             
         #prepend temporary headers set by other plugins
         tempheader=suspect.get_tag('SAPlugin.tempheader')
@@ -369,7 +369,7 @@ Subject: test scanner
                 content=filtered 
             
             newmsgrep=email.message_from_string(content)
-            suspect.setSource(content)
+            suspect.set_source(content)
 
             isspam=False
             spamheader=newmsgrep[spamheadername]
@@ -638,7 +638,7 @@ Subject: test scanner
 
   XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
-        suspect.setSource(stream)
+        suspect.set_source(stream)
         result=self.candidate.examine(suspect)
         if type(result) is tuple:
             result,message=result

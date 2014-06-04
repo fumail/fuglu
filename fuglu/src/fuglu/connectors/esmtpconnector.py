@@ -33,7 +33,7 @@ from email.Header import Header
 def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
     #we must prepend headers manually as we can't set a header order in email objects
-    origmsgtxt=suspect.getSource()
+    origmsgtxt=suspect.get_source()
     newheaders=""
     
     for key in suspect.addheaders:
@@ -58,7 +58,7 @@ class ESMTPHandler(ProtocolHandler):
             return (250,'OK')
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info('Injecting original message source without modifications')
-            msgcontent=suspect.getOriginalSource()
+            msgcontent=suspect.get_original_source()
         else:
             msgcontent=buildmsgsource(suspect)
         

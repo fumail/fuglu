@@ -100,7 +100,7 @@ Tags:
             self.logger.info('Not scanning - message too big')
             return
         
-        content=suspect.getSource()
+        content=suspect.get_source()
 
         for i in range(0,self.config.getint(self.section,'retries')):
             try:

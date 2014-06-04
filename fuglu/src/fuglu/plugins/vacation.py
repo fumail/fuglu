@@ -589,7 +589,7 @@ Subject: mailinglist membership reminder...
         
         suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         suspect.set_tag('nobounce',True)
-        suspect.setSource(botmsg)
+        suspect.set_source(botmsg)
         
         candidatevacation=self.candidate.on_vacation(suspect)
         self.assertTrue(candidatevacation!=None,"Vacation object not found in database")
@@ -618,7 +618,7 @@ Subject: mailinglist membership reminder...
         
         suspect=Suspect('MAILER-daEmon@unittests.fuglu.org','recipient@unittests.fuglu.org','/dev/null')
         suspect.set_tag('nobounce',True)
-        suspect.setSource(botmsg)
+        suspect.set_source(botmsg)
         
         candidatevacation=self.candidate.on_vacation(suspect)
         self.assertTrue(candidatevacation!=None,"Vacation object not found in database")
