@@ -947,6 +947,9 @@ class ActionCodeTestCase(unittest.TestCase):
         self.assertEqual(string_to_actioncode('defaultvirusaction', conf),REJECT)
         self.assertEqual(string_to_actioncode('nonexistingstuff'), None)
         self.assertEqual(actioncode_to_string(REJECT),'REJECT')
+        self.assertEqual(actioncode_to_string(string_to_actioncode('discard')), 'DELETE')
+        
+        
 
 
 class TemplateTestcase(unittest.TestCase):
