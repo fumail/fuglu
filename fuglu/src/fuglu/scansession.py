@@ -234,6 +234,7 @@ class SessionHandler(object):
                     suspect.debug('Plugin DELETES this message - no further tests')
                     self.logger.debug('Plugin says: DELETE. Skipping all other tests')
                     self.action=DELETE
+                    self.message=message
                     self.trash(suspect,str(plugin))
                     break
                 elif result==REJECT:
