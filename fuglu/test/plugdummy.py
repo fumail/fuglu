@@ -28,12 +28,6 @@ try:
 except ImportError:
     from email.Utils import formatdate
 
-import inspect
-this_file = inspect.currentframe().f_code.co_filename
-workdir=os.path.dirname(os.path.abspath(this_file))
-os.chdir(workdir)
-sys.path.insert(0,'../src')
-
 from fuglu.shared import Suspect, ScannerPlugin,DUNNO, actioncode_to_string,\
     AppenderPlugin
 from fuglu.core import MainController
@@ -122,11 +116,8 @@ if __name__=='__main__':
         sys.exit(1)
     
     if opts.defaultconfig:
-        if opts.appender:
-            sec=mc.appenders[-1].section
-        else:
-            sec=mc.plugins[-1].section
-
+        sec=pluginstance.section
+        
         print "Default config options for %s\n"%sec
         try:
             for opt,val in config.items(sec):            
