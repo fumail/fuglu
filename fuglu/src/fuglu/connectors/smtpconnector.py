@@ -78,7 +78,10 @@ class SMTPHandler(ProtocolHandler):
         else:
             msgcontent=buildmsgsource(suspect)
         
-        client = FUSMTPClient('127.0.0.1',self.config.getint('main', 'outgoingport'))
+        targethost=self.config.get('main','outgoinghost')
+        if targethost=='${injecthost}':
+            targethost=self.socket.getpeername()[0]
+        client = FUSMTPClient(targethost,self.config.getint('main', 'outgoingport'))
         helo=self.config.get('main','outgoinghelo')
         if helo.strip()=='':
             helo=socket.gethostname()

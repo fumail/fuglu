@@ -255,7 +255,10 @@ class ESMTPPassthroughSession(object):
         """forward a esmtp command to outgoing postfix instance"""
         command=command.strip()
         if self.forwardconn==None:
-            self.forwardconn=smtplib.SMTP('127.0.0.1',self.config.getint('main', 'outgoingport'))
+            targethost=self.config.get('main','outgoinghost')
+            if targethost=='${injecthost}':
+                targethost=self.socket.getpeername()[0]
+            self.forwardconn=smtplib.SMTP(targethost,self.config.getint('main', 'outgoingport'))
         self.logger.debug("""SEND: "%s" """%command)
         code,ans=self.forwardconn.docmd(command)
         ret="%s %s"%(code,ans)

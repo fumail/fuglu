@@ -113,9 +113,15 @@ class MainController(object):
               'default':"10025,10099,10888",
             },
             
+            'outgoinghost':{
+              'section':'main',
+              'description':"outgoing hostname/ip where postfix is listening for re-injects.\nuse ${injecthost} to connect back to the IP where the incoming connection came from",
+              'default':"127.0.0.1",
+            },
+            
             'outgoingport':{
               'section':'main',
-              'description':"outgoing port (what port does postfix listen for re-injects)",
+              'description':"outgoing port  where postfix is listening for re-injects)",
               'default':"10026",
             },
                 
@@ -886,6 +892,7 @@ class AllpluginTestCase(unittest.TestCase):
 class EndtoEndTestTestCase(unittest.TestCase):
     """Full check if mail runs through"""
     
+    FUGLU_HOST="127.0.0.1"
     FUGLU_PORT=7711
     DUMMY_PORT=7712
     FUGLUCONTROL_PORT=7713
@@ -895,6 +902,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
         self.config.set('main','incomingport',str(EndtoEndTestTestCase.FUGLU_PORT))
+        self.config.set('main','outgoinghost',str(EndtoEndTestTestCase.FUGLU_HOST))
         self.config.set('main','outgoingport',str(EndtoEndTestTestCase.DUMMY_PORT))
         self.config.set('main','controlport',str(EndtoEndTestTestCase.FUGLUCONTROL_PORT))
         guess_clamav_socket(self.config)
@@ -902,7 +910,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
         self.mc=MainController(self.config)
         
         #start listening smtp dummy server to get fuglus answer
-        self.smtp=DummySMTPServer(self.config, EndtoEndTestTestCase.DUMMY_PORT, "127.0.0.1")
+        self.smtp=DummySMTPServer(self.config, EndtoEndTestTestCase.DUMMY_PORT, EndtoEndTestTestCase.FUGLU_HOST)
         thread.start_new_thread(self.smtp.serve, ())
         
         #start fuglus listening server
@@ -951,6 +959,7 @@ Don't dare you change any of my bytes or even remove one!"""
 class DKIMTestCase(unittest.TestCase):
     """DKIM Sig Test"""
     
+    FUGLU_HOST="127.0.0.1"
     FUGLU_PORT=7731
     DUMMY_PORT=7732
     FUGLUCONTROL_PORT=7733
@@ -961,6 +970,7 @@ class DKIMTestCase(unittest.TestCase):
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
         self.config.set('main','incomingport',str(DKIMTestCase.FUGLU_PORT))
+        self.config.set('main','outgoinghost',str(DKIMTestCase.FUGLU_HOST))
         self.config.set('main','outgoingport',str(DKIMTestCase.DUMMY_PORT))
         self.config.set('main','controlport',str(DKIMTestCase.FUGLUCONTROL_PORT))
         guess_clamav_socket(self.config)
@@ -969,7 +979,7 @@ class DKIMTestCase(unittest.TestCase):
         self.mc=MainController(self.config)
         
         #start listening smtp dummy server to get fuglus answer
-        self.smtp=DummySMTPServer(self.config, self.config.getint('main', 'outgoingport'), "127.0.0.1")
+        self.smtp=DummySMTPServer(self.config, self.config.getint('main', 'outgoingport'), DKIMTestCase.FUGLU_HOST)
         thread.start_new_thread(self.smtp.serve, ())
         
         #start fuglus listening server
@@ -1017,6 +1027,7 @@ class DKIMTestCase(unittest.TestCase):
 class SMIMETestCase(unittest.TestCase):
     """Email Signature Tests"""
     
+    FUGLU_HOST="127.0.0.1"
     FUGLU_PORT=7721
     DUMMY_PORT=7722
     FUGLUCONTROL_PORT=7723
@@ -1027,6 +1038,7 @@ class SMIMETestCase(unittest.TestCase):
         self.config=ConfigParser.RawConfigParser()
         self.config.read(['testdata/endtoendtest.conf'])
         self.config.set('main','incomingport',str(SMIMETestCase.FUGLU_PORT))
+        self.config.set('main','outgoinghost',str(SMIMETestCase.FUGLU_HOST))
         self.config.set('main','outgoingport',str(SMIMETestCase.DUMMY_PORT))
         self.config.set('main','controlport',str(SMIMETestCase.FUGLUCONTROL_PORT))
         guess_clamav_socket(self.config)
@@ -1035,7 +1047,7 @@ class SMIMETestCase(unittest.TestCase):
         self.mc=MainController(self.config)
         
         #start listening smtp dummy server to get fuglus answer
-        self.smtp=DummySMTPServer(self.config, SMIMETestCase.DUMMY_PORT, "127.0.0.1")
+        self.smtp=DummySMTPServer(self.config, SMIMETestCase.DUMMY_PORT, SMIMETestCase.FUGLU_HOST)
         thread.start_new_thread(self.smtp.serve, ())
         
         #start fuglus listening server
