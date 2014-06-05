@@ -161,10 +161,16 @@ if __name__=='__main__':
         opts.recipients=["recipient@fuglu.local",]
     
     if opts.eml:
-        mailmessage=email.message_from_file(open(opts.eml,'rb'))
+        if opts.eml=='-':
+            msgcontent=sys.stdin.read()
+        else:
+            msgcontent=open(opts.eml,'rb').read()
+        mailmessage=email.message_from_string(msgcontent)
     else:
         if opts.body:
-            if os.path.isfile(opts.body):
+            if opts.body=='-':
+                body=sys.stdin.read()
+            elif os.path.isfile(opts.body):
                 body=open(opts.body,'rb').read()
             else:
                 body=opts.body
