@@ -342,6 +342,7 @@ class DummySMTPServer(object):
         self.logger.debug('Starting dummy SMTP Server on Port %s'%port)
         self.port=port
         self.config=config
+        self.tempfilename=None
         
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

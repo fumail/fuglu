@@ -1018,6 +1018,7 @@ class DKIMTestCase(unittest.TestCase):
         
         #verify the smtp server stored the file correctly
         tmpfile=self.smtp.tempfilename
+        self.assertTrue(tmpfile!=None,'Send to dummy smtp server failed')
         
         result=open(tmpfile,'r').read()
         logbuffer=cStringIO.StringIO()
