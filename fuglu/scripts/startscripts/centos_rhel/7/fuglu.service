@@ -1,0 +1,14 @@
+#copy this to /usr/lib/systemd/system/fuglu.service
+#systemctl enable fuglu
+#systemctl start fuglu
+
+[Unit]
+Description=fuglu mail filter
+
+[Service]
+Type=forking
+PIDFile=/run/fuglu.pid
+ExecStart=/usr/bin/fuglu --pidfile=/run/fuglu.pid
+
+[Install]
+WantedBy=multi-user.target
