@@ -45,9 +45,9 @@ class ThreadPool(threading.Thread):
     def add_task(self,session):
         self.tasks.put(session)
     
-    def get_task(self):
+    def get_task(self,timeout=3):
         try:
-            session=self.tasks.get(True, 5)
+            session=self.tasks.get(True, timeout)
             return session
         except Queue.Empty:
             return None
@@ -55,7 +55,7 @@ class ThreadPool(threading.Thread):
          
     
     def run(self):
-        self.logger.debug('Threadpool initialising. minthreads=%s maxthreads=%s maxqueue=%s checkinterval=%s'%(self.minthreads,self.maxthreads,self.queuesize,self.checkinterval) )
+        self.logger.debug('Threadpool initializing. minthreads=%s maxthreads=%s maxqueue=%s checkinterval=%s'%(self.minthreads,self.maxthreads,self.queuesize,self.checkinterval) )
         
         
         while self.stayalive:
@@ -143,11 +143,10 @@ class Worker(threading.Thread):
         self.logger.debug('thread start')
         
         while self.stayalive:
-            time.sleep(0.1)
             self.threadinfo='waiting for task'
             if self.noisy:
                 self.logger.debug('Getting new task...')
-            sesshandler=self.pool.get_task()
+            sesshandler=self.pool.get_task(3)
             if sesshandler==None:
                 if self.noisy:
                     self.logger.debug('Queue empty')
