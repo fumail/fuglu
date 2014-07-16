@@ -28,7 +28,7 @@ from fuglu.scansession import SessionHandler
 from fuglu.shared import Suspect,apply_template
 
 from email.Header import Header
-
+import re
 
 def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
@@ -309,15 +309,23 @@ class ESMTPPassthroughSession(object):
         elif cmd == "MAIL":
             if self.state != ESMTPPassthroughSession.ST_HELO:
                 return ("503 Bad command sequence", 1)
+            try:
+                self.from_address=self.stripAddress(data)
+            except:
+                return ("501 invalid address syntax", 1)
             self.state = ESMTPPassthroughSession.ST_MAIL
-            self.from_address=self.stripAddress(data)
+
         elif cmd == "RCPT":
             if (self.state != ESMTPPassthroughSession.ST_MAIL) and (self.state != ESMTPPassthroughSession.ST_RCPT):
                 return ("503 Bad command sequence", 1)
+            try:
+                rec=self.stripAddress(data)
+                self.to_address=rec
+                self.recipients.append(rec)
+            except:
+                return ("501 invalid address syntax", 1)
             self.state = ESMTPPassthroughSession.ST_RCPT
-            rec=self.stripAddress(data)
-            self.to_address=rec
-            self.recipients.append(rec)
+
         elif cmd == "DATA":
             if self.state != ESMTPPassthroughSession.ST_RCPT:
                 return ("503 Bad command sequence", 1)
@@ -371,6 +379,8 @@ class ESMTPPassthroughSession(object):
             end=len(address)
         retaddr=address[start:end]
         retaddr=retaddr.strip()
+        if retaddr!='' and re.match("^[^@]+@[^@]+\.[^@]+$",retaddr)==None:
+            raise ValueError, "Could not parse address %s"%address
         return retaddr
 
 
