@@ -6,7 +6,7 @@
 # X-Start-Before:    postfix
 # X-Stop-After:      postfix
 # Default-Start:     2 3 4 5
-# Default-Stop:      
+# Default-Stop:      0 1 6
 # Short-Description: Fuglu is yet another mail scanner daemon written in python.
 # Description:       Installed as a postfix after-queue filter fuglu can be used to filter spam, viruses, unwanted attachments etc.
 ### END INIT INFO
