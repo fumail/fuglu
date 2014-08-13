@@ -71,7 +71,7 @@
 <h2>Basic Configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fuglu">
 <h3>Fuglu<a class="headerlink" href="#fuglu" title="Permalink to this headline">¶</a></h3>
-<p>First of all, rename remove the .dist ending from all files in <tt class="docutils literal"><span class="pre">/etc/fuglu</span></tt>, so you have a basic default configuration.</p>
+<p>First of all, remove the .dist ending from all files in <tt class="docutils literal"><span class="pre">/etc/fuglu</span></tt>, so you have a basic default configuration.</p>
 <p>edit <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> and change parameters if you like</p>
 <p>Note: If you don&#8217;t have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.</p>
 <p>eg, change</p>
@@ -94,56 +94,65 @@ chown nobody /var/log/fuglu
 </div>
 <p>example:</p>
 <div class="highlight-python"><div class="highlight"><pre>fuglu --lint
-
-Fuglu $Id: core.py 7 2009-04-09 06:51:25Z oli $
+Fuglu 0.6.1
 ---------- LINT MODE ----------
+Checking dependencies...
+sqlalchemy: installed
+BeautifulSoup: installed
+magic: installed
+Loading extensions...
+fuglu.extensions.sql: enabled (available)
 Loading plugins...
 Plugin loading complete
 Linting  main configuration
 OK
 
-Linting Plugin  ArchivePlugin
+Linting Plugin  Archive Config section: ArchivePlugin
 OK
 
-Linting Plugin  Attachment Blocker
+Linting Plugin  Attachment Blocker Config section: FiletypePlugin
+Found python-file magic library
+No database configured. Using per user/domain file configuration from /etc/fuglu/rules
 OK
 
-Linting Plugin  ClamavPlugin
+Linting Plugin  Clam AV Config section: ClamavPlugin
+Virusaction: DELETE
 Got Pong: PONG
 
-Clamav found virus {&#39;stream&#39;: &#39;Eicar-Test-Signature FOUND&#39;}
+Clamav found virus {&#39;stream&#39;: &#39;Eicar-Test-Signature&#39;}
 OK
 
-Linting Plugin  SAPlugin
-Got: SPAMD/1.4 0 PONG
+Linting Plugin  SpamAssassin Config section: SAPlugin
+Got: SPAMD/1.5 0 PONG
 
 GTUBE Has been detected correctly
 OK
 
-Linting Plugin  MessageDebugger
+Linting Plugin  Debugger Config section: debug
 OK
 
-Linting Plugin  PluginSkipper
+Linting Plugin  Plugin Skipper Config section: PluginSkipper
 OK
-
 0 plugins reported errors.
 </pre></div>
 </div>
 <p>If all went fine, run <tt class="docutils literal"><span class="pre">fuglu</span></tt> without parameters to start the daemon.
 in <tt class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span></tt> you should then see output similar to this:</p>
-<div class="highlight-python"><div class="highlight"><pre>tail /var/log/fuglu/fuglu.log
-2009-04-16 16:14:54,738 root        : INFO Dropping Privileges. Before: root(0)/root(0) After: nobody(99)/nobody(99)
-2009-04-16 16:14:54,739 fuglu.plugin.FiletypePlugin.RulesCache: INFO Loaded 0 rules from 2 files
-2009-04-16 16:14:54,739 fuglu.MainController: INFO Init Stat Engine
-2009-04-16 16:14:54,740 fuglu.MainController: INFO Init Threadpool
-2009-04-16 16:14:54,740 fuglu.MainController: INFO Init SMTP Engine
-2009-04-16 16:14:54,741 fuglu.MainController: INFO Startup complete
-2009-04-16 16:14:54,742 fuglu.smtp.incoming.10025: INFO SMTP Server running on port 10025
-2009-04-16 16:14:54,743 fuglu.smtp.incoming.10099: INFO SMTP Server running on port 10099
-2009-04-16 16:14:54,743 fuglu.smtp.incoming.10888: INFO SMTP Server running on port 10888
+<div class="highlight-python"><div class="highlight"><pre>2014-08-13 15:25:46,093 root        : INFO FuGLU Version 0.6.1 starting up
+2014-08-13 15:25:46,094 fuglu.MainController: INFO Init Stat Engine
+2014-08-13 15:25:46,094 fuglu.MainController: INFO Init Threadpool
+2014-08-13 15:25:46,095 fuglu.MainController: INFO Starting interface sockets...
+2014-08-13 15:25:46,095 fuglu.MainController: INFO starting connector smtp/10025
+2014-08-13 15:25:46,096 fuglu.MainController: INFO starting connector smtp/10099
+2014-08-13 15:25:46,096 fuglu.incoming.10025: INFO SMTP (After Queue) Server running on port 10025
+2014-08-13 15:25:46,096 fuglu.MainController: INFO starting connector smtp/10888
+2014-08-13 15:25:46,096 fuglu.incoming.10099: INFO SMTP (After Queue) Server running on port 10099
+2014-08-13 15:25:46,097 fuglu.incoming.10888: INFO SMTP (After Queue) Server running on port 10888
+2014-08-13 15:25:46,097 fuglu.MainController: INFO Startup complete
+2014-08-13 15:25:46,097 fuglu.control.fuglu_control.sock: INFO Control/Info Server running on port /tmp/fuglu_control.sock
 </pre></div>
 </div>
-<p>fuglu comes with a few example init scripts if you want to start fuglu like other system daemons</p>
+<p>fuglu comes init scripts/systemd service files if you want to start fuglu like other system daemons</p>
 </div>
 <div class="section" id="postfix">
 <h3>Postfix<a class="headerlink" href="#postfix" title="Permalink to this headline">¶</a></h3>
@@ -217,7 +226,7 @@ plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] sectio
 </div>
 <div class="section" id="fuglu-in-before-queue-mode">
 <h3>Fuglu in Before-Queue Mode<a class="headerlink" href="#fuglu-in-before-queue-mode" title="Permalink to this headline">¶</a></h3>
-<p>The fuglu ESMTP Connector enables fuglu to run in before-queue mode, i.e. while the smtp session with the remote system is still active. This allows  rejecting spam / infected mails for example.</p>
+<p>The fuglu ESMTP connector enables fuglu to run in before-queue mode, i.e. while the smtp session with the remote system is still active. This allows rejecting spam / infected mails.</p>
 <p><strong>Postfix config</strong>:
 edit <tt class="docutils literal"><span class="pre">master.cf</span></tt> as described in <a class="reference external" href="http://www.postfix.org/SMTPD_PROXY_README.html">http://www.postfix.org/SMTPD_PROXY_README.html</a></p>
 <div class="highlight-python"><div class="highlight"><pre># Before-filter SMTP server. Receive mail from the network and

@@ -19,8 +19,8 @@ recommended
 -----------
 
  * **python-file** (the file magic bindings) - Without this the attachment checker will only be able to block based on content type/attachment name but not based on the real file content. 
- * **Spamassassin Daemon (spamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
- * **Clam Antivirus Daemon (clamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
+ * **Spamassassin daemon (spamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
+ * **Clam antivirus daemon (clamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
  * **python-BeautifulSoup** (optional, used to improve html tag stripping from body searches if available)
 
 ----------------------------
