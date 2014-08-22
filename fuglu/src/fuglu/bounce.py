@@ -1,4 +1,4 @@
-#   Copyright 2009 Oli Schacher
+#   Copyright 2014 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,7 +72,6 @@ class Bounce(object):
         fp.close()
         self.send_template_string(recipient, filecontent, suspect, values)
         
-    
     def send_template_string(self,recipient,templatecontent,suspect,values):
         """Send a E-Mail Bounce Message
         
@@ -89,20 +88,17 @@ class Bounce(object):
             return
         
         message=apply_template(templatecontent, suspect, values)
-        
         try:
             message=self._add_required_headers(recipient,message)
         except Exception,e:
-            self.logger.warning("Bounce message could not be generated: %s"%str(e))
-            
-            
-        
-        
+            self.logger.warning("Bounce message template could not be verified: %s"%str(e))
+
         self.logger.debug('Sending bounce message to %s'%recipient)
         fromaddress="<>"
         self._send(fromaddress, recipient, message)
     
     def _send(self,fromaddress,toaddress,message):
+        """really send message""" 
         if self.config.getboolean('main','disablebounces'):
             self.logger.warning('Bounces are disabled in config - not sending message to %s'%toaddress)
             return
