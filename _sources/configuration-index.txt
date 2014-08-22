@@ -278,7 +278,7 @@ in the fuglu configuration set ``DEFAULTHIGHSPAMACTION=REJECT`` (do the same for
  * *${date}* : current date
  * *${time}* : current time 
 
-Esample:
+Example:
 
 ::
 
