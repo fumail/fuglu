@@ -71,7 +71,7 @@ The format is : <headername> <regex> <optional argument>
 
 <headername> can be any of...
  * a email header name, eg ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
- * ``mime:````<headeraneme>`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
+ * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
 
   * ``envelope_from``  (the envelope from address) 
