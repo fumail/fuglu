@@ -16,6 +16,10 @@
 import smtplib
 import logging
 import os
+import email
+from email.utils import formatdate, make_msgid
+from email.header import Header
+import socket
 
 from fuglu.shared import apply_template
 
@@ -25,7 +29,27 @@ class Bounce(object):
     def __init__(self,config):
         self.logger=logging.getLogger('fuglu.bouncer')
         self.config=config
+    
+    def _add_required_headers(self,recipient, messagecontent):
+        """add headers required for sending automated mail"""
+        msgrep=email.message_from_string(messagecontent)
         
+        if not 'to' in msgrep:
+            msgrep['To']=Header("<%s>"%recipient).encode()
+        
+        if not 'From' in msgrep:
+            msgrep['from']=Header("<MAILER-DAEMON@%s>"%socket.gethostname()).encode()
+        
+        if not 'auto-submitted' in msgrep: 
+            msgrep['auto-submitted'] = Header('auto-generated').encode()
+        
+        if not 'date' in msgrep:
+            msgrep['Date'] = formatdate(localtime=True)
+        
+        if not 'Message-id' in msgrep:
+            msgrep['Message-ID'] = make_msgid()
+        
+        return msgrep.as_string()
     
     def send_template_file(self,recipient,templatefile,suspect,values):
         """Send a E-Mail Bounce Message
@@ -65,7 +89,15 @@ class Bounce(object):
             return
         
         message=apply_template(templatecontent, suspect, values)
-
+        
+        try:
+            message=self._add_required_headers(recipient,message)
+        except Exception,e:
+            self.logger.warning("Bounce message could not be generated: %s"%str(e))
+            
+            
+        
+        
         self.logger.debug('Sending bounce message to %s'%recipient)
         fromaddress="<>"
         self._send(fromaddress, recipient, message)
