@@ -1,6 +1,12 @@
 -- Next release
  * new Prepender: PluginFraction (like PluginSkipper but include instead of exclude list)
  * new tool: fuglu_suspectfilter . Use this to find out which rules in a suspect filter match a sample message
+ * Spamassassin Plugin: unix domain socket support
+ * Improved bounce message formatting
+ * new config: outgoing host for reinjecting messages into a remote MTA
+ 
+Devekioers:
+ * plugdummy tool: can run run multiple plugins in one go. autodetects plugin type. 
  
 -- Fuglu 0.6.1, 2013-11-15
  * new Plugin: ScriptFilter (dynamically loaded filter scripts)
