@@ -17,10 +17,12 @@
 from fuglu.shared import ScannerPlugin,DELETE,DUNNO,DEFER,REJECT,Suspect,string_to_actioncode,apply_template
 from fuglu.extensions.sql import DBConfig
 import time
-from socket import *
+import socket
 import email
 import re
 import unittest
+import os
+
 
 class SAPlugin(ScannerPlugin):
     """This plugin passes suspects to a spamassassin daemon.
@@ -50,7 +52,7 @@ Tags:
             
             'port':{
                 'default':'783',
-                'description':"tcp port number ",
+                'description':"tcp port number or path to spamd unix socket",
             },
                          
             'timeout':{
@@ -159,23 +161,14 @@ Tags:
         except Exception,e:
             print e
             return False
-        
-        
-        
-        
+
     def lint_ping(self):
         """ping sa"""
-        serverHost = self.config.get(self.section,'host')          
-        serverPort = self.config.getint(self.section,'port')
-        timeout=self.config.getint(self.section,'timeout')
         retries = self.config.getint(self.section,'retries')
         for i in range(0,retries):
             try:
-                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
-                s = socket(AF_INET, SOCK_STREAM)   
-        
-                s.settimeout(timeout)
-                s.connect((serverHost, serverPort)) 
+                self.logger.debug('Contacting spamd  (Try %s of %s)'%(i+1,retries))
+                s = self.__init_socket()
                 s.sendall('PING SPAMC/1.2')
                 s.sendall("\r\n")
                 s.shutdown(1)
@@ -191,13 +184,13 @@ Tags:
                     return False
                 print "Got: %s"%line
                 return True
-            except timeout:
+            except socket.timeout:
                 print('SPAMD Socket timed out.')
-            except herror,h:
+            except socket.herror,h:
                 print('SPAMD Herror encountered : %s'%str(h))
-            except gaierror,g:
+            except socket.gaierror,g:
                 print('SPAMD gaierror encountered: %s'%str(g))
-            except error,e:
+            except socket.error,e:
                 print('SPAMD socket error: %s'%str(e))
             
             time.sleep(1)
@@ -424,22 +417,46 @@ Subject: test scanner
         difftime=endtime-starttime
         suspect.tags['SAPlugin.time']="%.4f"%difftime
         return action,message
-    
+
+    def __init_socket(self):
+        host=self.config.get(self.section,'host')
+        unixsocket=False
+        
+        try:
+            iport=int(self.config.get(self.section,'port'))
+        except ValueError:
+            unixsocket=True
+        
+        if unixsocket:
+            sock=self.config.get(self.section,'port')
+            if not os.path.exists(sock):
+                raise Exception("unix socket %s not found"%sock)
+            s=socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.settimeout(self.config.getint(self.section,'timeout'))
+            try:
+                s.connect(sock)
+            except socket.error:
+                raise Exception('Could not reach spamd using unix socket %s' % sock)
+        else:
+            port=int(self.config.get(self.section,'port'))
+            s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(self.config.getint(self.section,'timeout'))
+            try:
+                s.connect((host, port))
+            except socket.error:
+                raise Exception('Could not reach spamd using network (%s, %s)' % (host, port))
+        
+        return s
+
     def safilter(self,messagecontent,user):
         """pass content to sa, return sa-processed mail"""
-        serverHost = self.config.get(self.section,'host')          
-        serverPort = self.config.getint(self.section,'port')
-        timeout=self.config.getint(self.section,'timeout')
         retries = self.config.getint(self.section,'retries')
         peruserconfig = self.config.getboolean(self.section,'peruserconfig')
         spamsize=len(messagecontent)
         for i in range(0,retries):
             try:
-                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
-                s = socket(AF_INET, SOCK_STREAM)   
-        
-                s.settimeout(timeout)
-                s.connect((serverHost, serverPort)) 
+                self.logger.debug('Contacting spamd (Try %s of %s)'%(i+1,retries))
+                s = self.__init_socket()
                 s.sendall('PROCESS SPAMC/1.2')
                 s.sendall("\r\n")
                 s.sendall("Content-length: %s"%spamsize)
@@ -469,13 +486,13 @@ Subject: test scanner
                     continue
                 
                 return content
-            except timeout:
+            except socket.timeout:
                 self.logger.error('SPAMD Socket timed out.')
-            except herror,h:
+            except socket.herror,h:
                 self.logger.error('SPAMD Herror encountered : %s'%str(h))
-            except gaierror,g:
+            except socket.gaierror,g:
                 self.logger.error('SPAMD gaierror encountered: %s'%str(g))
-            except error,e:
+            except socket.error,e:
                 self.logger.error('SPAMD socket error: %s'%str(e))
             
             time.sleep(1)
@@ -498,19 +515,13 @@ Subject: test scanner
     def _safilter_content(self,messagecontent,user,command):
         """pass content to sa, return body"""
         assert command in ['SYMBOLS','REPORT',]
-        serverHost = self.config.get(self.section,'host')          
-        serverPort = self.config.getint(self.section,'port')
-        timeout=self.config.getint(self.section,'timeout')
         retries = self.config.getint(self.section,'retries')
         peruserconfig = self.config.getboolean(self.section,'peruserconfig')
         spamsize=len(messagecontent)
         for i in range(0,retries):
             try:
-                self.logger.debug('Contacting spamd %s (Try %s of %s)'%(serverHost,i+1,retries))
-                s = socket(AF_INET, SOCK_STREAM)   
-        
-                s.settimeout(timeout)
-                s.connect((serverHost, serverPort)) 
+                self.logger.debug('Contacting spamd  (Try %s of %s)'%(i+1,retries))
+                s = self.__init_socket()
                 s.sendall('%s SPAMC/1.2'%command)
                 s.sendall("\r\n")
                 s.sendall("Content-length: %s"%spamsize)
@@ -549,13 +560,13 @@ Subject: test scanner
                     spstatus=True
                     
                 return (spstatus,float(score),content)
-            except timeout:
+            except socket.timeout:
                 self.logger.error('SPAMD Socket timed out.')
-            except herror,h:
+            except socket.herror,h:
                 self.logger.error('SPAMD Herror encountered : %s'%str(h))
-            except gaierror,g:
+            except socket.gaierror,g:
                 self.logger.error('SPAMD gaierror encountered: %s'%str(g))
-            except error,e:
+            except socket.error,e:
                 self.logger.error('SPAMD socket error: %s'%str(e))
             
             time.sleep(1)
