@@ -129,8 +129,6 @@ Once fuglu is up and running, we need to tell Postfix to use it as an after queu
 
 Detailed documentation is available on the `postfix <http://www.postfix.org/FILTER_README.html>`_ website, but here is a quick example. 
 
-here is a quick example.
-
 add to ``master.cf`` :
 
 

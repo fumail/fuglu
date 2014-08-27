@@ -158,7 +158,6 @@ in <tt class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span
 <h3>Postfix<a class="headerlink" href="#postfix" title="Permalink to this headline">¶</a></h3>
 <p>Once fuglu is up and running, we need to tell Postfix to use it as an after queue filter.</p>
 <p>Detailed documentation is available on the <a class="reference external" href="http://www.postfix.org/FILTER_README.html">postfix</a> website, but here is a quick example.</p>
-<p>here is a quick example.</p>
 <p>add to <tt class="docutils literal"><span class="pre">master.cf</span></tt> :</p>
 <div class="highlight-python"><div class="highlight"><pre>#fuglu
 fuglu_default   unix  -       -       n       -       10      smtp
