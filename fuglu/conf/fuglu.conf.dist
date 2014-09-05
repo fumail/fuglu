@@ -16,6 +16,10 @@ prependers=debug,skip
 #(unless a mail is deferred in which case running the appender would not make sense as it will come again)
 appenders=
 
+#outgoing hostname/ip where postfix is listening for re-injects.
+#use ${injecthost} to connect back to the IP where the incoming connection came from
+outgoinghost=127.0.0.1
+
 #run as group
 group=nobody
 
@@ -27,7 +31,7 @@ trashdir=
 #This may be used for debugging/testing to make sure fuglu can not produce backscatter
 disablebounces=0
 
-#outgoing port (what port does postfix listen for re-injects)
+#outgoing port  where postfix is listening for re-injects)
 outgoingport=10026
 
 #port where fuglu provides statistics etc (used by fuglu_control). Can also be a path to a unix socket
@@ -95,6 +99,7 @@ scriptfilter=fuglu.plugins.script.ScriptFilter
 dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
 spf=fuglu.plugins.domainauth.SPFPlugin
 dkimverify=fuglu.plugins.domainauth.DKIMVerifyPlugin
+fraction=fuglu.plugins.p_fraction.PluginFraction
 
 [databaseconfig]
 
