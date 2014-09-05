@@ -1,4 +1,4 @@
--- Fuglu 0.6.2, (not yet released)
+-- Fuglu 0.6.2, 2014-09-05
  * new Prepender: PluginFraction (basically the opposite of PluginSkipper:include instead of exclude list)
  * new tool: fuglu_suspectfilter . Use this to find out which rules in a suspect filter match a sample message
  * Spamassassin Plugin: unix domain socket support
@@ -6,7 +6,7 @@
  * new config: outgoing_host for reinjecting messages into a remote MTA
  * the HeaderPlugin has been removed, the plugin was buggy and the functionality is redundant
  * Clamav Plugin: removed the deprecated STREAM scan method with INSTREAM
- * tuned the internal threadpool which should slightly improve scan performance
+ * tuned the internal thread pool which should slightly improve scan performance
  * reorganized script directory, added init/systemd scripts for the common linux distributions
  * added action DISCARD as alias to DELETE to be more consistent with postfix
 
