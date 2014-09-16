@@ -1,1 +1,2 @@
-__all__=['smtpconnector','esmtpconnector','milterconnector','ncblackholeconnector',]
+__all__ = ['smtpconnector', 'esmtpconnector',
+           'milterconnector', 'ncblackholeconnector', ]

@@ -3,7 +3,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 #
-__all__=['bounce','core','daemon','funkyconsole','protocolbase','scansession','shared','stats','threadpool']
+__all__ = ['bounce', 'core', 'daemon', 'funkyconsole',
+           'protocolbase', 'scansession', 'shared', 'stats', 'threadpool']
 
-FUGLU_VERSION="0.6.2"
+FUGLU_VERSION = "0.6.2"

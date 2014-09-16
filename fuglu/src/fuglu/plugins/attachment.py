@@ -14,7 +14,7 @@
 #
 # $Id$
 #
-from fuglu.shared import ScannerPlugin,Suspect, DELETE, DUNNO, string_to_actioncode, actioncode_to_string
+from fuglu.shared import ScannerPlugin, Suspect, DELETE, DUNNO, string_to_actioncode, actioncode_to_string
 from fuglu.bounce import Bounce
 import fuglu.extensions.sql
 import time
@@ -28,76 +28,80 @@ from fuglu.extensions.sql import DBFile
 
 from threading import Lock
 
-MAGIC_AVAILABLE=0
-MAGIC_PYTHON_FILE=1
-MAGIC_PYTHON_MAGIC=2
+MAGIC_AVAILABLE = 0
+MAGIC_PYTHON_FILE = 1
+MAGIC_PYTHON_MAGIC = 2
 
 try:
     import magic
-    #python-file or python-magic? python-magic does not have an open attribute
-    if hasattr(magic,'open'):
-        MAGIC_AVAILABLE=MAGIC_PYTHON_FILE
+    # python-file or python-magic? python-magic does not have an open attribute
+    if hasattr(magic, 'open'):
+        MAGIC_AVAILABLE = MAGIC_PYTHON_FILE
     else:
-        MAGIC_AVAILABLE=MAGIC_PYTHON_MAGIC
+        MAGIC_AVAILABLE = MAGIC_PYTHON_MAGIC
 
 except ImportError:
     pass
 
 
-FUATT_NAMESCONFENDING="-filenames.conf"
-FUATT_CTYPESCONFENDING="-filetypes.conf"
+FUATT_NAMESCONFENDING = "-filenames.conf"
+FUATT_CTYPESCONFENDING = "-filetypes.conf"
 
-FUATT_DEFAULT=u'default'
+FUATT_DEFAULT = u'default'
 
-FUATT_ACTION_ALLOW=u'allow'
-FUATT_ACTION_DENY=u'deny'
-FUATT_ACTION_DELETE=u'delete'
+FUATT_ACTION_ALLOW = u'allow'
+FUATT_ACTION_DENY = u'deny'
+FUATT_ACTION_DELETE = u'delete'
 
-FUATT_CHECKTYPE_FN=u'filename'
-FUATT_CHECKTYPE_CT=u'contenttype'
+FUATT_CHECKTYPE_FN = u'filename'
+FUATT_CHECKTYPE_CT = u'contenttype'
 
-ATTACHMENT_DUNNO=0
-ATTACHMENT_BLOCK=1
-ATTACHMENT_OK=2
-ATTACHMENT_SILENTDELETE=3
+ATTACHMENT_DUNNO = 0
+ATTACHMENT_BLOCK = 1
+ATTACHMENT_OK = 2
+ATTACHMENT_SILENTDELETE = 3
 
-KEY_NAME=u"name"
-KEY_CTYPE=u"ctype"
+KEY_NAME = u"name"
+KEY_CTYPE = u"ctype"
 
-class RulesCache( object ):
+
+class RulesCache(object):
+
     """caches rule files"""
-    
+
     __shared_state = {}
 
-    def __init__(self,rulesdir):
+    def __init__(self, rulesdir):
         self.__dict__ = self.__shared_state
         if not hasattr(self, 'rules'):
-            self.rules={}
+            self.rules = {}
         if not hasattr(self, 'lock'):
-            self.lock=Lock()
-        if not hasattr(self,'logger'):
-            self.logger=logging.getLogger('fuglu.plugin.FiletypePlugin.RulesCache')
-        if not hasattr(self,'lastreload'):
-            self.lastreload=0
-        self.rulesdir=rulesdir
+            self.lock = Lock()
+        if not hasattr(self, 'logger'):
+            self.logger = logging.getLogger(
+                'fuglu.plugin.FiletypePlugin.RulesCache')
+        if not hasattr(self, 'lastreload'):
+            self.lastreload = 0
+        self.rulesdir = rulesdir
         self.reloadifnecessary()
 
-    def getRules(self,ruletype,key):
-        self.logger.debug('Rule cache request: [%s] [%s]'%(ruletype,key))
+    def getRules(self, ruletype, key):
+        self.logger.debug('Rule cache request: [%s] [%s]' % (ruletype, key))
         if not self.rules.has_key(ruletype):
-            self.logger.error('Invalid rule type requested: %s'%ruletype)
+            self.logger.error('Invalid rule type requested: %s' % ruletype)
         if not self.rules[ruletype].has_key(key):
-            self.logger.debug('Ruleset not found : [%s] [%s]'%(ruletype,key))
+            self.logger.debug(
+                'Ruleset not found : [%s] [%s]' % (ruletype, key))
             return None
-        self.logger.debug('Ruleset found : [%s] [%s] '%(ruletype,key))
+        self.logger.debug('Ruleset found : [%s] [%s] ' % (ruletype, key))
 
-        ret=self.rules[ruletype][key]
+        ret = self.rules[ruletype][key]
         return ret
 
-    def getCTYPERules(self,key):
+    def getCTYPERules(self, key):
         return self.getRules(KEY_CTYPE, key)
 
-    def getNAMERules(self,key):
+    def getNAMERules(self, key):
         return self.getRules(KEY_NAME, key)
 
     def reloadifnecessary(self):
@@ -112,9 +116,9 @@ class RulesCache( object ):
             self.lock.release()
 
     def rulesdirchanged(self):
-        statinfo=os.stat(self.rulesdir)
-        ctime=statinfo.st_ctime
-        if ctime>self.lastreload:
+        statinfo = os.stat(self.rulesdir)
+        ctime = statinfo.st_ctime
+        if ctime > self.lastreload:
             return True
         return False
 
@@ -122,73 +126,75 @@ class RulesCache( object ):
         """effectively loads the rules, do not call directly, only through reloadifnecessary"""
         self.logger.debug('Reloading attachment rules...')
 
-        #set last timestamp
-        statinfo=os.stat(self.rulesdir)
-        ctime=statinfo.st_ctime
-        self.lastreload=ctime
+        # set last timestamp
+        statinfo = os.stat(self.rulesdir)
+        ctime = statinfo.st_ctime
+        self.lastreload = ctime
 
+        filelist = os.listdir(self.rulesdir)
 
-        filelist=os.listdir(self.rulesdir)
+        newruleset = {KEY_NAME: {}, KEY_CTYPE: {}}
 
-        newruleset={KEY_NAME:{},KEY_CTYPE:{}}
-
-        rulecounter=0
+        rulecounter = 0
         for filename in filelist:
-            if  not (filename.endswith(FUATT_NAMESCONFENDING) or filename.endswith(FUATT_CTYPESCONFENDING)):
-                self.logger.debug('Ignoring file %s'%filename)
+            if not (filename.endswith(FUATT_NAMESCONFENDING) or filename.endswith(FUATT_CTYPESCONFENDING)):
+                self.logger.debug('Ignoring file %s' % filename)
                 continue
 
-
-            ruleset=self._loadonefile("%s/%s"%(self.rulesdir,filename))
-            if ruleset==None:
+            ruleset = self._loadonefile("%s/%s" % (self.rulesdir, filename))
+            if ruleset == None:
                 continue
-            rulesloaded=len(ruleset)
-            self.logger.debug('%s rules loaded from file %s'%(rulesloaded,filename))
-            ruletype=KEY_NAME
-            key=filename[0:-len(FUATT_NAMESCONFENDING)]
+            rulesloaded = len(ruleset)
+            self.logger.debug('%s rules loaded from file %s' %
+                              (rulesloaded, filename))
+            ruletype = KEY_NAME
+            key = filename[0:-len(FUATT_NAMESCONFENDING)]
             if(filename.endswith(FUATT_CTYPESCONFENDING)):
-                ruletype=KEY_CTYPE
-                key=filename[0:-len(FUATT_CTYPESCONFENDING)]
-            newruleset[ruletype][key]=ruleset
-            self.logger.debug('Updating cache: [%s][%s]'%(ruletype,key))
-            rulecounter+=rulesloaded
+                ruletype = KEY_CTYPE
+                key = filename[0:-len(FUATT_CTYPESCONFENDING)]
+            newruleset[ruletype][key] = ruleset
+            self.logger.debug('Updating cache: [%s][%s]' % (ruletype, key))
+            rulecounter += rulesloaded
 
-        totalfiles=len(filelist)
-        self.rules=newruleset
-        self.logger.info('Loaded %s rules from %s files'%(rulecounter,totalfiles))
+        totalfiles = len(filelist)
+        self.rules = newruleset
+        self.logger.info('Loaded %s rules from %s files' %
+                         (rulecounter, totalfiles))
 
-
-    def _loadonefile(self,filename):
+    def _loadonefile(self, filename):
         """returns all rules in a file"""
         if not os.path.exists(filename):
-            self.logger.error('Rules File %s does not exist'%filename)
+            self.logger.error('Rules File %s does not exist' % filename)
             return None
         if not os.path.isfile(filename):
-            self.logger.warning('Ignoring file %s - not a file'%filename)
+            self.logger.warning('Ignoring file %s - not a file' % filename)
             return None
-        handle=open(filename)
+        handle = open(filename)
         return self.get_rules_from_config_lines(handle.readlines())
 
-    def get_rules_from_config_lines(self,lineslist):
-        ret={}
+    def get_rules_from_config_lines(self, lineslist):
+        ret = {}
         for line in lineslist:
-            line=line.strip()
-            if line.startswith('#') or line=='':
+            line = line.strip()
+            if line.startswith('#') or line == '':
                 continue
-            tpl=line.split(None,2)
-            if (len(tpl)!=3):
-                self.logger.debug('Ignoring invalid line  (length %s): %s'%(len(tpl),line))
-            (action,regex,description)=tpl
-            action=action.lower()
-            if action not in [FUATT_ACTION_ALLOW,FUATT_ACTION_DENY,FUATT_ACTION_DELETE]:
-                self.logger.error('Invalid rule action: %s'%action)
+            tpl = line.split(None, 2)
+            if (len(tpl) != 3):
+                self.logger.debug(
+                    'Ignoring invalid line  (length %s): %s' % (len(tpl), line))
+            (action, regex, description) = tpl
+            action = action.lower()
+            if action not in [FUATT_ACTION_ALLOW, FUATT_ACTION_DENY, FUATT_ACTION_DELETE]:
+                self.logger.error('Invalid rule action: %s' % action)
                 continue
 
-            tp=(action,regex,description)
-            ret[regex]=tp
+            tp = (action, regex, description)
+            ret[regex] = tp
         return ret
-        
+
+
 class FiletypePlugin(ScannerPlugin):
+
     """This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the '''file''' library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.
 
 Attachment rules can be defined globally, per domain or per user.
@@ -238,7 +244,7 @@ small extract from default-filenames.conf:
     deny    \.ani$            Windows animated cursor file security vulnerability    
     deny    \.cur$            Windows cursor file security vulnerability    
     deny    \.hlp$            Windows help file security vulnerability
-    
+
     allow    \.jpg$            -    
     allow    \.gif$            -    
 
@@ -252,11 +258,11 @@ The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like 
 
     To: ${from_address}
     Subject: Blocked attachment
-    
+
     Your message to ${to_address} contains a blocked attachment and has been deleted.
-    
+
     ${blockinfo}
-    
+
     You may add this file to a zip archive (or similar) and send it again.
 
 
@@ -267,229 +273,251 @@ eg. define headers for your message at the beginning, followed by a blank line. 
 See (TODO: link to template vars chapter) for commonly available template variables in Fuglu.
 
 """
-    def __init__(self,config,section=None):
-        ScannerPlugin.__init__(self,config,section)
-        self.requiredvars={
-            'template_blockedfile':{
-                'default':'/etc/fuglu/templates/blockedfile.tmpl',
-                'description':'Mail template for the bounce to inform sender about blocked attachment',
+
+    def __init__(self, config, section=None):
+        ScannerPlugin.__init__(self, config, section)
+        self.requiredvars = {
+            'template_blockedfile': {
+                'default': '/etc/fuglu/templates/blockedfile.tmpl',
+                'description': 'Mail template for the bounce to inform sender about blocked attachment',
             },
-            
-            'sendbounce':{
-                'default':'1',
-                'description':'inform the sender about blocked attachments',
+
+            'sendbounce': {
+                'default': '1',
+                'description': 'inform the sender about blocked attachments',
             },
-                         
-            'rulesdir':{
-                'default':'/etc/fuglu/rules',
-                'description':'directory that contains attachment rules',
+
+            'rulesdir': {
+                'default': '/etc/fuglu/rules',
+                'description': 'directory that contains attachment rules',
             },
-                           
-            'blockaction':{
-                'default':'DELETE',
-                'description':'what should the plugin do when a blocked attachment is detected\nREJECT : reject the message (recommended in pre-queue mode)\nDELETE : discard messages\nDUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)',
+
+            'blockaction': {
+                'default': 'DELETE',
+                'description': 'what should the plugin do when a blocked attachment is detected\nREJECT : reject the message (recommended in pre-queue mode)\nDELETE : discard messages\nDUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)',
             },
-                           
-            'dbconnectstring':{
-                'default':'',
-                'description':'sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled',
-                'confidential':True,
+
+            'dbconnectstring': {
+                'default': '',
+                'description': 'sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled',
+                'confidential': True,
             },
-                           
-            'query':{
-                'default':'SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio',
-                'description':"sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain\n:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules",
-            },       
+
+            'query': {
+                'default': 'SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio',
+                'description': "sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain\n:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules",
+            },
         }
-        
-        self.logger=self._logger()
+
+        self.logger = self._logger()
         if MAGIC_AVAILABLE:
-            if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
+            if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
                 self.ms = magic.open(magic.MAGIC_MIME)
                 self.ms.load()
         else:
             self.logger.warning('python-magic not available')
-        self.rulescache=None
-        self.extremeverbosity=False
+        self.rulescache = None
+        self.extremeverbosity = False
 
-    def examine(self,suspect):
-        starttime=time.time()
-        if self.rulescache==None:
-            self.rulescache=RulesCache(self.config.get(self.section,'rulesdir'))
-        
-        self.blockedfiletemplate=self.config.get(self.section,'template_blockedfile')
+    def examine(self, suspect):
+        starttime = time.time()
+        if self.rulescache == None:
+            self.rulescache = RulesCache(
+                self.config.get(self.section, 'rulesdir'))
 
-        returnaction=self.walk(suspect)
+        self.blockedfiletemplate = self.config.get(
+            self.section, 'template_blockedfile')
 
-        endtime=time.time()
-        difftime=endtime-starttime
-        suspect.tags['FiletypePlugin.time']="%.4f"%difftime
+        returnaction = self.walk(suspect)
+
+        endtime = time.time()
+        difftime = endtime - starttime
+        suspect.tags['FiletypePlugin.time'] = "%.4f" % difftime
         return returnaction
 
-    def getFiletype(self,path):
-        if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
-            ftype=self.ms.file(path)
-        elif MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
-            ftype=magic.from_file(path,mime=True)
+    def getFiletype(self, path):
+        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
+            ftype = self.ms.file(path)
+        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
+            ftype = magic.from_file(path, mime=True)
         return ftype
 
-    def getBuffertype(self,buffercontent):
-        if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
-            btype=self.ms.buffer(buffercontent)
-        elif MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
-            btype=magic.from_buffer(buffercontent, mime=True)
+    def getBuffertype(self, buffercontent):
+        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
+            btype = self.ms.buffer(buffercontent)
+        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
+            btype = magic.from_buffer(buffercontent, mime=True)
         return btype
 
-    def asciionly(self,stri):
+    def asciionly(self, stri):
         """return stri with all non-ascii chars removed"""
         return "".join([x for x in stri if ord(x) < 128])
-        
 
-    def matchRules(self,ruleset,obj,suspect,attachmentname=None):
-        if attachmentname==None:
-            attachmentname=""
-        attachmentname=self.asciionly(attachmentname)
-        
-        if obj==None:
-            self.logger.warning("%s: message has unknown name or content-type attachment %s"%(suspect.id,attachmentname))
+    def matchRules(self, ruleset, obj, suspect, attachmentname=None):
+        if attachmentname == None:
+            attachmentname = ""
+        attachmentname = self.asciionly(attachmentname)
+
+        if obj == None:
+            self.logger.warning(
+                "%s: message has unknown name or content-type attachment %s" % (suspect.id, attachmentname))
             return ATTACHMENT_DUNNO
-        
+
         # remove non ascii chars
-        asciirep=self.asciionly(obj)
-        
-        displayname=attachmentname
-        if asciirep==attachmentname:
-            displayname=''
-        
-        if ruleset==None:
+        asciirep = self.asciionly(obj)
+
+        displayname = attachmentname
+        if asciirep == attachmentname:
+            displayname = ''
+
+        if ruleset == None:
             return ATTACHMENT_DUNNO
 
         for regex in ruleset.keys():
-            prog=re.compile(regex,re.I)
+            prog = re.compile(regex, re.I)
             if self.extremeverbosity:
-                self.logger.debug('Attachment %s Rule %s'%(obj,regex))
-            if prog.search( obj):
-                info=ruleset[regex]
-                action=info[0]
-                description=info[2]
-                self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
-                suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s'%(obj,regex,description,action))
-                if action=='deny':
-                    self.logger.info('suspect %s contains blocked attachment %s %s'%(suspect.id,displayname,asciirep))
-                    blockinfo="%s %s: %s"%(displayname,asciirep,description)
-                    suspect.tags['FiletypePlugin.errormessage']=blockinfo
-                    if self.config.getboolean(self.section,'sendbounce'):
-                        self.logger.info("Sending attachment block bounce to %s"%suspect.from_address)
-                        bounce=Bounce(self.config)
-                        bounce.send_template_file(suspect.from_address, self.blockedfiletemplate, suspect,dict(blockinfo=blockinfo))
+                self.logger.debug('Attachment %s Rule %s' % (obj, regex))
+            if prog.search(obj):
+                info = ruleset[regex]
+                action = info[0]
+                description = info[2]
+                self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
+                    obj, regex, description, action))
+                suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
+                    obj, regex, description, action))
+                if action == 'deny':
+                    self.logger.info('suspect %s contains blocked attachment %s %s' % (
+                        suspect.id, displayname, asciirep))
+                    blockinfo = "%s %s: %s" % (
+                        displayname, asciirep, description)
+                    suspect.tags['FiletypePlugin.errormessage'] = blockinfo
+                    if self.config.getboolean(self.section, 'sendbounce'):
+                        self.logger.info(
+                            "Sending attachment block bounce to %s" % suspect.from_address)
+                        bounce = Bounce(self.config)
+                        bounce.send_template_file(
+                            suspect.from_address, self.blockedfiletemplate, suspect, dict(blockinfo=blockinfo))
                     return ATTACHMENT_BLOCK
 
-                if action=='delete':
-                    self.logger.info('suspect %s contains blocked attachment %s %s -- SILENT DELETE! --'%(suspect.id,displayname,asciirep))
+                if action == 'delete':
+                    self.logger.info(
+                        'suspect %s contains blocked attachment %s %s -- SILENT DELETE! --' % (suspect.id, displayname, asciirep))
                     return ATTACHMENT_SILENTDELETE
 
-                if action=='allow':
+                if action == 'allow':
                     return ATTACHMENT_OK
         return ATTACHMENT_DUNNO
 
-
-    def matchMultipleSets(self,setlist,obj,suspect,attachmentname=None):
+    def matchMultipleSets(self, setlist, obj, suspect, attachmentname=None):
         """run through multiple sets and return the first action which matches obj"""
-        self.logger.debug('Checking object %s against attachment rulesets'%obj)
+        self.logger.debug(
+            'Checking object %s against attachment rulesets' % obj)
         for ruleset in setlist:
-            res=self.matchRules(ruleset, obj,suspect,attachmentname)
-            if res!=ATTACHMENT_DUNNO:
+            res = self.matchRules(ruleset, obj, suspect, attachmentname)
+            if res != ATTACHMENT_DUNNO:
                 return res
         return ATTACHMENT_DUNNO
 
-    def walk(self,suspect):
+    def walk(self, suspect):
         """walks through a message and checks each attachment according to the rulefile specified in the config"""
-        
-        blockaction=self.config.get(self.section,'blockaction')
-        blockactioncode=string_to_actioncode(blockaction)
-        
-        #try db rules first
+
+        blockaction = self.config.get(self.section, 'blockaction')
+        blockactioncode = string_to_actioncode(blockaction)
+
+        # try db rules first
         self.rulescache.reloadifnecessary()
-        dbconn=''
-        if self.config.has_option(self.section,'dbconnectstring'):
-            dbconn=self.config.get(self.section,'dbconnectstring')
-           
-        if dbconn.strip()!='':
+        dbconn = ''
+        if self.config.has_option(self.section, 'dbconnectstring'):
+            dbconn = self.config.get(self.section, 'dbconnectstring')
+
+        if dbconn.strip() != '':
             self.logger.debug('Loading attachment rules from database')
-            query=self.config.get(self.section,'query')
-            dbfile=DBFile(dbconn, query)
-            user_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':FUATT_CHECKTYPE_FN}))
-            user_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_address,'checktype':FUATT_CHECKTYPE_CT}))
-            self.logger.debug('Found %s filename rules, %s content-type rules for address %s'%(len(user_names),len(user_ctypes),suspect.to_address))
-            domain_names=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':FUATT_CHECKTYPE_FN}))
-            domain_ctypes=self.rulescache.get_rules_from_config_lines(dbfile.getContent({'scope':suspect.to_domain,'checktype':FUATT_CHECKTYPE_CT}))
-            self.logger.debug('Found %s filename rules, %s content-type rules for domain %s'%(len(domain_names),len(domain_ctypes),suspect.to_domain))
+            query = self.config.get(self.section, 'query')
+            dbfile = DBFile(dbconn, query)
+            user_names = self.rulescache.get_rules_from_config_lines(
+                dbfile.getContent({'scope': suspect.to_address, 'checktype': FUATT_CHECKTYPE_FN}))
+            user_ctypes = self.rulescache.get_rules_from_config_lines(
+                dbfile.getContent({'scope': suspect.to_address, 'checktype': FUATT_CHECKTYPE_CT}))
+            self.logger.debug('Found %s filename rules, %s content-type rules for address %s' %
+                              (len(user_names), len(user_ctypes), suspect.to_address))
+            domain_names = self.rulescache.get_rules_from_config_lines(
+                dbfile.getContent({'scope': suspect.to_domain, 'checktype': FUATT_CHECKTYPE_FN}))
+            domain_ctypes = self.rulescache.get_rules_from_config_lines(
+                dbfile.getContent({'scope': suspect.to_domain, 'checktype': FUATT_CHECKTYPE_CT}))
+            self.logger.debug('Found %s filename rules, %s content-type rules for domain %s' %
+                              (len(domain_names), len(domain_ctypes), suspect.to_domain))
         else:
             self.logger.debug('Loading attachment rules from filesystem')
-            user_names=self.rulescache.getNAMERules(suspect.to_address)
-            user_ctypes=self.rulescache.getCTYPERules(suspect.to_address)
-    
-            domain_names=self.rulescache.getNAMERules(suspect.to_domain)
-            domain_ctypes=self.rulescache.getCTYPERules(suspect.to_domain)
+            user_names = self.rulescache.getNAMERules(suspect.to_address)
+            user_ctypes = self.rulescache.getCTYPERules(suspect.to_address)
 
-        #always get defaults from file
-        default_names=self.rulescache.getNAMERules(FUATT_DEFAULT)
-        default_ctypes=self.rulescache.getCTYPERules(FUATT_DEFAULT)
+            domain_names = self.rulescache.getNAMERules(suspect.to_domain)
+            domain_ctypes = self.rulescache.getCTYPERules(suspect.to_domain)
 
-        m=suspect.get_message_rep()
+        # always get defaults from file
+        default_names = self.rulescache.getNAMERules(FUATT_DEFAULT)
+        default_ctypes = self.rulescache.getCTYPERules(FUATT_DEFAULT)
+
+        m = suspect.get_message_rep()
         for i in m.walk():
             if i.is_multipart():
                 continue
-            contenttype_mime=i.get_content_type()
+            contenttype_mime = i.get_content_type()
             att_name = i.get_filename(None)
 
             if not att_name:
-                #workaround for mimetypes, it always takes .ksh for text/plain
-                if i.get_content_type()=='text/plain':
-                    ext='.txt'
+                # workaround for mimetypes, it always takes .ksh for text/plain
+                if i.get_content_type() == 'text/plain':
+                    ext = '.txt'
                 else:
                     ext = mimetypes.guess_extension(i.get_content_type())
 
-                if ext==None:
-                    ext=''
+                if ext == None:
+                    ext = ''
                 att_name = 'unnamed%s' % ext
 
-            
-
-            res=self.matchMultipleSets([user_names,domain_names,default_names], att_name,suspect,att_name)
-            if res==ATTACHMENT_SILENTDELETE:
-                self._debuginfo(suspect,"Attachment name=%s SILENT DELETE : blocked by name"%att_name)
+            res = self.matchMultipleSets(
+                [user_names, domain_names, default_names], att_name, suspect, att_name)
+            if res == ATTACHMENT_SILENTDELETE:
+                self._debuginfo(
+                    suspect, "Attachment name=%s SILENT DELETE : blocked by name" % att_name)
                 return DELETE
-            if res==ATTACHMENT_BLOCK:
-                self._debuginfo(suspect,"Attachment name=%s : blocked by name)"%att_name)
-                message=suspect.tags['FiletypePlugin.errormessage']
-                return blockactioncode,message
-            
+            if res == ATTACHMENT_BLOCK:
+                self._debuginfo(
+                    suspect, "Attachment name=%s : blocked by name)" % att_name)
+                message = suspect.tags['FiletypePlugin.errormessage']
+                return blockactioncode, message
 
-            #go through content type rules
-            res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_mime,suspect,att_name)
-            if res==ATTACHMENT_SILENTDELETE:
-                self._debuginfo(suspect,"Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (message source)"%(att_name,contenttype_mime))
+            # go through content type rules
+            res = self.matchMultipleSets(
+                [user_ctypes, domain_ctypes, default_ctypes], contenttype_mime, suspect, att_name)
+            if res == ATTACHMENT_SILENTDELETE:
+                self._debuginfo(
+                    suspect, "Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (message source)" % (att_name, contenttype_mime))
                 return DELETE
-            if res==ATTACHMENT_BLOCK:
-                self._debuginfo(suspect,"Attachment name=%s content-type=%s : blocked by mime content type (message source)"%(att_name,contenttype_mime))
-                message=suspect.tags['FiletypePlugin.errormessage']
-                return blockactioncode,message
-            
+            if res == ATTACHMENT_BLOCK:
+                self._debuginfo(
+                    suspect, "Attachment name=%s content-type=%s : blocked by mime content type (message source)" % (att_name, contenttype_mime))
+                message = suspect.tags['FiletypePlugin.errormessage']
+                return blockactioncode, message
+
             if MAGIC_AVAILABLE:
                 pl = i.get_payload(decode=True)
-                contenttype_magic=self.getBuffertype(pl)
-                res=self.matchMultipleSets([user_ctypes,domain_ctypes,default_ctypes], contenttype_magic,suspect,att_name)
-                if res==ATTACHMENT_SILENTDELETE:
-                    self._debuginfo(suspect,"Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (magic)"%(att_name,contenttype_mime))
+                contenttype_magic = self.getBuffertype(pl)
+                res = self.matchMultipleSets(
+                    [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
+                if res == ATTACHMENT_SILENTDELETE:
+                    self._debuginfo(
+                        suspect, "Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (magic)" % (att_name, contenttype_mime))
                     return DELETE
-                if res==ATTACHMENT_BLOCK:
-                    self._debuginfo(suspect,"Attachment name=%s content-type=%s : blocked by mime content type (magic)"%(att_name,contenttype_mime))
-                    message=suspect.tags['FiletypePlugin.errormessage']
-                    return blockactioncode,message
+                if res == ATTACHMENT_BLOCK:
+                    self._debuginfo(
+                        suspect, "Attachment name=%s content-type=%s : blocked by mime content type (magic)" % (att_name, contenttype_mime))
+                    message = suspect.tags['FiletypePlugin.errormessage']
+                    return blockactioncode, message
         return DUNNO
 
-    def _debuginfo(self,suspect,message):
+    def _debuginfo(self, suspect, message):
         """Debug to log and suspect"""
         suspect.debug(message)
         self.logger.debug(message)
@@ -498,56 +526,59 @@ See (TODO: link to template vars chapter) for commonly available template variab
         return "Attachment Blocker"
 
     def lint(self):
-        allok=(self.checkConfig() and self.lint_magic() and self.lint_sql())
+        allok = (self.checkConfig() and self.lint_magic() and self.lint_sql())
         return allok
 
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
             print "python-magic and python-file library not available. Will only do content-type checks, no real file analysis"
             return False
-        if MAGIC_AVAILABLE==MAGIC_PYTHON_FILE:
+        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
             print "Found python-file magic library"
-        if MAGIC_AVAILABLE==MAGIC_PYTHON_MAGIC:
+        if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             print "Found python-magic library"
         return True
 
     def lint_sql(self):
-        dbconn=''
-        if self.config.has_option(self.section,'dbconnectstring'):
-            dbconn=self.config.get(self.section,'dbconnectstring')
-        if dbconn.strip()!='':
+        dbconn = ''
+        if self.config.has_option(self.section, 'dbconnectstring'):
+            dbconn = self.config.get(self.section, 'dbconnectstring')
+        if dbconn.strip() != '':
             print "Reading per user/domain attachment rules from database"
             if not fuglu.extensions.sql.ENABLED:
                 print "Fuglu SQL Extension not available, cannot load attachment rules from database"
                 return False
-            query=self.config.get(self.section,'query')
-            dbfile=DBFile(dbconn, query)
+            query = self.config.get(self.section, 'query')
+            dbfile = DBFile(dbconn, query)
             try:
-                dbfile.getContent({'scope':'lint','checktype':FUATT_CHECKTYPE_FN})
-            except Exception,e:
+                dbfile.getContent(
+                    {'scope': 'lint', 'checktype': FUATT_CHECKTYPE_FN})
+            except Exception, e:
                 import traceback
-                print "Could not get attachment rules from database. Exception: %s"%str(e)
+                print "Could not get attachment rules from database. Exception: %s" % str(e)
                 print traceback.format_exc()
                 return False
         else:
-            print "No database configured. Using per user/domain file configuration from %s"%self.config.get(self.section,'rulesdir')
+            print "No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir')
         return True
 
 
 class DatabaseConfigTestCase(unittest.TestCase):
+
     """Testcases for the Attachment Checker Plugin"""
+
     def setUp(self):
         from ConfigParser import RawConfigParser
         import tempfile
         import shutil
-        
-        testfile="/tmp/attachconfig.db"
+
+        testfile = "/tmp/attachconfig.db"
         if os.path.exists(testfile):
             os.remove(testfile)
-        #important: 4 slashes for absolute paths!
-        testdb="sqlite:///%s"%testfile
-        
-        sql="""create table attachmentrules(
+        # important: 4 slashes for absolute paths!
+        testdb = "sqlite:///%s" % testfile
+
+        sql = """create table attachmentrules(
         id integer not null primary key,
         scope varchar(255) not null,
         checktype varchar(20) not null,
@@ -556,84 +587,93 @@ class DatabaseConfigTestCase(unittest.TestCase):
         description varchar(255) not null,
         prio integer not null
         )
-        """ 
+        """
 
-        self.session=fuglu.extensions.sql.get_session(testdb)
+        self.session = fuglu.extensions.sql.get_session(testdb)
         self.session.flush()
         self.session.execute(sql)
-        self.tempdir=tempfile.mkdtemp('attachtestdb', 'fuglu')
-        self.template='%s/blockedfile.tmpl'%self.tempdir
-        shutil.copy('../conf/templates/blockedfile.tmpl.dist',self.template)
-        shutil.copy('../conf/rules/default-filenames.conf.dist','%s/default-filenames.conf'%self.tempdir)
-        shutil.copy('../conf/rules/default-filetypes.conf.dist','%s/default-filetypes.conf'%self.tempdir)
-        config=RawConfigParser()
+        self.tempdir = tempfile.mkdtemp('attachtestdb', 'fuglu')
+        self.template = '%s/blockedfile.tmpl' % self.tempdir
+        shutil.copy('../conf/templates/blockedfile.tmpl.dist', self.template)
+        shutil.copy('../conf/rules/default-filenames.conf.dist',
+                    '%s/default-filenames.conf' % self.tempdir)
+        shutil.copy('../conf/rules/default-filetypes.conf.dist',
+                    '%s/default-filetypes.conf' % self.tempdir)
+        config = RawConfigParser()
         config.add_section('FiletypePlugin')
-        config.set('FiletypePlugin', 'template_blockedfile',self.template)
-        config.set('FiletypePlugin', 'rulesdir',self.tempdir)
-        config.set('FiletypePlugin','dbconnectstring',testdb)
-        config.set('FiletypePlugin', 'blockaction','DELETE')
-        config.set('FiletypePlugin', 'sendbounce','True')
-        config.set('FiletypePlugin','query','SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
+        config.set('FiletypePlugin', 'template_blockedfile', self.template)
+        config.set('FiletypePlugin', 'rulesdir', self.tempdir)
+        config.set('FiletypePlugin', 'dbconnectstring', testdb)
+        config.set('FiletypePlugin', 'blockaction', 'DELETE')
+        config.set('FiletypePlugin', 'sendbounce', 'True')
+        config.set('FiletypePlugin', 'query',
+                   'SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
         config.add_section('main')
-        config.set('main','disablebounces','1')
-        self.candidate=FiletypePlugin(config)
-    
+        config.set('main', 'disablebounces', '1')
+        self.candidate = FiletypePlugin(config)
+
     def test_dbrules(self):
         """Test if db rules correctly override defaults"""
         import tempfile
         import shutil
 
-        testdata=u"""
+        testdata = u"""
         INSERT INTO attachmentrules(scope,checktype,action,regex,description,prio) VALUES
         ('recipient@unittests.fuglu.org','contenttype','allow','application/x-executable','this user likes exe',1)
         """
         self.session.execute(testdata)
-        #copy file rules
-        tempfilename=tempfile.mktemp(suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy('testdata/binaryattachment.eml',tempfilename)
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
+        # copy file rules
+        tempfilename = tempfile.mktemp(
+            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy('testdata/binaryattachment.eml', tempfilename)
+        suspect = Suspect(
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
 
-        result=self.candidate.examine(suspect)
-        resstr=actioncode_to_string(result)
-        self.assertEquals(resstr,"DUNNO")
-        
-        
-        #another recipient should still get the block
-        suspect=Suspect('sender@unittests.fuglu.org','recipient2@unittests.fuglu.org',tempfilename)
+        result = self.candidate.examine(suspect)
+        resstr = actioncode_to_string(result)
+        self.assertEquals(resstr, "DUNNO")
 
-        result=self.candidate.examine(suspect)
+        # another recipient should still get the block
+        suspect = Suspect(
+            'sender@unittests.fuglu.org', 'recipient2@unittests.fuglu.org', tempfilename)
+
+        result = self.candidate.examine(suspect)
         if type(result) is tuple:
-            result,message=result
-        resstr=actioncode_to_string(result)
-        self.assertEquals(resstr,"DELETE")
+            result, message = result
+        resstr = actioncode_to_string(result)
+        self.assertEquals(resstr, "DELETE")
         os.remove(tempfilename)
 
+
 class AttachmentPluginTestCase(unittest.TestCase):
+
     """Testcases for the Attachment Checker Plugin"""
+
     def setUp(self):
         from ConfigParser import RawConfigParser
         import tempfile
         import shutil
 
-        self.tempdir=tempfile.mkdtemp('attachtest', 'fuglu')
-        self.template='%s/blockedfile.tmpl'%self.tempdir
-        shutil.copy('../conf/templates/blockedfile.tmpl.dist',self.template)
-        shutil.copy('../conf/rules/default-filenames.conf.dist','%s/default-filenames.conf'%self.tempdir)
-        shutil.copy('../conf/rules/default-filetypes.conf.dist','%s/default-filetypes.conf'%self.tempdir)
-        config=RawConfigParser()
+        self.tempdir = tempfile.mkdtemp('attachtest', 'fuglu')
+        self.template = '%s/blockedfile.tmpl' % self.tempdir
+        shutil.copy('../conf/templates/blockedfile.tmpl.dist', self.template)
+        shutil.copy('../conf/rules/default-filenames.conf.dist',
+                    '%s/default-filenames.conf' % self.tempdir)
+        shutil.copy('../conf/rules/default-filetypes.conf.dist',
+                    '%s/default-filetypes.conf' % self.tempdir)
+        config = RawConfigParser()
         config.add_section('FiletypePlugin')
-        config.set('FiletypePlugin', 'template_blockedfile',self.template)
-        config.set('FiletypePlugin', 'rulesdir',self.tempdir)
-        config.set('FiletypePlugin', 'blockaction','DELETE')
-        config.set('FiletypePlugin', 'sendbounce','True')
+        config.set('FiletypePlugin', 'template_blockedfile', self.template)
+        config.set('FiletypePlugin', 'rulesdir', self.tempdir)
+        config.set('FiletypePlugin', 'blockaction', 'DELETE')
+        config.set('FiletypePlugin', 'sendbounce', 'True')
         config.add_section('main')
-        config.set('main','disablebounces','1')
-        self.candidate=FiletypePlugin(config)
-
+        config.set('main', 'disablebounces', '1')
+        self.candidate = FiletypePlugin(config)
 
     def tearDown(self):
-        os.remove('%s/default-filenames.conf'%self.tempdir)
-        os.remove('%s/default-filetypes.conf'%self.tempdir)
+        os.remove('%s/default-filenames.conf' % self.tempdir)
+        os.remove('%s/default-filetypes.conf' % self.tempdir)
         os.remove(self.template)
         os.rmdir(self.tempdir)
 
@@ -642,16 +682,18 @@ class AttachmentPluginTestCase(unittest.TestCase):
         import tempfile
         import shutil
 
-        #copy file rules
-        tempfilename=tempfile.mktemp(suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy('testdata/binaryattachment.eml',tempfilename)
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
+        # copy file rules
+        tempfilename = tempfile.mktemp(
+            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy('testdata/binaryattachment.eml', tempfilename)
+        suspect = Suspect(
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
 
-        result=self.candidate.examine(suspect)
+        result = self.candidate.examine(suspect)
         if type(result) is tuple:
-            result,message=result
+            result, message = result
         os.remove(tempfilename)
-        self.failIf(result!=DELETE)
+        self.failIf(result != DELETE)
 
     def disabled_test_utf8msg(self):
         """Test utf8 msgs are parsed ok - can cause bugs on some magic implementations (eg. centos)
@@ -659,12 +701,14 @@ class AttachmentPluginTestCase(unittest.TestCase):
         import tempfile
         import shutil
 
-        tempfilename=tempfile.mktemp(suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy('testdata/utf8message.eml',tempfilename)
-        suspect=Suspect('sender@unittests.fuglu.org','recipient@unittests.fuglu.org',tempfilename)
+        tempfilename = tempfile.mktemp(
+            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy('testdata/utf8message.eml', tempfilename)
+        suspect = Suspect(
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
 
-        result=self.candidate.examine(suspect)
+        result = self.candidate.examine(suspect)
         if type(result) is tuple:
-            result,message=result
+            result, message = result
         os.remove(tempfilename)
-        self.assertEquals(result,DUNNO)
+        self.assertEquals(result, DUNNO)

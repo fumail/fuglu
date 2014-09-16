@@ -1,11 +1,11 @@
 # This software is provided 'as-is', without any express or implied
 # warranty.  In no event will the author be held liable for any damages
 # arising from the use of this software.
-# 
+#
 # Permission is granted to anyone to use this software for any purpose,
 # including commercial applications, and to alter it and redistribute it
 # freely, subject to the following restrictions:
-# 
+#
 # 1. The origin of this software must not be misrepresented; you must not
 #    claim that you wrote the original software. If you use this software
 #    in a product, an acknowledgment in the product documentation would be
@@ -13,7 +13,7 @@
 # 2. Altered source versions must be plainly marked as such, and must not be
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
-# 
+#
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
 
 import base64
@@ -33,7 +33,9 @@ __all__ = [
     "verify",
 ]
 
+
 class Simple:
+
     """Class that represents the "simple" canonicalization algorithm."""
 
     name = "simple"
@@ -48,7 +50,9 @@ class Simple:
         # Ignore all empty lines at the end of the message body.
         return re.sub("(\r\n)*$", "\r\n", body)
 
+
 class Relaxed:
+
     """Class that represents the "relaxed" canonicalization algorithm."""
 
     name = "relaxed"
@@ -59,7 +63,7 @@ class Relaxed:
         # Unfold all header lines.
         # Compress WSP to single space.
         # Remove all WSP at the start or end of the field value (strip).
-        return [(x[0].lower(), re.sub(r"\s+", " ", re.sub("\r\n", "", x[1])).strip()+"\r\n") for x in headers]
+        return [(x[0].lower(), re.sub(r"\s+", " ", re.sub("\r\n", "", x[1])).strip() + "\r\n") for x in headers]
 
     @staticmethod
     def canonicalize_body(body):
@@ -68,30 +72,41 @@ class Relaxed:
         # Ignore all empty lines at the end of the message body.
         return re.sub("(\r\n)*$", "\r\n", re.sub(r"[\x09\x20]+", " ", re.sub("[\\x09\\x20]+\r\n", "\r\n", body)))
 
+
 class DKIMException(Exception):
+
     """Base class for DKIM errors."""
     pass
 
+
 class InternalError(DKIMException):
+
     """Internal error in dkim module. Should never happen."""
     pass
 
+
 class KeyFormatError(DKIMException):
+
     """Key format error while parsing an RSA public or private key."""
     pass
 
+
 class MessageFormatError(DKIMException):
+
     """RFC822 message format error."""
     pass
 
+
 class ParameterError(DKIMException):
+
     """Input parameter error."""
     pass
+
 
 def _remove(s, t):
     i = s.find(t)
     assert i >= 0
-    return s[:i] + s[i+len(t):]
+    return s[:i] + s[i + len(t):]
 
 INTEGER = 0x02
 BIT_STRING = 0x03
@@ -131,6 +146,7 @@ ASN1_RSAPrivateKey = [
     ])
 ]
 
+
 def asn1_parse(template, data):
     """Parse a data structure according to ASN.1 template.
 
@@ -160,22 +176,24 @@ def asn1_parse(template, data):
                     i += 1
                 r.append(n)
             elif tag == BIT_STRING:
-                r.append(data[i:i+length])
+                r.append(data[i:i + length])
                 i += length
             elif tag == NULL:
                 assert length == 0
                 r.append(None)
             elif tag == OBJECT_IDENTIFIER:
-                r.append(data[i:i+length])
+                r.append(data[i:i + length])
                 i += length
             elif tag == SEQUENCE:
-                r.append(asn1_parse(t[1], data[i:i+length]))
+                r.append(asn1_parse(t[1], data[i:i + length]))
                 i += length
             else:
                 raise KeyFormatError("Unexpected tag in template: %02x" % tag)
         else:
-            raise KeyFormatError("Unexpected tag (got %02x, expecting %02x)" % (tag, t[0]))
+            raise KeyFormatError(
+                "Unexpected tag (got %02x, expecting %02x)" % (tag, t[0]))
     return r
+
 
 def asn1_length(n):
     """Return a string representing a field length in ASN.1 format."""
@@ -187,6 +205,7 @@ def asn1_length(n):
         r = chr(n & 0xff) + r
         n >>= 8
     return r
+
 
 def asn1_build(node):
     """Build an ASN.1 data structure based on pairs of (type, data)."""
@@ -209,6 +228,7 @@ def asn1_build(node):
 HASHID_SHA1 = "\x2b\x0e\x03\x02\x1a"
 HASHID_SHA256 = "\x60\x86\x48\x01\x65\x03\x04\x02\x01"
 
+
 def str2int(s):
     """Convert an octet string to an integer. Octet string assumed to represent a positive integer."""
     r = 0
@@ -216,7 +236,8 @@ def str2int(s):
         r = (r << 8) | ord(c)
     return r
 
-def int2str(n, length = -1):
+
+def int2str(n, length=-1):
     """Convert an integer to an octet string. Number must be positive.
 
     @param n: Number to convert.
@@ -229,10 +250,12 @@ def int2str(n, length = -1):
     while length < 0 or len(r) < length:
         r.append(chr(n & 0xff))
         n >>= 8
-        if length < 0 and n == 0: break
+        if length < 0 and n == 0:
+            break
     r.reverse()
     assert length < 0 or len(r) == length
     return r
+
 
 def rfc822_parse(message):
     """Parse a message in RFC822 format.
@@ -249,42 +272,46 @@ def rfc822_parse(message):
     i = 0
     while i < len(lines):
         if len(lines[i]) == 0:
-            # End of headers, return what we have plus the body, excluding the blank line.
+            # End of headers, return what we have plus the body, excluding the
+            # blank line.
             i += 1
             break
         if re.match(r"[\x09\x20]", lines[i][0]):
-            headers[-1][1] += lines[i]+"\r\n"
+            headers[-1][1] += lines[i] + "\r\n"
         else:
             m = re.match(r"([\x21-\x7e]+?):", lines[i])
             if m is not None:
-                headers.append([m.group(1), lines[i][m.end(0):]+"\r\n"])
+                headers.append([m.group(1), lines[i][m.end(0):] + "\r\n"])
             elif lines[i].startswith("From "):
                 pass
             else:
-                raise MessageFormatError("Unexpected characters in RFC822 header: %s" % lines[i])
+                raise MessageFormatError(
+                    "Unexpected characters in RFC822 header: %s" % lines[i])
         i += 1
     return (headers, "\r\n".join(lines[i:]))
 
+
 def dnstxt(name):
     """Return a TXT record associated with a DNS name."""
-    #PATCH:
-    #return fake dkim key for fuglu.org
+    # PATCH:
+    # return fake dkim key for fuglu.org
     if name.endswith('testfuglu.org.'):
-        k=''
+        k = ''
         for line in open('testdata/dkim/testfuglu.org.public'):
             if line.startswith('---'):
                 continue
-            k=k+line.strip()
-            
-        record="v=DKIM1; k=rsa; p=%s"%k
+            k = k + line.strip()
+
+        record = "v=DKIM1; k=rsa; p=%s" % k
         return record
-    
-    import dns.resolver    
+
+    import dns.resolver
     a = dns.resolver.query(name, dns.rdatatype.TXT)
     for r in a.response.answer:
         if r.rdtype == dns.rdatatype.TXT:
             return "".join(r.items[0].strings)
     return None
+
 
 def fold(header):
     """Fold a header line into multiple crlf-separated lines at column 72."""
@@ -304,6 +331,7 @@ def fold(header):
         pre += header[:i] + "\r\n "
         header = header[j:]
     return pre + header
+
 
 def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple, Simple), include_headers=None, length=False, debuglog=None):
     """Sign an RFC822 message and return the DKIM-Signature header line.
@@ -366,7 +394,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         ('a', "rsa-sha256"),
         ('c', "%s/%s" % (canonicalize[0].name, canonicalize[1].name)),
         ('d', domain),
-        ('i', identity or "@"+domain),
+        ('i', identity or "@" + domain),
         length and ('l', len(body)),
         ('q', "dns/txt"),
         ('s', selector),
@@ -380,7 +408,9 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     sig = fold(sig)
 
     if debuglog is not None:
-        print >>debuglog, "sign headers:", sign_headers + [("DKIM-Signature", " "+"; ".join("%s=%s" % x for x in sigfields))]
+        print >>debuglog, "sign headers:", sign_headers + \
+            [("DKIM-Signature", " " + "; ".join("%s=%s" %
+                                                x for x in sigfields))]
     h = hashlib.sha256()
     for x in sign_headers:
         h.update(x[0])
@@ -401,12 +431,14 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         ])
     )
     modlen = len(int2str(pk['modulus']))
-    if len(dinfo)+3 > modlen:
+    if len(dinfo) + 3 > modlen:
         raise ParameterError("Hash too large for modulus")
-    sig2 = int2str(pow(str2int("\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo), pk['privateExponent'], pk['modulus']), modlen)
+    sig2 = int2str(pow(str2int("\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) +
+                               "\x00" + dinfo), pk['privateExponent'], pk['modulus']), modlen)
     sig += base64.b64encode(''.join(sig2))
 
     return sig + "\r\n"
+
 
 def verify(message, debuglog=None):
     """Verify a DKIM signature on an RFC822 formatted message.
@@ -475,13 +507,15 @@ def verify(message, debuglog=None):
         if debuglog is not None:
             print >>debuglog, "signature missing h="
         return False
-    if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d'])-1] not in "@."):
+    if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d']) - 1] not in "@."):
         if debuglog is not None:
-            print >>debuglog, "i= domain is not a subdomain of d= (i=%s d=%d)" % (sig['i'], sig['d'])
+            print >>debuglog, "i= domain is not a subdomain of d= (i=%s d=%d)" % (
+                sig['i'], sig['d'])
         return False
     if 'l' in sig and re.match(r"\d{,76}$", sig['l']) is None:
         if debuglog is not None:
-            print >>debuglog, "l= value is not a decimal integer (%s)" % sig['l']
+            print >>debuglog, "l= value is not a decimal integer (%s)" % sig[
+                'l']
         return False
     if 'q' in sig and sig['q'] != "dns/txt":
         if debuglog is not None:
@@ -493,22 +527,26 @@ def verify(message, debuglog=None):
         return False
     if 't' in sig and re.match(r"\d+$", sig['t']) is None:
         if debuglog is not None:
-            print >>debuglog, "t= value is not a decimal integer (%s)" % sig['t']
+            print >>debuglog, "t= value is not a decimal integer (%s)" % sig[
+                't']
         return False
     if 'x' in sig:
         if re.match(r"\d+$", sig['x']) is None:
             if debuglog is not None:
-                print >>debuglog, "x= value is not a decimal integer (%s)" % sig['x']
+                print >>debuglog, "x= value is not a decimal integer (%s)" % sig[
+                    'x']
             return False
         if int(sig['x']) < int(sig['t']):
             if debuglog is not None:
-                print >>debuglog, "x= value is less than t= value (x=%s t=%s)" % (sig['x'], sig['t'])
+                print >>debuglog, "x= value is less than t= value (x=%s t=%s)" % (
+                    sig['x'], sig['t'])
             return False
 
     m = re.match("(\w+)(?:/(\w+))?$", sig['c'])
     if m is None:
         if debuglog is not None:
-            print >>debuglog, "c= value is not in format method/method (%s)" % sig['c']
+            print >>debuglog, "c= value is not in format method/method (%s)" % sig[
+                'c']
         return False
     can_headers = m.group(1)
     if m.group(2) is not None:
@@ -557,10 +595,11 @@ def verify(message, debuglog=None):
         print >>debuglog, "bh:", base64.b64encode(bodyhash)
     if bodyhash != base64.b64decode(re.sub(r"\s+", "", sig['bh'])):
         if debuglog is not None:
-            print >>debuglog, "body hash mismatch (got %s, expected %s)" % (base64.b64encode(bodyhash), sig['bh'])
+            print >>debuglog, "body hash mismatch (got %s, expected %s)" % (
+                base64.b64encode(bodyhash), sig['bh'])
         return False
 
-    s = dnstxt(sig['s']+"._domainkey."+sig['d']+".")
+    s = dnstxt(sig['s'] + "._domainkey." + sig['d'] + ".")
     if not s:
         return False
     a = re.split(r"\s*;\s*", s)
@@ -597,8 +636,10 @@ def verify(message, debuglog=None):
                 sign_headers.append(headers[i])
                 break
         lastindex[h] = i
-    # The call to _remove() assumes that the signature b= only appears once in the signature header
-    sign_headers += [(x[0], x[1].rstrip()) for x in canonicalize_headers.canonicalize_headers([(sigheaders[0][0], _remove(sigheaders[0][1], sig['b']))])]
+    # The call to _remove() assumes that the signature b= only appears once in
+    # the signature header
+    sign_headers += [(x[0], x[1].rstrip()) for x in canonicalize_headers.canonicalize_headers(
+        [(sigheaders[0][0], _remove(sigheaders[0][1], sig['b']))])]
     if debuglog is not None:
         print >>debuglog, "verify headers:", sign_headers
 
@@ -609,7 +650,8 @@ def verify(message, debuglog=None):
         h.update(x[1])
     d = h.digest()
     if debuglog is not None:
-        print >>debuglog, "verify digest:", " ".join("%02x" % ord(x) for x in d)
+        print >>debuglog, "verify digest:", " ".join(
+            "%02x" % ord(x) for x in d)
 
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -622,16 +664,17 @@ def verify(message, debuglog=None):
     )
     if debuglog is not None:
         print >>debuglog, "dinfo:", " ".join("%02x" % ord(x) for x in dinfo)
-    if len(dinfo)+3 > modlen:
+    if len(dinfo) + 3 > modlen:
         if debuglog is not None:
             print >>debuglog, "Hash too large for modulus"
         return False
-    sig2 = "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
+    sig2 = "\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) + "\x00" + dinfo
     if debuglog is not None:
         print >>debuglog, "sig2:", " ".join("%02x" % ord(x) for x in sig2)
         print >>debuglog, sig['b']
         print >>debuglog, re.sub(r"\s+", "", sig['b'])
-    v = int2str(pow(str2int(base64.b64decode(re.sub(r"\s+", "", sig['b']))), pk['publicExponent'], pk['modulus']), modlen)
+    v = int2str(pow(str2int(base64.b64decode(
+        re.sub(r"\s+", "", sig['b']))), pk['publicExponent'], pk['modulus']), modlen)
     if debuglog is not None:
         print >>debuglog, "v:", " ".join("%02x" % ord(x) for x in v)
     assert len(v) == len(sig2)
@@ -641,7 +684,9 @@ def verify(message, debuglog=None):
 if __name__ == "__main__":
     message = """From: greg@hewgill.com\r\nSubject: test\r\n message\r\n\r\nHi.\r\n\r\nWe lost the game. Are you hungry yet?\r\n\r\nJoe.\r\n"""
     print rfc822_parse(message)
-    sig = sign(message, "greg", "hewgill.com", open("/home/greg/.domainkeys/rsa.private").read())
+    sig = sign(message, "greg", "hewgill.com", open(
+        "/home/greg/.domainkeys/rsa.private").read())
     print sig
-    print verify(sig+message)
-    #print sign(open("/home/greg/tmp/message").read(), "greg", "hewgill.com", open("/home/greg/.domainkeys/rsa.private").read())
+    print verify(sig + message)
+    # print sign(open("/home/greg/tmp/message").read(), "greg", "hewgill.com",
+    # open("/home/greg/.domainkeys/rsa.private").read())

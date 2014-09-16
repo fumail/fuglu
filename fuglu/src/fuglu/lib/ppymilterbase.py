@@ -34,75 +34,75 @@ import sys
 import types
 
 
-MILTER_VERSION = 2 # Milter version we claim to speak (from pmilter)
+MILTER_VERSION = 2  # Milter version we claim to speak (from pmilter)
 
 # Potential milter command codes and their corresponding PpyMilter callbacks.
 # From sendmail's include/libmilter/mfdef.h
-SMFIC_ABORT   = 'A' # "Abort"
-SMFIC_BODY    = 'B' # "Body chunk"
-SMFIC_CONNECT = 'C' # "Connection information"
-SMFIC_MACRO   = 'D' # "Define macro"
-SMFIC_BODYEOB = 'E' # "final body chunk (End)"
-SMFIC_HELO    = 'H' # "HELO/EHLO"
-SMFIC_HEADER  = 'L' # "Header"
-SMFIC_MAIL    = 'M' # "MAIL from"
-SMFIC_EOH     = 'N' # "EOH"
-SMFIC_OPTNEG  = 'O' # "Option negotation"
-SMFIC_RCPT    = 'R' # "RCPT to"
-SMFIC_QUIT    = 'Q' # "QUIT"
-SMFIC_DATA    = 'T' # "DATA"
-SMFIC_UNKNOWN = 'U' # "Any unknown command"
+SMFIC_ABORT = 'A'  # "Abort"
+SMFIC_BODY = 'B'  # "Body chunk"
+SMFIC_CONNECT = 'C'  # "Connection information"
+SMFIC_MACRO = 'D'  # "Define macro"
+SMFIC_BODYEOB = 'E'  # "final body chunk (End)"
+SMFIC_HELO = 'H'  # "HELO/EHLO"
+SMFIC_HEADER = 'L'  # "Header"
+SMFIC_MAIL = 'M'  # "MAIL from"
+SMFIC_EOH = 'N'  # "EOH"
+SMFIC_OPTNEG = 'O'  # "Option negotation"
+SMFIC_RCPT = 'R'  # "RCPT to"
+SMFIC_QUIT = 'Q'  # "QUIT"
+SMFIC_DATA = 'T'  # "DATA"
+SMFIC_UNKNOWN = 'U'  # "Any unknown command"
 
 COMMANDS = {
-  SMFIC_ABORT: 'Abort',
-  SMFIC_BODY: 'Body',
-  SMFIC_CONNECT: 'Connect',
-  SMFIC_MACRO: 'Macro',
-  SMFIC_BODYEOB: 'EndBody',
-  SMFIC_HELO: 'Helo',
-  SMFIC_HEADER: 'Header',
-  SMFIC_MAIL: 'MailFrom',
-  SMFIC_EOH: 'EndHeaders',
-  SMFIC_OPTNEG: 'OptNeg',
-  SMFIC_RCPT: 'RcptTo',
-  SMFIC_QUIT: 'Quit',
-  SMFIC_DATA: 'Data',
-  SMFIC_UNKNOWN: 'Unknown',
-  }
+    SMFIC_ABORT: 'Abort',
+    SMFIC_BODY: 'Body',
+    SMFIC_CONNECT: 'Connect',
+    SMFIC_MACRO: 'Macro',
+    SMFIC_BODYEOB: 'EndBody',
+    SMFIC_HELO: 'Helo',
+    SMFIC_HEADER: 'Header',
+    SMFIC_MAIL: 'MailFrom',
+    SMFIC_EOH: 'EndHeaders',
+    SMFIC_OPTNEG: 'OptNeg',
+    SMFIC_RCPT: 'RcptTo',
+    SMFIC_QUIT: 'Quit',
+    SMFIC_DATA: 'Data',
+    SMFIC_UNKNOWN: 'Unknown',
+}
 
 # To register/mask callbacks during milter protocol negotiation with sendmail.
 # From sendmail's include/libmilter/mfdef.h
 NO_CALLBACKS = 127  # (all seven callback flags set: 1111111)
 CALLBACKS = {
-  'OnConnect':    1,  # 0x01 SMFIP_NOCONNECT # Skip SMFIC_CONNECT
-  'OnHelo':       2,  # 0x02 SMFIP_NOHELO    # Skip SMFIC_HELO
-  'OnMailFrom':   4,  # 0x04 SMFIP_NOMAIL    # Skip SMFIC_MAIL
-  'OnRcptTo':     8,  # 0x08 SMFIP_NORCPT    # Skip SMFIC_RCPT
-  'OnBody':       16, # 0x10 SMFIP_NOBODY    # Skip SMFIC_BODY
-  'OnHeader':     32, # 0x20 SMFIP_NOHDRS    # Skip SMFIC_HEADER
-  'OnEndHeaders': 64, # 0x40 SMFIP_NOEOH     # Skip SMFIC_EOH
-  }
+    'OnConnect':    1,  # 0x01 SMFIP_NOCONNECT # Skip SMFIC_CONNECT
+    'OnHelo':       2,  # 0x02 SMFIP_NOHELO    # Skip SMFIC_HELO
+    'OnMailFrom':   4,  # 0x04 SMFIP_NOMAIL    # Skip SMFIC_MAIL
+    'OnRcptTo':     8,  # 0x08 SMFIP_NORCPT    # Skip SMFIC_RCPT
+    'OnBody':       16,  # 0x10 SMFIP_NOBODY    # Skip SMFIC_BODY
+    'OnHeader':     32,  # 0x20 SMFIP_NOHDRS    # Skip SMFIC_HEADER
+    'OnEndHeaders': 64,  # 0x40 SMFIP_NOEOH     # Skip SMFIC_EOH
+}
 
 # Acceptable response commands/codes to return to sendmail (with accompanying
 # command data).  From sendmail's include/libmilter/mfdef.h
 RESPONSE = {
-    'ADDRCPT'    : '+', # SMFIR_ADDRCPT    # "add recipient"
-    'DELRCPT'    : '-', # SMFIR_DELRCPT    # "remove recipient"
-    'ACCEPT'     : 'a', # SMFIR_ACCEPT     # "accept"
-    'REPLBODY'   : 'b', # SMFIR_REPLBODY   # "replace body (chunk)"
-    'CONTINUE'   : 'c', # SMFIR_CONTINUE   # "continue"
-    'DISCARD'    : 'd', # SMFIR_DISCARD    # "discard"
-    'CONNFAIL'   : 'f', # SMFIR_CONN_FAIL  # "cause a connection failure"
-    'ADDHEADER'  : 'h', # SMFIR_ADDHEADER  # "add header"
-    'INSHEADER'  : 'i', # SMFIR_INSHEADER  # "insert header"
-    'CHGHEADER'  : 'm', # SMFIR_CHGHEADER  # "change header"
-    'PROGRESS'   : 'p', # SMFIR_PROGRESS   # "progress"
-    'QUARANTINE' : 'q', # SMFIR_QUARANTINE # "quarantine"
-    'REJECT'     : 'r', # SMFIR_REJECT     # "reject"
-    'SETSENDER'  : 's', # v3 only?
-    'TEMPFAIL'   : 't', # SMFIR_TEMPFAIL   # "tempfail"
-    'REPLYCODE'  : 'y', # SMFIR_REPLYCODE  # "reply code etc"
-    }
+    'ADDRCPT': '+',  # SMFIR_ADDRCPT    # "add recipient"
+    'DELRCPT': '-',  # SMFIR_DELRCPT    # "remove recipient"
+    'ACCEPT': 'a',  # SMFIR_ACCEPT     # "accept"
+    'REPLBODY': 'b',  # SMFIR_REPLBODY   # "replace body (chunk)"
+    'CONTINUE': 'c',  # SMFIR_CONTINUE   # "continue"
+    'DISCARD': 'd',  # SMFIR_DISCARD    # "discard"
+    'CONNFAIL': 'f',  # SMFIR_CONN_FAIL  # "cause a connection failure"
+    'ADDHEADER': 'h',  # SMFIR_ADDHEADER  # "add header"
+    'INSHEADER': 'i',  # SMFIR_INSHEADER  # "insert header"
+    'CHGHEADER': 'm',  # SMFIR_CHGHEADER  # "change header"
+    'PROGRESS': 'p',  # SMFIR_PROGRESS   # "progress"
+    'QUARANTINE': 'q',  # SMFIR_QUARANTINE # "quarantine"
+    'REJECT': 'r',  # SMFIR_REJECT     # "reject"
+    'SETSENDER': 's',  # v3 only?
+    'TEMPFAIL': 't',  # SMFIR_TEMPFAIL   # "tempfail"
+    'REPLYCODE': 'y',  # SMFIR_REPLYCODE  # "reply code etc"
+}
 
 
 def printchar(char):
@@ -122,31 +122,39 @@ def CanonicalizeAddress(addr):
       The addr with leading and trailing angle brackets removed unless
       the address is "<>" (in which case the string is returned unchanged).
     """
-    if addr == '<>': return addr
+    if addr == '<>':
+        return addr
     return addr.lstrip('<').rstrip('>')
 
 
 class PpyMilterException(Exception):
+
     """Parent of all other PpyMilter exceptions.  Subclass this: do not
     construct or catch explicitly!"""
 
 
 class PpyMilterPermFailure(PpyMilterException):
+
     """Milter exception that indicates a perment failure."""
 
 
 class PpyMilterTempFailure(PpyMilterException):
+
     """Milter exception that indicates a temporary/transient failure."""
 
 
 class PpyMilterCloseConnection(PpyMilterException):
+
     """Exception that indicates the server should close the milter connection."""
 
+
 class PpyMilterActionError(PpyMilterException):
+
     """Exception raised when an action is performed that was not negotiated."""
 
 
 class PpyMilterDispatcher(object):
+
     """Dispatcher class for a milter server.  This class accepts entire
     milter commands as a string (command character + binary data), parses
     the command and binary data appropriately and invokes the appropriate
@@ -163,7 +171,6 @@ class PpyMilterDispatcher(object):
                         milter commands (e.g. a child of the PpyMilter class).
         """
         self.__milter = milter
-
 
     def Dispatch(self, data):
         """Callback function for the milter socket server to handle a single
@@ -198,7 +205,8 @@ class PpyMilterDispatcher(object):
                 return RESPONSE['CONTINUE']
 
             if not hasattr(self.__milter, handler_callback_name):
-                logging.warn('Unimplemented command in milter %s: "%s" ("%s")'%(self.__milter, command, data))
+                logging.warn('Unimplemented command in milter %s: "%s" ("%s")' % (
+                    self.__milter, command, data))
                 return RESPONSE['CONTINUE']
 
             parser = getattr(self, parser_callback_name)
@@ -265,13 +273,13 @@ class PpyMilterDispatcher(object):
         """
         (hostname, data) = data.split('\0', 1)
         family = struct.unpack('c', data[0])[0]
-        
-        #http://code.google.com/p/ppymilter/issues/detail?id=6
-        if family==4 or family==6:
+
+        # http://code.google.com/p/ppymilter/issues/detail?id=6
+        if family == 4 or family == 6:
             port = struct.unpack('!H', data[1:3])[0]
             address = data[3:]
         else:
-            port =0
+            port = 0
             address = 'unknown'
         return (cmd, hostname, family, port, address)
 
@@ -403,11 +411,13 @@ class PpyMilterDispatcher(object):
         """
         return (cmd)
 
-    def _ParseData(self,cmd,data):
-        #print "pdata: cmd=%s data=%s"%(cmd,data)
-        return (cmd,data)
+    def _ParseData(self, cmd, data):
+        # print "pdata: cmd=%s data=%s"%(cmd,data)
+        return (cmd, data)
+
 
 class PpyMilter(object):
+
     """Pure python milter handler base class.  Inherit from this class
     and override any On*() commands you would like your milter to handle.
     Register any actions your milter may perform using the Can*() functions
@@ -422,12 +432,12 @@ class PpyMilter(object):
     # Actions we tell sendmail we may perform
     # PpyMilter users invoke self.CanFoo() during their __init__()
     # to toggle these settings.
-    ACTION_ADDHDRS    = 1  # 0x01 SMFIF_ADDHDRS    # Add headers
-    ACTION_CHGBODY    = 2  # 0x02 SMFIF_CHGBODY    # Change body chunks
-    ACTION_ADDRCPT    = 4  # 0x04 SMFIF_ADDRCPT    # Add recipients
-    ACTION_DELRCPT    = 8  # 0x08 SMFIF_DELRCPT    # Remove recipients
-    ACTION_CHGHDRS    = 16 # 0x10 SMFIF_CHGHDRS    # Change or delete headers
-    ACTION_QUARANTINE = 32 # 0x20 SMFIF_QUARANTINE # Quarantine message
+    ACTION_ADDHDRS = 1  # 0x01 SMFIF_ADDHDRS    # Add headers
+    ACTION_CHGBODY = 2  # 0x02 SMFIF_CHGBODY    # Change body chunks
+    ACTION_ADDRCPT = 4  # 0x04 SMFIF_ADDRCPT    # Add recipients
+    ACTION_DELRCPT = 8  # 0x08 SMFIF_DELRCPT    # Remove recipients
+    ACTION_CHGHDRS = 16  # 0x10 SMFIF_CHGHDRS    # Change or delete headers
+    ACTION_QUARANTINE = 32  # 0x20 SMFIF_QUARANTINE # Quarantine message
 
     def __init__(self):
         """Construct a PpyMilter object.  Sets callbacks and registers
@@ -574,7 +584,8 @@ class PpyMilter(object):
         try:
             self.OnResetState()
         except AttributeError:
-            logging.warn('No OnResetState() callback is defined for this milter.')
+            logging.warn(
+                'No OnResetState() callback is defined for this milter.')
 
     # you probably should not be overriding this  :-p
     def OnOptNeg(self, cmd, ver, actions, protocol):
@@ -590,13 +601,13 @@ class PpyMilter(object):
         out = struct.pack('!III', MILTER_VERSION,
                           self.__actions & actions,
                           self.__protocol & protocol)
-        return cmd+out
+        return cmd + out
 
     def OnMacro(self, cmd, macro_cmd, data):
         """Callback for the 'Macro' milter command: no response required."""
         return None
 
-    def OnData(self,cmd,data):
+    def OnData(self, cmd, data):
         return self.Continue()
 
     def OnQuit(self, cmd):
@@ -672,5 +683,5 @@ class PpyMilter(object):
     def __VerifyCapability(self, action):
         if not (self.__actions & action):
             logging.error('Error: Attempted to perform an action that was not' +
-                           'requested.')
+                          'requested.')
             raise PpyMilterActionError('Action not requested in __init__')

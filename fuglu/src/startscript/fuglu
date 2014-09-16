@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -31,100 +31,111 @@ import pwd
 import grp
 import optparse
 
-controller=None
+controller = None
 
-theconfigfile='/etc/fuglu/fuglu.conf'
-dconfdir='/etc/fuglu/conf.d'
-theloggingfile='/etc/fuglu/logging.conf'
-thepidfile='/var/run/fuglu.pid'
+theconfigfile = '/etc/fuglu/fuglu.conf'
+dconfdir = '/etc/fuglu/conf.d'
+theloggingfile = '/etc/fuglu/logging.conf'
+thepidfile = '/var/run/fuglu.pid'
+
 
 def reloadconfig():
     """reload configuration file"""
-    logger=logging.getLogger('fuglu')
+    logger = logging.getLogger('fuglu')
     logger.info('Reloading configuration')
-    newconfig=ConfigParser.ConfigParser()
+    newconfig = ConfigParser.ConfigParser()
     newconfig.readfp(open(theconfigfile))
-    
-    identifier="no identifier given"
-    if newconfig.has_option('main', 'identifier'):
-        identifier=newconfig.get('main','identifier')
-    
-    #load conf.d
-    if os.path.isdir(dconfdir):
-        filelist=os.listdir(dconfdir)
-        configfiles=[dconfdir+'/'+c for c in filelist if c.endswith('.conf')]
-        logger.debug('Conffiles in %s: %s'%(dconfdir,configfiles))
-        readfiles=newconfig.read(configfiles)
-        logger.debug('Read additional files: %s'%(readfiles))
 
-    logger.info('Reload config complete. Current configuration:%s'%identifier)
-    controller.config=newconfig
+    identifier = "no identifier given"
+    if newconfig.has_option('main', 'identifier'):
+        identifier = newconfig.get('main', 'identifier')
+
+    # load conf.d
+    if os.path.isdir(dconfdir):
+        filelist = os.listdir(dconfdir)
+        configfiles = [
+            dconfdir + '/' + c for c in filelist if c.endswith('.conf')]
+        logger.debug('Conffiles in %s: %s' % (dconfdir, configfiles))
+        readfiles = newconfig.read(configfiles)
+        logger.debug('Read additional files: %s' % (readfiles))
+
+    logger.info('Reload config complete. Current configuration:%s' %
+                identifier)
+    controller.config = newconfig
     controller.propagate_core_defaults()
-    
+
     logger.info('Reloading plugins...')
-    ok=controller.load_plugins()
+    ok = controller.load_plugins()
     if ok:
         logger.info('Plugin reload completed')
     else:
         logger.error('Plugin reload failed')
-    
+
     controller.propagate_plugin_defaults()
-    
+
     controller.reload()
 
-def sighup(signum,frame):
+
+def sighup(signum, frame):
     """handle sighup to reload config"""
     reloadconfig()
 
-lint=False
-debugmsg=False
-console=False
+lint = False
+debugmsg = False
+console = False
 
 
-parser=optparse.OptionParser(version=FUGLU_VERSION)
-parser.add_option("--lint",action="store_true",dest="lint",default=False,help="Check configuration and exit")
-parser.add_option("--console", action="store_true", dest="console", default=False, help="start an interactive console after fuglu startup")
-parser.add_option("-f","--foreground",action="store_true",dest="foreground",default=False,help="start fuglu in the foreground, even if daemonize is enabled in the config")
-parser.add_option("--pidfile",action="store",dest="pidfile",help="use a different pidfile than /var/run/fuglu.pid")
-parser.add_option("-c","--config",action="store",dest="configfile",help="use a different config file and disable reading from /etc/fuglu/conf.d")
+parser = optparse.OptionParser(version=FUGLU_VERSION)
+parser.add_option("--lint", action="store_true", dest="lint",
+                  default=False, help="Check configuration and exit")
+parser.add_option("--console", action="store_true", dest="console",
+                  default=False, help="start an interactive console after fuglu startup")
+parser.add_option("-f", "--foreground", action="store_true", dest="foreground", default=False,
+                  help="start fuglu in the foreground, even if daemonize is enabled in the config")
+parser.add_option("--pidfile", action="store", dest="pidfile",
+                  help="use a different pidfile than /var/run/fuglu.pid")
+parser.add_option("-c", "--config", action="store", dest="configfile",
+                  help="use a different config file and disable reading from /etc/fuglu/conf.d")
 
-(opts,args)=parser.parse_args()
-if len(args)>0:
-    print "Unknown option(s): %s"%args
+(opts, args) = parser.parse_args()
+if len(args) > 0:
+    print "Unknown option(s): %s" % args
     print ""
     parser.print_help()
     sys.exit(1)
-    
-lint=opts.lint
-console=opts.console
+
+lint = opts.lint
+console = opts.console
 
 if opts.pidfile:
-    thepidfile=opts.pidfile
+    thepidfile = opts.pidfile
 
 if opts.configfile:
-    theconfigfile=opts.configfile
-    theloggingfile=os.path.join(os.path.split(theconfigfile)[0], os.path.split(theloggingfile)[1])
-    dconfdir=None
+    theconfigfile = opts.configfile
+    theloggingfile = os.path.join(
+        os.path.split(theconfigfile)[0], os.path.split(theloggingfile)[1])
+    dconfdir = None
 
-config=ConfigParser.ConfigParser()
+config = ConfigParser.ConfigParser()
 if not os.path.exists(theconfigfile):
-    print """Configfile (%s) not found. Please create it by renaming the .dist file and modifying it to your needs"""%theconfigfile
+    print """Configfile (%s) not found. Please create it by renaming the .dist file and modifying it to your needs""" % theconfigfile
     sys.exit(1)
-readconfig=config.readfp(open(theconfigfile))
-#load conf.d
+readconfig = config.readfp(open(theconfigfile))
+# load conf.d
 if dconfdir and os.path.isdir(dconfdir):
-    filelist=os.listdir(dconfdir)
-    configfiles=[dconfdir+'/'+c for c in filelist if c.endswith('.conf')]
-    readfiles=config.read(configfiles)
+    filelist = os.listdir(dconfdir)
+    configfiles = [dconfdir + '/' + c for c in filelist if c.endswith('.conf')]
+    readfiles = config.read(configfiles)
 
 
-daemon=DaemonStuff(thepidfile)
-#we could have an empty config file
-if  not lint and not console and not opts.foreground: #no daemon for lint&console mode
+daemon = DaemonStuff(thepidfile)
+# we could have an empty config file
+# no daemon for lint&console mode
+if not lint and not console and not opts.foreground:
     if config.has_option('main', 'daemonize'):
         if config.getboolean('main', 'daemonize'):
             daemon.createDaemon()
-    else: #option not specified -> default to run daemon
+    else:  # option not specified -> default to run daemon
         daemon.createDaemon()
 if lint:
     # define a Handler which writes INFO messages or higher to the sys.stderr
@@ -136,41 +147,39 @@ if lint:
     console.setFormatter(formatter)
     # add the handler to the root logger
     logging.getLogger('').addHandler(console)
-    fc=fuglu.funkyconsole.FunkyConsole()
+    fc = fuglu.funkyconsole.FunkyConsole()
     print fc.strcolor("Fuglu", "yellow"),
     print fc.strcolor(FUGLU_VERSION, "green")
-    print "----------",fc.strcolor("LINT MODE", (fc.MODE["blink"],fc.FG["magenta"])),"----------"
+    print "----------", fc.strcolor("LINT MODE", (fc.MODE["blink"], fc.FG["magenta"])), "----------"
 
 else:
     logging.config.fileConfig(theloggingfile)
 
 
-controller=MainController(config)
+controller = MainController(config)
 controller.propagate_core_defaults()
-baselogger=logging.getLogger('')
-baselogger.info("FuGLU Version %s starting up"%FUGLU_VERSION)
+baselogger = logging.getLogger('')
+baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
 try:
-    running_user=config.get('main','user')
-    running_group=config.get('main','group')
+    running_user = config.get('main', 'user')
+    running_group = config.get('main', 'group')
 except:
-    running_user='nobody'
-    running_group='nobody'
-    
+    running_user = 'nobody'
+    running_group = 'nobody'
+
 try:
-    daemon.drop_privs(running_user,running_group)
+    daemon.drop_privs(running_user, running_group)
 except:
     err = sys.exc_info()[1]
-    baselogger.error("Could not drop privileges to %s/%s : %s"%(running_user,running_group,str(err)))
-    
+    baselogger.error("Could not drop privileges to %s/%s : %s" %
+                     (running_user, running_group, str(err)))
 
 
-    
 if lint:
     controller.lint()
 else:
     signal.signal(signal.SIGHUP, sighup)
     if console:
-        controller.debugconsole=True
+        controller.debugconsole = True
     controller.startup()
-
