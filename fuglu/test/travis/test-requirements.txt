@@ -1,3 +1,5 @@
 BeautifulSoup
 python-magic
 SQLAlchemy
+pydns
+spfpy
