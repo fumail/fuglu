@@ -1,7 +1,7 @@
 BeautifulSoup
 python-magic
 SQLAlchemy
-ipaddress
+ipaddr
 pydns
 pyspf
 

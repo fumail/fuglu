@@ -329,7 +329,7 @@ try:
 
         def _make_dummy_suspect(self,senderdomain,clientip,helo='foo.example.com'):
             s= Suspect('sender@%s'%senderdomain,'recipient@example.com','/dev/null')
-            s.clientinfo=(helo,unicode(clientip),'ptr.example.com')
+            s.clientinfo=(helo,clientip,'ptr.example.com')
             return s
 
         def setUp(self):
