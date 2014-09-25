@@ -910,7 +910,7 @@ class SuspectFilter(object):
 
     def file_changed(self):
         """Return True if the file has changed on disks since the last reload"""
-        if not os.path.is_file(self.filename):
+        if not os.path.isfile(self.filename):
             return False
         statinfo = os.stat(self.filename)
         ctime = statinfo.st_ctime
@@ -918,6 +918,29 @@ class SuspectFilter(object):
             return True
         return False
 
+    def lint(self):
+        """check file and print warnings to console. returns True if everything is ok, False otherwise"""
+        if not os.path.isfile(self.filename):
+            print "SuspectFilter file not found: %s"%self.filename
+            return False
+        lines= open(self.filename, 'r').readlines()
+        lineno=0
+        for line in lines:
+            lineno+=1
+            line = line.strip()
+            if line == "":
+                continue
+            if line.startswith('#'):
+                continue
+            try:
+                tup = self._load_perlstyle_line(line)
+                if tup!=None:
+                    continue
+                tup = self._load_simplestyle_line(line)
+            except Exception, e:
+                print "Error in SuspectFilter file '%s', lineno %s , line '%s' : %s"%(self.filename,lineno,line,str(e))
+                return False
+        return True
 
 
 class SuspectFilterTestCase(unittest.TestCase):
