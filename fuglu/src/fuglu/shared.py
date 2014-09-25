@@ -629,7 +629,7 @@ class SuspectFilter(object):
         # check if reloadinterval has passed
         if now - self.lastreload < self.reloadinterval:
             return
-        if self.filechanged():
+        if self.file_changed():
             self._reload()
 
     def _load_simplestyle_line(self, line):
@@ -908,12 +908,16 @@ class SuspectFilter(object):
         """old name for get_args"""
         return self.get_args(suspect)
 
-    def filechanged(self):
+    def file_changed(self):
+        """Return True if the file has changed on disks since the last reload"""
+        if not os.path_is_file(self.filename):
+            return False
         statinfo = os.stat(self.filename)
         ctime = statinfo.st_ctime
         if ctime > self.lastreload:
             return True
         return False
+
 
 
 class SuspectFilterTestCase(unittest.TestCase):
