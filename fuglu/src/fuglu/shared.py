@@ -910,7 +910,7 @@ class SuspectFilter(object):
 
     def file_changed(self):
         """Return True if the file has changed on disks since the last reload"""
-        if not os.path_is_file(self.filename):
+        if not os.path.is_file(self.filename):
             return False
         statinfo = os.stat(self.filename)
         ctime = statinfo.st_ctime
