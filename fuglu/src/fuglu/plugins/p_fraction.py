@@ -75,3 +75,11 @@ eg. put this in /etc/fuglu/pluginfraction.regex:
 
         self.filter = SuspectFilter(filename)
         return True
+
+    def lint(self):
+        return (self.checkConfig() and self.lint_filter())
+
+    def lint_filter(self):
+        filterfile = self.config.get(self.section, 'filterfile')
+        filter = SuspectFilter(filterfile)
+        return filter.lint()

@@ -100,7 +100,7 @@ envelope_to support@fuglu\.org      yes
 
     def lint(self):
         allok = (
-            self.checkConfig() and self.check_deprecated() and self.lint_dirs())
+            self.checkConfig() and self.check_deprecated() and self.lint_dirs() and self.lint_filter())
         return allok
 
     def check_deprecated(self):
@@ -111,6 +111,11 @@ envelope_to support@fuglu\.org      yes
             print "makedomainsubdir=0 -> subdirtemplate="
             return False
         return True
+
+    def lint_filter(self):
+        filterfile = self.config.get(self.section, 'archiverules')
+        filter = SuspectFilter(filterfile)
+        return filter.lint()
 
     def lint_dirs(self):
         archivedir = self.config.get(self.section, 'archivedir')

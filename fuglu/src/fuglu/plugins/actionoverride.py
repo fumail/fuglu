@@ -37,15 +37,13 @@ class ActionOverridePlugin(ScannerPlugin):
         return "Action Override"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_dirs())
+        allok = (self.checkConfig() and self.lint_filter())
         return allok
 
-    def lint_dirs(self):
+    def lint_filter(self):
         filterfile = self.config.get(self.section, 'actionrules')
-        if not os.path.exists(filterfile.strip()):
-            print "Action Rules file %s not found" % filterfile
-            return False
-        return True
+        filter = SuspectFilter(filterfile)
+        return filter.lint()
 
     def examine(self, suspect):
         actionrules = self.config.get(self.section, 'actionrules')
