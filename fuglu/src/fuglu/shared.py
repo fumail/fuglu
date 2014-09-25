@@ -921,12 +921,12 @@ class SuspectFilter(object):
     def lint(self):
         """check file and print warnings to console. returns True if everything is ok, False otherwise"""
         if not os.path.isfile(self.filename):
-            print "SuspectFilter file not found: %s"%self.filename
+            print "SuspectFilter file not found: %s" % self.filename
             return False
-        lines= open(self.filename, 'r').readlines()
-        lineno=0
+        lines = open(self.filename, 'r').readlines()
+        lineno = 0
         for line in lines:
-            lineno+=1
+            lineno += 1
             line = line.strip()
             if line == "":
                 continue
@@ -934,11 +934,11 @@ class SuspectFilter(object):
                 continue
             try:
                 tup = self._load_perlstyle_line(line)
-                if tup!=None:
+                if tup != None:
                     continue
                 tup = self._load_simplestyle_line(line)
             except Exception, e:
-                print "Error in SuspectFilter file '%s', lineno %s , line '%s' : %s"%(self.filename,lineno,line,str(e))
+                print "Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e))
                 return False
         return True
 
