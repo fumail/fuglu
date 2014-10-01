@@ -14,13 +14,9 @@
 #
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, DEFER, string_to_actioncode, apply_template
 import socket
-import string
 import time
 import re
-import unittest
 import os
-import logging
-
 
 class FprotPlugin(ScannerPlugin):
 
@@ -271,41 +267,3 @@ AAEAAQA3AAAAbQAAAAAA
             return False
         print "F-Prot found virus", result
         return True
-
-
-# UNIT TEST
-class FprotTestCase(unittest.TestCase):
-
-    """Testcases for the Stub Plugin"""
-
-    def setUp(self):
-        from ConfigParser import RawConfigParser
-        config = RawConfigParser()
-        config.add_section('FprotPlugin')
-        config.set('FprotPlugin', 'host', 'localhost')
-        config.set('FprotPlugin', 'port', '10200')
-        config.set('FprotPlugin', 'timeout', '20')
-        config.set('FprotPlugin', 'maxsize', '10485000')
-        config.set('FprotPlugin', 'retries', '3')
-        config.set('FprotPlugin', 'networkmode', '0')
-        self.candidate = FprotPlugin(config)
-
-    def test_eicar(self):
-        """Test eicar detection"""
-        from fuglu.shared import Suspect
-        try:
-            self.candidate.__init_socket__()
-        except:
-            logging.warn("f-prot not reachable - not running test")
-            return
-
-        virlist = self.candidate.scan_file('testdata/eicar.eml')
-        self.failUnless(
-            "EICAR_Test_File" in virlist.values(), "Eicar not found in scan_file")
-
-        fp = open('testdata/eicar.eml', 'r')
-        buffer = fp.read()
-        fp.close()
-        virlist = self.candidate.scan_stream(buffer)
-        self.failUnless(
-            "EICAR_Test_File" in virlist.values(), "Eicar not found in scan_stream")

@@ -292,19 +292,6 @@ def rfc822_parse(message):
 
 
 def dnstxt(name):
-    """Return a TXT record associated with a DNS name."""
-    # PATCH:
-    # return fake dkim key for fuglu.org
-    if name.endswith('testfuglu.org.'):
-        k = ''
-        for line in open('testdata/dkim/testfuglu.org.public'):
-            if line.startswith('---'):
-                continue
-            k = k + line.strip()
-
-        record = "v=DKIM1; k=rsa; p=%s" % k
-        return record
-
     import dns.resolver
     a = dns.resolver.query(name, dns.rdatatype.TXT)
     for r in a.response.answer:

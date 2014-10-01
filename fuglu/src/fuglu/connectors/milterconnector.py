@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id$
 #
 
 
@@ -23,7 +22,6 @@ import traceback
 
 from fuglu.lib.ppymilterbase import PpyMilter, PpyMilterDispatcher, PpyMilterCloseConnection, SMFIC_BODYEOB, RESPONSE
 
-from fuglu.scansession import SessionHandler
 from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 import tempfile

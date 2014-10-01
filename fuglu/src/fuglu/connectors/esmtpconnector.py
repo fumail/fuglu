@@ -23,7 +23,6 @@ import string
 import tempfile
 import os
 from fuglu.protocolbase import ProtocolHandler
-import unittest
 from fuglu.scansession import SessionHandler
 from fuglu.shared import Suspect, apply_template
 

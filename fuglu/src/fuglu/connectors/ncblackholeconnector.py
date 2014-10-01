@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# $Id: smtpconnector.py 90 2010-02-20 23:08:04Z gryphius $
-#
+##
 
 import logging
 import tempfile

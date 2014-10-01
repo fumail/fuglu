@@ -2,20 +2,11 @@ language: python
 python:
   - "2.6"
   - "2.7"
-  
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq clamav-daemon spamassassin
-  - sudo spamd -d
-  - sudo freshclam
-  - sudo service clamav-daemon restart
-  
-# command to install dependencies
-install:
-  - pip install -r fuglu/test/travis/test-requirements.txt
-# command to run tests
-script: python fuglu/test/runtests.py
 
+install:
+  - pip install -r fuglu/tests/travis/test-requirements.txt
+
+script: nosetests fuglu/tests/unit/
 
 branches:
   only:
@@ -26,4 +17,3 @@ notifications:
   
 cache:
   apt: true
- 

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id$
 #
 from fuglu.shared import ScannerPlugin, Suspect, DELETE, DUNNO, string_to_actioncode, actioncode_to_string
 from fuglu.bounce import Bounce
@@ -23,7 +22,6 @@ import mimetypes
 import os
 import os.path
 import logging
-import unittest
 from fuglu.extensions.sql import DBFile
 
 from threading import Lock
@@ -561,154 +559,3 @@ See (TODO: link to template vars chapter) for commonly available template variab
         else:
             print "No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir')
         return True
-
-
-class DatabaseConfigTestCase(unittest.TestCase):
-
-    """Testcases for the Attachment Checker Plugin"""
-
-    def setUp(self):
-        from ConfigParser import RawConfigParser
-        import tempfile
-        import shutil
-
-        testfile = "/tmp/attachconfig.db"
-        if os.path.exists(testfile):
-            os.remove(testfile)
-        # important: 4 slashes for absolute paths!
-        testdb = "sqlite:///%s" % testfile
-
-        sql = """create table attachmentrules(
-        id integer not null primary key,
-        scope varchar(255) not null,
-        checktype varchar(20) not null,
-        action varchar(255) not null,
-        regex varchar(255) not null,
-        description varchar(255) not null,
-        prio integer not null
-        )
-        """
-
-        self.session = fuglu.extensions.sql.get_session(testdb)
-        self.session.flush()
-        self.session.execute(sql)
-        self.tempdir = tempfile.mkdtemp('attachtestdb', 'fuglu')
-        self.template = '%s/blockedfile.tmpl' % self.tempdir
-        shutil.copy('../conf/templates/blockedfile.tmpl.dist', self.template)
-        shutil.copy('../conf/rules/default-filenames.conf.dist',
-                    '%s/default-filenames.conf' % self.tempdir)
-        shutil.copy('../conf/rules/default-filetypes.conf.dist',
-                    '%s/default-filetypes.conf' % self.tempdir)
-        config = RawConfigParser()
-        config.add_section('FiletypePlugin')
-        config.set('FiletypePlugin', 'template_blockedfile', self.template)
-        config.set('FiletypePlugin', 'rulesdir', self.tempdir)
-        config.set('FiletypePlugin', 'dbconnectstring', testdb)
-        config.set('FiletypePlugin', 'blockaction', 'DELETE')
-        config.set('FiletypePlugin', 'sendbounce', 'True')
-        config.set('FiletypePlugin', 'query',
-                   'SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
-        config.add_section('main')
-        config.set('main', 'disablebounces', '1')
-        self.candidate = FiletypePlugin(config)
-
-    def test_dbrules(self):
-        """Test if db rules correctly override defaults"""
-        import tempfile
-        import shutil
-
-        testdata = u"""
-        INSERT INTO attachmentrules(scope,checktype,action,regex,description,prio) VALUES
-        ('recipient@unittests.fuglu.org','contenttype','allow','application/x-executable','this user likes exe',1)
-        """
-        self.session.execute(testdata)
-        # copy file rules
-        tempfilename = tempfile.mktemp(
-            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy('testdata/binaryattachment.eml', tempfilename)
-        suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-
-        result = self.candidate.examine(suspect)
-        resstr = actioncode_to_string(result)
-        self.assertEquals(resstr, "DUNNO")
-
-        # another recipient should still get the block
-        suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient2@unittests.fuglu.org', tempfilename)
-
-        result = self.candidate.examine(suspect)
-        if type(result) is tuple:
-            result, message = result
-        resstr = actioncode_to_string(result)
-        self.assertEquals(resstr, "DELETE")
-        os.remove(tempfilename)
-
-
-class AttachmentPluginTestCase(unittest.TestCase):
-
-    """Testcases for the Attachment Checker Plugin"""
-
-    def setUp(self):
-        from ConfigParser import RawConfigParser
-        import tempfile
-        import shutil
-
-        self.tempdir = tempfile.mkdtemp('attachtest', 'fuglu')
-        self.template = '%s/blockedfile.tmpl' % self.tempdir
-        shutil.copy('../conf/templates/blockedfile.tmpl.dist', self.template)
-        shutil.copy('../conf/rules/default-filenames.conf.dist',
-                    '%s/default-filenames.conf' % self.tempdir)
-        shutil.copy('../conf/rules/default-filetypes.conf.dist',
-                    '%s/default-filetypes.conf' % self.tempdir)
-        config = RawConfigParser()
-        config.add_section('FiletypePlugin')
-        config.set('FiletypePlugin', 'template_blockedfile', self.template)
-        config.set('FiletypePlugin', 'rulesdir', self.tempdir)
-        config.set('FiletypePlugin', 'blockaction', 'DELETE')
-        config.set('FiletypePlugin', 'sendbounce', 'True')
-        config.add_section('main')
-        config.set('main', 'disablebounces', '1')
-        self.candidate = FiletypePlugin(config)
-
-    def tearDown(self):
-        os.remove('%s/default-filenames.conf' % self.tempdir)
-        os.remove('%s/default-filetypes.conf' % self.tempdir)
-        os.remove(self.template)
-        os.rmdir(self.tempdir)
-
-    def test_hiddenbinary(self):
-        """Test if hidden binaries get detected correctly"""
-        import tempfile
-        import shutil
-
-        # copy file rules
-        tempfilename = tempfile.mktemp(
-            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy('testdata/binaryattachment.eml', tempfilename)
-        suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-
-        result = self.candidate.examine(suspect)
-        if type(result) is tuple:
-            result, message = result
-        os.remove(tempfilename)
-        self.failIf(result != DELETE)
-
-    def disabled_test_utf8msg(self):
-        """Test utf8 msgs are parsed ok - can cause bugs on some magic implementations (eg. centos)
-        disabled - need new sample"""
-        import tempfile
-        import shutil
-
-        tempfilename = tempfile.mktemp(
-            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy('testdata/utf8message.eml', tempfilename)
-        suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
-
-        result = self.candidate.examine(suspect)
-        if type(result) is tuple:
-            result, message = result
-        os.remove(tempfilename)
-        self.assertEquals(result, DUNNO)

@@ -5,5 +5,6 @@ sleep 5
 spamd & 
 cd /tmp/
 git clone https://github.com/gryphius/fuglu.git
-cd fuglu/fuglu/test
-python runtests.py
+cd fuglu
+nosetests fuglu/tests/unit/ fuglu/tests/integration/
+

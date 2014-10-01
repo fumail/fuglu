@@ -19,8 +19,6 @@ Example Plugin
 
 from fuglu.shared import ScannerPlugin, DUNNO
 import time
-import unittest
-
 
 class ExamplePlugin(ScannerPlugin):
 
@@ -64,24 +62,3 @@ class ExamplePlugin(ScannerPlugin):
         difftime = endtime - starttime
         suspect.tags['ExamplePlugin.time'] = "%.4f" % difftime
         return DUNNO
-
-
-class ExamplePluginTestCase(unittest.TestCase):
-
-    """Testcases for the Example Plugin"""
-
-    def setUp(self):
-        from ConfigParser import RawConfigParser
-        config = RawConfigParser()
-        config.add_section('ExamplePlugin')
-        config.set('ExamplePlugin', 'greeting', 'hi there!')
-        self.candidate = ExamplePlugin(config)
-
-    def test_something(self):
-        """Test if examine runs through"""
-        from fuglu.shared import Suspect
-        suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
-        self.candidate.examine(suspect)
-        self.failIf(suspect.get_tag('ExamplePlugin.time')
-                    == None, "Examine didn't run through")

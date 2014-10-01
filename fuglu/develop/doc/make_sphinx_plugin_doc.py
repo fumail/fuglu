@@ -15,7 +15,7 @@ import os
 this_file = inspect.currentframe().f_code.co_filename
 workdir=os.path.dirname(os.path.abspath(this_file))
 os.chdir(workdir)
-sys.path.insert(0,'../src')
+sys.path.insert(0,'../../src')
 
 import fuglu
 from fuglu.plugins import *
