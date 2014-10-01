@@ -159,4 +159,3 @@ class DBConfig(RawConfigParser):
 
     def parentget(self, section, option):
         return RawConfigParser.get(self, section, option)
-

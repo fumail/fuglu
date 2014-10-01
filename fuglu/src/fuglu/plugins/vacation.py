@@ -497,4 +497,3 @@ SQL Example for mysql:
             return False
 
         return True
-

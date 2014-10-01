@@ -4,7 +4,9 @@ from fuglu.plugins.fprot import FprotPlugin
 
 import logging
 
+
 class FprotTestCase(unittest.TestCase):
+
     def setUp(self):
         from ConfigParser import RawConfigParser
         config = RawConfigParser()

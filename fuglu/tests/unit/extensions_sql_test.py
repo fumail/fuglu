@@ -1,11 +1,12 @@
-from unittestsetup import TESTDATADIR,CONFDIR
+from unittestsetup import TESTDATADIR, CONFDIR
 
 import unittest
 import os
 from ConfigParser import RawConfigParser
 
 from fuglu.shared import Suspect
-from fuglu.extensions.sql import get_session,DBConfig
+from fuglu.extensions.sql import get_session, DBConfig
+
 
 class DBConfigTestCase(unittest.TestCase):
 

@@ -7,6 +7,7 @@ import os
 
 from fuglu.plugins.archive import ArchivePlugin
 
+
 class ArchiveTestcase(unittest.TestCase):
 
     def setUp(self):
@@ -47,7 +48,7 @@ class ArchiveTestcase(unittest.TestCase):
 
         tempfilename = tempfile.mktemp(
             suffix='archive', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR+'/helloworld.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/helloworld.eml', tempfilename)
         self.tempfiles.append(tempfilename)
 
         self.config.set('ArchivePlugin', 'storeoriginal', '1')
@@ -79,7 +80,7 @@ class ArchiveTestcase(unittest.TestCase):
 
         tempfilename = tempfile.mktemp(
             suffix='archive', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR+'/helloworld.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/helloworld.eml', tempfilename)
         self.tempfiles.append(tempfilename)
 
         self.config.set('ArchivePlugin', 'storeoriginal', '0')

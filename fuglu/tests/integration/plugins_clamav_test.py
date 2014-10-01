@@ -3,9 +3,10 @@ import unittest
 from fuglu.plugins.clamav import ClamavPlugin
 
 from ConfigParser import RawConfigParser
-from fuglu.shared import  Suspect,actioncode_to_string
+from fuglu.shared import Suspect, actioncode_to_string
 import os
 import email
+
 
 class ClamavPluginTestCase(unittest.TestCase):
 

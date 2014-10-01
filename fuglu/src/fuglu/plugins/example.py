@@ -20,6 +20,7 @@ Example Plugin
 from fuglu.shared import ScannerPlugin, DUNNO
 import time
 
+
 class ExamplePlugin(ScannerPlugin):
 
     """Copy this to make a new plugin"""

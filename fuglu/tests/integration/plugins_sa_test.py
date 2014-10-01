@@ -139,4 +139,3 @@ This is a test mailing """
             'SAPlugin', 'sql_blacklist_dbconnectstring', 'mysql://127.0.0.1:9977/idonotexist')
         self.assertEquals(self.candidate.check_sql_blacklist(
             suspect), DUNNO), 'error coping with db problems'
-

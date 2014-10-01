@@ -1,10 +1,12 @@
 import integrationtestsetup
 import unittest
 from fuglu.plugins.icap import ICAPPlugin
-from fuglu.shared import Suspect,actioncode_to_string
+from fuglu.shared import Suspect, actioncode_to_string
 import email
 
+
 class ICAPPluginTestCase(unittest.TestCase):
+
     def setUp(self):
         from ConfigParser import RawConfigParser
         config = RawConfigParser()

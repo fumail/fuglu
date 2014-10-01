@@ -4,7 +4,8 @@ import fuglu
 import unittest
 from datetime import datetime, timedelta
 
-from fuglu.plugins.vacation import VacationPlugin,VacationCache,Vacation,metadata
+from fuglu.plugins.vacation import VacationPlugin, VacationCache, Vacation, metadata
+
 
 class VacationTestCase(unittest.TestCase):
 

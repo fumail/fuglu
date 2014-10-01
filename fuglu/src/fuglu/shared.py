@@ -940,5 +940,3 @@ class SuspectFilter(object):
                 print "Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e))
                 return False
         return True
-
-

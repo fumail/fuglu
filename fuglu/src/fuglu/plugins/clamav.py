@@ -273,5 +273,3 @@ AAEAAQA3AAAAbQAAAAAA
             return False
         print "Clamav found virus", result
         return True
-
-

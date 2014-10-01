@@ -1,4 +1,4 @@
-from integrationtestsetup import guess_clamav_socket,TESTDATADIR,CONFDIR,DummySMTPServer
+from integrationtestsetup import guess_clamav_socket, TESTDATADIR, CONFDIR, DummySMTPServer
 import unittest
 import ConfigParser
 import tempfile
@@ -16,13 +16,14 @@ from fuglu.lib.patcheddkimlib import verify, sign
 from fuglu.core import MainController
 from fuglu.scansession import SessionHandler
 
+
 class AllpluginTestCase(unittest.TestCase):
 
     """Tests that pass with a default config"""
 
     def setUp(self):
         config = ConfigParser.RawConfigParser()
-        config.read([CONFDIR+'/fuglu.conf.dist'])
+        config.read([CONFDIR + '/fuglu.conf.dist'])
         config.set('main', 'disablebounces', '1')
         guess_clamav_socket(config)
 
@@ -46,7 +47,7 @@ class AllpluginTestCase(unittest.TestCase):
             None, self.mc.config, self.mc.prependers, self.mc.plugins, self.mc.appenders)
         tempfilename = tempfile.mktemp(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR+'/eicar.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/eicar.eml', tempfilename)
         self.tempfiles.append(tempfilename)
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
@@ -56,8 +57,6 @@ class AllpluginTestCase(unittest.TestCase):
         sesshandler.run_plugins(suspect, pluglist)
         self.failUnless(
             suspect.is_virus(), "Eicar message was not detected as virus")
-
-
 
 
 class EndtoEndTestTestCase(unittest.TestCase):
@@ -71,7 +70,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
 
     def setUp(self):
         self.config = ConfigParser.RawConfigParser()
-        self.config.read([TESTDATADIR+'/endtoendtest.conf'])
+        self.config.read([TESTDATADIR + '/endtoendtest.conf'])
         self.config.set(
             'main', 'incomingport', str(EndtoEndTestTestCase.FUGLU_PORT))
         self.config.set(
@@ -98,7 +97,6 @@ class EndtoEndTestTestCase(unittest.TestCase):
 
     def testE2E(self):
         """test if a standard message runs through"""
-
 
         # give fuglu time to start listener
         time.sleep(1)
@@ -148,15 +146,15 @@ class DKIMTestCase(unittest.TestCase):
     def setUp(self):
 
         k = ''
-        for line in open(TESTDATADIR+'/dkim/testfuglu.org.public'):
+        for line in open(TESTDATADIR + '/dkim/testfuglu.org.public'):
             if line.startswith('---'):
                 continue
             k = k + line.strip()
         record = "v=DKIM1; k=rsa; p=%s" % k
-        fuglu.lib.patcheddkimlib.dnstxt=mock.Mock(return_value=record)
+        fuglu.lib.patcheddkimlib.dnstxt = mock.Mock(return_value=record)
 
         self.config = ConfigParser.RawConfigParser()
-        self.config.read([TESTDATADIR+'/endtoendtest.conf'])
+        self.config.read([TESTDATADIR + '/endtoendtest.conf'])
         self.config.set('main', 'incomingport', str(DKIMTestCase.FUGLU_PORT))
         self.config.set('main', 'outgoinghost', str(DKIMTestCase.FUGLU_HOST))
         self.config.set('main', 'outgoingport', str(DKIMTestCase.DUMMY_PORT))
@@ -182,13 +180,11 @@ class DKIMTestCase(unittest.TestCase):
     def testDKIM(self):
         # give fuglu time to start listener
         time.sleep(1)
-        inputfile = TESTDATADIR+'/helloworld.eml'
+        inputfile = TESTDATADIR + '/helloworld.eml'
         msgstring = open(inputfile, 'r').read()
 
-
-
         dkimheader = sign(msgstring, 'whatever', 'testfuglu.org', open(
-            TESTDATADIR+'/dkim/testfuglu.org.private').read(), include_headers=['From', 'To'])
+            TESTDATADIR + '/dkim/testfuglu.org.private').read(), include_headers=['From', 'To'])
         signedcontent = dkimheader + msgstring
         logbuffer = cStringIO.StringIO()
         self.assertTrue(verify(signedcontent, debuglog=logbuffer),
@@ -231,7 +227,7 @@ class SMIMETestCase(unittest.TestCase):
     def setUp(self):
         time.sleep(5)
         self.config = ConfigParser.RawConfigParser()
-        self.config.read([TESTDATADIR+'/endtoendtest.conf'])
+        self.config.read([TESTDATADIR + '/endtoendtest.conf'])
         self.config.set('main', 'incomingport', str(SMIMETestCase.FUGLU_PORT))
         self.config.set('main', 'outgoinghost', str(SMIMETestCase.FUGLU_HOST))
         self.config.set('main', 'outgoingport', str(SMIMETestCase.DUMMY_PORT))
@@ -264,7 +260,7 @@ class SMIMETestCase(unittest.TestCase):
         smtpclient = smtplib.SMTP('127.0.0.1', SMIMETestCase.FUGLU_PORT)
         # smtpServer.set_debuglevel(1)
         smtpclient.helo('test.smime')
-        inputfile = TESTDATADIR+'/smime/signedmessage.eml'
+        inputfile = TESTDATADIR + '/smime/signedmessage.eml'
         (status, output) = self.verifyOpenSSL(inputfile)
         self.assertTrue(
             status == 0, "Testdata S/MIME verification failed: \n%s" % output)

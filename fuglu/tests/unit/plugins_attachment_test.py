@@ -1,4 +1,4 @@
-from unittestsetup import TESTDATADIR,CONFDIR
+from unittestsetup import TESTDATADIR, CONFDIR
 
 import unittest
 import os
@@ -9,7 +9,7 @@ from nose.tools import nottest
 
 import fuglu
 from fuglu.plugins.attachment import FiletypePlugin
-from fuglu.shared import actioncode_to_string,Suspect,DELETE,DUNNO
+from fuglu.shared import actioncode_to_string, Suspect, DELETE, DUNNO
 
 
 class DatabaseConfigTestCase(unittest.TestCase):
@@ -39,10 +39,11 @@ class DatabaseConfigTestCase(unittest.TestCase):
         self.session.execute(sql)
         self.tempdir = tempfile.mkdtemp('attachtestdb', 'fuglu')
         self.template = '%s/blockedfile.tmpl' % self.tempdir
-        shutil.copy(CONFDIR+'/templates/blockedfile.tmpl.dist', self.template)
-        shutil.copy(CONFDIR+'/rules/default-filenames.conf.dist',
+        shutil.copy(
+            CONFDIR + '/templates/blockedfile.tmpl.dist', self.template)
+        shutil.copy(CONFDIR + '/rules/default-filenames.conf.dist',
                     '%s/default-filenames.conf' % self.tempdir)
-        shutil.copy(CONFDIR+'/rules/default-filetypes.conf.dist',
+        shutil.copy(CONFDIR + '/rules/default-filetypes.conf.dist',
                     '%s/default-filetypes.conf' % self.tempdir)
         config = RawConfigParser()
         config.add_section('FiletypePlugin')
@@ -68,7 +69,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
         # copy file rules
         tempfilename = tempfile.mktemp(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR+'/binaryattachment.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/binaryattachment.eml', tempfilename)
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
 
@@ -95,10 +96,11 @@ class AttachmentPluginTestCase(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp('attachtest', 'fuglu')
         self.template = '%s/blockedfile.tmpl' % self.tempdir
-        shutil.copy(CONFDIR+'/templates/blockedfile.tmpl.dist', self.template)
-        shutil.copy(CONFDIR+'/rules/default-filenames.conf.dist',
+        shutil.copy(
+            CONFDIR + '/templates/blockedfile.tmpl.dist', self.template)
+        shutil.copy(CONFDIR + '/rules/default-filenames.conf.dist',
                     '%s/default-filenames.conf' % self.tempdir)
-        shutil.copy(CONFDIR+'/rules/default-filetypes.conf.dist',
+        shutil.copy(CONFDIR + '/rules/default-filetypes.conf.dist',
                     '%s/default-filetypes.conf' % self.tempdir)
         config = RawConfigParser()
         config.add_section('FiletypePlugin')
@@ -121,7 +123,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         # copy file rules
         tempfilename = tempfile.mktemp(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR+'/binaryattachment.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/binaryattachment.eml', tempfilename)
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
 
@@ -138,7 +140,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
 
         tempfilename = tempfile.mktemp(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR+'/utf8message.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/utf8message.eml', tempfilename)
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
 

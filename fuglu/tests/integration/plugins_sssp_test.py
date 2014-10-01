@@ -1,8 +1,9 @@
 import integrationtestsetup
 import unittest
 from fuglu.plugins.sssp import SSSPPlugin
-from fuglu.shared import Suspect,actioncode_to_string
+from fuglu.shared import Suspect, actioncode_to_string
 import email
+
 
 class SSSPPluginTestCase(unittest.TestCase):
 

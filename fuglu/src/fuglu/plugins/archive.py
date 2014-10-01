@@ -294,4 +294,3 @@ envelope_to support@fuglu\.org      yes
             except Exception, e:
                 self.logger.error(
                     "Could not change user/group of file %s : %s" % (filename, str(e)))
-

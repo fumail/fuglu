@@ -626,7 +626,6 @@ Subject: test scanner
         print gotback
 
 
-
 if __name__ == '__main__':
     import sys
     command = sys.argv[1]

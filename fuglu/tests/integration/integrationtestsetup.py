@@ -4,13 +4,14 @@ import logging
 import socket
 
 UNITTESTDIR = os.path.dirname(os.path.realpath(__file__))
-CODEDIR = os.path.abspath(UNITTESTDIR+'../../../src')
-TESTDATADIR= os.path.abspath(UNITTESTDIR+'/testdata')
-CONFDIR = os.path.abspath(CODEDIR+'/../conf')
+CODEDIR = os.path.abspath(UNITTESTDIR + '../../../src')
+TESTDATADIR = os.path.abspath(UNITTESTDIR + '/testdata')
+CONFDIR = os.path.abspath(CODEDIR + '/../conf')
 
 sys.path.insert(0, CODEDIR)
 
 from fuglu.connectors.smtpconnector import SMTPSession
+
 
 def guess_clamav_socket(config):
     """depending on the test environment, clamav may be using a tcp port or running on a unix socket

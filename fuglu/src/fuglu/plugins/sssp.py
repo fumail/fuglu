@@ -399,4 +399,3 @@ AAEAAQA3AAAAbQAAAAAA
             return False
         print "SSSP server found virus", result
         return True
-

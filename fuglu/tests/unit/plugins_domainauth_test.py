@@ -4,6 +4,7 @@ import unittestsetup
 from fuglu.shared import Suspect
 from fuglu.plugins.domainauth import SPFPlugin
 
+
 class SPFTestCase(unittest.TestCase):
 
     """SPF Check Tests"""

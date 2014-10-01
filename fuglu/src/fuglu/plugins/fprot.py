@@ -18,6 +18,7 @@ import time
 import re
 import os
 
+
 class FprotPlugin(ScannerPlugin):
 
     """ This plugin passes suspects to a f-prot scan daemon 

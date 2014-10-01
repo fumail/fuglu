@@ -2,14 +2,15 @@ from unittestsetup import TESTDATADIR
 import unittest
 import ConfigParser
 
-from fuglu.shared import Suspect,SuspectFilter,string_to_actioncode,actioncode_to_string,apply_template,REJECT
+from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT
+
 
 class SuspectFilterTestCase(unittest.TestCase):
 
     """Test Header Filter"""
 
     def setUp(self):
-        self.candidate = SuspectFilter(TESTDATADIR+'/headertest.regex')
+        self.candidate = SuspectFilter(TESTDATADIR + '/headertest.regex')
 
     def tearDown(self):
         pass
@@ -18,7 +19,7 @@ class SuspectFilterTestCase(unittest.TestCase):
         """Test header filters"""
 
         suspect = Suspect('sender@unittests.fuglu.org',
-                          'recipient@unittests.fuglu.org', TESTDATADIR+'/helloworld.eml')
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         suspect.tags['testtag'] = 'testvalue'
 
         headermatches = self.candidate.get_args(suspect)
@@ -96,7 +97,7 @@ class TemplateTestcase(unittest.TestCase):
         """Test Basic Template function"""
 
         suspect = Suspect('sender@unittests.fuglu.org',
-                          'recipient@unittests.fuglu.org', TESTDATADIR+'/helloworld.eml')
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         suspect.tags['nobounce'] = True
 
         reason = "a three-headed monkey stole it"
@@ -121,7 +122,7 @@ class ClientInfoTestCase(unittest.TestCase):
 
     def test_client_info(self):
         suspect = Suspect('sender@unittests.fuglu.org',
-                          'recipient@unittests.fuglu.org', TESTDATADIR+'/helloworld.eml')
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         helo, ip, revdns = suspect.client_info_from_rcvd(None, 0)
         self.assertEquals(helo, 'helo1')
         self.assertEquals(ip, '10.0.0.1')

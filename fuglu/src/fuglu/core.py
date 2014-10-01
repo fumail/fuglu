@@ -28,7 +28,7 @@ import time
 import code
 import socket
 
-from fuglu.shared import default_template_values,Suspect
+from fuglu.shared import default_template_values, Suspect
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncblackholeconnector import NCServer
@@ -838,7 +838,3 @@ class MainController(object):
                 raise Exception, 'Cannot set Config Section %s : Plugin %s does not support config override' % (
                     configsection, mod)
         return plugininstance
-
-
-
-
