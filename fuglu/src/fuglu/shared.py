@@ -325,7 +325,7 @@ class Suspect(object):
                 therep = strrep[:maxtaglen] + "..."
 
             # specialfixes
-            if k == 'SAPlugin.spamscore':
+            if k == 'SAPlugin.spamscore' and type(v)!=str:
                 therep = "%.2f" % v
 
             tagscopy[k] = therep
