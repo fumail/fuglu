@@ -24,7 +24,7 @@ class SuspectTestCase(unittest.TestCase):
             known.append(suspect_id)
             self.assertEqual(len(suspect_id),32)
             for c in suspect_id:
-                self.assertIn(c,string.hexdigits)
+                self.assertTrue(c in string.hexdigits)
 
 
 class SuspectFilterTestCase(unittest.TestCase):
