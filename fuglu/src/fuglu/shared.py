@@ -18,18 +18,7 @@ import logging
 import os
 import time
 import socket
-
-_HASHLIB = 0
-_MD5 = 1
-
-MD5LIB = -1
-try:
-    import hashlib
-    MD5LIB = _HASHLIB
-except:
-    MD5LIB = _MD5
-    import md5
-
+import uuid
 
 HAVE_BEAUTIFULSOUP = False
 try:
@@ -38,13 +27,13 @@ try:
 except:
     pass
 
-import random
 import email
 import re
 import ConfigParser
 import datetime
 from string import Template
 from email.Header import Header
+
 # constants
 
 DUNNO = 0  # go on
@@ -216,17 +205,9 @@ class Suspect(object):
 
     def _generate_id(self):
         """
-        generate a new id for a message. 
-        uses hash of hostname+current time+random int which 
-        should be sufficiently unique for the quarantine
+        returns a unique id (a string of 32 hex characters)
         """
-        uni = "%s%s%s" % (HOSTNAME, time.time(), random.randint(1, 10000))
-        suspectid = None
-        if MD5LIB == _HASHLIB:
-            suspectid = hashlib.md5(uni).hexdigest()
-        else:
-            suspectid = md5.new(uni).hexdigest()
-        return suspectid
+        return uuid.uuid4().hex
 
     def debug(self, message):
         """Add a line to the debug log if debugging is enabled for this message"""
