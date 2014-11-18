@@ -20,7 +20,7 @@ class SuspectTestCase(unittest.TestCase):
         known=[]
         for i in range(10000):
             suspect_id=s._generate_id()
-            self.assertNotIn(suspect_id,known,'duplicate id %s generated'%suspect_id)
+            self.assertTrue(suspect_id not in known,'duplicate id %s generated'%suspect_id)
             known.append(suspect_id)
             self.assertEqual(len(suspect_id),32)
             for c in suspect_id:
