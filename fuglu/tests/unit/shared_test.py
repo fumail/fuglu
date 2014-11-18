@@ -1,8 +1,30 @@
 from unittestsetup import TESTDATADIR
 import unittest
 import ConfigParser
-
+import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT
+
+
+class SuspectTestCase(unittest.TestCase):
+    """Test Suspect functions"""
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_id(self):
+        """Check the length and uniqueness of the generated id"""
+        s=Suspect('sender@example.com','recipient@example.com','/dev/null')
+        known=[]
+        for i in range(10000):
+            suspect_id=s._generate_id()
+            self.assertNotIn(suspect_id,known,'duplicate id %s generated'%suspect_id)
+            known.append(suspect_id)
+            self.assertEqual(len(suspect_id),32)
+            for c in suspect_id:
+                self.assertIn(c,string.hexdigits)
 
 
 class SuspectFilterTestCase(unittest.TestCase):
