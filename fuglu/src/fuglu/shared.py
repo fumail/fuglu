@@ -19,6 +19,7 @@ import os
 import time
 import socket
 import uuid
+import HTMLParser
 
 HAVE_BEAUTIFULSOUP = False
 try:
@@ -711,19 +712,32 @@ class SuspectFilter(object):
 
         self.patterns = newpatterns
 
-    def strip_text(self, content):
+    def strip_text(self, content, remove_tags=None, use_bfs=True):
         """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
+
+        if remove_tags==None:
+            remove_tags = ['script', 'style']
 
         # replace newline with space
         content = content.replace("\n", " ")
 
-        if HAVE_BEAUTIFULSOUP:
+        if HAVE_BEAUTIFULSOUP and use_bfs:
             soup = BeautifulSoup.BeautifulSoup(content)
+            for r in remove_tags:
+                [x.extract() for x in soup.findAll(r)]
             stripped = ''.join(
                 [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode)])
             return stripped
 
-        # no library available, use regex replace
+        # no BeautifulSoup available, let's try a modified version of pyzor's html stripper
+        stripper=HTMLStripper(strip_tags=remove_tags)
+        try:
+            stripper.feed(content)
+            return stripper.get_stripped_data()
+        except UnicodeDecodeError, HTMLParser.HTMLParseError:
+            pass
+
+        # use regex replace
         return re.sub(self.stripre, '', content)
 
     def get_decoded_textparts(self, messagerep):
@@ -921,3 +935,28 @@ class SuspectFilter(object):
                 print "Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e))
                 return False
         return True
+
+class HTMLStripper(HTMLParser.HTMLParser):
+    def __init__(self,strip_tags=None):
+        HTMLParser.HTMLParser.__init__(self)
+        self.strip_tags = strip_tags or ['script','style']
+        self.reset()
+        self.collect = True
+        self.stripped_data = []
+
+    def handle_data(self, data):
+        if data and self.collect:
+            self.stripped_data.append(data)
+
+    def handle_starttag(self, tag, attrs):
+        HTMLParser.HTMLParser.handle_starttag(self, tag, attrs)
+        if tag.lower() in self.strip_tags:
+            self.collect = False
+
+    def handle_endtag(self, tag):
+        HTMLParser.HTMLParser.handle_endtag(self, tag)
+        if tag.lower() in self.strip_tags:
+            self.collect = True
+
+    def get_stripped_data(self):
+        return ''.join(self.stripped_data)

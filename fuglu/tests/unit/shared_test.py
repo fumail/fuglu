@@ -4,7 +4,6 @@ import ConfigParser
 import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT
 
-
 class SuspectTestCase(unittest.TestCase):
     """Test Suspect functions"""
 
@@ -81,6 +80,14 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failUnless(matchedvalue == 'unittests.fuglu.org')
         self.failUnless(arg == 'Sent to unittest domain!')
         self.failUnless(regex == 'unittests\.fuglu\.org')
+
+
+    def test_strip(self):
+        html="""foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
+
+        for use_bfs in [True,False]:
+            stripped=self.candidate.strip_text(html,use_bfs=use_bfs)
+            self.assertEqual(stripped,'foobarbaz')
 
 
 class ActionCodeTestCase(unittest.TestCase):
