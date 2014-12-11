@@ -47,8 +47,7 @@ run for incoming or outgoing mails or to skip whitelisted messages.
 Appender Plugins
 ................
 
-Appender plugins are run after the scanner plugins when the message has alr
-eady been re-injected into postfix
+Appender plugins are run after the scanner plugins when the message has already been re-injected into postfix
 (or rejected or deleted or...) so they don't increase your scanning time . They are mostly used for statistical tasks, updating counters in database etc. 
 
 
@@ -80,7 +79,7 @@ The format is : <headername> <regex> <optional argument>
   * ``to_domain`` (domain part of envelope_to)
 
  * a ``message Tag`` prepended by the @ symbol, eg. ``@incomingport``
- * ``body:raw``' to match the the decoded message body (only applies to text/* partsl)
+ * ``body:raw``' to match the the decoded message body (only applies to text/* parts)
  * ``body:stripped`` or just ``body`` to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)
  * ``body:full`` to match the full body
 

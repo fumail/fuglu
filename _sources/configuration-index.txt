@@ -120,7 +120,7 @@ in ``/var/log/fuglu/fuglu.log`` you should then see output similar to this:
   2014-08-13 15:25:46,097 fuglu.control.fuglu_control.sock: INFO Control/Info Server running on port /tmp/fuglu_control.sock
 
 
-fuglu comes init scripts/systemd service files if you want to start fuglu like other system daemons
+fuglu comes with init scripts/systemd service files if you want to start fuglu like other system daemons
 
 Postfix
 .......

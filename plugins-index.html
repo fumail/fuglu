@@ -100,8 +100,7 @@ run for incoming or outgoing mails or to skip whitelisted messages.</p>
 </div>
 <div class="section" id="appender-plugins">
 <h3>Appender Plugins<a class="headerlink" href="#appender-plugins" title="Permalink to this headline">¶</a></h3>
-<p>Appender plugins are run after the scanner plugins when the message has alr
-eady been re-injected into postfix
+<p>Appender plugins are run after the scanner plugins when the message has already been re-injected into postfix
 (or rejected or deleted or...) so they don&#8217;t increase your scanning time . They are mostly used for statistical tasks, updating counters in database etc.</p>
 </div>
 </div>
@@ -131,7 +130,7 @@ named like the plugin itself.</p>
 </div></blockquote>
 <ul class="last simple">
 <li>a <tt class="docutils literal"><span class="pre">message</span> <span class="pre">Tag</span></tt> prepended by the &#64; symbol, eg. <tt class="docutils literal"><span class="pre">&#64;incomingport</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">body:raw</span></tt>&#8216; to match the the decoded message body (only applies to text/* partsl)</li>
+<li><tt class="docutils literal"><span class="pre">body:raw</span></tt>&#8216; to match the the decoded message body (only applies to text/* parts)</li>
 <li><tt class="docutils literal"><span class="pre">body:stripped</span></tt> or just <tt class="docutils literal"><span class="pre">body</span></tt> to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)</li>
 <li><tt class="docutils literal"><span class="pre">body:full</span></tt> to match the full body</li>
 </ul>
@@ -1377,7 +1376,7 @@ Debug Output written to:/tmp/fuglu-test.log
 
     <div class="footer">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
