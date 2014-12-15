@@ -18,7 +18,11 @@ Mailing list
 
 http://fuglu.org/mailman/listinfo/fuglu-users_fuglu.org
 
+-----------
+IRC Channel
+-----------
 
+discuss fuglu in #fuglu on Freenode
 
 
 
