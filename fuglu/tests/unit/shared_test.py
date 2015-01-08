@@ -85,9 +85,24 @@ class SuspectFilterTestCase(unittest.TestCase):
     def test_strip(self):
         html="""foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
 
+        declarationtest="""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
+  <head>
+    <title>greetings</title>
+  </head>
+  <body>
+    <font color="red">well met!</font>
+  </body>
+</html>
+"""
         for use_bfs in [True,False]:
             stripped=self.candidate.strip_text(html,use_bfs=use_bfs)
             self.assertEqual(stripped,'foobarbaz')
+
+            docstripped=self.candidate.strip_text(declarationtest,use_bfs=use_bfs)
+            self.assertEqual(docstripped.split(),['greetings','well','met!'])
 
 
 class ActionCodeTestCase(unittest.TestCase):
