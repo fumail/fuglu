@@ -12,7 +12,7 @@
     
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -102,7 +102,10 @@ sql_blacklist_sql=SELECT value FROM userpref WHERE prefid=&#39;blacklist_from&#3
 #maximum size in bytes. larger messages will be skipped
 maxsize=256000
 
-#what header does sa set to indicate the spam status
+#what header does SA set to indicate the spam status
+#Note that fuglu requires a standard header template configuration for spamstatus and score extraction
+#if forwardoriginal is set to 0
+#eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
 spamheader=X-Spam-Status
 
 #hostname where spamd runs
@@ -622,7 +625,8 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 <p>Plugin: fuglu.plugins.domainauth.SPFPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
 This plugin checks the SPF status and sets tag &#8216;SPF.status&#8217; to one of the official states &#8216;pass&#8217;, &#8216;fail&#8217;, &#8216;neutral&#8217;,
-&#8216;softfail, &#8216;permerror&#8217;, &#8216;temperror&#8217; or &#8216;skipped&#8217; if the SPF check could not be peformed.</p>
+&#8216;softfail, &#8216;permerror&#8217;, &#8216;temperror&#8217; or &#8216;skipped&#8217; if the SPF check could not be peformed.
+Tag &#8216;SPF.explanation&#8217; contains a human readable explanation of the result</p>
 <p>The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
 in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
 <div class="section" id="id12">
@@ -695,10 +699,9 @@ noappender=1
         </div>
       </div>
       <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <div class="sphinxlocaltoc">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
+        <div class="sphinxsidebarwrapper"><div class="sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">SpamAssassin</a><ul>
 <li><a class="reference internal" href="#configuration">Configuration</a></li>
 </ul>

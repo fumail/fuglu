@@ -10,6 +10,12 @@
  * :license: BSD
  */
 
+
+
+  
+  
+
+
 /* ==========================================================================
  * highlighter #2
  * ==========================================================================
@@ -116,11 +122,22 @@ $(document).ready(function (){
  */
 
 $(document).ready(function (){
-  var holder = $('<div class="sidebartoggle"><button id="sidebar-hide" title="click to hide the sidebar">&laquo;</button><button id="sidebar-show" style="display: none" title="click to show the sidebar">sidebar &raquo;</button></div>');
+  if(!$('.sphinxsidebar').length){
+    return;
+  }
+  
+    var close_arrow = '&laquo;';
+    var open_arrow = 'sidebar &raquo;';
+  
+  var holder = $('<div class="sidebartoggle"><button id="sidebar-hide" title="click to hide the sidebar">' +
+                 close_arrow + '</button><button id="sidebar-show" style="display: none" title="click to show the sidebar">' +
+                 open_arrow + '</button></div>');
   var doc = $('div.document');
 
   var show_btn = $('#sidebar-show', holder);
   var hide_btn = $('#sidebar-hide', holder);
+  /* FIXME: when url_root is a relative path, this sets cookie in wrong spot.
+     need to detect relative roots, and combine with document.location.path */
   var copts = { expires: 7, path: DOCUMENTATION_OPTIONS.url_root };
 
   show_btn.click(function (){
@@ -233,27 +250,66 @@ $(document).ready(function (){
  * ==========================================================================
  *
  * highlights toc entry for current section being viewed.
- * only enabled under stick mode
  */
 $(document).ready(function (){
-  // find all links in sidebar toc
-  var links = $(".sphinxlocaltoc > ul a");
-  if(!links.length) return;
 
-  // build list of elems, and various constant metadata
+  // locate and scan sidebar's localtoc,
+  // assembling metadata & relevant DOM nodes
   var records = [];
+  var links = $(".sphinxlocaltoc > ul a");
   for(var i=0; i<links.length; ++i){
     var elem = $(links[i]);
     var tag = elem.attr("href");
     var section = (tag == "#") ? $("h1").parent() : $(tag);
     var children = section.find("div.section");
-    records.push({elem: elem,
+    records.push({elem: elem, // node used to store 'toggled' flag, always first node in <target>
+                  target: elem, // set of local/global toc nodes to highlight
+                  section: section, // dom node of referenced section
+                  first_child: children.length ? $(children[0]) : null // first subsection of <section>
+                  });
+  }
+
+  // locate and scan sidebar's globaltoc,
+  // expanded <records> to include global toc nodes as well.
+  var global_links = $(".sphinxglobaltoc > ul > li.current a");
+  var l = records.length;
+_global_toc_loop:
+  for(var i=0; i<global_links.length; ++i){
+    var elem = $(global_links[i]);
+    var tag = elem.attr("href");
+    if(tag && tag[0] != "#"){
+      // it's a link to another document (embedded via toctree)
+      // FIXME: would like to highlight these while hovering over their section
+      continue;
+    }
+    var section = tag ? $(tag) : $("h1").parent();
+
+    // add to existing localtoc record if one matched
+    // (normal case if localtoc present)
+    for(var j=0; j<l; ++j){
+      var record = records[i];
+      if(record.section[0] == section[0]){
+        record.target = record.target.add(elem);
+        continue _global_toc_loop;
+      }
+    }
+
+    // or create new record (normal case if localtoc missing)
+    var children = section.find("div.section");
+    records.push({elem: elem, target: elem,
                   section: section,
                   first_child: children.length ? $(children[0]) : null
                   });
   }
 
-  // replacement for $().offset() which is always viewport relative
+  // abort if we couldn't find local -or- global toc
+  if(!records.length) return;
+
+  // from here on, <links> is only used to reset .toggled flag,
+  // so merging global links in that list
+  links = links.add(global_links);
+
+  // replacement for $().offset() since that func isn't always viewport relative
   function top_offset($node){ return $node[0].getBoundingClientRect().top; }
 
   // function to update toc markers
@@ -280,7 +336,7 @@ $(document).ready(function (){
     // set 'current' class for all currently viewable sections in toc
     for(var i=0; i < records.length; ++i){
       var record = records[i];
-      record.elem.toggleClass("visible", is_visible(record));
+      record.target.toggleClass("visible", is_visible(record));
     }
   }
 
