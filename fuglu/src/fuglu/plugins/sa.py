@@ -82,7 +82,7 @@ Tags:
 
             'spamheader': {
                 'default': 'X-Spam-Status',
-                'description': 'what header does sa set to indicate the spam status',
+                'description': 'what header does SA set to indicate the spam status\nNote that fuglu requires a standard header template configuration for spamstatus and score extraction\nif forwardoriginal is set to 0\neg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_',
             },
 
             'peruserconfig': {
@@ -305,6 +305,44 @@ Subject: test scanner
             # in case of invalid problem action
             return DEFER
 
+
+    def _extract_spamstatus(self,msgrep,spamheadername,suspect):
+        """
+        extract spamstatus and score from messages returned by spamassassin
+        Assumes a default spamheader configuration, eg
+        add_header spam Flag _YESNOCAPS_
+        or
+        add_header all Status _YESNO_, score=_SCORE_ required=_REQD_ tests=_TESTS_ autolearn=_AUTOLEARN_ version=_VERSION_
+
+        :param msgrep: email.message.Message object built from the returned source
+        :param spamheadername: name of the header containing the status information
+        :return: tuple isspam,spamscore . isspam is a boolean, spamscore a float or None if the spamscore can't be extracted
+        """
+        isspam = False
+        spamheader = msgrep[spamheadername]
+
+        spamscore = None
+        if spamheader == None:
+            self.logger.warning(
+                'Did not find Header %s in returned message from SA' % spamheadername)
+        else:
+            if re.match(r"""^YES""",spamheader.strip(),re.IGNORECASE)!=None:
+                isspam = True
+
+            patt = re.compile('Score=([\-\d\.]+)', re.IGNORECASE)
+            m = patt.search(spamheader)
+
+            if m != None:
+                spamscore = float(m.group(1))
+                self.logger.debug('Spamscore: %s' % spamscore)
+                suspect.debug('Spamscore: %s' % spamscore)
+            else:
+                self.logger.warning(
+                    'Could not extract spam score from header: %s' % spamheader)
+                suspect.debug(
+                    'Could not read spam score from header %s' % spamheader)
+        return isspam,spamscore
+
     def examine(self, suspect):
         # check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip') == True:
@@ -377,29 +415,7 @@ Subject: test scanner
 
             newmsgrep = email.message_from_string(content)
             suspect.set_source(content)
-
-            isspam = False
-            spamheader = newmsgrep[spamheadername]
-
-            spamscore = None
-            if spamheader == None:
-                self.logger.warning(
-                    'Did not find Header %s in returned message from SA' % spamheadername)
-            else:
-                if len(spamheader) > 2 and 'yes' in spamheader.lower():
-                    isspam = True
-                patt = re.compile('Score=([\-\d\.]+)', re.IGNORECASE)
-                m = patt.search(spamheader)
-
-                if m != None:
-                    spamscore = float(m.group(1))
-                    self.logger.debug('Spamscore: %s' % spamscore)
-                    suspect.debug('Spamscore: %s' % spamscore)
-                else:
-                    self.logger.warning(
-                        'Could not extract spam score from header: %s' % spamheader)
-                    suspect.debug(
-                        'Could not read spam score from header %s' % spamheader)
+            isspam,spamscore=self._extract_spamstatus(newmsgrep,spamheadername,suspect)
 
         action = DUNNO
         message = None
