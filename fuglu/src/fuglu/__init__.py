@@ -16,4 +16,4 @@
 __all__ = ['bounce', 'core', 'daemon', 'funkyconsole',
            'protocolbase', 'scansession', 'shared', 'stats', 'threadpool']
 
-FUGLU_VERSION = "0.6.2"
+FUGLU_VERSION = "0.6.2-31-g3dd6939"

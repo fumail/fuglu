@@ -23,6 +23,7 @@ import os
 import os.path
 import logging
 from fuglu.extensions.sql import DBFile
+import threading
 
 from threading import Lock
 
@@ -61,6 +62,9 @@ ATTACHMENT_SILENTDELETE = 3
 
 KEY_NAME = u"name"
 KEY_CTYPE = u"ctype"
+
+threadLocal = threading.local()
+
 
 
 class RulesCache(object):
@@ -309,14 +313,16 @@ See (TODO: link to template vars chapter) for commonly available template variab
         }
 
         self.logger = self._logger()
-        if MAGIC_AVAILABLE:
-            if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-                self.ms = magic.open(magic.MAGIC_MIME)
-                self.ms.load()
-        else:
-            self.logger.warning('python-magic not available')
         self.rulescache = None
         self.extremeverbosity = False
+
+    def _get_file_magic(self):
+        #initialize one magic instance per thread for the libmagic bindings (ahupps file magic seems to do that by itself)
+        if not hasattr(threadLocal,'magic'):
+            ms = magic.open(magic.MAGIC_MIME)
+            ms.load()
+            threadLocal.magic=ms
+        return threadLocal.magic
 
     def examine(self, suspect):
         starttime = time.time()
@@ -336,14 +342,16 @@ See (TODO: link to template vars chapter) for commonly available template variab
 
     def getFiletype(self, path):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ftype = self.ms.file(path)
+            ms=self._get_file_magic()
+            ftype = ms.file(path)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             ftype = magic.from_file(path, mime=True)
         return ftype
 
     def getBuffertype(self, buffercontent):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            btype = self.ms.buffer(buffercontent)
+            ms=self._get_file_magic()
+            btype = ms.buffer(buffercontent)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             btype = magic.from_buffer(buffercontent, mime=True)
         return btype

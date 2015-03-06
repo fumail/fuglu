@@ -592,7 +592,10 @@ class MainController(object):
 
         try:
             import magic
-            print fc.strcolor('magic: installed', 'green')
+            magic_vers="python-magic (https://github.com/ahupp/python-magic)"
+            if hasattr(magic,'open'):
+                magic_vers="python-file/libmagic bindings (http://www.darwinsys.com/file/)"
+            print fc.strcolor('magic: found %s'%magic_vers, 'green')
         except:
             print fc.strcolor('magic: not installed', 'yellow') + " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled"
 
