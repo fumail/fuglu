@@ -1,3 +1,13 @@
+-- Fuglu 0.6.3, not yet released
+ * lint now also checks SuspectFilter files in some plugins
+ * improved HTML stripping
+ * bugfix: Spamassassin plugin no longer treats ham as spam if forwardoriginal=0 and spamheader contains bayes test result
+ * bugfix: Attachment plugin should no longer cause fuglu to crash under load if python-file is installed
+
+
+Developers:
+ *
+
 -- Fuglu 0.6.2, 2014-09-05
  * new Prepender: PluginFraction (basically the opposite of PluginSkipper:include instead of exclude list)
  * new tool: fuglu_suspectfilter . Use this to find out which rules in a suspect filter match a sample message
