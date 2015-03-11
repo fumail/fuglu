@@ -362,7 +362,7 @@ also, make sure the ISP Plugin is the last plugin
 
 
 	[main]
-	plugins=attachment,clamav,<other virus scanners here>,spamassassin,<your isp plugin>
+	plugins=clamav,<other virus scanners here>,spamassassin,attachment,<your isp plugin>
 
 
 

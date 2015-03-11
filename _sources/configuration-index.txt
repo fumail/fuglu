@@ -24,7 +24,7 @@ eg, change
 
 ::
 
-	plugins=archive,attachment,clamav,spamassassin
+	plugins=archive,clamav,spamassassin,attachment
 
 to
 
@@ -296,7 +296,7 @@ With this example pre-queue configuration fuglu will scan for spam, virus and bl
 ::
 
 	[main]
-	plugins=attachment,clamav,spamassassin
+	plugins=clamav,spamassassin,attachment
 	incomingport=esmtp:10025,10099,10888
 
 	[spam]

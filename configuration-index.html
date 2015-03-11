@@ -43,6 +43,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
           <a href="operation-index.html" title="Operation"
              accesskey="N">next</a> &nbsp; &nbsp;</li>
         <li class="right" >
@@ -75,7 +78,7 @@
 <p>edit <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> and change parameters if you like</p>
 <p>Note: If you don&#8217;t have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.</p>
 <p>eg, change</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">attachment</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">spamassassin</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">attachment</span>
 </pre></div>
 </div>
 <p>to</p>
@@ -279,7 +282,7 @@ smtp      inet  n       -       n       -       20      smtpd
 <p><strong>Example fuglu configuration</strong></p>
 <p>With this example pre-queue configuration fuglu will scan for spam, virus and blocked attachments. low spam will be tagged, high spam (level&gt;=10) will be rejected.</p>
 <div class="highlight-python"><div class="highlight"><pre>[main]
-plugins=attachment,clamav,spamassassin
+plugins=clamav,spamassassin,attachment
 incomingport=esmtp:10025,10099,10888
 
 [spam]
@@ -434,6 +437,9 @@ dbconnectstring=mysql://root@localhost/fuglu
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
         <li class="right" >
           <a href="operation-index.html" title="Operation"
              >next</a> &nbsp; &nbsp;</li>
