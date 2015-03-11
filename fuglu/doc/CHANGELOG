@@ -1,6 +1,7 @@
 -- Fuglu 0.6.3, not yet released
  * lint now also checks SuspectFilter files in some plugins
  * improved HTML stripping
+ * Attachment Plugin: can now check file names in zip archives and extract files from zips to check their content type
  * bugfix: Spamassassin plugin no longer treats ham as spam if forwardoriginal=0 and spamheader contains bayes test result
  * bugfix: Attachment plugin should no longer cause fuglu to crash under load if python-file is installed
 

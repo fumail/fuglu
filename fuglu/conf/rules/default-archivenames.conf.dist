@@ -1,0 +1,3 @@
+deny \.vbs$ Archive contains potentially dangerous Visual Basic script file name  (.vbs)
+deny \.exe$ Archive contains potentially dangerous Windows executable file name (.exe)
+deny \.scr$ Archive contains potentially dangerous Windows screensaver file name (.scr)

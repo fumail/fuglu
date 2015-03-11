@@ -56,6 +56,9 @@ class DatabaseConfigTestCase(unittest.TestCase):
                    'SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio')
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
+        config.set('FiletypePlugin', 'checkarchivenames', 'False')
+        config.set('FiletypePlugin', 'checkarchivecontent', 'False')
+        config.set('FiletypePlugin', 'archivecontentmaxsize', '500000')
         self.candidate = FiletypePlugin(config)
 
     def test_dbrules(self):
@@ -108,6 +111,10 @@ class AttachmentPluginTestCase(unittest.TestCase):
         config.set('FiletypePlugin', 'rulesdir', self.tempdir)
         config.set('FiletypePlugin', 'blockaction', 'DELETE')
         config.set('FiletypePlugin', 'sendbounce', 'True')
+        config.set('FiletypePlugin', 'checkarchivenames', 'True')
+        config.set('FiletypePlugin', 'checkarchivecontent', 'True')
+        config.set('FiletypePlugin', 'archivecontentmaxsize', '5000000')
+
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
         self.candidate = FiletypePlugin(config)
@@ -149,3 +156,62 @@ class AttachmentPluginTestCase(unittest.TestCase):
             result, message = result
         os.remove(tempfilename)
         self.assertEquals(result, DUNNO)
+
+    def test_archiveextractsize(self):
+        """Test archive extract max filesize"""
+        # copy file rules
+        tempfilename = tempfile.mktemp(
+            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy(TESTDATADIR + '/6mbzipattachment.eml', tempfilename)
+
+        user= 'recipient-sizetest@unittests.fuglu.org'
+        conffile=self.tempdir+"/%s-archivefiletypes.conf"%user
+        open(conffile,'w').write("deny application\/octet\-stream no data allowed") # the largefile in the test message is just a bunch of zeroes
+
+        suspect = Suspect(
+            'sender@unittests.fuglu.org', user, tempfilename)
+
+        #test with high limit first
+        oldlimit=self.candidate.config.get('FiletypePlugin', 'archivecontentmaxsize')
+        self.candidate.config.set('FiletypePlugin', 'archivecontentmaxsize', '7000000')
+        result = self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result, message = result
+        self.failIf(result != DELETE, 'extracted large file should be blocked')
+
+        #now set the limit to 5 mb, the file should be skipped now
+        self.candidate.config.set('FiletypePlugin', 'archivecontentmaxsize', '5000000')
+        result = self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result, message = result
+        self.failIf(result != DUNNO, 'large file should be skipped')
+
+        #reset config
+        self.candidate.config.set('FiletypePlugin', 'archivecontentmaxsize', oldlimit)
+
+
+        os.remove(tempfilename)
+        os.remove(conffile)
+
+    def test_archivename(self):
+        """Test check archive names"""
+        # copy file rules
+        tempfilename = tempfile.mktemp(
+            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+        shutil.copy(TESTDATADIR + '/6mbzipattachment.eml', tempfilename)
+
+        user= 'recipient-archivenametest@unittests.fuglu.org'
+        conffile=self.tempdir+"/%s-archivenames.conf"%user
+        open(conffile,'w').write("deny largefile user does not like the largefile within a zip")
+
+        suspect = Suspect(
+            'sender@unittests.fuglu.org', user, tempfilename)
+
+        result = self.candidate.examine(suspect)
+        if type(result) is tuple:
+            result, message = result
+        self.failIf(result != DELETE, 'archive containing blocked filename was not blocked')
+
+
+        os.remove(tempfilename)
+        os.remove(conffile)
