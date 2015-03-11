@@ -360,7 +360,7 @@ The other common template variables are available as well.
 
         self.logger = self._logger()
         self.rulescache = None
-        self.extremeverbosity = True #TODO disable
+        self.extremeverbosity = False
 
     def _get_file_magic(self):
         #initialize one magic instance per thread for the libmagic bindings (ahupps file magic seems to do that by itself)
