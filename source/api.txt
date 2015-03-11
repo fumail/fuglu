@@ -1,0 +1,34 @@
+Plugin API
+==========
+
+.. toctree::
+   :maxdepth: 3
+   
+.. _api-shared:
+   
+Handy functions in the fuglu.shared module
+..........................................
+
+.. automodule:: fuglu.shared
+   :members: actioncode_to_string,string_to_actioncode,apply_template,default_template_values
+
+
+.. _api-Suspect:
+
+The Suspect class
+.................
+
+.. autoclass:: fuglu.shared.Suspect
+   :members:
+   :exclude-members: addheader,getMessageRep,getOriginalSource,setMessageRep,setSource,getSource
+   
+
+.. _api-SuspectFilter:
+   
+The SuspectFilter class
+.......................
+
+.. autoclass:: fuglu.shared.SuspectFilter
+   :members:
+   :exclude-members: getArgs
+

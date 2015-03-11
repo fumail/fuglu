@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Plugin API &mdash; fuglu  documentation</title>
+    
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="top" title="fuglu  documentation" href="index.html" />
+    <link rel="prev" title="ISP Config" href="isp-config.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="isp-config.html" title="ISP Config"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">fuglu  documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="plugin-api">
+<h1>Plugin API<a class="headerlink" href="#plugin-api" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="module-fuglu.shared">
+<span id="handy-functions-in-the-fuglu-shared-module"></span><span id="api-shared"></span><h2>Handy functions in the fuglu.shared module<a class="headerlink" href="#module-fuglu.shared" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="fuglu.shared.actioncode_to_string">
+<tt class="descclassname">fuglu.shared.</tt><tt class="descname">actioncode_to_string</tt><big>(</big><em>actioncode</em><big>)</big><a class="headerlink" href="#fuglu.shared.actioncode_to_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the human readable string for this code</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="fuglu.shared.string_to_actioncode">
+<tt class="descclassname">fuglu.shared.</tt><tt class="descname">string_to_actioncode</tt><big>(</big><em>actionstring</em>, <em>config=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.string_to_actioncode" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the code for this action</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="fuglu.shared.apply_template">
+<tt class="descclassname">fuglu.shared.</tt><tt class="descname">apply_template</tt><big>(</big><em>templatecontent</em>, <em>suspect</em>, <em>values=None</em>, <em>valuesfunction=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.apply_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace templatecontent variables as defined in <a class="reference external" href="http://gryphius.github.io/fuglu/plugins-index.html#template-variables">http://gryphius.github.io/fuglu/plugins-index.html#template-variables</a>
+with actual values from suspect
+the calling function can pass additional values by passing a values dict</p>
+<p>if valuesfunction is not none, it is called with the final dict with all built-in and passed values
+and allows further modifications, like SQL escaping etc</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="fuglu.shared.default_template_values">
+<tt class="descclassname">fuglu.shared.</tt><tt class="descname">default_template_values</tt><big>(</big><em>suspect</em>, <em>values=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.default_template_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dict with default template variables applicable for this suspect
+if values is not none, fill the values dict instead of returning a new one</p>
+</dd></dl>
+
+</div>
+<div class="section" id="the-suspect-class">
+<span id="api-suspect"></span><h2>The Suspect class<a class="headerlink" href="#the-suspect-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="fuglu.shared.Suspect">
+<em class="property">class </em><tt class="descclassname">fuglu.shared.</tt><tt class="descname">Suspect</tt><big>(</big><em>from_address</em>, <em>to_address</em>, <em>tempfile</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect" title="Permalink to this definition">¶</a></dt>
+<dd><p>The suspect represents the message to be scanned. Each scannerplugin will be presented
+with a suspect and may modify the tags or even the message content itself.</p>
+<dl class="method">
+<dt id="fuglu.shared.Suspect.add_header">
+<tt class="descname">add_header</tt><big>(</big><em>key</em>, <em>value</em>, <em>immediate=False</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.add_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds a header to the message. by default, headers will added when re-injecting the message back to postfix
+if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
+visible to later plugins (eg. for spamassassin rules), otherwise, leave as False which is faster.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.client_info_from_rcvd">
+<tt class="descname">client_info_from_rcvd</tt><big>(</big><em>ignoreregex=None</em>, <em>skip=0</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.client_info_from_rcvd" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns information about the client that submitted this message.
+(helo,ip,reversedns)</p>
+<p>This information is extracted from the message Received: headers and therefore probably not 100% reliable
+all information is returned as-is, this means for example, that non-fcrdns client will show &#8216;unknown&#8217; as reverse dns value.</p>
+<p>if ignoreregex is not None, all results which match this regex in either helo,ip or reversedns will be ignored</p>
+<p>By default, this method starts searching at the top Received Header. Set a higher skip value to start searching further down.</p>
+<p>both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA</p>
+<p>returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fuglu.shared.Suspect.clientinfo">
+<tt class="descname">clientinfo</tt><em class="property"> = None</em><a class="headerlink" href="#fuglu.shared.Suspect.clientinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>holds client info tuple: hostname, ip, reversedns</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.debug">
+<tt class="descname">debug</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a line to the debug log if debugging is enabled for this message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.get_client_info">
+<tt class="descname">get_client_info</tt><big>(</big><em>config=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.get_client_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns information about the client that submitted this message.
+(helo,ip,reversedns)</p>
+<p>This information is extracted from the message Received: headers and therefore probably not 100% reliable
+all information is returned as-is, this means for example, that non-fcrdns client will show &#8216;unknown&#8217; as reverse dns value.</p>
+<p>if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.get_headers">
+<tt class="descname">get_headers</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.get_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the message headers as string</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.get_message_rep">
+<tt class="descname">get_message_rep</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.get_message_rep" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the python email api representation of this suspect</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.get_original_source">
+<tt class="descname">get_original_source</tt><big>(</big><em>maxbytes=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.get_original_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the original, unmodified message source</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.get_source">
+<tt class="descname">get_source</tt><big>(</big><em>maxbytes=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.get_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the current message source, possibly changed by plugins</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.get_tag">
+<tt class="descname">get_tag</tt><big>(</big><em>key</em>, <em>defaultvalue=None</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.get_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the tag value. if the tag is not found, return defaultvalue instead (None if no defaultvalue passed)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.is_highspam">
+<tt class="descname">is_highspam</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.is_highspam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if ANY of the spam engines tagged this suspect as high spam</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.is_modified">
+<tt class="descname">is_modified</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.is_modified" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns true if the message source has been modified</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.is_spam">
+<tt class="descname">is_spam</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.is_spam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if ANY of the spam engines tagged this suspect as spam</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.is_virus">
+<tt class="descname">is_virus</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.is_virus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if ANY of the antivirus engines tagged this suspect as infected</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.set_message_rep">
+<tt class="descname">set_message_rep</tt><big>(</big><em>msgrep</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.set_message_rep" title="Permalink to this definition">¶</a></dt>
+<dd><p>replace the message content. this must be a standard python email representation
+Warning: setting the source via python email representation seems to break dkim signatures!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.set_tag">
+<tt class="descname">set_tag</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#fuglu.shared.Suspect.set_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a new tag</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fuglu.shared.Suspect.source">
+<tt class="descname">source</tt><em class="property"> = None</em><a class="headerlink" href="#fuglu.shared.Suspect.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>holds the message source if set directly</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="the-suspectfilter-class">
+<span id="api-suspectfilter"></span><h2>The SuspectFilter class<a class="headerlink" href="#the-suspectfilter-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="fuglu.shared.SuspectFilter">
+<em class="property">class </em><tt class="descclassname">fuglu.shared.</tt><tt class="descname">SuspectFilter</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows filtering Suspect based on header/tag/body regexes</p>
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.file_changed">
+<tt class="descname">file_changed</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.file_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the file has changed on disks since the last reload</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.get_args">
+<tt class="descname">get_args</tt><big>(</big><em>suspect</em>, <em>extended=False</em><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.get_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns all args of matched regexes in a list
+if extended=True:  returns a list of tuples with all available information:
+(fieldname, matchedvalue, arg, regex)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.get_decoded_textparts">
+<tt class="descname">get_decoded_textparts</tt><big>(</big><em>messagerep</em><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.get_decoded_textparts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all text contents</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.get_field">
+<tt class="descname">get_field</tt><big>(</big><em>suspect</em>, <em>headername</em><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.get_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of mail header values or special values. If the value can not be found, an empty list is returned.</p>
+<dl class="docutils">
+<dt>headers:</dt>
+<dd>just the headername for normal headers
+mime:headername for attached mime part headers</dd>
+<dt>envelope data:</dt>
+<dd>envelope_from (or from_address)
+envelope_to (or to_address)
+from_domain
+to_domain</dd>
+<dt>tags</dt>
+<dd>&#64;tagname</dd>
+<dt>body source:</dt>
+<dd>body:full -&gt; (full source, encoded)
+body:stripped (or just &#8216;body&#8217;) : -&gt; returns text/* bodyparts with tags and newlines stripped
+body:raw -&gt; decoded raw message body parts</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.lint">
+<tt class="descname">lint</tt><big>(</big><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.lint" title="Permalink to this definition">¶</a></dt>
+<dd><p>check file and print warnings to console. returns True if everything is ok, False otherwise</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.matches">
+<tt class="descname">matches</tt><big>(</big><em>suspect</em>, <em>extended=False</em><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns (True,arg) if any regex matches, (False,None) otherwise</p>
+<p>if extended=True, returns all available info about the match in a tuple:
+True, (fieldname, matchedvalue, arg, regex)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.SuspectFilter.strip_text">
+<tt class="descname">strip_text</tt><big>(</big><em>content</em>, <em>remove_tags=None</em>, <em>use_bfs=True</em><big>)</big><a class="headerlink" href="#fuglu.shared.SuspectFilter.strip_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Strip HTML Tags from content, replace newline with space (like Spamassassin)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper"><div class="sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Plugin API</a><ul>
+<li><a class="reference internal" href="#module-fuglu.shared">Handy functions in the fuglu.shared module</a></li>
+<li><a class="reference internal" href="#the-suspect-class">The Suspect class</a></li>
+<li><a class="reference internal" href="#the-suspectfilter-class">The SuspectFilter class</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="isp-config.html"
+                          title="Previous page">&larr; ISP Config</a></p>
+  </div>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="isp-config.html" title="ISP Config"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">fuglu  documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2012, gryphius.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

@@ -48,7 +48,7 @@ Appender Plugins
 ................
 
 Appender plugins are run after the scanner plugins when the message has already been re-injected into postfix
-(or rejected or deleted or...) so they don't increase your scanning time . They are mostly used for statistical tasks, updating counters in database etc. 
+(or rejected or deleted or...) so they don't increase your scanning time . They are mostly used for statistical tasks, updating counters in a database etc. 
 
 
 --------------------
@@ -66,9 +66,9 @@ Suspect Filters
 
 SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a suspects header or tag. 
 
-The format is : <headername> <regex> <optional argument> 
+The format is : ``<headername> <regex> <optional argument>``
 
-<headername> can be any of...
+``<headername>`` can be any of...
  * a email header name, eg ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
  * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
@@ -93,7 +93,7 @@ The format is : <headername> <regex> <optional argument>
 
 ``<optional argument>`` depends on the plugin that reads this header filter file, some don't need arguments at all. Please refer to the plugin documentation.
 
-Filter files are automatically reloaded if you change anything, so you don't need to restart fuglu.
+Filter files are automatically reloaded if you change anything, you don't need to restart fuglu.
 
 
 Example:
@@ -152,7 +152,8 @@ Plugins included in Fuglu
 Writing your own plugins
 ------------------------
 
-Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from ``ScannerPlugin``, override ``__str__`` to provide a nice human readable name and override ``examine`` to do the actual work of your plugins. ``examine`` should return one of the action codes above (DUNNO, DEFER, DELETE, ....). You probably only need stuff from ``fuglu.shared``, so it's probably a good idea to get familiar with that module. 
+Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from ``ScannerPlugin``, override ``__str__`` to provide a nice human readable name and override ``examine`` to do the actual work of your plugins. ``examine`` should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. ``return DEFER, 'please try again later'`` 
+In plugin you usually only have to import things from :ref:`fuglu.shared<api-shared>` , so it's probably a good idea to get familiar with  that module.
 
 
 
@@ -195,13 +196,13 @@ This is a quick example of how your plugin code skeleton would look like:
 		return DUNNO
 
 
-First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, DUNNO might be enough depending on what your plugin does.
+First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, ``DUNNO`` might be enough depending on what your plugin does.
 
 ::
 
 	from fuglu.shared import ScannerPlugin,DUNNO
 
-in __init__ you only call BasicPlugins __init__  for now. This sets self.config and self.section on the object where you later can read config options (eg. self.config.get(self.section,'somevalue').  Do NOT load the plugin configuration here. __init__ is only called once when fuglu starts up. Always load plugin config in ``examine``.
+in ``__init__`` you only call BasicPlugin's ``__init__``  for now. This sets ``self.config`` and ``self.section`` on the object where you later can read config options (eg. ``self.config.get(self.section,'somevalue')``.  Do **NOT** load the plugin configuration here. ``__init__`` is only called once when fuglu starts up. Always load plugin config in ``examine``.
 
 ::
 
@@ -209,7 +210,7 @@ in __init__ you only call BasicPlugins __init__  for now. This sets self.config 
         ScannerPlugin.__init__(self,config,section)
 
 
-then code your ``examine`` method. You will have to work with the ``suspect`` (TODO: LINK HERE) object, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it's probably a good idea to read FugluSuspect to get a list of things you can do with the suspect and FugluTags so see common tags that can have a influence on fuglu's behaviour.
+then code your ``examine`` method. You will have to work with :ref:`api-Suspect`, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it's probably a good idea to look at the Suspect class in ``fuglu.shared`` to get a list of things you can do with the suspect.
 
 
 
@@ -440,9 +441,6 @@ run ``fuglu --console`` to enter an interactive python console after fuglu start
 
 
 
-
-
-
 debug a plugin without running fuglu
 ------------------------------------
 
@@ -452,7 +450,7 @@ the generated input messag is stored as: ``/tmp/fuglu_dummy_message_in.eml``
 
 if your plugin modified the message source, the resulting message can be found at ``/tmp/fuglu_dummy_message_out.eml``
 
-``plugdummy.py`` is located in the ``test`` directory.
+``plugdummy.py`` is located in the ``develop/scripts`` directory.
 
 simple usage:
 
@@ -494,7 +492,6 @@ the '-s' and '-f' options change the envelope sender/recipient. -r can be specif
 	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!                                                                                                                               
 	INFO:root:Result: DUNNO                                                                                                                                                                                           
 	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}  
-
 
 
 adding headers to the input message
@@ -629,3 +626,4 @@ You can easily integrate your unittests with the fuglu test script.
 	Debug Output written to:/tmp/fuglu-test.log
 
 
+	

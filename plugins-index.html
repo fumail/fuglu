@@ -43,6 +43,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
           <a href="help-index.html" title="Support"
              accesskey="N">next</a> &nbsp; &nbsp;</li>
         <li class="right" >
@@ -101,7 +104,7 @@ run for incoming or outgoing mails or to skip whitelisted messages.</p>
 <div class="section" id="appender-plugins">
 <h3>Appender Plugins<a class="headerlink" href="#appender-plugins" title="Permalink to this headline">¶</a></h3>
 <p>Appender plugins are run after the scanner plugins when the message has already been re-injected into postfix
-(or rejected or deleted or...) so they don&#8217;t increase your scanning time . They are mostly used for statistical tasks, updating counters in database etc.</p>
+(or rejected or deleted or...) so they don&#8217;t increase your scanning time . They are mostly used for statistical tasks, updating counters in a database etc.</p>
 </div>
 </div>
 <div class="section" id="plugin-configuration">
@@ -112,9 +115,9 @@ named like the plugin itself.</p>
 <div class="section" id="suspect-filters">
 <h3>Suspect Filters<a class="headerlink" href="#suspect-filters" title="Permalink to this headline">¶</a></h3>
 <p>SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a suspects header or tag.</p>
-<p>The format is : &lt;headername&gt; &lt;regex&gt; &lt;optional argument&gt;</p>
+<p>The format is : <tt class="docutils literal"><span class="pre">&lt;headername&gt;</span> <span class="pre">&lt;regex&gt;</span> <span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt></p>
 <dl class="docutils">
-<dt>&lt;headername&gt; can be any of...</dt>
+<dt><tt class="docutils literal"><span class="pre">&lt;headername&gt;</span></tt> can be any of...</dt>
 <dd><ul class="first simple">
 <li>a email header name, eg <tt class="docutils literal"><span class="pre">Received</span></tt>, <tt class="docutils literal"><span class="pre">To</span></tt>, <tt class="docutils literal"><span class="pre">From</span></tt>, <tt class="docutils literal"><span class="pre">Subject</span></tt> ... also supports &#8216;*&#8217; as wildcard character</li>
 <li><tt class="docutils literal"><span class="pre">mime:headername</span></tt> to get mime Headers in the message payload  eg: <tt class="docutils literal"><span class="pre">mime:Content-Disposition</span></tt></li>
@@ -141,7 +144,7 @@ named like the plugin itself.</p>
 </pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt> depends on the plugin that reads this header filter file, some don&#8217;t need arguments at all. Please refer to the plugin documentation.</p>
-<p>Filter files are automatically reloaded if you change anything, so you don&#8217;t need to restart fuglu.</p>
+<p>Filter files are automatically reloaded if you change anything, you don&#8217;t need to restart fuglu.</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre>#normal header test
 Subject hello   Hello in the subject!
@@ -833,7 +836,8 @@ noappender=1
 </div>
 <div class="section" id="writing-your-own-plugins">
 <h2>Writing your own plugins<a class="headerlink" href="#writing-your-own-plugins" title="Permalink to this headline">¶</a></h2>
-<p>Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from <tt class="docutils literal"><span class="pre">ScannerPlugin</span></tt>, override <tt class="docutils literal"><span class="pre">__str__</span></tt> to provide a nice human readable name and override <tt class="docutils literal"><span class="pre">examine</span></tt> to do the actual work of your plugins. <tt class="docutils literal"><span class="pre">examine</span></tt> should return one of the action codes above (DUNNO, DEFER, DELETE, ....). You probably only need stuff from <tt class="docutils literal"><span class="pre">fuglu.shared</span></tt>, so it&#8217;s probably a good idea to get familiar with that module.</p>
+<p>Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from <tt class="docutils literal"><span class="pre">ScannerPlugin</span></tt>, override <tt class="docutils literal"><span class="pre">__str__</span></tt> to provide a nice human readable name and override <tt class="docutils literal"><span class="pre">examine</span></tt> to do the actual work of your plugins. <tt class="docutils literal"><span class="pre">examine</span></tt> should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. <tt class="docutils literal"><span class="pre">return</span> <span class="pre">DEFER,</span> <span class="pre">'please</span> <span class="pre">try</span> <span class="pre">again</span> <span class="pre">later'</span></tt>
+In plugin you usually only have to import things from <a class="reference internal" href="api.html#api-shared"><em>fuglu.shared</em></a> , so it&#8217;s probably a good idea to get familiar with  that module.</p>
 <p>This is a quick example of how your plugin code skeleton would look like:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
 <span class="kn">import</span> <span class="nn">time</span>
@@ -869,16 +873,16 @@ noappender=1
         <span class="k">return</span> <span class="n">DUNNO</span>
 </pre></div>
 </div>
-<p>First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, DUNNO might be enough depending on what your plugin does.</p>
+<p>First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, <tt class="docutils literal"><span class="pre">DUNNO</span></tt> might be enough depending on what your plugin does.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
 </pre></div>
 </div>
-<p>in __init__ you only call BasicPlugins __init__  for now. This sets self.config and self.section on the object where you later can read config options (eg. self.config.get(self.section,&#8217;somevalue&#8217;).  Do NOT load the plugin configuration here. __init__ is only called once when fuglu starts up. Always load plugin config in <tt class="docutils literal"><span class="pre">examine</span></tt>.</p>
+<p>in <tt class="docutils literal"><span class="pre">__init__</span></tt> you only call BasicPlugin&#8217;s <tt class="docutils literal"><span class="pre">__init__</span></tt>  for now. This sets <tt class="docutils literal"><span class="pre">self.config</span></tt> and <tt class="docutils literal"><span class="pre">self.section</span></tt> on the object where you later can read config options (eg. <tt class="docutils literal"><span class="pre">self.config.get(self.section,'somevalue')</span></tt>.  Do <strong>NOT</strong> load the plugin configuration here. <tt class="docutils literal"><span class="pre">__init__</span></tt> is only called once when fuglu starts up. Always load plugin config in <tt class="docutils literal"><span class="pre">examine</span></tt>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>then code your <tt class="docutils literal"><span class="pre">examine</span></tt> method. You will have to work with the <tt class="docutils literal"><span class="pre">suspect</span></tt> (TODO: LINK HERE) object, which is a representation of the message being analyzed. The suspect has <tt class="docutils literal"><span class="pre">tags</span></tt> that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it&#8217;s probably a good idea to read FugluSuspect to get a list of things you can do with the suspect and FugluTags so see common tags that can have a influence on fuglu&#8217;s behaviour.</p>
+<p>then code your <tt class="docutils literal"><span class="pre">examine</span></tt> method. You will have to work with <a class="reference internal" href="api.html#api-suspect"><em>The Suspect class</em></a>, which is a representation of the message being analyzed. The suspect has <tt class="docutils literal"><span class="pre">tags</span></tt> that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it&#8217;s probably a good idea to look at the Suspect class in <tt class="docutils literal"><span class="pre">fuglu.shared</span></tt> to get a list of things you can do with the suspect.</p>
 <div class="section" id="common-tasks-api-faq">
 <h3>Common Tasks (&#8220;API&#8221; FAQ)<a class="headerlink" href="#common-tasks-api-faq" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="define-configuration-options-for-your-plugin">
@@ -1057,7 +1061,7 @@ with fuglu &gt;=0.6.0 you can also get the most recent exceptions with the follo
 <p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn&#8217;t require a running fuglu or postfix. it will create a dummy suspect, call the plugin&#8217;s examine method and print the result (and debug output).</p>
 <p>the generated input messag is stored as: <tt class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_in.eml</span></tt></p>
 <p>if your plugin modified the message source, the resulting message can be found at <tt class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_out.eml</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is located in the <tt class="docutils literal"><span class="pre">test</span></tt> directory.</p>
+<p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is located in the <tt class="docutils literal"><span class="pre">develop/scripts</span></tt> directory.</p>
 <p>simple usage:</p>
 <p>assuming your plugin file (&#8216;myplugin.py&#8217;) is in <tt class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></tt> you can run <tt class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">&lt;pluginname&gt;</span></tt></p>
 <div class="highlight-python"><div class="highlight"><pre>#./plugdummy.py myplugin.ExamplePlugin
@@ -1369,6 +1373,9 @@ Debug Output written to:/tmp/fuglu-test.log
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
         <li class="right" >
           <a href="help-index.html" title="Support"
              >next</a> &nbsp; &nbsp;</li>
