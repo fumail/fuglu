@@ -9,4 +9,6 @@
 deny \.vbs$     Archive contains potentially dangerous Visual Basic script file name  (.vbs)
 deny \.exe$     Archive contains potentially dangerous Windows executable file name (.exe)
 deny \.scr$     Archive contains potentially dangerous Windows screensaver file name (.scr)
-deny \.zip$     nested ZIP archives - abused to conceal malware
+
+# block zip in zip - disabled by default, often used in legit traffic
+# deny \.zip$     nested ZIP archives - abused to conceal malware
