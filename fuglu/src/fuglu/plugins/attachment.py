@@ -651,14 +651,14 @@ The other common template variables are available as well.
 
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
-            print "python-magic and python-file library not available. Will only do content-type checks, no real file analysis"
+            print "python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis"
             if self.config.getboolean(self.section,'checkarchivecontent'):
                 print "->checkarviecontent setting ignored"
             return False
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            print "Found python-file magic library"
+            print "Found python-file/libmagic bindings (http://www.darwinsys.com/file/)"
         if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            print "Found python-magic library"
+            print "Found python-magic (https://github.com/ahupp/python-magic)"
         return True
 
     def lint_sql(self):
@@ -683,3 +683,4 @@ The other common template variables are available as well.
         else:
             print "No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir')
         return True
+
