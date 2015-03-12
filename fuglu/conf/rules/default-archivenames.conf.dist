@@ -1,3 +1,12 @@
-deny \.vbs$ Archive contains potentially dangerous Visual Basic script file name  (.vbs)
-deny \.exe$ Archive contains potentially dangerous Windows executable file name (.exe)
-deny \.scr$ Archive contains potentially dangerous Windows screensaver file name (.scr)
+# default allowed / denied filename patterns within archives (zip etc)
+# line format:
+# <action> <regex> <description>
+# <action> can be:
+# allow - this file is ok, don't do further checks . Don't use this blindly! If unsure, make NO rule instead of allow
+# deny - send error containing <description> back to sender, don't deliver the message
+# delete - silently delete the message, no error is sent back. Be careful with this option!
+
+deny \.vbs$     Archive contains potentially dangerous Visual Basic script file name  (.vbs)
+deny \.exe$     Archive contains potentially dangerous Windows executable file name (.exe)
+deny \.scr$     Archive contains potentially dangerous Windows screensaver file name (.scr)
+deny \.zip$     nested ZIP archives - abused to conceal malware

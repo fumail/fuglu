@@ -1,0 +1,11 @@
+# default allowed / denied filetype patterns from extracted archives
+# as detected by libmagic's 'file -i' command
+# line format:
+# <action> <regex> <description>
+# <action> can be:
+# allow - this content type is ok, don't do further checks . Don't use this blindly! If unsure, make NO rule instead of allow
+# deny - send error containing <description> back to sender, don't deliver the message
+# delete - silently delete the message, no error is sent back. Be careful with this option!
+
+#fuglu does not currently provide a default content type block list for extracted attachments
+#see default-filetypes.conf.dist for examples
