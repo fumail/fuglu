@@ -157,13 +157,20 @@ class RulesCache(object):
         newruleset = {KEY_NAME: {}, KEY_CTYPE: {}, KEY_ARCHIVENAME:{}, KEY_ARCHIVECTYPE:{}}
 
         rulecounter = 0
+        okfilecounter = 0
+        ignoredfilecounter = 0
+
         for filename in filelist:
             endingok=False
             for ending in (FUATT_NAMESCONFENDING, FUATT_CTYPESCONFENDING, FUATT_ARCHIVENAMESCONFENDING, FUATT_ARCHIVECTYPESCONFENDING):
                 if filename.endswith(ending):
                     endingok=True
                     break
-            if not endingok:
+
+            if endingok:
+                okfilecounter+=1
+            else:
+                ignoredfilecounter+=1
                 self.logger.debug('Ignoring file %s' % filename)
                 continue
 
@@ -189,10 +196,9 @@ class RulesCache(object):
             self.logger.debug('Updating cache: [%s][%s]' % (ruletype, key))
             rulecounter += rulesloaded
 
-        totalfiles = len(filelist)
         self.rules = newruleset
-        self.logger.info('Loaded %s rules from %s files' %
-                         (rulecounter, totalfiles))
+        self.logger.info('Loaded %s rules from %s files in %s (%s files ignored)' %
+                         (rulecounter, okfilecounter,  self.rulesdir, ignoredfilecounter))
 
     def _loadonefile(self, filename):
         """returns all rules in a file"""
