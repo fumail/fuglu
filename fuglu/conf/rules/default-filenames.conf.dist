@@ -27,12 +27,12 @@ allow   \.gpg$                -
 allow   \.pgp$                -
 allow   \.sig$                -
 allow   \.asc$                -
-allow \.p7[sm]$               -
+allow   \.p7[sm]$             -
 
 # Macintosh archives
-allow   \.hqx$                 -
-allow   \.sit.bin$             -
-allow   \.sea$                 -
+allow   \.hqx$                -
+allow   \.sit.bin$            -
+allow   \.sea$                -
 
 # consider enabling this
 # deny \.jar$   executable java program
@@ -48,7 +48,7 @@ deny    \.cmd$      Dangerous attachment type (Microsoft kbid=883260)
 deny    \.com$      Dangerous attachment type (Microsoft kbid=883260)
 deny    \.cpl$      Dangerous attachment type (Microsoft kbid=883260)
 #disabled, often used in ham
-#deny    \.crt$     Dangerous attachment type (Microsoft kbid=883260)
+#deny   \.crt$      Dangerous attachment type (Microsoft kbid=883260)
 deny    \.csh$      Dangerous attachment type (Microsoft kbid=883260)
 deny    \.exe$      Dangerous attachment type (Microsoft kbid=883260)
 deny    \.fxp$      Dangerous attachment type (Microsoft kbid=883260)
@@ -73,11 +73,11 @@ deny    \.sc[frt]$  Dangerous attachment type (Microsoft kbid=883260)
 deny    \.sh[bs]$   Dangerous attachment type (Microsoft kbid=883260)
 deny    \.tmp$      Dangerous attachment type (Microsoft kbid=883260)
 #disabled, often used in Windows ham:
-#deny    \.url$      Dangerous attachment type (Microsoft kbid=883260)
-deny    \.vb[es]?$   Dangerous attachment type (Microsoft kbid=883260)
-deny    \.vsmacros$  Dangerous attachment type (Microsoft kbid=883260)
-deny    \.vs[stw]$   Dangerous attachment type (Microsoft kbid=883260)
-deny    \.ws[cfh]?$  Dangerous attachment type (Microsoft kbid=883260)
+#deny   \.url$      Dangerous attachment type (Microsoft kbid=883260)
+deny    \.vb[es]?$  Dangerous attachment type (Microsoft kbid=883260)
+deny    \.vsmacros$ Dangerous attachment type (Microsoft kbid=883260)
+deny    \.vs[stw]$  Dangerous attachment type (Microsoft kbid=883260)
+deny    \.ws[cfh]?$ Dangerous attachment type (Microsoft kbid=883260)
 
 # google also blocks these https://support.google.com/mail/answer/6590
 deny \.lib$  Dangerous attachment type
