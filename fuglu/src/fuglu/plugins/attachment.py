@@ -212,7 +212,7 @@ class RulesCache(object):
         return self.get_rules_from_config_lines(handle.readlines())
 
     def get_rules_from_config_lines(self, lineslist):
-        ret = {}
+        ret = []
         for line in lineslist:
             line = line.strip()
             if line.startswith('#') or line == '':
@@ -221,6 +221,7 @@ class RulesCache(object):
             if (len(tpl) != 3):
                 self.logger.debug(
                     'Ignoring invalid line  (length %s): %s' % (len(tpl), line))
+                continue
             (action, regex, description) = tpl
             action = action.lower()
             if action not in [FUATT_ACTION_ALLOW, FUATT_ACTION_DENY, FUATT_ACTION_DELETE]:
@@ -228,7 +229,7 @@ class RulesCache(object):
                 continue
 
             tp = (action, regex, description)
-            ret[regex] = tp
+            ret.append(tp)
         return ret
 
 
@@ -433,14 +434,11 @@ The other common template variables are available as well.
         if ruleset == None:
             return ATTACHMENT_DUNNO
 
-        for regex in ruleset.keys():
+        for action, regex, description in ruleset:
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
             if prog.search(obj):
-                info = ruleset[regex]
-                action = info[0]
-                description = info[2]
                 self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
                     obj, regex, description, action))
                 suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
