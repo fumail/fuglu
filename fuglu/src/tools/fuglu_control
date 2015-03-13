@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -22,6 +22,7 @@ import sys
 import socket
 from optparse import OptionParser
 
+
 def usage():
     return """
     
@@ -35,43 +36,42 @@ def usage():
     netconsole [<port> [<bind address>]] : start a python interactive shell on a network socket
     """
 
-optionparser=OptionParser(usage=usage())
-optionparser.add_option("-p",dest="port",action="store",default="/tmp/fuglu_control.sock",help="Unix socket or port to connect to")
-(options,pargs) = optionparser.parse_args()
+optionparser = OptionParser(usage=usage())
+optionparser.add_option("-p", dest="port", action="store",
+                        default="/tmp/fuglu_control.sock", help="Unix socket or port to connect to")
+(options, pargs) = optionparser.parse_args()
 
 
-
-if len(pargs)<1:
+if len(pargs) < 1:
     optionparser.print_usage()
     sys.exit(1)
 
 
-localport=options.port
-iport=None
+localport = options.port
+iport = None
 try:
-    iport=int(localport)
+    iport = int(localport)
 except:
     pass
 
-cmd=" ".join(pargs)
-#connect to debug port
-if iport!=None:
+cmd = " ".join(pargs)
+# connect to debug port
+if iport != None:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 else:
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
 try:
-    if iport!=None:
+    if iport != None:
         s.connect(('127.0.0.1', iport))
     else:
         s.connect(localport)
-except Exception,e:
-    print "Cannot connect to fuglu control deamon (%s) - is fuglu running?"%localport
+except Exception, e:
+    print "Cannot connect to fuglu control deamon (%s) - is fuglu running?" % localport
     print str(e)
     sys.exit(1)
-    
+
 s.sendall(cmd)
 data = s.recv(32768)
 s.close()
 print data
-

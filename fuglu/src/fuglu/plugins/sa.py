@@ -305,8 +305,7 @@ Subject: test scanner
             # in case of invalid problem action
             return DEFER
 
-
-    def _extract_spamstatus(self,msgrep,spamheadername,suspect):
+    def _extract_spamstatus(self, msgrep, spamheadername, suspect):
         """
         extract spamstatus and score from messages returned by spamassassin
         Assumes a default spamheader configuration, eg
@@ -326,7 +325,7 @@ Subject: test scanner
             self.logger.warning(
                 'Did not find Header %s in returned message from SA' % spamheadername)
         else:
-            if re.match(r"""^YES""",spamheader.strip(),re.IGNORECASE)!=None:
+            if re.match(r"""^YES""", spamheader.strip(), re.IGNORECASE) != None:
                 isspam = True
 
             patt = re.compile('Score=([\-\d\.]+)', re.IGNORECASE)
@@ -341,7 +340,7 @@ Subject: test scanner
                     'Could not extract spam score from header: %s' % spamheader)
                 suspect.debug(
                     'Could not read spam score from header %s' % spamheader)
-        return isspam,spamscore
+        return isspam, spamscore
 
     def examine(self, suspect):
         # check if someone wants to skip sa checks
@@ -415,7 +414,8 @@ Subject: test scanner
 
             newmsgrep = email.message_from_string(content)
             suspect.set_source(content)
-            isspam,spamscore=self._extract_spamstatus(newmsgrep,spamheadername,suspect)
+            isspam, spamscore = self._extract_spamstatus(
+                newmsgrep, spamheadername, suspect)
 
         action = DUNNO
         message = None

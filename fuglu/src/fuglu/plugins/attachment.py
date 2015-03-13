@@ -72,11 +72,10 @@ ATTACHMENT_SILENTDELETE = 3
 
 KEY_NAME = u"name"
 KEY_CTYPE = u"ctype"
-KEY_ARCHIVENAME=u"archive-name"
-KEY_ARCHIVECTYPE=u"archive-ctype"
+KEY_ARCHIVENAME = u"archive-name"
+KEY_ARCHIVECTYPE = u"archive-ctype"
 
 threadLocal = threading.local()
-
 
 
 class RulesCache(object):
@@ -116,13 +115,13 @@ class RulesCache(object):
     def getCTYPERules(self, key):
         return self.getRules(KEY_CTYPE, key)
 
-    def getARCHIVECTYPERules(self,key):
+    def getARCHIVECTYPERules(self, key):
         return self.getRules(KEY_ARCHIVECTYPE, key)
 
     def getNAMERules(self, key):
         return self.getRules(KEY_NAME, key)
 
-    def getARCHIVENAMERules(self,key):
+    def getARCHIVENAMERules(self, key):
         return self.getRules(KEY_ARCHIVENAME, key)
 
     def reloadifnecessary(self):
@@ -154,23 +153,24 @@ class RulesCache(object):
 
         filelist = os.listdir(self.rulesdir)
 
-        newruleset = {KEY_NAME: {}, KEY_CTYPE: {}, KEY_ARCHIVENAME:{}, KEY_ARCHIVECTYPE:{}}
+        newruleset = {KEY_NAME: {}, KEY_CTYPE: {},
+                      KEY_ARCHIVENAME: {}, KEY_ARCHIVECTYPE: {}}
 
         rulecounter = 0
         okfilecounter = 0
         ignoredfilecounter = 0
 
         for filename in filelist:
-            endingok=False
+            endingok = False
             for ending in (FUATT_NAMESCONFENDING, FUATT_CTYPESCONFENDING, FUATT_ARCHIVENAMESCONFENDING, FUATT_ARCHIVECTYPESCONFENDING):
                 if filename.endswith(ending):
-                    endingok=True
+                    endingok = True
                     break
 
             if endingok:
-                okfilecounter+=1
+                okfilecounter += 1
             else:
-                ignoredfilecounter+=1
+                ignoredfilecounter += 1
                 self.logger.debug('Ignoring file %s' % filename)
                 continue
 
@@ -347,18 +347,18 @@ The other common template variables are available as well.
                 'description': "sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain\n:check will be replaced 'filename','contenttype','archive-filename' or 'archive-contenttype'",
             },
 
-            'checkarchivenames':{
-                'default':'0',
+            'checkarchivenames': {
+                'default': '0',
                 'description': "enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive."
             },
 
-            'checkarchivecontent':{
-                'default':'0',
+            'checkarchivecontent': {
+                'default': '0',
                 'description': 'extract compressed archives(only ZIP supported currently) and check file content type with libmagics\nnote that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.\nfuglu does not extract archives within the archive(recursion)',
             },
 
-            'archivecontentmaxsize':{
-                'default':'5000000',
+            'archivecontentmaxsize': {
+                'default': '5000000',
                 'description': 'only extract and examine files up to this amount of (uncompressed) bytes',
             },
 
@@ -369,11 +369,12 @@ The other common template variables are available as well.
         self.extremeverbosity = False
 
     def _get_file_magic(self):
-        #initialize one magic instance per thread for the libmagic bindings (ahupps file magic seems to do that by itself)
-        if not hasattr(threadLocal,'magic'):
+        # initialize one magic instance per thread for the libmagic bindings
+        # (ahupps file magic seems to do that by itself)
+        if not hasattr(threadLocal, 'magic'):
             ms = magic.open(magic.MAGIC_MIME)
             ms.load()
-            threadLocal.magic=ms
+            threadLocal.magic = ms
         return threadLocal.magic
 
     def examine(self, suspect):
@@ -394,7 +395,7 @@ The other common template variables are available as well.
 
     def getFiletype(self, path):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms=self._get_file_magic()
+            ms = self._get_file_magic()
             ftype = ms.file(path)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             ftype = magic.from_file(path, mime=True)
@@ -402,7 +403,7 @@ The other common template variables are available as well.
 
     def getBuffertype(self, buffercontent):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms=self._get_file_magic()
+            ms = self._get_file_magic()
             btype = ms.buffer(buffercontent)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             btype = magic.from_buffer(buffercontent, mime=True)
@@ -452,7 +453,8 @@ The other common template variables are available as well.
                     suspect.tags['FiletypePlugin.errormessage'] = blockinfo
                     if self.config.getboolean(self.section, 'sendbounce'):
                         if suspect.is_spam() or suspect.is_virus():
-                            self.logger.info("backscatter prevention: not sending attachment block bounce to %s - the message is tagged spam or virus" % suspect.from_address)
+                            self.logger.info(
+                                "backscatter prevention: not sending attachment block bounce to %s - the message is tagged spam or virus" % suspect.from_address)
                         else:
                             self.logger.info(
                                 "Sending attachment block bounce to %s" % suspect.from_address)
@@ -521,19 +523,25 @@ The other common template variables are available as well.
             self.logger.debug('Loading attachment rules from filesystem')
             user_names = self.rulescache.getNAMERules(suspect.to_address)
             user_ctypes = self.rulescache.getCTYPERules(suspect.to_address)
-            user_archive_names = self.rulescache.getARCHIVENAMERules(suspect.to_address)
-            user_archive_ctypes = self.rulescache.getARCHIVECTYPERules(suspect.to_address)
+            user_archive_names = self.rulescache.getARCHIVENAMERules(
+                suspect.to_address)
+            user_archive_ctypes = self.rulescache.getARCHIVECTYPERules(
+                suspect.to_address)
 
             domain_names = self.rulescache.getNAMERules(suspect.to_domain)
             domain_ctypes = self.rulescache.getCTYPERules(suspect.to_domain)
-            domain_archive_names = self.rulescache.getARCHIVENAMERules(suspect.to_domain)
-            domain_archive_ctypes = self.rulescache.getARCHIVECTYPERules(suspect.to_domain)
+            domain_archive_names = self.rulescache.getARCHIVENAMERules(
+                suspect.to_domain)
+            domain_archive_ctypes = self.rulescache.getARCHIVECTYPERules(
+                suspect.to_domain)
 
         # always get defaults from file
         default_names = self.rulescache.getNAMERules(FUATT_DEFAULT)
         default_ctypes = self.rulescache.getCTYPERules(FUATT_DEFAULT)
-        default_archive_names = self.rulescache.getARCHIVENAMERules(FUATT_DEFAULT)
-        default_archive_ctypes = self.rulescache.getARCHIVECTYPERules(FUATT_DEFAULT)
+        default_archive_names = self.rulescache.getARCHIVENAMERules(
+            FUATT_DEFAULT)
+        default_archive_ctypes = self.rulescache.getARCHIVECTYPERules(
+            FUATT_DEFAULT)
 
         m = suspect.get_message_rep()
         for i in m.walk():
@@ -593,15 +601,18 @@ The other common template variables are available as well.
                     message = suspect.tags['FiletypePlugin.errormessage']
                     return blockactioncode, message
 
-            #archives
-            if self.config.getboolean(self.section,'checkarchivenames') or self.config.getboolean(self.section,'checkarchivecontent'):
-                if att_name.lower().endswith('.zip'): #some .docs can actually be zips as well.. we might have to try these as well in the future
-                    self._debuginfo(suspect,"Archive check: scanning file names in %s"%att_name)
+            # archives
+            if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
+                # some .docs can actually be zips as well.. we might have to
+                # try these as well in the future
+                if att_name.lower().endswith('.zip'):
+                    self._debuginfo(
+                        suspect, "Archive check: scanning file names in %s" % att_name)
                     try:
                         pl = StringIO(i.get_payload(decode=True))
                         zip = zipfile.ZipFile(pl)
                         namelist = zip.namelist()
-                        if self.config.getboolean(self.section,'checkarchivenames'):
+                        if self.config.getboolean(self.section, 'checkarchivenames'):
                             for name in namelist:
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
@@ -612,21 +623,25 @@ The other common template variables are available as well.
                                 if res == ATTACHMENT_BLOCK:
                                     self._debuginfo(
                                         suspect, "Blocked filename in archive %s" % att_name)
-                                    message = suspect.tags['FiletypePlugin.errormessage']
+                                    message = suspect.tags[
+                                        'FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                        if MAGIC_AVAILABLE and self.config.getboolean(self.section,'checkarchivecontent'):
+                        if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
                             for name in namelist:
-                                safename=self.asciionly(name)
-                                zinfo=zip.getinfo(name)
-                                if zinfo.file_size>self.config.getint(self.section,'archivecontentmaxsize'):
-                                    self._debuginfo(suspect,'not extracting %s - uncompressed size %s too large'%(safename,zinfo.file_size))
+                                safename = self.asciionly(name)
+                                zinfo = zip.getinfo(name)
+                                if zinfo.file_size > self.config.getint(self.section, 'archivecontentmaxsize'):
+                                    self._debuginfo(
+                                        suspect, 'not extracting %s - uncompressed size %s too large' % (safename, zinfo.file_size))
                                     continue
                                 else:
-                                    self._debuginfo(suspect,'extracting %s'%(safename))
-                                extracted=zip.read(name)
+                                    self._debuginfo(
+                                        suspect, 'extracting %s' % (safename))
+                                extracted = zip.read(name)
 
-                                contenttype_magic = self.getBuffertype(extracted)
+                                contenttype_magic = self.getBuffertype(
+                                    extracted)
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -636,11 +651,13 @@ The other common template variables are available as well.
                                 if res == ATTACHMENT_BLOCK:
                                     self._debuginfo(
                                         suspect, "Extracted file %s from archive %s content-type=%s : blocked by mime content type (magic)" % (safename, att_name, contenttype_magic))
-                                    message = suspect.tags['FiletypePlugin.errormessage']
+                                    message = suspect.tags[
+                                        'FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                    except Exception,e:
-                        self.logger.warning("ZIP name scanning failed in attachment %s: %s"%(att_name,str(e)))
+                    except Exception, e:
+                        self.logger.warning(
+                            "ZIP name scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
 
     def _debuginfo(self, suspect, message):
@@ -658,7 +675,7 @@ The other common template variables are available as well.
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
             print "python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis"
-            if self.config.getboolean(self.section,'checkarchivecontent'):
+            if self.config.getboolean(self.section, 'checkarchivecontent'):
                 print "->checkarviecontent setting ignored"
             return False
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
@@ -689,4 +706,3 @@ The other common template variables are available as well.
         else:
             print "No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir')
         return True
-

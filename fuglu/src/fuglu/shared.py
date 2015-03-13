@@ -307,7 +307,7 @@ class Suspect(object):
                 therep = strrep[:maxtaglen] + "..."
 
             # specialfixes
-            if k == 'SAPlugin.spamscore' and type(v)!=str:
+            if k == 'SAPlugin.spamscore' and type(v) != str:
                 therep = "%.2f" % v
 
             tagscopy[k] = therep
@@ -715,7 +715,7 @@ class SuspectFilter(object):
     def strip_text(self, content, remove_tags=None, use_bfs=True):
         """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
 
-        if remove_tags==None:
+        if remove_tags == None:
             remove_tags = ['script', 'style']
 
         # replace newline with space
@@ -726,11 +726,12 @@ class SuspectFilter(object):
             for r in remove_tags:
                 [x.extract() for x in soup.findAll(r)]
             stripped = ''.join(
-                [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration )and not isinstance(e, BeautifulSoup.ProcessingInstruction ) and not isinstance(e, BeautifulSoup.Comment )])
+                [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
             return stripped
 
-        # no BeautifulSoup available, let's try a modified version of pyzor's html stripper
-        stripper=HTMLStripper(strip_tags=remove_tags)
+        # no BeautifulSoup available, let's try a modified version of pyzor's
+        # html stripper
+        stripper = HTMLStripper(strip_tags=remove_tags)
         try:
             stripper.feed(content)
             return stripper.get_stripped_data()
@@ -938,10 +939,12 @@ class SuspectFilter(object):
                 return False
         return True
 
+
 class HTMLStripper(HTMLParser.HTMLParser):
-    def __init__(self,strip_tags=None):
+
+    def __init__(self, strip_tags=None):
         HTMLParser.HTMLParser.__init__(self)
-        self.strip_tags = strip_tags or ['script','style']
+        self.strip_tags = strip_tags or ['script', 'style']
         self.reset()
         self.collect = True
         self.stripped_data = []

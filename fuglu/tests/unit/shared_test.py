@@ -4,7 +4,9 @@ import ConfigParser
 import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT
 
+
 class SuspectTestCase(unittest.TestCase):
+
     """Test Suspect functions"""
 
     def setUp(self):
@@ -15,13 +17,14 @@ class SuspectTestCase(unittest.TestCase):
 
     def test_id(self):
         """Check the length and uniqueness of the generated id"""
-        s=Suspect('sender@example.com','recipient@example.com','/dev/null')
-        known=[]
+        s = Suspect('sender@example.com', 'recipient@example.com', '/dev/null')
+        known = []
         for i in range(10000):
-            suspect_id=s._generate_id()
-            self.assertTrue(suspect_id not in known,'duplicate id %s generated'%suspect_id)
+            suspect_id = s._generate_id()
+            self.assertTrue(
+                suspect_id not in known, 'duplicate id %s generated' % suspect_id)
             known.append(suspect_id)
-            self.assertEqual(len(suspect_id),32)
+            self.assertEqual(len(suspect_id), 32)
             for c in suspect_id:
                 self.assertTrue(c in string.hexdigits)
 
@@ -81,11 +84,10 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failUnless(arg == 'Sent to unittest domain!')
         self.failUnless(regex == 'unittests\.fuglu\.org')
 
-
     def test_strip(self):
-        html="""foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
+        html = """foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
 
-        declarationtest="""<?xml version="1.0" encoding="UTF-8"?>
+        declarationtest = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
@@ -97,8 +99,8 @@ class SuspectFilterTestCase(unittest.TestCase):
   </body>
 </html>
 """
-            #word generated empty message
-        wordhtml="""<html xmlns:v=3D"urn:schemas-microsoft-com:vml"
+        # word generated empty message
+        wordhtml = """<html xmlns:v=3D"urn:schemas-microsoft-com:vml"
 xmlns:o=3D"urn:schemas-microsoft-com:office:office"
 xmlns:w=3D"urn:schemas-microsoft-com:office:word"
 xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml"
@@ -150,15 +152,18 @@ div.WordSection1
 link=3D"#0563C1" vlink=3D"#954F72"><div class=3DWordSection1><p
 class=3DMsoNormal><o:p> </o:p></p></div></body></html>"""
 
-        for use_bfs in [True,False]:
-            stripped=self.candidate.strip_text(html,use_bfs=use_bfs)
-            self.assertEqual(stripped,'foobarbaz')
+        for use_bfs in [True, False]:
+            stripped = self.candidate.strip_text(html, use_bfs=use_bfs)
+            self.assertEqual(stripped, 'foobarbaz')
 
-            docstripped=self.candidate.strip_text(declarationtest,use_bfs=use_bfs)
-            self.assertEqual(docstripped.split(),['greetings','well','met!'])
+            docstripped = self.candidate.strip_text(
+                declarationtest, use_bfs=use_bfs)
+            self.assertEqual(
+                docstripped.split(), ['greetings', 'well', 'met!'])
 
-            wordhtmstripped=self.candidate.strip_text(wordhtml,use_bfs=use_bfs)
-            self.assertEqual(wordhtmstripped.strip(),'')
+            wordhtmstripped = self.candidate.strip_text(
+                wordhtml, use_bfs=use_bfs)
+            self.assertEqual(wordhtmstripped.strip(), '')
 
 
 class ActionCodeTestCase(unittest.TestCase):
