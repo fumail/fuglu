@@ -1173,48 +1173,6 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="unit-tests">
-<h3>Unit Tests<a class="headerlink" href="#unit-tests" title="Permalink to this headline">¶</a></h3>
-<dl class="docutils">
-<dt>You can easily integrate your unittests with the fuglu test script.</dt>
-<dd><ul class="first last simple">
-<li>create your testcase in the same file as your plugin resides (the testscript will search for all classes extending unittest.TestCase</li>
-<li>create a new directory &#8216;~/fuglu-dev&#8217;</li>
-<li>in ~/fuglu-dev create a new textfile &#8216;&#8217;test.conf&#8217;&#8216;</li>
-</ul>
-</dd>
-</dl>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">test</span><span class="p">]</span>
-<span class="n">includemodules</span><span class="o">=</span><span class="n">myplugin</span>
-</pre></div>
-</div>
-<p>(replace myplugin with your plugin module name)</p>
-<blockquote>
-<div><ul class="simple">
-<li>create a symlink in fuglu-dev to your real plugin file, eg &#8216;&#8217;ln -s /home/edgar/work/myplugin/myplugin.py ~/fuglu-dev/myplugin.py&#8217;&#8216;</li>
-<li>checkout the fuglu code from svn</li>
-<li>cd to the test directory, then run the testscript with the modulename of your plugin as argument</li>
-</ul>
-</div></blockquote>
-<div class="highlight-python"><div class="highlight"><pre>edgar@boscos:~/workspace/fuglu/test$ ./runtests.py myplugin
-[&#39;../conf/fuglu.conf.dist&#39;, &#39;/home/edgar/fuglu-dev/test.conf&#39;]
-found 1 tests in myplugin
----------------------------
-Total 1 tests in Testsuite
-
-STARTING TESTS
-
-fuglu.plugin.MyHeloPlugin: INFO     Hello world from sender@unittests.fuglu.org to recipient@unittests.fuglu.org!
-.
-----------------------------------------------------------------------
-Ran 1 test in 0.010s
-
-OK
-
-Debug Output written to:/tmp/fuglu-test.log
-</pre></div>
-</div>
-</div>
 </div>
 </div>
 
@@ -1325,7 +1283,6 @@ Debug Output written to:/tmp/fuglu-test.log
 </ul>
 </li>
 <li><a class="reference internal" href="#deploying-plugins">Deploying Plugins</a></li>
-<li><a class="reference internal" href="#unit-tests">Unit Tests</a></li>
 </ul>
 </li>
 </ul>
