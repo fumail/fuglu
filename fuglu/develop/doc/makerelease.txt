@@ -2,11 +2,6 @@
 # NEW FUGLU RELEASE #
 #####################
 
-Make sure all tests pass
-------------------------
-cd fuglu/tests
-./runtests.py
-
 
 documentation
 -------------
@@ -26,6 +21,17 @@ make html
 
 fuglu_conf -m all > conf/fuglu.conf.dist
 (commit to git)
+
+
+Make sure all tests pass
+------------------------
+cd fuglu/tests
+nosetests-2.7 unit
+nosetests-2.7 integration
+
+fix code style
+..............
+autopep8-python2 -i -r .
 
 deploy
 ------
