@@ -15,6 +15,7 @@ allow   \.xlsx?$              -
 allow   \.ppsx?$              -
 allow   \.pdf$                -
 allow   \.xml$                -
+allow   \.rtf$                -
 allow   \.url$                - override microsoft deny list
 allow   \.cer$                - override microsoft deny list
 allow   \.crt$                - override microsoft deny list
