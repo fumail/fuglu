@@ -92,16 +92,16 @@ Tags:
     def examine(self, suspect):
         starttime = time.time()
 
-        if suspect.size > self.config.getint('FprotPlugin', 'maxsize'):
+        if suspect.size > self.config.getint(self.section, 'maxsize'):
             self._logger().info('Not scanning - message too big (message %s  bytes > config %s bytes )' %
-                                (suspect.size, self.config.getint('FprotPlugin', 'maxsize')))
+                                (suspect.size, self.config.getint(self.section, 'maxsize')))
             return DUNNO
 
         content = suspect.get_message_rep().as_string()
 
-        for i in range(0, self.config.getint('FprotPlugin', 'retries')):
+        for i in range(0, self.config.getint(self.section, 'retries')):
             try:
-                if self.config.getboolean('FprotPlugin', 'networkmode'):
+                if self.config.getboolean(self.section, 'networkmode'):
                     viruses = self.scan_stream(content)
                 else:
                     viruses = self.scan_file(suspect.tempfile)
@@ -131,9 +131,9 @@ Tags:
                     return DUNNO
             except Exception, e:
                 self._logger().warning("Error encountered while contacting fpscand (try %s of %s): %s" %
-                                       (i + 1, self.config.getint('FprotPlugin', 'retries'), str(e)))
+                                       (i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self._logger().error("fpscand failed after %s retries" %
-                             self.config.getint('FprotPlugin', 'retries'))
+                             self.config.getint(self.section, 'retries'))
         content = None
         return self._problemcode()
 
@@ -220,13 +220,13 @@ Tags:
 
     def __init_socket__(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(self.config.getint('FprotPlugin', 'timeout'))
+        s.settimeout(self.config.getint(self.section, 'timeout'))
         try:
-            s.connect((self.config.get('FprotPlugin', 'host'),
-                       self.config.getint('FprotPlugin', 'port')))
+            s.connect((self.config.get(self.section, 'host'),
+                       self.config.getint(self.section, 'port')))
         except socket.error:
             raise Exception, 'Could not reach fpscand using network (%s, %s)' % (
-                self.config.get('FprotPlugin', 'host'), self.config.getint('FprotPlugin', 'port'))
+                self.config.get(self.section, 'host'), self.config.getint(self.section, 'port'))
 
         return s
 
