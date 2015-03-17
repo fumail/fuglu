@@ -158,7 +158,7 @@ Tags:
 
         while len(remainingbytes) > 0:
             chunklength = min(default_chunk_size, len(remainingbytes))
-            self.logger.debug('sending %s byte chunk' % chunklength)
+            #self.logger.debug('sending %s byte chunk' % chunklength)
             chunkdata = remainingbytes[:chunklength]
 
             remainingbytes = remainingbytes[chunklength:]
