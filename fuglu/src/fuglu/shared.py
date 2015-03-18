@@ -165,7 +165,7 @@ class Suspect(object):
         self.tags['spam'] = {}
         self.tags['highspam'] = {}
         self.tags['decisions'] = []
-        self.tags['scantimes']= []
+        self.tags['scantimes'] = []
 
         # temporary file containing the message source
         self.tempfile = tempfile
