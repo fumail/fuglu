@@ -189,11 +189,25 @@ chgrp=
 
 [FiletypePlugin]
 
-#inform the sender about blocked attachments
+#inform the sender about blocked attachments.
+#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
 sendbounce=1
+
+#read runtime configuration values from a database. requires sqlalchemy to be installed
+dbconnectstring=
+
+#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
+#:check will be replaced 'filename','contenttype','archive-filename' or 'archive-contenttype'
+query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 
 #Mail template for the bounce to inform sender about blocked attachment
 template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+
+#directory that contains attachment rules
+rulesdir=/etc/fuglu/rules
+
+#enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+checkarchivenames=0
 
 #what should the plugin do when a blocked attachment is detected
 #REJECT : reject the message (recommended in pre-queue mode)
@@ -201,15 +215,13 @@ template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
 
-#read runtime configuration values from a database. requires sqlalchemy to be installed
-dbconnectstring=
+#extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+#note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
+#fuglu does not extract archives within the archive(recursion)
+checkarchivecontent=0
 
-#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
-#:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
-query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
-
-#directory that contains attachment rules
-rulesdir=/etc/fuglu/rules
+#only extract and examine files up to this amount of (uncompressed) bytes
+archivecontentmaxsize=5000000
 
 [ClamavPlugin]
 
@@ -271,7 +283,10 @@ sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND u
 #should match the 'StreamMaxLength' config option in clamd.conf 
 maxsize=256000
 
-#what header does sa set to indicate the spam status
+#what header does SA set to indicate the spam status
+#Note that fuglu requires a standard header template configuration for spamstatus and score extraction
+#if forwardoriginal is set to 0
+#eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
 spamheader=X-Spam-Status
 
 #hostname where clamd runs
