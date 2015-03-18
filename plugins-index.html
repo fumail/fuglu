@@ -206,7 +206,6 @@ mime:Content-Type ^application\/x-msdos-program$
 <li>reads <tt class="docutils literal"><span class="pre">SAPlugin.tempheader</span></tt>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
 <li>sets <tt class="docutils literal"><span class="pre">spam['spamassassin']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">SAPlugin.spamscore</span></tt> (float) if possible</li>
-<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.time</span></tt> (float)</li>
 <li>sets <tt class="docutils literal"><span class="pre">SAPlugin.skipreason</span></tt> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
 </ul>
 </div></blockquote>
@@ -290,7 +289,6 @@ lowspamaction=DEFAULTLOWSPAMACTION
 <div><ul class="simple">
 <li>sets <tt class="docutils literal"><span class="pre">virus['ClamAV']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
-<li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.time</span></tt> (float)</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id1">
@@ -373,24 +371,36 @@ allow    \.gif$            -
 <div class="highlight-python"><div class="highlight"><pre>To: ${from_address}
 Subject: Blocked attachment
 
-Your message to ${to_address} contains a blocked attachment and has been deleted.
+Your message to ${to_address} contains a blocked attachment and has not been delivered.
 
 ${blockinfo}
-
-You may add this file to a zip archive (or similar) and send it again.
 </pre></div>
 </div>
 <p>eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.</p>
 <p><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
-<p>See (TODO: link to template vars chapter) for commonly available template variables in Fuglu.</p>
+<p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
 <h4>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python"><div class="highlight"><pre>[FiletypePlugin]
-#inform the sender about blocked attachments
+#inform the sender about blocked attachments.
+#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
 sendbounce=1
+
+#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
+dbconnectstring=
+
+#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
+#:check will be replaced &#39;filename&#39;,&#39;contenttype&#39;,&#39;archive-filename&#39; or &#39;archive-contenttype&#39;
+query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 
 #Mail template for the bounce to inform sender about blocked attachment
 template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+
+#directory that contains attachment rules
+rulesdir=/etc/fuglu/rules
+
+#enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+checkarchivenames=0
 
 #what should the plugin do when a blocked attachment is detected
 #REJECT : reject the message (recommended in pre-queue mode)
@@ -398,15 +408,13 @@ template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
 
-#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
-dbconnectstring=
+#extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+#note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
+#fuglu does not extract archives within the archive(recursion)
+checkarchivecontent=0
 
-#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
-#:check will be replaced by either &#39;filename&#39; to get filename rules or &#39;contenttype&#39; to get content type rules
-query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
-
-#directory that contains attachment rules
-rulesdir=/etc/fuglu/rules
+#only extract and examine files up to this amount of (uncompressed) bytes
+archivecontentmaxsize=5000000
 </pre></div>
 </div>
 </div>
@@ -571,7 +579,6 @@ virusaction=DEFAULTVIRUSACTION
 <div><ul class="simple">
 <li>sets <tt class="docutils literal"><span class="pre">virus['F-Prot']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
-<li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.time</span></tt> (float)</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id6">
@@ -840,7 +847,6 @@ noappender=1
 In plugin you usually only have to import things from <a class="reference internal" href="api.html#api-shared"><em>fuglu.shared</em></a> , so it&#8217;s probably a good idea to get familiar with  that module.</p>
 <p>This is a quick example of how your plugin code skeleton would look like:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
-<span class="kn">import</span> <span class="nn">time</span>
 
 <span class="k">class</span> <span class="nc">DemoPlugin</span><span class="p">(</span><span class="n">ScannerPlugin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy this to make a new plugin&quot;&quot;&quot;</span>
@@ -861,15 +867,8 @@ In plugin you usually only have to import things from <a class="reference intern
         <span class="c">#debug example</span>
         <span class="c">#self._logger().debug(&#39;hello world from StubPlugin&#39;)</span>
 
-        <span class="n">starttime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-
-
         <span class="c">#PUT PLUGIN CODE HERE</span>
 
-        <span class="c">#For debugging, its good to know how long each plugin took</span>
-        <span class="n">endtime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">difftime</span><span class="o">=</span><span class="n">endtime</span><span class="o">-</span><span class="n">starttime</span>
-        <span class="n">suspect</span><span class="o">.</span><span class="n">tags</span><span class="p">[</span><span class="s">&#39;DemoPlugin.time&#39;</span><span class="p">]</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%.4f</span><span class="s">&quot;</span><span class="o">%</span><span class="n">difftime</span>
         <span class="k">return</span> <span class="n">DUNNO</span>
 </pre></div>
 </div>
@@ -1070,7 +1069,7 @@ INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
 INFO:root:Result: DUNNO
-INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={&#39;virus&#39;: {}, &#39;spam&#39;: {}, &#39;ExamplePlugin.time&#39;: &#39;0.0001&#39;, &#39;highspam&#39;: {}}
+INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={&#39;virus&#39;: {}, &#39;spam&#39;: {}, &#39;highspam&#39;: {}}
 </pre></div>
 </div>
 <p>advanced usage:</p>
@@ -1087,7 +1086,7 @@ INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!
 INFO:root:Result: DUNNO
-INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={&#39;virus&#39;: {}, &#39;spam&#39;: {}, &#39;ExamplePlugin.time&#39;: &#39;0.0001&#39;, &#39;highspam&#39;: {}}
+INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={&#39;virus&#39;: {}, &#39;spam&#39;: {}, &#39;highspam&#39;: {}}
 </pre></div>
 </div>
 <p>adding headers to the input message</p>
@@ -1111,7 +1110,7 @@ INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
 INFO:root:Result: DUNNO
-INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={&#39;spam&#39;: {}, &#39;virus&#39;: {}, &#39;mytag&#39;: &#39;myvalue&#39;, &#39;ExamplePlugin.time&#39;: &#39;0.0001&#39;, &#39;highspam&#39;: {}}
+INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={&#39;spam&#39;: {}, &#39;virus&#39;: {}, &#39;mytag&#39;: &#39;myvalue&#39;, &#39;highspam&#39;: {}}
 </pre></div>
 </div>
 <p>setting a config option:</p>
@@ -1139,7 +1138,7 @@ INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
 INFO:root:Result: DUNNO
-INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={&#39;virus&#39;: {}, &#39;spam&#39;: {}, &#39;ExamplePlugin.time&#39;: &#39;0.0001&#39;, &#39;highspam&#39;: {}}
+INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={&#39;virus&#39;: {}, &#39;spam&#39;: {}, &#39;highspam&#39;: {}}
 Fuglu Interactive Console started
 
 pre-defined locals:

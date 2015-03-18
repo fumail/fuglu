@@ -18,7 +18,6 @@ Tags:
  * reads ``SAPlugin.tempheader``, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
- * sets ``SAPlugin.time`` (float)
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
 
 
@@ -110,7 +109,6 @@ Tags:
 
  * sets ``virus['ClamAV']`` (boolean)
  * sets ``ClamavPlugin.virus`` (list of strings) - virus names found in message
- * sets ``ClamavPlugin.time`` (float)
 
 
 Configuration
@@ -216,18 +214,18 @@ The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like 
     To: ${from_address}
     Subject: Blocked attachment
 
-    Your message to ${to_address} contains a blocked attachment and has been deleted.
+    Your message to ${to_address} contains a blocked attachment and has not been delivered.
 
     ${blockinfo}
 
-    You may add this file to a zip archive (or similar) and send it again.
 
 
 eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.
 
 ``${blockinfo}`` will be replaced with the text you specified in the third column of the rule that blocked this message.
 
-See (TODO: link to template vars chapter) for commonly available template variables in Fuglu.
+The other common template variables are available as well.
+
 
 
 
@@ -237,11 +235,25 @@ Configuration
 ::
 
     [FiletypePlugin]
-    #inform the sender about blocked attachments
+    #inform the sender about blocked attachments.
+    #If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
     sendbounce=1
+
+    #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
+    dbconnectstring=
+
+    #sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
+    #:check will be replaced 'filename','contenttype','archive-filename' or 'archive-contenttype'
+    query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 
     #Mail template for the bounce to inform sender about blocked attachment
     template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+
+    #directory that contains attachment rules
+    rulesdir=/etc/fuglu/rules
+
+    #enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+    checkarchivenames=0
 
     #what should the plugin do when a blocked attachment is detected
     #REJECT : reject the message (recommended in pre-queue mode)
@@ -249,15 +261,13 @@ Configuration
     #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
     blockaction=DELETE
 
-    #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
-    dbconnectstring=
+    #extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+    #note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
+    #fuglu does not extract archives within the archive(recursion)
+    checkarchivecontent=0
 
-    #sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
-    #:check will be replaced by either 'filename' to get filename rules or 'contenttype' to get content type rules
-    query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
-
-    #directory that contains attachment rules
-    rulesdir=/etc/fuglu/rules
+    #only extract and examine files up to this amount of (uncompressed) bytes
+    archivecontentmaxsize=5000000
 
 
 
@@ -456,7 +466,6 @@ Tags:
 
  * sets ``virus['F-Prot']`` (boolean)
  * sets ``FprotPlugin.virus`` (list of strings) - virus names found in message
- * sets ``FprotPlugin.time`` (float)
 
 
 Configuration

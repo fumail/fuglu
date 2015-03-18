@@ -163,7 +163,6 @@ This is a quick example of how your plugin code skeleton would look like:
 
 
 	from fuglu.shared import ScannerPlugin,DUNNO
-	import time
 
 	class DemoPlugin(ScannerPlugin):
 	    """Copy this to make a new plugin"""
@@ -184,15 +183,8 @@ This is a quick example of how your plugin code skeleton would look like:
 		#debug example
 		#self._logger().debug('hello world from StubPlugin')
 		  
-		starttime=time.time()
-		
-		
 		#PUT PLUGIN CODE HERE
 		
-		#For debugging, its good to know how long each plugin took
-		endtime=time.time()
-		difftime=endtime-starttime
-		suspect.tags['DemoPlugin.time']="%.4f"%difftime
 		return DUNNO
 
 
@@ -465,7 +457,7 @@ assuming your plugin file ('myplugin.py') is in ``/usr/local/fuglu/plugins`` you
 	INFO:root:Running plugin: ExamplePlugin
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
 	INFO:root:Result: DUNNO 
-	INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+	INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}
 
 advanced usage:
 
@@ -491,7 +483,7 @@ the '-s' and '-f' options change the envelope sender/recipient. -r can be specif
 	INFO:root:Running plugin: ExamplePlugin                                                                                                                                                                           
 	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!                                                                                                                               
 	INFO:root:Result: DUNNO                                                                                                                                                                                           
-	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}  
+	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}  
 
 
 adding headers to the input message
@@ -521,7 +513,7 @@ adding tags:
 	INFO:root:Running plugin: ExamplePlugin
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
 	INFO:root:Result: DUNNO 
-	INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'spam': {}, 'virus': {}, 'mytag': 'myvalue', 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+	INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'spam': {}, 'virus': {}, 'mytag': 'myvalue', 'highspam': {}}
 
 
 setting a config option:
@@ -556,7 +548,7 @@ running a interactive console in the dummy enrivonment:
 	INFO:root:Running plugin: ExamplePlugin
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
 	INFO:root:Result: DUNNO 
-	INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'ExamplePlugin.time': '0.0001', 'highspam': {}}
+	INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}
 	Fuglu Interactive Console started
 
 	pre-defined locals:

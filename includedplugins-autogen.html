@@ -40,6 +40,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
     <li><a href="index.html">fuglu  documentation</a> &raquo;</li>
  
       </ul>
@@ -66,7 +69,6 @@
 <li>reads <tt class="docutils literal"><span class="pre">SAPlugin.tempheader</span></tt>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
 <li>sets <tt class="docutils literal"><span class="pre">spam['spamassassin']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">SAPlugin.spamscore</span></tt> (float) if possible</li>
-<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.time</span></tt> (float)</li>
 <li>sets <tt class="docutils literal"><span class="pre">SAPlugin.skipreason</span></tt> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
 </ul>
 </div></blockquote>
@@ -150,7 +152,6 @@ lowspamaction=DEFAULTLOWSPAMACTION
 <div><ul class="simple">
 <li>sets <tt class="docutils literal"><span class="pre">virus['ClamAV']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
-<li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.time</span></tt> (float)</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id1">
@@ -233,24 +234,36 @@ allow    \.gif$            -
 <div class="highlight-python"><div class="highlight"><pre>To: ${from_address}
 Subject: Blocked attachment
 
-Your message to ${to_address} contains a blocked attachment and has been deleted.
+Your message to ${to_address} contains a blocked attachment and has not been delivered.
 
 ${blockinfo}
-
-You may add this file to a zip archive (or similar) and send it again.
 </pre></div>
 </div>
 <p>eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.</p>
 <p><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
-<p>See (TODO: link to template vars chapter) for commonly available template variables in Fuglu.</p>
+<p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
 <h2>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre>[FiletypePlugin]
-#inform the sender about blocked attachments
+#inform the sender about blocked attachments.
+#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
 sendbounce=1
+
+#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
+dbconnectstring=
+
+#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
+#:check will be replaced &#39;filename&#39;,&#39;contenttype&#39;,&#39;archive-filename&#39; or &#39;archive-contenttype&#39;
+query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 
 #Mail template for the bounce to inform sender about blocked attachment
 template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+
+#directory that contains attachment rules
+rulesdir=/etc/fuglu/rules
+
+#enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+checkarchivenames=0
 
 #what should the plugin do when a blocked attachment is detected
 #REJECT : reject the message (recommended in pre-queue mode)
@@ -258,15 +271,13 @@ template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
 
-#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
-dbconnectstring=
+#extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+#note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
+#fuglu does not extract archives within the archive(recursion)
+checkarchivecontent=0
 
-#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
-#:check will be replaced by either &#39;filename&#39; to get filename rules or &#39;contenttype&#39; to get content type rules
-query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
-
-#directory that contains attachment rules
-rulesdir=/etc/fuglu/rules
+#only extract and examine files up to this amount of (uncompressed) bytes
+archivecontentmaxsize=5000000
 </pre></div>
 </div>
 </div>
@@ -431,7 +442,6 @@ virusaction=DEFAULTVIRUSACTION
 <div><ul class="simple">
 <li>sets <tt class="docutils literal"><span class="pre">virus['F-Prot']</span></tt> (boolean)</li>
 <li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
-<li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.time</span></tt> (float)</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id6">
@@ -799,6 +809,9 @@ noappender=1
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
     <li><a href="index.html">fuglu  documentation</a> &raquo;</li>
  
       </ul>
