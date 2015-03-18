@@ -18,7 +18,6 @@ Example Plugin
 """
 
 from fuglu.shared import ScannerPlugin, DUNNO
-import time
 
 
 class ExamplePlugin(ScannerPlugin):
@@ -42,8 +41,6 @@ class ExamplePlugin(ScannerPlugin):
         # config Example
         greeting = self.config.get(self.section, 'greeting')
 
-        starttime = time.time()
-
         # debug info is helpful when the message is run through fuglu_debug
         suspect.debug("Greeting: %s" % greeting)
 
@@ -58,8 +55,4 @@ class ExamplePlugin(ScannerPlugin):
         else:
             self._logger().warning("Message has no 'From' header!")
 
-        # For debugging, it's good to know how long each plugin took
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['ExamplePlugin.time'] = "%.4f" % difftime
         return DUNNO

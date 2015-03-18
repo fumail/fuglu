@@ -379,7 +379,6 @@ The other common template variables are available as well.
         return threadLocal.magic
 
     def examine(self, suspect):
-        starttime = time.time()
         if self.rulescache == None:
             self.rulescache = RulesCache(
                 self.config.get(self.section, 'rulesdir'))
@@ -388,10 +387,6 @@ The other common template variables are available as well.
             self.section, 'template_blockedfile')
 
         returnaction = self.walk(suspect)
-
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['FiletypePlugin.time'] = "%.4f" % difftime
         return returnaction
 
     def getFiletype(self, path):

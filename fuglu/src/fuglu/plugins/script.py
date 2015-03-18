@@ -57,7 +57,6 @@ example script:
         }
 
     def examine(self, suspect):
-        starttime = time.time()
         scripts = self.get_scripts()
         retaction = DUNNO
         retmessage = ''
@@ -74,9 +73,6 @@ example script:
                 retmessage = message
                 break
 
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['ScriptFilter.time'] = "%.4f" % difftime
         return retaction, retmessage
 
     def lint(self):

@@ -165,6 +165,7 @@ class Suspect(object):
         self.tags['spam'] = {}
         self.tags['highspam'] = {}
         self.tags['decisions'] = []
+        self.tags['scantimes']= []
 
         # temporary file containing the message source
         self.tempfile = tempfile
@@ -288,7 +289,7 @@ class Suspect(object):
 
     def _short_tag_rep(self):
         """return a tag representation suitable for logging, with some tags stripped, some shortened"""
-        blacklist = ['decisions', ]
+        blacklist = ['decisions', 'scantimes', 'debugfile']
         tagscopy = {}
 
         for k, v in self.tags.iteritems():

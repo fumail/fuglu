@@ -16,7 +16,6 @@
 
 from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, Suspect, apply_template
 import socket
-import time
 import os
 
 
@@ -192,7 +191,6 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             return DEFER
 
     def examine(self, suspect):
-        starttime = time.time()
         enginename = 'sophos'
 
         if suspect.size > self.config.getint(self.section, 'maxsize'):
@@ -212,10 +210,6 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                     suspect.debug('viruses found in message : %s' % viruses)
                 else:
                     suspect.tags['virus'][enginename] = False
-
-                endtime = time.time()
-                difftime = endtime - starttime
-                suspect.tags['SSSPPlugin.time'] = "%.4f" % difftime
 
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')

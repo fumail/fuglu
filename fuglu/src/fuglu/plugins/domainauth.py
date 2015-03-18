@@ -103,8 +103,6 @@ It is currently recommended to leave both header and body canonicalization as 'r
                 'DKIMVerify.skipreason', 'dkimpy library not available')
             return DUNNO
 
-        starttime = time.time()
-
         source = suspect.get_original_source()
         if "dkim-signature: " not in suspect.get_headers().lower():
             suspect.set_tag('DKIMVerify.skipreason', 'not dkim signed')
@@ -118,10 +116,6 @@ It is currently recommended to leave both header and body canonicalization as 'r
             valid = False
 
         suspect.set_tag("DKIMVerify.sigvalid", valid)
-
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['DKIMVerify.time'] = "%.4f" % difftime
         return DUNNO
 
     def lint(self):
@@ -210,7 +204,6 @@ If fuglu handles both incoming and outgoing mails you should make sure that this
             self._logger.error("DKIM signing skipped - missing dkimpy library")
             return DUNNO
 
-        starttime = time.time()
         message = suspect.get_source()
         domain = self.get_header_from_domain(suspect)
         addvalues = dict(header_from_domain=domain)
@@ -252,10 +245,6 @@ If fuglu handles both incoming and outgoing mails you should make sure that this
             dkimhdr = dkimhdr[16:]
 
         suspect.addheader('DKIM-Signature', dkimhdr, immediate=True)
-
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['DKIMSign.time'] = "%.4f" % difftime
 
     def lint(self):
         if not DKIMPY_AVAILABLE:
@@ -302,7 +291,6 @@ in combination with other factors to take action (for example a "DMARC" plugin c
             suspect.set_tag("SPF.explanation", 'missing dependency')
             return DUNNO
 
-        starttime = time.time()
         clientinfo = suspect.get_client_info(self.config)
         if clientinfo == None:
             suspect.debug("pyspf not available, can not check")
@@ -318,10 +306,6 @@ in combination with other factors to take action (for example a "DMARC" plugin c
         suspect.set_tag("SPF.status", result)
         suspect.set_tag("SPF.explanation", explanation)
         suspect.debug("SPF status: %s (%s)" % (result, explanation))
-
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['SPFCheck.time'] = "%.4f" % difftime
         return DUNNO
 
     def lint(self):

@@ -4,10 +4,12 @@
  * Attachment Plugin: can now check file names in zip archives and extract files from zips to check their content type
  * bugfix: Spamassassin plugin no longer treats ham as spam if forwardoriginal=0 and spamheader contains bayes test result
  * bugfix: Attachment plugin should no longer cause fuglu to crash under load if python-file is installed
-
+ * bugfix: Attachment plugin should now evaluate rules within the same file in the correct order
 
 Developers:
- *
+ * suspects now have an additional tag 'scantimes' contaiting a list of tuples (<plugin section name>, scan time) - you no longer have to add your custom Myplugin.time tag
+   All built-in plugins no longer write the .time tag themselves.
+ * the "decisions" tag now uses the plugin's section name instead of the  human readable name.
 
 -- Fuglu 0.6.2, 2014-09-05
  * new Prepender: PluginFraction (basically the opposite of PluginSkipper:include instead of exclude list)

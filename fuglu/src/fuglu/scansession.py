@@ -220,7 +220,10 @@ class SessionHandler(object):
                 self.set_threadinfo(
                     "%s : Running Plugin %s" % (suspect, plugin))
                 suspect.debug('Running plugin %s' % str(plugin))
+                starttime=time.time()
                 ans = plugin.examine(suspect)
+                plugintime=time.time()-starttime
+                suspect.tags['scantimes'].append((plugin.section,plugintime))
                 message = None
                 if type(ans) is tuple:
                     result, message = ans
@@ -230,7 +233,7 @@ class SessionHandler(object):
                 if result == None:
                     result = DUNNO
 
-                suspect.tags['decisions'].append((str(plugin), result))
+                suspect.tags['decisions'].append((plugin.section, result))
 
                 if result == DUNNO:
                     suspect.debug('Plugin makes no final decision')
@@ -285,7 +288,10 @@ class SessionHandler(object):
                 self.logger.debug('Running prepender %s' % plugin)
                 self.set_threadinfo(
                     "%s : Running Prepender %s" % (suspect, plugin))
+                starttime=time.time()
                 result = plugin.pluginlist(suspect, plugcopy)
+                plugintime=time.time()-starttime
+                suspect.tags['scantimes'].append((plugin.section, plugintime))
                 if result != None:
                     plugcopyset = set(plugcopy)
                     resultset = set(result)
@@ -317,7 +323,10 @@ class SessionHandler(object):
                 suspect.debug('Running appender %s' % plugin)
                 self.set_threadinfo(
                     "%s : Running appender %s" % (suspect, plugin))
+                starttime=time.time()
                 plugin.process(suspect, finaldecision)
+                plugintime=time.time()-starttime
+                suspect.tags['scantimes'].append((plugin.section, plugintime))
             except Exception:
                 CrashStore.store_exception()
                 exc = traceback.format_exc()

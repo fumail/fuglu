@@ -38,7 +38,6 @@ Tags:
  * reads ``SAPlugin.tempheader``, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
- * sets ``SAPlugin.time`` (float)
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
 """
 
@@ -368,8 +367,6 @@ Subject: test scanner
             suspect.set_tag('SAPlugin.skipreason', 'size skip')
             return self.check_sql_blacklist(suspect)
 
-        starttime = time.time()
-
         forwardoriginal = self.config.getboolean(
             self.section, 'forwardoriginal')
 
@@ -446,10 +443,6 @@ Subject: test scanner
                     runtimeconfig.get(self.section, 'highspamaction'), self.config)
                 if configaction != None:
                     action = configaction
-
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['SAPlugin.time'] = "%.4f" % difftime
         return action, message
 
     def __init_socket(self):

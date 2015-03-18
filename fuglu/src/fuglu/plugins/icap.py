@@ -18,7 +18,6 @@
 
 from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, Suspect, apply_template
 import socket
-import time
 import os
 
 
@@ -99,7 +98,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             return DEFER
 
     def examine(self, suspect):
-        starttime = time.time()
+
         enginename = self.config.get(self.section, 'enginename')
 
         if suspect.size > self.config.getint(self.section, 'maxsize'):
@@ -119,10 +118,6 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                     suspect.debug('viruses found in message : %s' % viruses)
                 else:
                     suspect.tags['virus'][enginename] = False
-
-                endtime = time.time()
-                difftime = endtime - starttime
-                suspect.tags['ICAPPlugin.time'] = "%.4f" % difftime
 
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')

@@ -16,7 +16,6 @@ from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, acti
     DELETE, Suspect, apply_template
 import socket
 import string
-import time
 import os
 import struct
 
@@ -36,7 +35,6 @@ Tags:
 
  * sets ``virus['ClamAV']`` (boolean)
  * sets ``ClamavPlugin.virus`` (list of strings) - virus names found in message
- * sets ``ClamavPlugin.time`` (float)
 """
 
     def __init__(self, config, section=None):
@@ -97,7 +95,6 @@ Tags:
             return DEFER
 
     def examine(self, suspect):
-        starttime = time.time()
 
         if suspect.size > self.config.getint(self.section, 'maxsize'):
             self.logger.info('Not scanning - message too big')
@@ -116,10 +113,6 @@ Tags:
                     suspect.debug('viruses found in message : %s' % viruses)
                 else:
                     suspect.tags['virus']['ClamAV'] = False
-
-                endtime = time.time()
-                difftime = endtime - starttime
-                suspect.tags['ClamavPlugin.time'] = "%.4f" % difftime
 
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')

@@ -15,7 +15,6 @@
 #
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, DEFER, SuspectFilter,\
     apply_template
-import time
 import os
 import shutil
 import pwd
@@ -128,8 +127,6 @@ envelope_to support@fuglu\.org      yes
         return True
 
     def examine(self, suspect):
-        starttime = time.time()
-
         archiverules = self.config.get(self.section, 'archiverules')
         if archiverules == None or archiverules == "":
             return DUNNO
@@ -161,11 +158,6 @@ envelope_to support@fuglu\.org      yes
         else:
             suspect.debug(
                 "No archive rule/exception rule applies to this message")
-
-        # For debugging, its good to know how long each plugin took
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['ArchivePlugin.time'] = "%.4f" % difftime
 
     def archive(self, suspect):
         archivedir = self.config.get(self.section, 'archivedir')

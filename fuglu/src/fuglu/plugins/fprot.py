@@ -32,7 +32,6 @@ Tags:
 
  * sets ``virus['F-Prot']`` (boolean)
  * sets ``FprotPlugin.virus`` (list of strings) - virus names found in message
- * sets ``FprotPlugin.time`` (float)
 """
 
     def __init__(self, config, section=None):
@@ -113,10 +112,6 @@ Tags:
                     suspect.debug('Viruses found in message : %s' % viruses)
                 else:
                     suspect.tags['virus']['F-Prot'] = False
-
-                endtime = time.time()
-                difftime = endtime - starttime
-                suspect.tags['FprotPlugin.time'] = "%.4f" % difftime
 
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')

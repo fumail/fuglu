@@ -292,8 +292,6 @@ SQL Example for mysql:
         return self.cache
 
     def examine(self, suspect):
-        starttime = time.time()
-
         # this plugin should not cause fuglu to defer
         try:
             vac = self.should_send_vacation_message(suspect)
@@ -305,10 +303,6 @@ SQL Example for mysql:
             exc = traceback.format_exc()
             self.logger.error("Exception in Vacation Plugin: %s" % e)
             self.logger.error(exc)
-
-        endtime = time.time()
-        difftime = endtime - starttime
-        suspect.tags['VacationPlugin.time'] = "%.4f" % difftime
         return DUNNO
 
     def should_send_vacation_message(self, suspect):
