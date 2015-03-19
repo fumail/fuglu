@@ -61,7 +61,7 @@ Developers:
  * new Plugin: Killer (Deletes All messages) - used in some special setups
  * Vacation Plugin: Now supports domain wide ooo messages
  * SuspectFilter Files now have support advanced regex format /<perl style regular expression>/<modifiers>
-   see: http://sourceforge.net/apps/trac/fuglu/wiki/SuspectFilter
+   see:  http://gryphius.github.io/fuglu/plugins-index.html?highlight=suspectfilter#suspect-filters
  * Archive Plugin: Improved Logging
  * Attachment Plugin: bugfix, sendbounce option could not be disabled
  * Spamassassin Plugin: bugfix, better detection of spamflag header
@@ -77,11 +77,11 @@ Developers:
  * suspect.addheader() has a new 'immediate' option to make headers visible for consecutive plugins. by default, headers are only added before re-injecting
  * Spamassassin Plugin: writes new tag "SAPlugin.skipreason' if the message was not scanned
  * new way of defining required config variables. plugins can now provide defaults and config option descriptions. 
-   see: http://sourceforge.net/apps/trac/fuglu/wiki/dev/WritingPlugins#definingconfigurationoptionsforyourplugin
+   see: http://gryphius.github.io/fuglu/plugins-index.html#define-configuration-options-for-your-plugin
    important: for default values to work, make sure your plugin doesn't read it's own config values in __init__ !
  * Suspect.getSource() now has an optional maxsize parameter to limit the amount of body data read into memory
  * new development tool: 'plugdummy.py', dry-run and debug your plugins without a running fuglu
-   see: http://sourceforge.net/apps/trac/fuglu/wiki/dev/Plugdummy
+   see: http://gryphius.github.io/fuglu/plugins-index.html#debug-a-plugin-without-running-fuglu
  
  
  
