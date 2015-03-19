@@ -1,15 +1,15 @@
--- Fuglu 0.6.3, not yet released
+-- Fuglu 0.6.3, 2015-03-20
  * lint now also checks SuspectFilter files in some plugins
- * improved HTML stripping
- * Attachment Plugin: can now check file names in zip archives and extract files from zips to check their content type
+ * SuspectFilters: improved HTML stripping
+ * Attachment plugin: can now check file names in zip archives and extract files from zips to check their content type
  * bugfix: Spamassassin plugin no longer treats ham as spam if forwardoriginal=0 and spamheader contains bayes test result
  * bugfix: Attachment plugin should no longer cause fuglu to crash under load if python-file is installed
  * bugfix: Attachment plugin should now evaluate rules within the same file in the correct order
 
 Developers:
- * suspects now have an additional tag 'scantimes' contaiting a list of tuples (<plugin section name>, scan time) - you no longer have to add your custom Myplugin.time tag
-   All built-in plugins no longer write the .time tag themselves.
- * the "decisions" tag now uses the plugin's section name instead of the  human readable name.
+ * suspects now have an additional built-in tag 'scantimes' which contains a list of tuples (<plugin section name>, scan time) - you no longer have to add your custom Myplugin.time tag
+   Existing plugins no longer write the .time tag themselves.
+ * the built-in "decisions" tag now uses the plugin's section name instead of the  human readable name
 
 -- Fuglu 0.6.2, 2014-09-05
  * new Prepender: PluginFraction (basically the opposite of PluginSkipper:include instead of exclude list)
@@ -71,8 +71,7 @@ Developers:
  * outgoinghelo is no longer mandatory, fuglu auto-detects the local hostname if the config option is empty
  * new tool: fuglu_conf to export current config, show differences from the default (fuglu_conf -n) etc
  * the message returned to the connecting client is now configurable
- 
- 
+
 Developers: 
  * suspect.addheader() has a new 'immediate' option to make headers visible for consecutive plugins. by default, headers are only added before re-injecting
  * Spamassassin Plugin: writes new tag "SAPlugin.skipreason' if the message was not scanned
@@ -82,9 +81,7 @@ Developers:
  * Suspect.getSource() now has an optional maxsize parameter to limit the amount of body data read into memory
  * new development tool: 'plugdummy.py', dry-run and debug your plugins without a running fuglu
    see: http://gryphius.github.io/fuglu/plugins-index.html#debug-a-plugin-without-running-fuglu
- 
- 
- 
+
 -- Fuglu 0.5.0, Released 2011-10-28
  * started changelog ;-)
  * bugfix: Milter protocol errors
