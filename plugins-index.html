@@ -677,13 +677,13 @@ actionrules=/etc/fuglu/actionrules.regex
 <p>This plugins executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
 <p>Filterscripts must be written in standard python but with the file ending <tt class="docutils literal"><span class="pre">.fgf</span></tt> (&#8220;fuglu filter&#8221;)</p>
-<p>scripts are reloaded for every message executed in alphabetic order</p>
+<p>scripts are reloaded for every message and executed in alphabetic order</p>
 <p>The API is basically the same as for normal plugins within the <tt class="docutils literal"><span class="pre">examine()</span></tt> method, with a few special cases:</p>
 <p>there is no &#8216;self&#8217; which means:</p>
 <blockquote>
 <div><ul class="simple">
 <li>access the configuration by using <tt class="docutils literal"><span class="pre">config</span></tt> directly (instead of <tt class="docutils literal"><span class="pre">self.config</span></tt>)</li>
-<li>use <tt class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></tt> instead of <tt class="docutils literal"><span class="pre">self.logger.debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
+<li>use <tt class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></tt> instead of <tt class="docutils literal"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
 </ul>
 </div></blockquote>
 <p>the script should not return anything, but change the available variables <tt class="docutils literal"><span class="pre">action</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt> instead
@@ -693,7 +693,7 @@ This can be used to quickly add a custom filter script without changing the fugl
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#block all messages from evilsender.example.com</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="o">==</span><span class="s">&#39;evilsender.example.com&#39;</span><span class="p">:</span>
-    <span class="n">suspect</span><span class="o">.</span><span class="n">addheader</span><span class="p">(</span><span class="s">&quot;x-fuglu-SenderDomain&quot;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="p">,</span><span class="n">immediate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;x-fuglu-SenderDomain&quot;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="p">,</span><span class="n">immediate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">stop</span><span class="p">()</span>
 <span class="n">debug</span><span class="p">(</span><span class="s">&quot;hello world&quot;</span><span class="p">)</span>
 <span class="n">action</span><span class="o">=</span><span class="n">REJECT</span>
