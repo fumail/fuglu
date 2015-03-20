@@ -29,7 +29,7 @@ except ImportError:
     from email.Utils import formatdate
 
 from fuglu.shared import Suspect, ScannerPlugin, DUNNO, actioncode_to_string,\
-    AppenderPlugin
+    AppenderPlugin, PrependerPlugin
 from fuglu.core import MainController
 
 
@@ -96,6 +96,7 @@ if __name__ == '__main__':
     config = ConfigParser.ConfigParser()
     config.add_section('main')
 
+    prependers = []
     scanners = []
     appenders = []
 
@@ -110,6 +111,8 @@ if __name__ == '__main__':
 
         if isinstance(pluginstance, ScannerPlugin):
             scanners.append(plugin)
+        elif isinstance(pluginstance, PrependerPlugin):
+            prependers.append(plugin)
         elif isinstance(pluginstance, AppenderPlugin):
             appenders.append(plugin)
         else:
@@ -117,6 +120,7 @@ if __name__ == '__main__':
 
     config.set('main', 'plugins', ','.join(scanners))
     config.set('main', 'appenders', ','.join(appenders))
+    config.set('main', 'prependers', ','.join(prependers))
 
     # load plugin
     mc = MainController(config)
@@ -215,8 +219,27 @@ if __name__ == '__main__':
                 val = valstr
             suspect.set_tag(nme, val)
 
-    # now run examine
-    for pluginstance in mc.plugins:
+
+    scannerlist=mc.plugins
+    for pluginstance in mc.prependers:
+        logging.info("*** Running prepender: %s ***" % pluginstance)
+
+        result = pluginstance.pluginlist(suspect, scannerlist)
+        if result != None:
+            origset = set(scannerlist)
+            resultset = set(result)
+            removed = list(origset - resultset)
+            added = list(resultset - origset)
+            if len(removed) > 0:
+                logging.info(
+                    'Prepender %s removed plugins: %s' % (pluginstance, map(str, removed)))
+            if len(added) > 0:
+                logging.info(
+                    'Prepender %s added plugins: %s' % (pluginstance, map(str, added)))
+            scannerlist = resultset
+            logging.info("Scanner plugin list is now: %s"%scannerlist)
+
+    for pluginstance in scannerlist:
         logging.info("*** Running plugin: %s ***" % pluginstance)
         ans = pluginstance.examine(suspect)
         message = ""
@@ -247,4 +270,4 @@ if __name__ == '__main__':
 
     if opts.console:
         run_debugconsole(
-            suspect=suspect, plugin=pluginstance, result=result, config=config)
+            suspect=suspect, plugin=pluginstance, result=result, config=config, prependers=mc.prependers, scanners=scannerlist, appenders=mc.appenders)
