@@ -59,7 +59,7 @@ class SQLSkipper(PrependerPlugin):
         #if postfix->fuglu is not configured with xxx_destination_recipient_limit=1 the message might have multiple recipients
         user_configs = sqlsession.execute("SELECT recipient,antispam_enabled FROM spamconfig WHERE recipient IN :recipient",dict(recipient=tuple(suspect.recipients)))
 
-        #if one recipient doesn't have a config, we assume av should run normally
+        #if one recipient doesn't have a config, we assume antispam should run normally
         if user_configs.rowcount<len(suspect.recipients):
             self._logger().debug("Not all recipients have a database config - assuming normal run")
             return
