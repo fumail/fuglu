@@ -57,7 +57,7 @@ class SQLSkipper(PrependerPlugin):
         self._logger().debug("Checking database overrides for %s"%(suspect.recipients))
 
         #if postfix is not configured xxx_destination_recipient_limit=1 the message might have multiple recipients
-        user_configs = sqlsession.execute("SELECT recipient,antispam_enabled FROM spamconfig WHERE recipient IN :recipient",dict(recipient=suspect.recipients))
+        user_configs = sqlsession.execute("SELECT recipient,antispam_enabled FROM spamconfig WHERE recipient IN :recipient",dict(recipient=tuple(suspect.recipients)))
 
         #if one recipient doesn't have a config, we assume av should run normally
         if user_configs.rowcount<len(suspect.recipients):
@@ -72,6 +72,7 @@ class SQLSkipper(PrependerPlugin):
                 return
 
         # if we reach this point, all recipients in the message have antispam disabled
+        self._logger().info("%s - antispam disabled by database override"%(suspect.id))
         skippluginlist = ['SAPlugin', ] # add other plugins you want to skip here
 
         listcopy = pluginlist[:]
