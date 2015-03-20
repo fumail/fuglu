@@ -113,7 +113,7 @@ if __name__ == '__main__':
         elif isinstance(pluginstance, AppenderPlugin):
             appenders.append(plugin)
         else:
-            print "%s doesn't seem to be a fuglu plugin - ignoring"
+            print "%s doesn't seem to be a fuglu plugin - ignoring"%plugin
 
     config.set('main', 'plugins', ','.join(scanners))
     config.set('main', 'appenders', ','.join(appenders))
