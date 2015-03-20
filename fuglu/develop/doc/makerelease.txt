@@ -45,7 +45,7 @@ git push --tags origin master
 python setup.py sdist
 
 * pypi upload
-python setup.py sdist upload
+twine upload dist/fuglu-<new-version>.tar.gz
 
 
 * mailing list announcement
