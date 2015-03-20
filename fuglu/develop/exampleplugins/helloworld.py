@@ -14,31 +14,34 @@
 #
 #
 """
-Example Plugin
+Example scanner plugin
 """
 
 from fuglu.shared import ScannerPlugin, DUNNO
 
 
-class ExamplePlugin(ScannerPlugin):
+class HelloWorld(ScannerPlugin):
 
-    """Copy this to make a new plugin"""
+    """Basic example scanner plugin which just writes a greeting message to the log for every incoming message"""
 
     def __init__(self, config, section=None):
         ScannerPlugin.__init__(self, config, section)
-        self.requiredvars = {
-            'greeting': {
-                'default': 'hello world!',
-                'description': 'greeting the plugin should log to the console',
+        self.requiredvars = { # this defines the configuration options for a plugin
+            'greeting': { # name of the config
+                'default': 'hello world!', # default value, always use strings here
+                'description': 'greeting message the plugin should log to the console', #  included as comment when generating default config files
             }
         }
         # DO NOT call self.config.get .. here!
 
     def __str__(self):
-        return "Example"
+        """return short human readable name here"""
+        return "Hello World Greeter"
 
     def examine(self, suspect):
-        # config Example
+        """This is the most important function you have to implement in scanner plugins"""
+
+        # read config example
         greeting = self.config.get(self.section, 'greeting')
 
         # debug info is helpful when the message is run through fuglu_debug
@@ -55,4 +58,7 @@ class ExamplePlugin(ScannerPlugin):
         else:
             self._logger().warning("Message has no 'From' header!")
 
+        # plugins should return one of the action codes: DUNNO (default), REJECT, DEFER, ACCEPT  - imported from fuglu.shared
+        # you can also return a message, for example:
+        # return DEFER, "please try again later"
         return DUNNO
