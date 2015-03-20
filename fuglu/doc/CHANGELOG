@@ -3,7 +3,7 @@
  * SuspectFilters: improved HTML stripping
  * Attachment plugin: can now check file names in zip archives and extract files from zips to check their content type
  * bugfix: Spamassassin plugin no longer treats ham as spam if forwardoriginal=0 and spamheader contains bayes test result
- * bugfix: Attachment plugin should no longer causes fuglu to crash under load if python-file is installed
+ * bugfix: Attachment plugin should no longer cause fuglu to crash under load if python-file is installed
  * bugfix: Attachment plugin should now evaluate rules within the same file in the correct order
 
 Developers:
