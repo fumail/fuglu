@@ -54,6 +54,10 @@ Tags:
                 'default': '0',
                 'description': "if fpscand runs on a different host than fuglu, set this to 1 to send the message over the network instead of just the filename",
             },
+            'scanoptions': {
+                'default': '',
+                'description': 'additional scan options  (see `man fpscand` -> SCANNING OPTIONS for possible values)',
+            },
             'maxsize': {
                 'default': '10485000',
                 'description': "maximum message size to scan",
@@ -175,7 +179,8 @@ Tags:
     def scan_file(self, filename):
         filename = os.path.abspath(filename)
         s = self.__init_socket__()
-        s.sendall('SCAN FILE %s' % filename)
+        s.sendall('SCAN %s FILE %s' %
+                  (self.config.get(self.section, 'scanoptions'), filename))
         s.sendall('\n')
 
         result = s.recv(20000)
@@ -198,7 +203,8 @@ Tags:
 
         s = self.__init_socket__()
         buflen = len(buffer)
-        s.sendall('SCAN STREAM fu_stream SIZE %s' % buflen)
+        s.sendall('SCAN %s STREAM fu_stream SIZE %s' %
+                  (self.config.get(self.section, 'scanoptions'), buflen))
         s.sendall('\n')
         self._logger().debug(
             'Sending buffer (length=%s) to fpscand...' % buflen)
