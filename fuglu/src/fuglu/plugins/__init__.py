@@ -13,4 +13,4 @@
 # limitations under the License.
 #
 __all__ = ['archive', 'attachment', 'actionoverride', 'clamav', 'sa', 'p_debug',
-           'p_skipper', 'p_fraction', 'vacation', 'icap', 'sssp', 'fprot', 'domainauth', 'script']
+           'p_skipper', 'p_fraction', 'vacation', 'icap', 'sssp', 'fprot', 'drweb', 'domainauth', 'script']
