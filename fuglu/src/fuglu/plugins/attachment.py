@@ -628,6 +628,8 @@ The other common template variables are available as well.
                         namelist = self._archive_namelist(archive_type,archive_handle)
                         if self.config.getboolean(self.section, 'checkarchivenames'):
                             for name in namelist:
+                                if type(name)==unicode: #rarfile returns unicode objects which mess up generated bounces
+                                    name=name.encode("utf-8","ignore")
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
