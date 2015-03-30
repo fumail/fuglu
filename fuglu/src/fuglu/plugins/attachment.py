@@ -75,7 +75,16 @@ KEY_CTYPE = u"ctype"
 KEY_ARCHIVENAME = u"archive-name"
 KEY_ARCHIVECTYPE = u"archive-ctype"
 
+
+RARFILE_AVAILABLE=0
+try:
+    import rarfile
+    RARFILE_AVAILABLE=1
+except ImportError:
+    pass
+
 threadLocal = threading.local()
+
 
 
 class RulesCache(object):
@@ -369,6 +378,13 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
+        #remember that the order is important here, if we support tar.gz and gz in the future make sure tar.gz comes first!
+        self.supported_archive_extensions=['zip',]
+        if RARFILE_AVAILABLE:
+            self.supported_archive_extensions.append('rar')
+
+
+
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
         # (ahupps file magic seems to do that by itself)
@@ -596,15 +612,17 @@ The other common template variables are available as well.
 
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
-                # some .docs can actually be zips as well.. we might have to
-                # try these as well in the future
-                if att_name.lower().endswith('.zip'):
-                    self._debuginfo(
-                        suspect, "Archive check: scanning file names in %s" % att_name)
+                archive_type=None
+                for arext in self.supported_archive_extensions:
+                    if att_name.lower().endswith('.%s'%arext):
+                        archive_type=arext
+                        break
+
+                if archive_type!=None:
                     try:
                         pl = StringIO(i.get_payload(decode=True))
-                        zip = zipfile.ZipFile(pl)
-                        namelist = zip.namelist()
+                        archive_handle = self._archive_handle(archive_type,pl)
+                        namelist = self._archive_namelist(archive_type,archive_handle)
                         if self.config.getboolean(self.section, 'checkarchivenames'):
                             for name in namelist:
                                 res = self.matchMultipleSets(
@@ -623,16 +641,9 @@ The other common template variables are available as well.
                         if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
                             for name in namelist:
                                 safename = self.asciionly(name)
-                                zinfo = zip.getinfo(name)
-                                if zinfo.file_size > self.config.getint(self.section, 'archivecontentmaxsize'):
-                                    self._debuginfo(
-                                        suspect, 'not extracting %s - uncompressed size %s too large' % (safename, zinfo.file_size))
-                                    continue
-                                else:
-                                    self._debuginfo(
-                                        suspect, 'extracting %s' % (safename))
-                                extracted = zip.read(name)
-
+                                extracted = self._archive_extract(archive_type,archive_handle,name)
+                                if extracted==None:
+                                    self._debuginfo(suspect,'%s not extracted - too large'%(safename))
                                 contenttype_magic = self.getBuffertype(
                                     extracted)
                                 res = self.matchMultipleSets(
@@ -650,8 +661,31 @@ The other common template variables are available as well.
 
                     except Exception, e:
                         self.logger.warning(
-                            "ZIP name scanning failed in attachment %s: %s" % (att_name, str(e)))
+                            "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
+
+    def _archive_handle(self,archive_type,payload):
+        """get a handle for this archive type"""
+        if archive_type=='zip':
+            return zipfile.ZipFile(payload)
+        if archive_type=='rar':
+            return rarfile.RarFile(payload)
+
+    def _archive_namelist(self,archive_type,handle):
+        """returns a list of file paths within the archive"""
+        #this works for zip and rar. if a future archive uses a different api, add above
+        return handle.namelist()
+
+    def _archive_extract(self,archive_type,handle,path):
+        """extract a file from the archive into memory
+        returns the file content or None if the file would be larger than the setting archivecontentmaxsize
+        """
+        #this works for zip and rar. if a future archive uses a different api, add above
+        arinfo = handle.getinfo(path)
+        if arinfo.file_size > self.config.getint(self.section, 'archivecontentmaxsize'):
+            return None
+        extracted = handle.read(path)
+        return extracted
 
     def _debuginfo(self, suspect, message):
         """Debug to log and suspect"""
@@ -662,7 +696,7 @@ The other common template variables are available as well.
         return "Attachment Blocker"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_magic() and self.lint_sql())
+        allok = (self.checkConfig() and self.lint_magic() and self.lint_sql() and self.lint_archivetypes())
         return allok
 
     def lint_magic(self):
@@ -675,6 +709,12 @@ The other common template variables are available as well.
             print "Found python-file/libmagic bindings (http://www.darwinsys.com/file/)"
         if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             print "Found python-magic (https://github.com/ahupp/python-magic)"
+        return True
+
+    def lint_archivetypes(self):
+        if not RARFILE_AVAILABLE:
+            print "rarfile library not found, RAR support disabled"
+        print "Archive scan, available file extensions: %s"%(self.supported_archive_extensions)
         return True
 
     def lint_sql(self):
