@@ -22,11 +22,21 @@ import uuid
 import HTMLParser
 
 HAVE_BEAUTIFULSOUP = False
+BS_VERSION=0
 try:
-    import BeautifulSoup
+    import bs4 as BeautifulSoup
     HAVE_BEAUTIFULSOUP = True
+    BS_VERSION=4
 except:
     pass
+
+if not HAVE_BEAUTIFULSOUP:
+    try:
+        import BeautifulSoup
+        HAVE_BEAUTIFULSOUP = True
+        BS_VERSION=3
+    except:
+        pass
 
 import email
 import re

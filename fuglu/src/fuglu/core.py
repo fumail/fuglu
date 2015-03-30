@@ -28,7 +28,7 @@ import time
 import code
 import socket
 
-from fuglu.shared import default_template_values, Suspect
+from fuglu.shared import default_template_values, Suspect, HAVE_BEAUTIFULSOUP, BS_VERSION
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncblackholeconnector import NCServer
@@ -584,10 +584,10 @@ class MainController(object):
         except:
             print fc.strcolor('sqlalchemy: not installed', 'yellow') + " Optional dependency, required if you want to enable any database lookups"
 
-        try:
-            import BeautifulSoup
-            print fc.strcolor('BeautifulSoup: installed', 'green')
-        except:
+
+        if HAVE_BEAUTIFULSOUP:
+            print fc.strcolor('BeautifulSoup: V%s installed'%BS_VERSION, 'green')
+        else:
             print fc.strcolor('BeautifulSoup: not installed', 'yellow') + " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config"
 
         try:
