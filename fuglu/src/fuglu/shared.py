@@ -512,7 +512,13 @@ class BasicPlugin(object):
     def lint(self):
         return self.checkConfig()
 
+
     def checkConfig(self):
+        """old name for check_config"""
+        return self.check_config()
+
+    def check_config(self):
+        """Print missing / non-default configuration settings"""
         allOK = True
 
         # old config style
