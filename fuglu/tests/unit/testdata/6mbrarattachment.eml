@@ -1,11 +1,6 @@
 Return-path: <sender@example.com>
 Envelope-to: oli@fuglu.org
 Delivery-date: Mon, 30 Mar 2015 09:49:15 +0200
-Received: from [1.2.3.4] (port=19447 helo=unittests.fuglu.org)
-	by boon.servername.ch with esmtp (Exim 4.85)
-	(envelope-from <sender@example.com>)
-	id 1YcURb-0004Yt-2c
-	for oli@fuglu.org; Mon, 30 Mar 2015 09:49:15 +0200
 Date: Mon, 30 Mar 2015 09:49:11 +0200
 To: oli@fuglu.org
 From: sender@example.com
