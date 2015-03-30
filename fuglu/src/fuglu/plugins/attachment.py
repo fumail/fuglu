@@ -250,7 +250,7 @@ Attachment rules can be defined globally, per domain or per user.
 
 Actions: This plugin will delete messages if they contain blocked attachments.
 
-Prerequisites: You must have the python ``file`` or ``magic`` module installed
+Prerequisites: You must have the python ``file`` or ``magic`` module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python ``rarfile`` module.
 
 
 The attachment configuration files are in ``/etc/fuglu/rules``. You whould have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have. 
@@ -258,6 +258,9 @@ The attachment configuration files are in ``/etc/fuglu/rules``. You whould have 
 For domain rules, create a new file ``<domainname>-filenames.conf`` / ``<domainname>-filetypes.conf`` , eg. ``fuglu.org-filenames.conf`` / ``fuglu.org-filetypes.conf``
 
 For individual user rules, create a new file ``<useremail>-filenames.conf`` / ``<useremail>-filetypes.conf``, eg. ``oli@fuglu.org-filenames.conf`` / ``oli@fuglu.org-filetypes.conf``
+
+To scan filenames or even file contents within archives (zip, rar), use ``<...>-archivefilenames.conf`` and ``<...>-archivefiletypes.conf``.
+
 
 The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
 <action>    <regular expression>   <description or error message>
@@ -359,12 +362,12 @@ The other common template variables are available as well.
 
             'checkarchivenames': {
                 'default': '0',
-                'description': "enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive."
+                'description': "enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive."
             },
 
             'checkarchivecontent': {
                 'default': '0',
-                'description': 'extract compressed archives(only ZIP supported currently) and check file content type with libmagics\nnote that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.\nfuglu does not extract archives within the archive(recursion)',
+                'description': 'extract compressed archives(zip,rar) and check file content type with libmagics\nnote that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.\nfuglu does not extract archives within the archive(recursion)',
             },
 
             'archivecontentmaxsize': {
