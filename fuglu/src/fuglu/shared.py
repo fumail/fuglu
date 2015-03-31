@@ -742,9 +742,14 @@ class SuspectFilter(object):
             soup = BeautifulSoup.BeautifulSoup(content)
             for r in remove_tags:
                 [x.extract() for x in soup.findAll(r)]
-            stripped = ''.join(
+
+            if BS_VERSION>=4:
+                text=soup.getText()
+                return text
+            else:
+                stripped = ''.join(
                 [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
-            return stripped
+                return stripped
 
         # no BeautifulSoup available, let's try a modified version of pyzor's
         # html stripper
