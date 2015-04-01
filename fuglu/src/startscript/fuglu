@@ -161,6 +161,7 @@ controller.propagate_core_defaults()
 baselogger = logging.getLogger('')
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
+
 try:
     running_user = config.get('main', 'user')
     running_group = config.get('main', 'group')
@@ -168,8 +169,10 @@ except:
     running_user = 'nobody'
     running_group = 'nobody'
 
+priv_drop_ok = False
 try:
     daemon.drop_privs(running_user, running_group)
+    priv_drop_ok = True
 except:
     err = sys.exc_info()[1]
     baselogger.error("Could not drop privileges to %s/%s : %s" %
@@ -178,6 +181,25 @@ except:
 
 if lint:
     controller.lint()
+    # the controller doesn't know about the logging.conf, so we lint this here
+    print ""
+    if priv_drop_ok:
+        print "Checking logging configuration...."
+        try:
+            logging.config.fileConfig(theloggingfile)
+            logging.info("fuglu --lint log configuration test")
+            print fc.strcolor("OK", "green")
+        except Exception, e:
+            print "Logging configuration check failed: %s " % str(e)
+            print "This may prevent the daemon from starting up."
+            print "Make sure the log directory exists and is writable by user '%s' " % running_user
+            print fc.strcolor("NOT OK", "red")
+    else:
+        print fc.strcolor("WARNING:", "yellow")
+        print "Skipping logging configuration check because I could not switch to user '%s' earlier." % running_user
+        print "please re-run fuglu --lint as privileged user"
+        print "(problems in the logging configuration could prevent the fuglu daemon from starting up)"
+
 else:
     signal.signal(signal.SIGHUP, sighup)
     if console:
