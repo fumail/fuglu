@@ -18,7 +18,11 @@ import socket
 import string
 import os
 import struct
+import threading
+import errno
 
+threadLocal = threading.local()
+MAX_SCANS_PER_SOCKET = 5000 # it's probably a good idea to re-establish the connection every now and then
 
 class ClamavPlugin(ScannerPlugin):
 
@@ -54,12 +58,10 @@ Tags:
                 'default': '30',
                 'description': 'socket timeout',
             },
-
             'maxsize': {
                 'default': '22000000',
                 'description': "maximum message size, larger messages will not be scanned.  \nshould match the 'StreamMaxLength' config option in clamd.conf ",
             },
-
             'retries': {
                 'default': '3',
                 'description': 'how often should fuglu retry the connection before giving up',
@@ -125,8 +127,13 @@ Tags:
                     return actioncode, message
                 return DUNNO
             except Exception, e:
-                self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s" % (
-                    i + 1, self.config.getint(self.section, 'retries'), str(e)))
+                self.__invalidate_socket()
+
+                #don't warn the first time if it's just a broken pipe which can happen with the new pipelining protocol
+                if not (i == 0 and isinstance(e,socket.error) and e.errno == errno.EPIPE):
+                    self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s" % (
+                        i + 1, self.config.getint(self.section, 'retries'), str(e)))
+
         self.logger.error("Clamdscan failed after %s retries" %
                           self.config.getint(self.section, 'retries'))
         content = None
@@ -142,49 +149,86 @@ Tags:
           - raises Exception if something went wrong
         """
         s = self.__init_socket__()
-
-        s.send('nINSTREAM\n')
-
+        s.send('zINSTREAM\0')
         default_chunk_size = 2048
-
         remainingbytes = buff
 
         while len(remainingbytes) > 0:
             chunklength = min(default_chunk_size, len(remainingbytes))
             #self.logger.debug('sending %s byte chunk' % chunklength)
             chunkdata = remainingbytes[:chunklength]
-
             remainingbytes = remainingbytes[chunklength:]
-
             s.send(struct.pack('!L', chunklength))
             s.send(chunkdata)
-
         s.send(struct.pack('!L', 0))
         result = '...'
         dr = {}
-        while result != '':
-            result = s.recv(20000)
-            if len(result) > 0:
-                if result.startswith('INSTREAM size limit exceeded'):
-                    raise Exception(
-                        "Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
-                if result.startswith('UNKNOWN'):
-                    raise Exception(
-                        "Clamd doesn't understand INSTREAM command. very old version?")
 
-                filenm = result.strip().split(':')[0]
-                virusname = result.strip().split(':')[1].strip()
-                if virusname[-5:] == 'ERROR':
-                    raise Exception, virusname
-                elif virusname != 'OK':
-                    dr[filenm] = virusname.replace(" FOUND", '')
-        s.close()
+        result = self._read_until_delimiter(s).strip()
+
+        if result.startswith('INSTREAM size limit exceeded'):
+            raise Exception(
+                "Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
+        if result.startswith('UNKNOWN'):
+            raise Exception(
+                "Clamd doesn't understand INSTREAM command. very old version?")
+
+        try:
+            ans_id,filename,virusinfo = result.split(':',2)
+            filename=filename.strip()
+            virusinfo=virusinfo.strip()
+        except:
+            raise Exception("Protocol error, could not parse result: %s"%result)
+
+        threadLocal.expectedID+=1
+        if threadLocal.expectedID != int(ans_id):
+            raise Exception("Commands out of sync - expected ID %s - got %s"%(threadLocal.expectedID,ans_id))
+
+        if virusinfo[-5:] == 'ERROR':
+            raise Exception, virusname
+        elif virusinfo != 'OK':
+            dr[filename] = virusinfo.replace(" FOUND", '')
+
+        if threadLocal.expectedID >= MAX_SCANS_PER_SOCKET:
+            try:
+                s.close()
+            finally:
+                self.__invalidate_socket()
+
         if dr == {}:
             return None
         else:
             return dr
 
-    def __init_socket__(self):
+    def _read_until_delimiter(self,socket):
+        data=''
+        while True:
+            chunk = socket.recv(4096)
+            if len(chunk)==0:
+                continue
+            data+=chunk
+            if chunk.endswith('\0'):
+                break
+            if '\0' in chunk:
+                raise Exception("Protocol error: got unexpected additional data after delimiter")
+        return data[:-1] # remove \0 at the end
+
+    def __invalidate_socket(self):
+        threadLocal.clamdsocket = None
+        threadLocal.expectedID = 0
+
+
+    def __init_socket__(self,oneshot=False):
+        """initialize a socket connection to clamd using host/port/file defined in the configuration
+        this connection is initialized with clamd's "IDSESSION" and cached per thread
+
+         set oneshot=True to get a socket without caching it and without initializing it with an IDSESSION
+         """
+
+        existing_socket = getattr(threadLocal,'clamdsocket',None)
+        if existing_socket != None and not oneshot:
+            return existing_socket
+
         clamd_HOST = self.config.get(self.section, 'host')
         unixsocket = False
 
@@ -214,6 +258,11 @@ Tags:
                 raise Exception(
                     'Could not reach clamd using network (%s, %s)' % (clamd_HOST, clamd_PORT))
 
+        #initialize an IDSESSION
+        if not oneshot:
+            s.send('zIDSESSION\0')
+            threadLocal.clamdsocket = s
+            threadLocal.expectedID = 0
         return s
 
     def lint(self):
@@ -224,7 +273,7 @@ Tags:
 
     def lint_ping(self):
         try:
-            s = self.__init_socket__()
+            s = self.__init_socket__(oneshot=True)
         except Exception, e:
             print "Could not contact clamd: %s" % (str(e))
             return False
