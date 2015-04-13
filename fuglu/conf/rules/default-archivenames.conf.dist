@@ -7,6 +7,8 @@
 # delete - silently delete the message, no error is sent back. Be careful with this option!
 
 deny \.vbs$     Archive contains potentially dangerous Visual Basic script file name  (.vbs)
+deny \.bat$     Archive contains potentially dangerous Windows batch file (.bat)
+deny \.cmd$     Archive contains potentially dangerous Windows batch file (.cmd)
 deny \.exe$     Archive contains potentially dangerous Windows executable file name (.exe)
 deny \.scr$     Archive contains potentially dangerous Windows screensaver file name (.scr)
 
