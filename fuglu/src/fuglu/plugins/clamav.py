@@ -227,7 +227,11 @@ Tags:
          """
 
         existing_socket = getattr(threadLocal,'clamdsocket',None)
+
+        socktimeout = self.config.getint(self.section, 'timeout')
+
         if existing_socket != None and not oneshot:
+            existing_socket.settimeout(socktimeout)
             return existing_socket
 
         clamd_HOST = self.config.get(self.section, 'host')
@@ -243,7 +247,7 @@ Tags:
             if not os.path.exists(sock):
                 raise Exception("unix socket %s not found" % sock)
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.settimeout(self.config.getint(self.section, 'timeout'))
+            s.settimeout(socktimeout)
             try:
                 s.connect(sock)
             except socket.error:
@@ -252,7 +256,7 @@ Tags:
         else:
             clamd_PORT = int(self.config.get(self.section, 'port'))
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(self.config.getint(self.section, 'timeout'))
+            s.settimeout(socktimeout)
             try:
                 s.connect((clamd_HOST, clamd_PORT))
             except socket.error:
