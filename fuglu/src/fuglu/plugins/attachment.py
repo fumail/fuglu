@@ -449,6 +449,9 @@ The other common template variables are available as well.
             return ATTACHMENT_DUNNO
 
         for action, regex, description in ruleset:
+            if type(description)==unicode: #database description may be unicode
+                description=description.encode("utf-8","ignore")
+
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
