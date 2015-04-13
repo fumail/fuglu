@@ -149,7 +149,7 @@ Tags:
           - raises Exception if something went wrong
         """
         s = self.__init_socket__()
-        s.send('zINSTREAM\0')
+        s.sendall('zINSTREAM\0')
         default_chunk_size = 2048
         remainingbytes = buff
 
@@ -158,9 +158,9 @@ Tags:
             #self.logger.debug('sending %s byte chunk' % chunklength)
             chunkdata = remainingbytes[:chunklength]
             remainingbytes = remainingbytes[chunklength:]
-            s.send(struct.pack('!L', chunklength))
-            s.send(chunkdata)
-        s.send(struct.pack('!L', 0))
+            s.sendall(struct.pack('!L', chunklength))
+            s.sendall(chunkdata)
+        s.sendall(struct.pack('!L', 0))
         result = '...'
         dr = {}
 
@@ -260,7 +260,7 @@ Tags:
 
         #initialize an IDSESSION
         if not oneshot:
-            s.send('zIDSESSION\0')
+            s.sendall('zIDSESSION\0')
             threadLocal.clamdsocket = s
             threadLocal.expectedID = 0
         return s
@@ -277,7 +277,7 @@ Tags:
         except Exception, e:
             print "Could not contact clamd: %s" % (str(e))
             return False
-        s.send('PING')
+        s.sendall('PING')
         result = s.recv(20000)
         print "Got Pong: %s" % result
         if result.strip() != 'PONG':
