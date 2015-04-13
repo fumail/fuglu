@@ -191,6 +191,7 @@ Tags:
 
         if threadLocal.expectedID >= MAX_SCANS_PER_SOCKET:
             try:
+                s.sendall('zEND\0')
                 s.close()
             finally:
                 self.__invalidate_socket()
