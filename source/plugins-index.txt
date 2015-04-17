@@ -64,11 +64,11 @@ For example, the Spamassassin Plugin's Name is ``SAplugin``, so it would search 
 Suspect Filters
 ...............
 
-SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a suspects header or tag. 
+SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a message header or suspect tag. 
 
-The format is : ``<headername> <regex> <optional argument>``
+The format is : ``<property> <regex> <optional argument>``
 
-``<headername>`` can be any of...
+``<property>`` can be any of...
  * a email header name, eg ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
  * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
@@ -79,7 +79,7 @@ The format is : ``<headername> <regex> <optional argument>``
   * ``to_domain`` (domain part of envelope_to)
 
  * a ``message Tag`` prepended by the @ symbol, eg. ``@incomingport``
- * ``body:raw``' to match the the decoded message body (only applies to text/* parts)
+ * ``body:raw`` to match the the decoded message body (only applies to text/* parts)
  * ``body:stripped`` or just ``body`` to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)
  * ``body:full`` to match the full body
 
@@ -105,8 +105,8 @@ Example:
 	MIME-Version ^1\.0$ Mime Version is 1.0
 
 	#builtin special fields
-	to_domain	(\.)?fuglu.org$	Sent to fuglu.org or any subdomain
-	envelope_from ^sender@example.com$
+	to_domain	(\.)?fuglu\.org$	Sent to fuglu.org or any subdomain
+	envelope_from ^sender@example\.com$
 
 	#match a tag from a previous plugin
 	@SAPlugin.report MISSING_HEADER 

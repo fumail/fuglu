@@ -114,10 +114,10 @@ named like the plugin itself.</p>
 <p>For example, the Spamassassin Plugin&#8217;s Name is <tt class="docutils literal"><span class="pre">SAplugin</span></tt>, so it would search for a <tt class="docutils literal"><span class="pre">[SAPlugin]</span></tt> config section.</p>
 <div class="section" id="suspect-filters">
 <h3>Suspect Filters<a class="headerlink" href="#suspect-filters" title="Permalink to this headline">¶</a></h3>
-<p>SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a suspects header or tag.</p>
-<p>The format is : <tt class="docutils literal"><span class="pre">&lt;headername&gt;</span> <span class="pre">&lt;regex&gt;</span> <span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt></p>
+<p>SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a message header or suspect tag.</p>
+<p>The format is : <tt class="docutils literal"><span class="pre">&lt;property&gt;</span> <span class="pre">&lt;regex&gt;</span> <span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt></p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">&lt;headername&gt;</span></tt> can be any of...</dt>
+<dt><tt class="docutils literal"><span class="pre">&lt;property&gt;</span></tt> can be any of...</dt>
 <dd><ul class="first simple">
 <li>a email header name, eg <tt class="docutils literal"><span class="pre">Received</span></tt>, <tt class="docutils literal"><span class="pre">To</span></tt>, <tt class="docutils literal"><span class="pre">From</span></tt>, <tt class="docutils literal"><span class="pre">Subject</span></tt> ... also supports &#8216;*&#8217; as wildcard character</li>
 <li><tt class="docutils literal"><span class="pre">mime:headername</span></tt> to get mime Headers in the message payload  eg: <tt class="docutils literal"><span class="pre">mime:Content-Disposition</span></tt></li>
@@ -133,7 +133,7 @@ named like the plugin itself.</p>
 </div></blockquote>
 <ul class="last simple">
 <li>a <tt class="docutils literal"><span class="pre">message</span> <span class="pre">Tag</span></tt> prepended by the &#64; symbol, eg. <tt class="docutils literal"><span class="pre">&#64;incomingport</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">body:raw</span></tt>&#8216; to match the the decoded message body (only applies to text/* parts)</li>
+<li><tt class="docutils literal"><span class="pre">body:raw</span></tt> to match the the decoded message body (only applies to text/* parts)</li>
 <li><tt class="docutils literal"><span class="pre">body:stripped</span></tt> or just <tt class="docutils literal"><span class="pre">body</span></tt> to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)</li>
 <li><tt class="docutils literal"><span class="pre">body:full</span></tt> to match the full body</li>
 </ul>
@@ -151,8 +151,8 @@ Subject hello   Hello in the subject!
 MIME-Version ^1\.0$ Mime Version is 1.0
 
 #builtin special fields
-to_domain       (\.)?fuglu.org$ Sent to fuglu.org or any subdomain
-envelope_from ^sender@example.com$
+to_domain       (\.)?fuglu\.org$        Sent to fuglu.org or any subdomain
+envelope_from ^sender@example\.com$
 
 #match a tag from a previous plugin
 @SAPlugin.report MISSING_HEADER
