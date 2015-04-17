@@ -24,6 +24,18 @@ from fuglu.shared import SuspectFilter, Suspect
 import logging
 import email
 
+def extract_email(header):
+    """
+    Try to extract the email address from a header
+    """
+    start = header.find('<') + 1
+    if start<0:
+        start=0
+    end = header.find('>')
+    if end < 0:
+        end = len(header)
+    return header[start:end].strip()
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         print "FuGlu suspect filter debugger"
@@ -58,8 +70,18 @@ if __name__ == '__main__':
 
     mailmessage = email.message_from_string(messagecontent)
 
+    try:
+        sender=extract_email(mailmessage.get('return-path',mailmessage.get('from','sender@example.com')))
+    except:
+        sender='sender@example.com'
+
+    try:
+        recipient=extract_email(mailmessage.get('delivered-to',mailmessage.get('to','recipient@example.com')))
+    except:
+        recipient='recipient@example.com'
+
     suspect = Suspect(
-        "sender@example.com", "recipient@example.com", messagefilename)
+        sender, recipient, messagefilename)
     suspect.set_source(messagecontent)
 
     matchlist = sfilter.get_args(suspect, True)
