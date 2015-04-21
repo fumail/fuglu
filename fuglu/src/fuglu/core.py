@@ -59,21 +59,18 @@ class MainController(object):
                 'section': 'main',
                 'description': "run as a daemon? (fork)",
                 'default': "1",
-                # todo: validator...?
             },
 
             'user': {
                 'section': 'main',
                 'description': "run as user",
                 'default': "nobody",
-                # todo: validator, check user...?
             },
 
             'group': {
                 'section': 'main',
                 'description': "run as group",
                 'default': "nobody",
-                # todo: validator, check user...?
             },
 
             'plugindir': {
