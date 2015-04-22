@@ -76,10 +76,12 @@
 <li>ACL concepts</li>
 <li>some have a concept of &#8220;alias domains&#8221;, some don&#8217;t</li>
 <li>different antispam/antivirus backends</li>
-<li>different types of quarantine storage, such as:<ul>
-    <li>distributed on scanning machine like mailscanner</li>
-    <li>centralized nfs</li>
-    <li>stored in a Cassandra/CouchDB cluster</li></ul></li>
+<li>different types of quarantine storage, such as<ul>
+<li>distributed on scanning machine like mailscanner</li>
+<li>centralized nfs</li>
+<li>stored in a Cassandra/CouchDB cluster</li>
+</ul>
+</li>
 <li>different types of reports (some want to show every detail to their clients, some others just want them to see number of  spam/ham/virus, etc)</li>
 <li>CRM/ERP integration</li>
 </ul>
@@ -423,7 +425,7 @@ plugins=clamav,&lt;other virus scanners here&gt;,spamassassin,attachment,&lt;you
     <h3><a href="index.html">Page contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">ISP Config</a><ul>
-<li><a class="reference internal" href="#quarantine-gui">Quarantine Gui</a></li>
+<li><a class="reference internal" href="#quarantine-gui">Quarantine GUI</a></li>
 <li><a class="reference internal" href="#the-fuglu-isp-plugin">The fuglu ISP plugin</a></li>
 <li><a class="reference internal" href="#configuration-of-other-plugins">Configuration of other plugins</a></li>
 </ul>

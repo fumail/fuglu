@@ -58,7 +58,7 @@ Configuration
 
     #what header does SA set to indicate the spam status
     #Note that fuglu requires a standard header template configuration for spamstatus and score extraction
-    #if forwardoriginal is set to 0
+    #if 'forwardoriginal' is set to 0
     #eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
     spamheader=X-Spam-Status
 
@@ -156,27 +156,30 @@ Attachment rules can be defined globally, per domain or per user.
 
 Actions: This plugin will delete messages if they contain blocked attachments.
 
-Prerequisites: You must have the python ``file`` or ``magic`` module installed
+Prerequisites: You must have the python ``file`` or ``magic`` module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python ``rarfile`` module.
 
 
-The attachment configuration files are in ``/etc/fuglu/rules``. You whould have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have. 
+The attachment configuration files are in ``/etc/fuglu/rules``. You should have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have.
 
 For domain rules, create a new file ``<domainname>-filenames.conf`` / ``<domainname>-filetypes.conf`` , eg. ``fuglu.org-filenames.conf`` / ``fuglu.org-filetypes.conf``
 
 For individual user rules, create a new file ``<useremail>-filenames.conf`` / ``<useremail>-filetypes.conf``, eg. ``oli@fuglu.org-filenames.conf`` / ``oli@fuglu.org-filetypes.conf``
 
-The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-<action>    <regular expression>   <description or error message>
+To scan filenames or even file contents within archives (zip, rar), use ``<...>-archivefilenames.conf`` and ``<...>-archivefiletypes.conf``.
 
-<action> can be one of:
+
+The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
+``<action>``    ``<regular expression>``   ``<description or error message>``
+
+``<action>`` can be one of:
  * allow : this file is ok, don't do further checks (you might use it for safe content types like text). Do not blindly create 'allow' rules. It's safer to make no rule at all, if no other rules hit, the file will be accepted
  * deny : delete this message and send the error message/description back to the sender
  * delete : silently delete the message, no error is sent back, and 'blockaction' is ignored
 
 
-<regular expression> is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
+``<regular expression>`` is a standard python regex. in ``x-filenames.conf`` this will be applied to the attachment name . in ``x-filetypes.conf`` this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
 
-example of default-filetypes.conf:
+Example of ``default-filetypes.conf`` :
 
 ::
 
@@ -191,7 +194,7 @@ example of default-filetypes.conf:
 
 
 
-small extract from default-filenames.conf:
+A small extract from ``default-filenames.conf``:
 
 ::
 
@@ -207,7 +210,8 @@ small extract from default-filenames.conf:
 
 Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)
 
-The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:
+The bounce template (eg ``/etc/fuglu/templates/blockedfile.tmpl`` ) should
+start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:
 
 ::
 
@@ -219,8 +223,6 @@ The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like 
     ${blockinfo}
 
 
-
-eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.
 
 ``${blockinfo}`` will be replaced with the text you specified in the third column of the rule that blocked this message.
 
@@ -252,7 +254,7 @@ Configuration
     #directory that contains attachment rules
     rulesdir=/etc/fuglu/rules
 
-    #enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+    #enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive.
     checkarchivenames=0
 
     #what should the plugin do when a blocked attachment is detected
@@ -261,7 +263,7 @@ Configuration
     #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
     blockaction=DELETE
 
-    #extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+    #extract compressed archives(zip,rar) and check file content type with libmagics
     #note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
     #fuglu does not extract archives within the archive(recursion)
     checkarchivecontent=0
@@ -281,12 +283,12 @@ You can use this if you want message archives for your domains or to debug probl
 
 Examples for the archive.regex filter file:
 
-archive messages to domain ''test.com'':
+Archive messages to domain ''test.com'':
 
 ``to_domain test\.com``
 
 
-archive messages from oli@fuglu.org:
+Archive messages from oli@fuglu.org:
 
 
 ``envelope_from oli@fuglu\.org``
@@ -294,12 +296,16 @@ archive messages from oli@fuglu.org:
 
 you can also append "yes" and "no" to the rules to create a more advanced configuration. Lets say we want to archive all messages to sales@fuglu.org and all regular messages support@fuglu.org except the ones created by automated scripts like logwatch or daily backup messages etc.
 
-envelope_to sales@fuglu\.org yes
 envelope_from logwatch@.*fuglu.org   no
+
+envelope_to sales@fuglu\.org yes
+
 from backups@fuglu.org no
+
 envelope_to support@fuglu\.org      yes
 
 
+Note: The first rule to match in a message is the only rule that will be applied. Exclusion rules should therefore be put above generic/catch-all rules.
 
 
 Configuration
@@ -340,7 +346,7 @@ Vacation
 
 Plugin: fuglu.plugins.vacation.VacationPlugin
 
-Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any 'automated' messages (Mailingslists, Spams, Bounces etc)
+Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any 'automated' messages (Mailingslists, Spams, Bounces etc)
 
 Requires: SQLAlechemy Extension
 
@@ -474,6 +480,9 @@ Configuration
 ::
 
     [FprotPlugin]
+    #additional scan options  (see `man fpscand` -> SCANNING OPTIONS for possible values)
+    scanoptions=
+
     #maximum retries on failed connections
     retries=3
 
@@ -558,7 +567,7 @@ Action Override
 
 Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin
 
- override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. 
+ Averride actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. 
 
 Configuration
 -------------
@@ -576,12 +585,12 @@ ScriptFilter
 
 Plugin: fuglu.plugins.script.ScriptFilter
 
-This plugins executes scripts found in a specified directory.
+This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.
 
 Filterscripts must be written in standard python but with the file ending ``.fgf`` ("fuglu filter")
 
-scripts are reloaded for every message and executed in alphabetic order
+Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.
 
 The API is basically the same as for normal plugins within the ``examine()`` method, with a few special cases:
 
@@ -596,7 +605,7 @@ the script should not return anything, but change the available variables ``acti
 use ``stop()`` to exit the script
 
 
-example script: 
+Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)
 
 ::
@@ -728,7 +737,7 @@ Plugin: fuglu.plugins.p_skipper.PluginSkipper
 
 Skips plugins based on standard filter file
 This can be used for example to skip spam filters on outgoing messages.
-eg. put this in /etc/fuglu/skipplugins.regex:
+e.g. put this in /etc/fuglu/skipplugins.regex:
 
 @incomingport    1099    SAPlugin
 

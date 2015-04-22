@@ -204,9 +204,11 @@ Running a plugin multiple times with different config sections
 ..............................................................
 
 By default, plugins search your configfile for a section named like the 
-plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. This can be overridden which allows running plugin multiple times per scan with different config options:
+plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. You can pass the plugin definition an argument to override this with a section named to suit your needs.
+This can also allow running a plugin multiple times per scan with different config options:
 
-example:
+
+Example:
 
 ::
 

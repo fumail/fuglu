@@ -106,7 +106,7 @@ maxsize=256000
 
 #what header does SA set to indicate the spam status
 #Note that fuglu requires a standard header template configuration for spamstatus and score extraction
-#if forwardoriginal is set to 0
+#if &#39;forwardoriginal&#39; is set to 0
 #eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
 spamheader=X-Spam-Status
 
@@ -192,14 +192,15 @@ virusaction=DEFAULTVIRUSACTION
 <p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
 <p>Attachment rules can be defined globally, per domain or per user.</p>
 <p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
-<p>Prerequisites: You must have the python <tt class="docutils literal"><span class="pre">file</span></tt> or <tt class="docutils literal"><span class="pre">magic</span></tt> module installed</p>
-<p>The attachment configuration files are in <tt class="docutils literal"><span class="pre">/etc/fuglu/rules</span></tt>. You whould have two default files there: <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt> which defines what filenames are allowed and <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> which defines what content types a attachment may have.</p>
+<p>Prerequisites: You must have the python <tt class="docutils literal"><span class="pre">file</span></tt> or <tt class="docutils literal"><span class="pre">magic</span></tt> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <tt class="docutils literal"><span class="pre">rarfile</span></tt> module.</p>
+<p>The attachment configuration files are in <tt class="docutils literal"><span class="pre">/etc/fuglu/rules</span></tt>. You should have two default files there: <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt> which defines what filenames are allowed and <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> which defines what content types a attachment may have.</p>
 <p>For domain rules, create a new file <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></tt> , eg. <tt class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></tt></p>
 <p>For individual user rules, create a new file <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></tt>, eg. <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></tt></p>
+<p>To scan filenames or even file contents within archives (zip, rar), use <tt class="docutils literal"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></tt> and <tt class="docutils literal"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></tt>.</p>
 <p>The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-&lt;action&gt;    &lt;regular expression&gt;   &lt;description or error message&gt;</p>
+<tt class="docutils literal"><span class="pre">&lt;action&gt;</span></tt>    <tt class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></tt>   <tt class="docutils literal"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></tt></p>
 <dl class="docutils">
-<dt>&lt;action&gt; can be one of:</dt>
+<dt><tt class="docutils literal"><span class="pre">&lt;action&gt;</span></tt> can be one of:</dt>
 <dd><ul class="first last simple">
 <li>allow : this file is ok, don&#8217;t do further checks (you might use it for safe content types like text). Do not blindly create &#8216;allow&#8217; rules. It&#8217;s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
 <li>deny : delete this message and send the error message/description back to the sender</li>
@@ -207,8 +208,8 @@ virusaction=DEFAULTVIRUSACTION
 </ul>
 </dd>
 </dl>
-<p>&lt;regular expression&gt; is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the <tt class="docutils literal"><span class="pre">file</span></tt> command.</p>
-<p>example of default-filetypes.conf:</p>
+<p><tt class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></tt> is a standard python regex. in <tt class="docutils literal"><span class="pre">x-filenames.conf</span></tt> this will be applied to the attachment name . in <tt class="docutils literal"><span class="pre">x-filetypes.conf</span></tt> this will be applied to the mime type of the file as well as the file type returned by the <tt class="docutils literal"><span class="pre">file</span></tt> command.</p>
+<p>Example of <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> :</p>
 <div class="highlight-python"><div class="highlight"><pre>allow    text        -
 allow    script    -
 allow    archive        -
@@ -219,7 +220,7 @@ deny    ELF        No programs allowed
 deny    Registry    No Windows Registry files allowed
 </pre></div>
 </div>
-<p>small extract from default-filenames.conf:</p>
+<p>A small extract from <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>deny    \.ico$            Windows icon file security vulnerability
 deny    \.ani$            Windows animated cursor file security vulnerability
 deny    \.cur$            Windows cursor file security vulnerability
@@ -230,7 +231,8 @@ allow    \.gif$            -
 </pre></div>
 </div>
 <p>Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)</p>
-<p>The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:</p>
+<p>The bounce template (eg <tt class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></tt> ) should
+start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre>To: ${from_address}
 Subject: Blocked attachment
 
@@ -239,7 +241,6 @@ Your message to ${to_address} contains a blocked attachment and has not been del
 ${blockinfo}
 </pre></div>
 </div>
-<p>eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.</p>
 <p><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
 <p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
@@ -262,7 +263,7 @@ template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #directory that contains attachment rules
 rulesdir=/etc/fuglu/rules
 
-#enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+#enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive.
 checkarchivenames=0
 
 #what should the plugin do when a blocked attachment is detected
@@ -271,7 +272,7 @@ checkarchivenames=0
 #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
 
-#extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+#extract compressed archives(zip,rar) and check file content type with libmagics
 #note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
 #fuglu does not extract archives within the archive(recursion)
 checkarchivecontent=0
@@ -288,15 +289,16 @@ archivecontentmaxsize=5000000
 <p>This plugins stores a copy of the message if it matches certain criteria (Suspect Filter).
 You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
 <p>Examples for the archive.regex filter file:</p>
-<p>archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
+<p>Archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
 <p><tt class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></tt></p>
-<p>archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
+<p>Archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
 <p><tt class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></tt></p>
 <p>you can also append &#8220;yes&#8221; and &#8220;no&#8221; to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
-<p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes
-envelope_from logwatch&#64;.*fuglu.org   no
-from <a class="reference external" href="mailto:backups&#37;&#52;&#48;fuglu&#46;org">backups<span>&#64;</span>fuglu<span>&#46;</span>org</a> no
-envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a>      yes</p>
+<p>envelope_from logwatch&#64;.*fuglu.org   no</p>
+<p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes</p>
+<p>from <a class="reference external" href="mailto:backups&#37;&#52;&#48;fuglu&#46;org">backups<span>&#64;</span>fuglu<span>&#46;</span>org</a> no</p>
+<p>envelope_to <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a>      yes</p>
+<p>Note: The first rule to match in a message is the only rule that will be applied. Exclusion rules should therefore be put above generic/catch-all rules.</p>
 <div class="section" id="id3">
 <h2>Configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre>[ArchivePlugin]
@@ -331,7 +333,7 @@ chgrp=
 <div class="section" id="vacation">
 <h1>Vacation<a class="headerlink" href="#vacation" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.vacation.VacationPlugin</p>
-<p>Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any &#8216;automated&#8217; messages (Mailingslists, Spams, Bounces etc)</p>
+<p>Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any &#8216;automated&#8217; messages (Mailingslists, Spams, Bounces etc)</p>
 <p>Requires: SQLAlechemy Extension</p>
 <dl class="docutils">
 <dt>Required DB Tables:</dt>
@@ -447,6 +449,9 @@ virusaction=DEFAULTVIRUSACTION
 <div class="section" id="id6">
 <h2>Configuration<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre>[FprotPlugin]
+#additional scan options  (see `man fpscand` -&gt; SCANNING OPTIONS for possible values)
+scanoptions=
+
 #maximum retries on failed connections
 retries=3
 
@@ -524,7 +529,7 @@ virusaction=DEFAULTVIRUSACTION
 <h1>Action Override<a class="headerlink" href="#action-override" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin</p>
 <blockquote>
-<div>override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
+<div>Averride actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
 <div class="section" id="id8">
 <h2>Configuration<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre>[ActionOverridePlugin]
@@ -537,10 +542,10 @@ actionrules=/etc/fuglu/actionrules.regex
 <div class="section" id="scriptfilter">
 <h1>ScriptFilter<a class="headerlink" href="#scriptfilter" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.script.ScriptFilter</p>
-<p>This plugins executes scripts found in a specified directory.
+<p>This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
 <p>Filterscripts must be written in standard python but with the file ending <tt class="docutils literal"><span class="pre">.fgf</span></tt> (&#8220;fuglu filter&#8221;)</p>
-<p>scripts are reloaded for every message and executed in alphabetic order</p>
+<p>Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.</p>
 <p>The API is basically the same as for normal plugins within the <tt class="docutils literal"><span class="pre">examine()</span></tt> method, with a few special cases:</p>
 <p>there is no &#8216;self&#8217; which means:</p>
 <blockquote>
@@ -552,7 +557,7 @@ This can be used to quickly add a custom filter script without changing the fugl
 <p>the script should not return anything, but change the available variables <tt class="docutils literal"><span class="pre">action</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt> instead
 (<tt class="docutils literal"><span class="pre">DUNNO</span></tt>, <tt class="docutils literal"><span class="pre">REJECT</span></tt>, <tt class="docutils literal"><span class="pre">DEFER</span></tt>, <tt class="docutils literal"><span class="pre">ACCEPT</span></tt>, <tt class="docutils literal"><span class="pre">DELETE</span></tt> are already imported)</p>
 <p>use <tt class="docutils literal"><span class="pre">stop()</span></tt> to exit the script</p>
-<p>example script:
+<p>Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#block all messages from evilsender.example.com</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="o">==</span><span class="s">&#39;evilsender.example.com&#39;</span><span class="p">:</span>
@@ -651,7 +656,7 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 <p>Plugin: fuglu.plugins.p_skipper.PluginSkipper</p>
 <p>Skips plugins based on standard filter file
 This can be used for example to skip spam filters on outgoing messages.
-eg. put this in /etc/fuglu/skipplugins.regex:</p>
+e.g. put this in /etc/fuglu/skipplugins.regex:</p>
 <p>&#64;incomingport    1099    SAPlugin</p>
 <div class="section" id="id13">
 <h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
