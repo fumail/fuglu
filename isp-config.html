@@ -67,19 +67,19 @@
 <h1>ISP Config<a class="headerlink" href="#isp-config" title="Permalink to this headline">¶</a></h1>
 <p>So, you are a ISP and consider fuglu as your scan glue? Here&#8217;s what you need to know.</p>
 <div class="section" id="quarantine-gui">
-<h2>Quarantine Gui<a class="headerlink" href="#quarantine-gui" title="Permalink to this headline">¶</a></h2>
+<h2>Quarantine GUI<a class="headerlink" href="#quarantine-gui" title="Permalink to this headline">¶</a></h2>
 <p>Fuglu itself does not ship any kind of quarantine web gui (like Mailwatch, Mailguard etc) for a simple reason: the requirements are too diverse. We are pretty sure you would spend the same amount of time adapting our gui to your needs as writing it from scratch.</p>
 <p>A few examples:</p>
 <blockquote>
 <div><ul class="simple">
-<li>programming language used in the web environment (python, php,perl, ....)</li>
+<li>programming language used in the web environment (python, php, perl, ...)</li>
 <li>ACL concepts</li>
 <li>some have a concept of &#8220;alias domains&#8221;, some don&#8217;t</li>
 <li>different antispam/antivirus backends</li>
-<li>different types of quarantine storage
-* distributed on scanning machine like mailscanner
-* centralized nfs
-* stored in a Cassandra/CouchDB cluster, ...)</li>
+<li>different types of quarantine storage, such as:<ul>
+    <li>distributed on scanning machine like mailscanner</li>
+    <li>centralized nfs</li>
+    <li>stored in a Cassandra/CouchDB cluster</li></ul></li>
 <li>different types of reports (some want to show every detail to their clients, some others just want them to see number of  spam/ham/virus, etc)</li>
 <li>CRM/ERP integration</li>
 </ul>
@@ -395,8 +395,8 @@ In fuglu you&#8217;d write a plugin which fills this table.</p>
 </div>
 <div class="section" id="configuration-of-other-plugins">
 <h2>Configuration of other plugins<a class="headerlink" href="#configuration-of-other-plugins" title="Permalink to this headline">¶</a></h2>
-<p>in a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins.</p>
-<p>in your fuglu.conf you&#8217;d probably set:</p>
+<p>In a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins.</p>
+<p>In your fuglu.conf you&#8217;d probably set:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">spam</span><span class="p">]</span>
 <span class="n">defaultlowspamaction</span><span class="o">=</span><span class="n">DUNNO</span>
 <span class="n">defaulthighspamaction</span><span class="o">=</span><span class="n">DUNNO</span>
@@ -405,12 +405,12 @@ In fuglu you&#8217;d write a plugin which fills this table.</p>
 <span class="n">defaultvirusaction</span><span class="o">=</span><span class="n">DUNNO</span>
 </pre></div>
 </div>
-<p>also, make sure the ISP Plugin is the last plugin</p>
+<p>Also, make sure the ISP Plugin is the last plugin</p>
 <div class="highlight-python"><div class="highlight"><pre>[main]
 plugins=clamav,&lt;other virus scanners here&gt;,spamassassin,attachment,&lt;your isp plugin&gt;
 </pre></div>
 </div>
-<p>so, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns &#8220;DELETE&#8221; after the infected message has been quarantined.</p>
+<p>So, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns &#8220;DELETE&#8221; after the infected message has been quarantined.</p>
 </div>
 </div>
 
