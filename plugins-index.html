@@ -117,9 +117,9 @@ named like the plugin itself.</p>
 <p>SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a message header or suspect tag.</p>
 <p>The format is : <tt class="docutils literal"><span class="pre">&lt;property&gt;</span> <span class="pre">&lt;regex&gt;</span> <span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt></p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">&lt;property&gt;</span></tt> can be any of...</dt>
+<dt><tt class="docutils literal"><span class="pre">&lt;property&gt;</span></tt> can be any of:</dt>
 <dd><ul class="first simple">
-<li>a email header name, eg <tt class="docutils literal"><span class="pre">Received</span></tt>, <tt class="docutils literal"><span class="pre">To</span></tt>, <tt class="docutils literal"><span class="pre">From</span></tt>, <tt class="docutils literal"><span class="pre">Subject</span></tt> ... also supports &#8216;*&#8217; as wildcard character</li>
+<li>a email header name, e.g. <tt class="docutils literal"><span class="pre">Received</span></tt>, <tt class="docutils literal"><span class="pre">To</span></tt>, <tt class="docutils literal"><span class="pre">From</span></tt>, <tt class="docutils literal"><span class="pre">Subject</span></tt> ... also supports &#8216;*&#8217; as wildcard character</li>
 <li><tt class="docutils literal"><span class="pre">mime:headername</span></tt> to get mime Headers in the message payload  eg: <tt class="docutils literal"><span class="pre">mime:Content-Disposition</span></tt></li>
 <li>one of fuglus builtin names to get envelope data:</li>
 </ul>
@@ -170,6 +170,7 @@ body:full ^--SPAMMY-MIME-BOUNDARY
 mime:Content-Type ^application\/x-msdos-program$
 </pre></div>
 </div>
+<p>Suspect filters work on a first match basis, once a match has been found no further rules rules are processed.</p>
 <p>see <a class="reference internal" href="operation-index.html#debug-suspect-filter"><em>Debug a suspect filter</em></a> for info on how to debug suspect filter files on specific messages.</p>
 </div>
 <div class="section" id="template-variables">
