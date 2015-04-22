@@ -69,7 +69,7 @@ SuspectFilter are special rule files used by many fuglu plugins. Often they defi
 The format is : ``<property> <regex> <optional argument>``
 
 ``<property>`` can be any of...
- * a email header name, eg ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
+ * a email header name, e.g. ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
  * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
 
@@ -202,7 +202,8 @@ in ``__init__`` you only call BasicPlugin's ``__init__``  for now. This sets ``s
         ScannerPlugin.__init__(self,config,section)
 
 
-then code your ``examine`` method. You will have to work with :ref:`api-Suspect`, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins. You can tag a message as virus, as spam, define your own tags, read tags from previous plugins...  it's probably a good idea to look at the Suspect class in ``fuglu.shared`` to get a list of things you can do with the suspect.
+then code your ``examine`` method. You will have to work with :ref:`api-Suspect`, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins. 
+You can tag a message as virus, as spam, define your own tags, read tags from previous plugins... it's probably a good idea to look at the Suspect class in ``fuglu.shared`` to get a list of things you can do with the suspect.
 
 
 
@@ -210,10 +211,10 @@ Common Tasks ("API" FAQ)
 ........................
 
 
-define configuration options for your plugin
+Define configuration options for your plugin
 --------------------------------------------
 
-in order to make 'lint' and 'fuglu_conf' work with your plugin it should tell the core what config options it expects. this is done by creating a dictionary named 'requiredvars' in the plugins init:
+In order to make 'lint' and 'fuglu_conf' work with your plugin it should tell the core what config options it expects. this is done by creating a dictionary named 'requiredvars' in the plugins init:
 
 Example:
 
@@ -243,19 +244,19 @@ This would tell fuglu that your plugin has three config options: host, username 
 
 The 'dict of dicts' uses your config option name as key for the outer dict. The inner dict supports the following keys:
 
- * ``default`` - Default value, used if the option is not specified in the config file
+ * ``default`` - default value, used if the option is not specified in the config file
  * ``section`` - config section to check. by default fuglu assumes that the plugin reads its own config section. override this if your plugin requires a config option from a different plugin or from the main config
  * ``confidential`` - set this to True if fuglu_conf should treat this option confidential and redact it in 'fuglu_conf -n' (passwords etc)
  * ``validator`` - function that should be called to validate if the configured value is valid. the function will receive the value as argument and must return True or False
  * ``deprecated`` - mark a config option as deprecated
 
 
-read the config
+Read the config
 ---------------
 
 Configs in fuglu are stored in ``/etc/fuglu/fuglu.conf`` (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own Section named like the Plugin Class. 
 
-example:
+Example:
 
 ::
 
@@ -263,36 +264,35 @@ example:
 	maxsize=10382
 
 
-you can then read the config in your plugin with the usual methods from a python ConfigParser object ( http://docs.python.org/library/configparser.html )
+You can then read the config in your plugin with the usual methods from a python ConfigParser object ( http://docs.python.org/library/configparser.html )
 
 ::
 
 	maxsize=self.config.getint(self.section, 'maxsize')
 
 
-Important: always the configs in ``examine`` (and not in ``init`` !). reading the config in init breaks loading default values and prevents on-the-fly config reload
+Important: always load the configs in ``examine`` (and not in ``init`` !). Reading the config in init breaks loading default values and prevents on-the-fly config reload
 
 
 
-get the message source
+Get the message source
 ----------------------
 
-use ``suspect.get_source()`` to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.
+Use ``suspect.get_source()`` to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.
 
-from fuglu.shared import ScannerPlugin,DUNNO
-import time
-add headers
+
+Add headers
 -----------
 
 ``suspect.add_header(headername,headervalue)``
 
-by default, headers are added to the message shortly before it is re-injected into postfix.
+By default, headers are added to the message shortly before it is re-injected into postfix.
 add ``immediate=True`` to add the header immediately, so other plugins can see it.
 
-write to the log
+Write to the log
 ----------------
 
-your plugin has a _logger method that returns a standard python logger object, so you can use the info / debug / error / fatal methods.
+Your plugin has a _logger method that returns a standard python logger object, so you can use the info / debug / error / fatal methods.
 
 Example:
 
@@ -302,26 +302,26 @@ Example:
 
 
 
-write debug info
+Write debug info
 ----------------
 
-to make the plugin write special debug info when ``fuglu_debug`` is used, use:
+To make the plugin write special debug info when ``fuglu_debug`` is used, use:
 
 ::
 
 	suspect.debug('debug info from DemoPlugin!')
 
 
-make plugin '--lint'-able
+Make plugin '--lint'-able
 -------------------------
 
-by default, ``lint()`` only validates the plugin's configuration settings from ``self.requiredvars``. You can override ``lint()`` to do more stuff.
+By default, ``lint()`` only validates the plugin's configuration settings from ``self.requiredvars``. You can override ``lint()`` to do more stuff.
 
  * use simple ``print`` in this method, no logging stuff. 
  * if you override ``lint()`` you should run ``self.checkConfig()`` to test the configuration
  * ``lint()`` must return True or False
 
-example of a plugin that would check if an imap account is available:
+Example of a plugin that would check if an imap account is available:
 
 
 ::
@@ -344,7 +344,7 @@ example of a plugin that would check if an imap account is available:
 
 
 
-use the 'SuspectFilter'
+Use the 'SuspectFilter'
 -----------------------
 
 SuspectFilters are a common way for all plugins to perform an action based on conditions defined in a filterfile . These files are automatically re-loaded if changed.
@@ -375,7 +375,7 @@ SuspectFilters are a common way for all plugins to perform an action based on co
 
 
 
-in ``examine`` create the filter if necessary
+In ``examine`` create the filter if necessary
 
 
 ::
@@ -385,7 +385,7 @@ in ``examine`` create the filter if necessary
 
 
 
-run the filter in examine: ``(match,arg)=self.filter.matches(suspect)``
+Run the filter in examine: ``(match,arg)=self.filter.matches(suspect)``
 ``match`` is a boolean, telling you if one of the rules matched
 `arg`` is an additional argument which have been appended to the filter rule in the config. lets say, the filter rule reads ``to_address example@fuglu.org hello world!``, you would get match=True and arg='Hello world!' if the message is sent to example@fuglu.org
 
@@ -405,7 +405,7 @@ run the filter in examine: ``(match,arg)=self.filter.matches(suspect)``
 
 
 
-use the sql extension
+Use the sql extension
 ---------------------
 
 TODO (DBFiles, sqlalchemy connections)
@@ -415,7 +415,7 @@ Debugging
 .........
 
 
-get a stacktrace
+Get a stacktrace
 ----------------
 
 if something went wrong you should see a stacktrace in the fuglu log (/var/log/fuglu/fuglu.log)
@@ -426,14 +426,14 @@ with fuglu >=0.6.0 you can also get the most recent exceptions with the followin
 	fuglu_control exceptionlist
 
 
-debug the plugin while fuglu is runnig
+Debug the plugin while fuglu is runnig
 --------------------------------------
 
 run ``fuglu --console`` to enter an interactive python console after fuglu startup. Your plugin is then available via the list ``mc.plugins``
 
 
 
-debug a plugin without running fuglu
+Debug a plugin without running fuglu
 ------------------------------------
 
 ``plugdummy.py`` is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn't require a running fuglu or postfix. it will create a dummy suspect, call the plugin's examine method and print the result (and debug output). 
@@ -459,21 +459,21 @@ assuming your plugin file ('myplugin.py') is in ``/usr/local/fuglu/plugins`` you
 	INFO:root:Result: DUNNO 
 	INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}
 
-advanced usage:
+Advanced usage:
 
 run ``plugdummy.py --help`` to get a list of all options
 
 Examples:
 
 
-running plugins from a different directory
+Running plugins from a different directory
 
 ::
 
 	./plugdummy.py -p /tmp/ myplugin.ExamplePlugin
 
 
-change sender / recipient
+Change sender / recipient
 the '-s' and '-f' options change the envelope sender/recipient. -r can be specified multiple times to simulate a multi-recipient message
 
 ::
@@ -486,7 +486,7 @@ the '-s' and '-f' options change the envelope sender/recipient. -r can be specif
 	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}  
 
 
-adding headers to the input message
+Adding headers to the input message
 
 ::
 
@@ -504,7 +504,7 @@ adding headers to the input message
 	hello, world!
 
 
-adding tags:
+Adding tags:
 
 ::
 
@@ -516,7 +516,7 @@ adding tags:
 	INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'spam': {}, 'virus': {}, 'mytag': 'myvalue', 'highspam': {}}
 
 
-setting a config option:
+Setting a config option:
 
 
 ::
@@ -527,7 +527,8 @@ setting a config option:
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: go away!
 	[...]
 
-setting the message body:
+Setting the message body:
+
 ::
 
 	#set body	
@@ -539,7 +540,7 @@ setting the message body:
 	#read headers & body from eml file
 	./plugdummy.py -e /tmp/bla.eml myplugin.ExamplePlugin
 
-running a interactive console in the dummy enrivonment:
+Running a interactive console in the dummy enrivonment:
 
 ::
 
@@ -569,11 +570,10 @@ running a interactive console in the dummy enrivonment:
 Deploying Plugins
 .................
 
- * if there is no ``plugindir`` set in fuglu.conf yet, define a new directory for custom plugins. eg ``/usr/local/fuglu/plugins``.
- * copy your plugin file to this directory
- * depending on the type of your plugin, add it to the plugin/prependers/appenders config option. Eg. if your scanner plugin class is ``MyHeloPlugin`` in the file myplugin.py you would add ``myplugin.MyHeloPlugin`` to the ``plugins`` config
- * if your plugin reads configuration entries, make sure those are present in fuglu.conf or in a custom conf-file in /etc/fuglu/conf.d
- * run ``fuglu --lint`` to check if fuglu is happy with your new plugin
- * (re)start fuglu 
-
+ * If there is no ``plugindir`` set in fuglu.conf yet, define a new directory for custom plugins. eg ``/usr/local/fuglu/plugins``.
+ * Copy your plugin file to this directory
+ * Depending on the type of your plugin, add it to the plugin/prependers/appenders config option. Eg. if your scanner plugin class is ``MyHeloPlugin`` in the file myplugin.py you would add ``myplugin.MyHeloPlugin`` to the ``plugins`` config
+ * If your plugin reads configuration entries, make sure those are present in fuglu.conf or in a custom conf-file in /etc/fuglu/conf.d
+ * Run ``fuglu --lint`` to check if fuglu is happy with your new plugin
+ * (Re)start fuglu
 

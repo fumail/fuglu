@@ -4,21 +4,23 @@ ISP Config
 So, you are a ISP and consider fuglu as your scan glue? Here's what you need to know.
 
 --------------
-Quarantine Gui
+Quarantine GUI
 --------------
 
 Fuglu itself does not ship any kind of quarantine web gui (like Mailwatch, Mailguard etc) for a simple reason: the requirements are too diverse. We are pretty sure you would spend the same amount of time adapting our gui to your needs as writing it from scratch.
 
 A few examples:
 
- * programming language used in the web environment (python, php,perl, ....)
+ * programming language used in the web environment (python, php, perl, ...)
  * ACL concepts
  * some have a concept of "alias domains", some don't
  * different antispam/antivirus backends
- * different types of quarantine storage 
+ * different types of quarantine storage, such as
+ 
    * distributed on scanning machine like mailscanner
    * centralized nfs
-   * stored in a Cassandra/CouchDB cluster, ...)
+   * stored in a Cassandra/CouchDB cluster
+
  * different types of reports (some want to show every detail to their clients, some others just want them to see number of  spam/ham/virus, etc)
  * CRM/ERP integration
 
@@ -342,9 +344,9 @@ Below is a stripped down example of such a plugin. In a real setup you'd probabl
 Configuration of other plugins
 ------------------------------
 
-in a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins. 
+In a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins. 
 
-in your fuglu.conf you'd probably set:
+In your fuglu.conf you'd probably set:
 
 ::
 
@@ -356,7 +358,7 @@ in your fuglu.conf you'd probably set:
 	defaultvirusaction=DUNNO
 
 
-also, make sure the ISP Plugin is the last plugin
+Also, make sure the ISP Plugin is the last plugin
 
 ::
 
@@ -366,6 +368,6 @@ also, make sure the ISP Plugin is the last plugin
 
 
 
-so, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns "DELETE" after the infected message has been quarantined.
+So, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns "DELETE" after the infected message has been quarantined.
 
 

@@ -215,8 +215,9 @@ fuglu_default_destination_recipient_limit=1
 <div class="section" id="running-a-plugin-multiple-times-with-different-config-sections">
 <h3>Running a plugin multiple times with different config sections<a class="headerlink" href="#running-a-plugin-multiple-times-with-different-config-sections" title="Permalink to this headline">¶</a></h3>
 <p>By default, plugins search your configfile for a section named like the
-plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. This can be overridden which allows running plugin multiple times per scan with different config options:</p>
-<p>example:</p>
+plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. You can pass the plugin definition an argument to override this with a section named to suit your needs.
+This can also allow running a plugin multiple times per scan with different config options:</p>
+<p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig1</span><span class="p">),</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig2</span><span class="p">)</span>
 
 <span class="p">[</span><span class="n">ArchiveConfig1</span><span class="p">]</span>
