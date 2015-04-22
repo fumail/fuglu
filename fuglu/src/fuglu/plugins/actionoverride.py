@@ -20,7 +20,7 @@ import os
 
 class ActionOverridePlugin(ScannerPlugin):
 
-    """ override Actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. """
+    """ Averride actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. """
 
     def __init__(self, config, section=None):
         ScannerPlugin.__init__(self, config, section)

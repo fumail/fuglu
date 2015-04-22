@@ -22,7 +22,7 @@ class PluginSkipper(PrependerPlugin):
 
     """Skips plugins based on standard filter file
 This can be used for example to skip spam filters on outgoing messages.
-eg. put this in /etc/fuglu/skipplugins.regex:
+e.g. put this in /etc/fuglu/skipplugins.regex:
 
 @incomingport    1099    SAPlugin
 """

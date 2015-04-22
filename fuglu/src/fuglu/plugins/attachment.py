@@ -253,7 +253,7 @@ Actions: This plugin will delete messages if they contain blocked attachments.
 Prerequisites: You must have the python ``file`` or ``magic`` module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python ``rarfile`` module.
 
 
-The attachment configuration files are in ``/etc/fuglu/rules``. You whould have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have. 
+The attachment configuration files are in ``/etc/fuglu/rules``. You should have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have.
 
 For domain rules, create a new file ``<domainname>-filenames.conf`` / ``<domainname>-filetypes.conf`` , eg. ``fuglu.org-filenames.conf`` / ``fuglu.org-filetypes.conf``
 
@@ -263,17 +263,17 @@ To scan filenames or even file contents within archives (zip, rar), use ``<...>-
 
 
 The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-<action>    <regular expression>   <description or error message>
+``<action>``    ``<regular expression>``   ``<description or error message>``
 
-<action> can be one of:
+``<action>`` can be one of:
  * allow : this file is ok, don't do further checks (you might use it for safe content types like text). Do not blindly create 'allow' rules. It's safer to make no rule at all, if no other rules hit, the file will be accepted
  * deny : delete this message and send the error message/description back to the sender
  * delete : silently delete the message, no error is sent back, and 'blockaction' is ignored
 
 
-<regular expression> is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
+``<regular expression>`` is a standard python regex. in ``x-filenames.conf`` this will be applied to the attachment name . in ``x-filetypes.conf`` this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
 
-example of default-filetypes.conf:
+Example of ``default-filetypes.conf`` :
 
 ::
 
@@ -288,7 +288,7 @@ example of default-filetypes.conf:
 
 
 
-small extract from default-filenames.conf:
+A small extract from ``default-filenames.conf``:
 
 ::
 
@@ -304,7 +304,8 @@ small extract from default-filenames.conf:
 
 Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)
 
-The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:
+The bounce template (eg ``/etc/fuglu/templates/blockedfile.tmpl`` ) should
+start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:
 
 ::
 
@@ -316,8 +317,6 @@ The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like 
     ${blockinfo}
 
 
-
-eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.
 
 ``${blockinfo}`` will be replaced with the text you specified in the third column of the rule that blocked this message.
 

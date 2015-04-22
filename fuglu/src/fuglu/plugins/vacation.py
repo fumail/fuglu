@@ -213,7 +213,7 @@ class VacationCache(object):
 
 class VacationPlugin(ScannerPlugin):
 
-    """Sends out-of-office reply messages. Configuration is got from a sql database. Replies are only sent once per day per sender. The plugin will not reply to any 'automated' messages (Mailingslists, Spams, Bounces etc)
+    """Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any 'automated' messages (Mailingslists, Spams, Bounces etc)
 
 Requires: SQLAlechemy Extension
 
