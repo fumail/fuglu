@@ -681,7 +681,7 @@ The other common template variables are available as well.
         #   http://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file
         #   http://stackoverflow.com/questions/20276105/why-cant-python-execute-a-zip-archive-passed-via-stdin
         #       This second link is only losely related, but echos the first, "processing a ZIP archive often requires backwards seeking"
-        self.logger.info("python2.6 workaround - trying to fix zipfile for opening")
+        
         content = zipFileContainer.read()
         pos = content.rfind('\x50\x4b\x05\x06') # reverse find: this string of bytes is the end of the zip's central directory.
         if pos>0:
@@ -689,10 +689,6 @@ The other common template variables are available as well.
             zipFileContainer.truncate()
             zipFileContainer.write('\x00\x00') # Zip file comment length: 0 byte length; tell zip applications to stop reading.
             zipFileContainer.seek(0)
-            self.logger.info("zip fixed successfully")
-        else:
-            self.logger.info("zip fix failed")
-
         return zipFileContainer
 
 
