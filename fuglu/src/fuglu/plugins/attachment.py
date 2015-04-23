@@ -24,12 +24,10 @@ import os.path
 import logging
 from fuglu.extensions.sql import DBFile
 import threading
+import sys
 
 from threading import Lock
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+from StringIO import StringIO  # do not use cStringIO - the python2.6 fix for opening some zipfiles does not work with cStringIO
 import zipfile
 
 MAGIC_AVAILABLE = 0
@@ -671,9 +669,38 @@ The other common template variables are available as well.
                             "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
 
+
+    def _fix_python26_zipfile_bug(self,zipFileContainer):
+        "http://stackoverflow.com/questions/3083235/unzipping-file-results-in-badzipfile-file-is-not-a-zip-file/21996397#21996397"
+        # HACK: See http://bugs.python.org/issue10694
+        # The zip file generated is correct, but because of extra data after the 'central directory' section,
+        # Some version of python (and some zip applications) can't read the file. By removing the extra data,
+        # we ensure that all applications can read the zip without issue.
+        # The ZIP format: http://www.pkware.com/documents/APPNOTE/APPNOTE-6.3.0.TXT
+        # Finding the end of the central directory:
+        #   http://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file
+        #   http://stackoverflow.com/questions/20276105/why-cant-python-execute-a-zip-archive-passed-via-stdin
+        #       This second link is only losely related, but echos the first, "processing a ZIP archive often requires backwards seeking"
+        self.logger.info("python2.6 workaround - trying to fix zipfile for opening")
+        content = zipFileContainer.read()
+        pos = content.rfind('\x50\x4b\x05\x06') # reverse find: this string of bytes is the end of the zip's central directory.
+        if pos>0:
+            zipFileContainer.seek(pos+20) # +20: see secion V.I in 'ZIP format' link above.
+            zipFileContainer.truncate()
+            zipFileContainer.write('\x00\x00') # Zip file comment length: 0 byte length; tell zip applications to stop reading.
+            zipFileContainer.seek(0)
+            self.logger.info("zip fixed successfully")
+        else:
+            self.logger.info("zip fix failed")
+
+        return zipFileContainer
+
+
     def _archive_handle(self,archive_type,payload):
         """get a handle for this archive type"""
         if archive_type=='zip':
+            if sys.version_info < (2,7):
+                payload = self._fix_python26_zipfile_bug(payload)
             return zipfile.ZipFile(payload)
         if archive_type=='rar':
             return rarfile.RarFile(payload)
