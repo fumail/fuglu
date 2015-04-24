@@ -25,6 +25,8 @@ import logging
 from fuglu.extensions.sql import DBFile
 import threading
 import sys
+import email
+from email.header import decode_header
 
 from threading import Lock
 from StringIO import StringIO  # do not use cStringIO - the python2.6 fix for opening some zipfiles does not work with cStringIO
@@ -562,7 +564,13 @@ The other common template variables are available as well.
             contenttype_mime = i.get_content_type()
             att_name = i.get_filename(None)
 
-            if not att_name:
+            if att_name:
+                #some filenames are encoded, try to decode
+                try:
+                    att_name = ''.join([x[0] for x in decode_header(att_name)])
+                except:
+                    pass
+            else:
                 # workaround for mimetypes, it always takes .ksh for text/plain
                 if i.get_content_type() == 'text/plain':
                     ext = '.txt'
