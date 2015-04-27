@@ -231,6 +231,27 @@ allow    \.gif$            -
 </pre></div>
 </div>
 <p>Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)</p>
+<p>Per domain/user overrides can also be fetched from a database instead of files (see dbconnectstring / query options).
+The query must return the same rule format as a file would. Multiple columns in the resultset will be concatenated.</p>
+<p>The default query assumes the following schema:</p>
+<div class="highlight-python"><div class="highlight"><pre>CREATE TABLE `attachmentrules` (
+  `rule_id` int(11) NOT NULL AUTO_INCREMENT,
+  `action` varchar(10) NOT NULL,
+  `regex` varchar(255) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `scope` varchar(255) DEFAULT NULL,
+  `checktype` varchar(20) NOT NULL,
+  `prio` int(11) NOT NULL,
+  PRIMARY KEY (`rule_id`)
+)
+</pre></div>
+</div>
+<p><em>action</em>: <tt class="docutils literal"><span class="pre">allow</span></tt>, <tt class="docutils literal"><span class="pre">deny</span></tt>, or <tt class="docutils literal"><span class="pre">delete</span></tt></p>
+<p><em>regex</em>: a regular expression</p>
+<p><em>description</em>: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled</p>
+<p><em>scope</em>: a domain name or a recipient&#8217;s email address</p>
+<p><em>checktype</em>: one of <tt class="docutils literal"><span class="pre">filename</span></tt>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
+<p><em>prio</em>: order in which the rules are run</p>
 <p>The bounce template (eg <tt class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></tt> ) should
 start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre>To: ${from_address}

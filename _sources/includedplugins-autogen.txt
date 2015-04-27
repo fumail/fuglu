@@ -210,6 +210,36 @@ A small extract from ``default-filenames.conf``:
 
 Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)
 
+Per domain/user overrides can also be fetched from a database instead of files (see dbconnectstring / query options).
+The query must return the same rule format as a file would. Multiple columns in the resultset will be concatenated.
+
+The default query assumes the following schema:
+
+::
+
+    CREATE TABLE `attachmentrules` (
+      `rule_id` int(11) NOT NULL AUTO_INCREMENT,
+      `action` varchar(10) NOT NULL,
+      `regex` varchar(255) NOT NULL,
+      `description` varchar(255) DEFAULT NULL,
+      `scope` varchar(255) DEFAULT NULL,
+      `checktype` varchar(20) NOT NULL,
+      `prio` int(11) NOT NULL,
+      PRIMARY KEY (`rule_id`)
+    )
+
+*action*: ``allow``, ``deny``, or ``delete``
+
+*regex*: a regular expression
+
+*description*: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled
+
+*scope*: a domain name or a recipient's email address
+
+*checktype*: one of ``filename``,``contenttype``,``archive-filename``,``archive-contenttype``
+
+*prio*: order in which the rules are run
+
 The bounce template (eg ``/etc/fuglu/templates/blockedfile.tmpl`` ) should
 start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:
 
