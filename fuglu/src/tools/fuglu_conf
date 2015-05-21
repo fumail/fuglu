@@ -23,7 +23,8 @@ import os
 import ConfigParser
 import StringIO
 import logging
-
+import inspect
+import re
 
 def stderr(msg):
     sys.stderr.write(msg)
@@ -102,17 +103,27 @@ def print_overrides(defaultconfig, userconfig, controller):
 
 def make_config(controller, onlysection=None):
     config = controller.config
+
     for sec in config.sections():
         if onlysection != None and sec != onlysection:
             continue
+
         print "\n[%s]" % sec
+        lines=[]
+
         for opt, val in config.items(sec):
-            meta = get_config_meta(controller, sec, opt)
+            buff=""
+            meta,order = get_config_meta(controller, sec, opt)
             if meta != None and 'description' in meta:
                 desc = '\n#'.join(meta['description'].split('\n'))
-                print '\n#%s' % desc
+                buff+= '\n#%s' % desc
 
-            print "%s=%s" % (opt, val)
+            buff+="\n%s=%s" % (opt, val)
+            lines.append((buff,order))
+
+        sortedlines=sorted(lines,key=lambda x:x[1])
+        for line in sortedlines:
+            print line[0]
 
 
 def get_config_meta(controller, section, option):
@@ -142,8 +153,23 @@ def get_config_meta(controller, section, option):
                         sys.stderr.write("Warning, no section found. obj=%s meta=%s\n"%(obj,clone))
                     if msection!=section:
                         continue
-                    return clone
 
+                    order=extract_option_order(obj,option)
+                    return clone,order
+    return None,0
+
+def extract_option_order(obj,option):
+    """Try to extract the order in which options where defined. (Evil source inspection hack.. dicts don't have an order)"""
+    sourcelines=inspect.getsourcelines(obj.__class__)[0]
+    counter=0
+    for line in sourcelines:
+        m=re.match(r'''\s+['"](?P<name>[a-zA-Z_]+)['"]\s?:\s?{''',line)
+        if m!=None:
+            srcopt=m.groups()[0]
+            counter+=1
+            if option==srcopt:
+                return counter
+    return 0
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR)

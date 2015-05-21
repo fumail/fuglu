@@ -1,29 +1,36 @@
 
 [main]
 
-#outgoing hostname/ip where postfix is listening for re-injects.
-#use ${injecthost} to connect back to the IP where the incoming connection came from
-outgoinghost=127.0.0.1
+#identifier can be any string that helps you identifying your config file
+#this helps making sure the correct config is loaded. this identifier will be printed out when fuglu is reloading its config
+identifier=dist
 
-#what PREPENDER plugins do we load, comma separated
-prependers=debug,skip
+#run as a daemon? (fork)
+daemonize=1
+
+#run as user
+user=nobody
 
 #run as group
 group=nobody
 
-#If a plugin decides to delete a message, save a copy here
-#default empty, eg. do not save a backup copy
-trashdir=
+#where should fuglu search for additional plugins
+plugindir=
 
-#if this is set to True/1/yes , no Bounces will be sent from Fuglu eg. after a blocked attachment has been detected
-#This may be used for debugging/testing to make sure fuglu can not produce backscatter
-disablebounces=0
+#what SCANNER plugins do we load, comma separated
+plugins=archive,attachment,clamav,spamassassin
 
-#outgoing port  where postfix is listening for re-injects)
-outgoingport=10026
+#what PREPENDER plugins do we load, comma separated
+prependers=debug,skip
 
-#port where fuglu provides statistics etc (used by fuglu_control). Can also be a path to a unix socket
-controlport=/tmp/fuglu_control.sock
+#what APPENDER plugins do we load, comma separated
+#appender plugins are plugins run after the scanning plugins
+#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
+#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
+appenders=
+
+#address fuglu should listen on. usually 127.0.0.1 so connections are accepted from local host only
+bindaddress=127.0.0.1
 
 #incoming port(s) (postfix connects here)
 #you can use multiple comma separated ports here
@@ -33,73 +40,82 @@ controlport=/tmp/fuglu_control.sock
 #10888: debug port
 incomingport=10025,10099,10888
 
-#identifier can be any string that helps you identifying your config file
-#this helps making sure the correct config is loaded. this identifier will be printed out when fuglu is reloading its config
-identifier=dist
+#outgoing hostname/ip where postfix is listening for re-injects.
+#use ${injecthost} to connect back to the IP where the incoming connection came from
+outgoinghost=127.0.0.1
 
-#String to prepend to added headers
-prependaddedheaders=X-Fuglu-
-
-#what SCANNER plugins do we load, comma separated
-plugins=archive,attachment,clamav,spamassassin
-
-#what APPENDER plugins do we load, comma separated
-#appender plugins are plugins run after the scanning plugins
-#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
-#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
-appenders=
-
-#temp dir where fuglu can store messages while scanning
-tempdir=/tmp
-
-#write debug info header to every mail
-debuginfoheader=0
-
-#Log pattern to use for all suspects in fuglu log. set empty string to disable logging generic suspect info. Supports the usual template variables plus: ${size}, ${spam} ${highspam}, ${modified} ${decision} ${tags} (short tags representagion) ${fulltags} full tags output, ${decision}
-logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}
+#outgoing port  where postfix is listening for re-injects)
+outgoingport=10026
 
 ##outgoing helo we should use for re-injects
 #leave empty to auto-detect current hostname
 outgoinghelo=
 
-#where should fuglu search for additional plugins
-plugindir=
+#temp dir where fuglu can store messages while scanning
+tempdir=/tmp
 
-#run as user
-user=nobody
+#String to prepend to added headers
+prependaddedheaders=X-Fuglu-
 
-#write suspect ID to every mail
-suspectidheader=1
+#If a plugin decides to delete a message, save a copy here
+#default empty, eg. do not save a backup copy
+trashdir=
 
 #list all deleted messages in 00-fuglutrash.log in the trashdir
 trashlog=0
 
-#address fuglu should listen on. usually 127.0.0.1 so connections are accepted from local host only
-bindaddress=127.0.0.1
+#if this is set to True/1/yes , no Bounces will be sent from Fuglu eg. after a blocked attachment has been detected
+#This may be used for debugging/testing to make sure fuglu can not produce backscatter
+disablebounces=0
 
-#run as a daemon? (fork)
-daemonize=1
+#write debug info header to every mail
+debuginfoheader=0
+
+#write suspect ID to every mail
+suspectidheader=1
 
 #write mrtg statistics
 mrtgdir=
 
+#port where fuglu provides statistics etc (used by fuglu_control). Can also be a path to a unix socket
+controlport=/tmp/fuglu_control.sock
+
+#Log pattern to use for all suspects in fuglu log. set empty string to disable logging generic suspect info. Supports the usual template variables plus: ${size}, ${spam} ${highspam}, ${modified} ${decision} ${tags} (short tags representagion) ${fulltags} full tags output, ${decision}
+logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}
+
 [PluginAlias]
-actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
-skip=fuglu.plugins.p_skipper.PluginSkipper
-dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
-spamassassin=fuglu.plugins.sa.SAPlugin
-vacation=fuglu.plugins.vacation.VacationPlugin
-scriptfilter=fuglu.plugins.script.ScriptFilter
-fraction=fuglu.plugins.p_fraction.PluginFraction
-icap=fuglu.plugins.icap.ICAPPlugin
-sssp=fuglu.plugins.sssp.SSSPPlugin
-fprot=fuglu.plugins.fprot.FprotPlugin
+
 debug=fuglu.plugins.p_debug.MessageDebugger
+
+skip=fuglu.plugins.p_skipper.PluginSkipper
+
+fraction=fuglu.plugins.p_fraction.PluginFraction
+
 archive=fuglu.plugins.archive.ArchivePlugin
-spf=fuglu.plugins.domainauth.SPFPlugin
-dkimverify=fuglu.plugins.domainauth.DKIMVerifyPlugin
+
 attachment=fuglu.plugins.attachment.FiletypePlugin
+
 clamav=fuglu.plugins.clamav.ClamavPlugin
+
+spamassassin=fuglu.plugins.sa.SAPlugin
+
+vacation=fuglu.plugins.vacation.VacationPlugin
+
+actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
+
+icap=fuglu.plugins.icap.ICAPPlugin
+
+sssp=fuglu.plugins.sssp.SSSPPlugin
+
+fprot=fuglu.plugins.fprot.FprotPlugin
+
+scriptfilter=fuglu.plugins.script.ScriptFilter
+
+dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
+
+dkimverify=fuglu.plugins.domainauth.DKIMVerifyPlugin
+
+spf=fuglu.plugins.domainauth.SPFPlugin
 
 [databaseconfig]
 
@@ -112,17 +128,17 @@ sql=SELECT value FROM fugluconfig WHERE `section`=:section AND `option`=:option 
 
 [spam]
 
-#what to do with messages if a plugin is sure it is spam ("high spam") 
-#in after-queue mode this is probably still DUNNO or maybe DELETE for courageous people
-#this is a DEFAULT action, eg. anti spam plugins should take this if you didn't set
-# a individual override 
-defaulthighspamaction=DUNNO
-
 #what to do with messages that plugins think are spam but  not so sure  ("low spam")
 #in normal usage you probably never set this something other than DUNNO
 #this is a DEFAULT action, eg. anti spam plugins should take this if you didn't set 
 # a individual override
 defaultlowspamaction=DUNNO
+
+#what to do with messages if a plugin is sure it is spam ("high spam") 
+#in after-queue mode this is probably still DUNNO or maybe DELETE for courageous people
+#this is a DEFAULT action, eg. anti spam plugins should take this if you didn't set
+# a individual override 
+defaulthighspamaction=DUNNO
 
 [smtpconnector]
 
@@ -131,20 +147,20 @@ requeuetemplate=FUGLU REQUEUE(${id}): ${injectanswer}
 
 [environment]
 
+#Distance to the boundary MTA ("how many received headers should fuglu skip to determine the last untrusted host information"). Only required if plugins need to have information about the last untrusted host(SPFPlugin)
+boundarydistance=0
+
 #Optional regex that should be applied to received headers to skip trusted (local) mta helo/ip/reverse dns.
 #Only required if plugins need to have information about the last untrusted host and the message doesn't pass a fixed amount of hops to reach this system in your network
 trustedhostsregex=
 
-#Distance to the boundary MTA ("how many received headers should fuglu skip to determine the last untrusted host information"). Only required if plugins need to have information about the last untrusted host(SPFPlugin)
-boundarydistance=0
-
 [performance]
-
-#maximum scanner threads
-maxthreads=40
 
 #minimum scanner threads
 minthreads=2
+
+#maximum scanner threads
+maxthreads=40
 
 [esmtpconnector]
 
@@ -162,36 +178,48 @@ defaultvirusaction=DELETE
 
 [ArchivePlugin]
 
-#change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
-chown=
-
 #Archiving SuspectFilter File
 archiverules=/etc/fuglu/archive.regex
 
-#filename template for the archived messages
-filenametemplate=${id}.eml
+#storage for archived messages
+archivedir=/tmp
 
 #subdirectory within archivedir
 subdirtemplate=${to_domain}
+
+#filename template for the archived messages
+filenametemplate=${id}.eml
 
 #if true/1/yes: store original message
 #if false/0/no: store message probably altered by previous plugins, eg with spamassassin headers
 storeoriginal=1
 
-#storage for archived messages
-archivedir=/tmp
-
-#set file permissions of saved messages
-chmod=
+#change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
+chown=
 
 #change group of saved messages (groupname or numeric id) - the user running fuglu must be a member of the target group for this to work
 chgrp=
 
+#set file permissions of saved messages
+chmod=
+
 [FiletypePlugin]
+
+#Mail template for the bounce to inform sender about blocked attachment
+template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 
 #inform the sender about blocked attachments.
 #If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
 sendbounce=1
+
+#directory that contains attachment rules
+rulesdir=/etc/fuglu/rules
+
+#what should the plugin do when a blocked attachment is detected
+#REJECT : reject the message (recommended in pre-queue mode)
+#DELETE : discard messages
+#DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
+blockaction=DELETE
 
 #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
 dbconnectstring=
@@ -200,20 +228,8 @@ dbconnectstring=
 #:check will be replaced 'filename','contenttype','archive-filename' or 'archive-contenttype'
 query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
 
-#Mail template for the bounce to inform sender about blocked attachment
-template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
-
-#directory that contains attachment rules
-rulesdir=/etc/fuglu/rules
-
 #enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive.
 checkarchivenames=0
-
-#what should the plugin do when a blocked attachment is detected
-#REJECT : reject the message (recommended in pre-queue mode)
-#DELETE : discard messages
-#DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
-blockaction=DELETE
 
 #extract compressed archives(zip,rar) and check file content type with libmagics
 #note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
@@ -225,48 +241,84 @@ archivecontentmaxsize=5000000
 
 [ClamavPlugin]
 
-#how often should fuglu retry the connection before giving up
-retries=3
-
 #hostname where clamd runs
 host=localhost
-
-#reject message template if running in pre-queue mode and virusaction=REJECT
-rejectmessage=threat detected: ${virusname}
-
-#socket timeout
-timeout=30
-
-#action if there is a problem (DUNNO, DEFER)
-problemaction=DEFER
-
-#maximum message size, larger messages will not be scanned.  
-#should match the 'StreamMaxLength' config option in clamd.conf 
-maxsize=22000000
 
 #tcp port number or path to clamd.sock for unix domain sockets
 #example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl 
 port=3310
 
-#action if infection is detected (DUNNO, REJECT, DELETE)
-virusaction=DEFAULTVIRUSACTION
+#socket timeout
+timeout=30
 
-[SAPlugin]
+#maximum message size, larger messages will not be scanned.  
+#should match the 'StreamMaxLength' config option in clamd.conf 
+maxsize=22000000
 
 #how often should fuglu retry the connection before giving up
 retries=3
 
+#action if infection is detected (DUNNO, REJECT, DELETE)
+virusaction=DEFAULTVIRUSACTION
+
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
 
-#reject message template if running in pre-queue mode
-rejectmessage=message identified as spam
+#reject message template if running in pre-queue mode and virusaction=REJECT
+rejectmessage=threat detected: ${virusname}
+
+[SAPlugin]
+
+#hostname where spamd runs
+host=localhost
+
+#tcp port number or path to spamd unix socket
+port=783
+
+#how long should we wait for an answer from sa
+timeout=30
+
+#maximum size in bytes. larger messages will be skipped
+maxsize=256000
+
+#how often should fuglu retry the connection before giving up
+retries=3
+
+#should we scan the original message as retreived from postfix or scan the current state 
+#in fuglu (which might have been altered by previous plugins)
+#only set this to disabled if you have a custom plugin that adds special headers to the message that will be 
+#used in spamassassin rules
+scanoriginal=1
 
 #forward the original message or replace the content as returned by spamassassin
 #if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
 #"original" in this case means "as passed to spamassassin", eg. if 'scanoriginal' is set to 0 above this will forward the
 #message as retreived from previous plugins 
 forwardoriginal=0
+
+#what header does SA set to indicate the spam status
+#Note that fuglu requires a standard header template configuration for spamstatus and score extraction
+#if 'forwardoriginal' is set to 0
+#eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
+spamheader=X-Spam-Status
+
+#enable SA user configuration 
+peruserconfig=1
+
+#spamscore threshold to mark a message as high spam
+highspamlevel=15
+
+#what should we do with high spam (spam score above highspamlevel)
+highspamaction=DEFAULTHIGHSPAMACTION
+
+#what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
+lowspamaction=DEFAULTLOWSPAMACTION
+
+#action if there is a problem (DUNNO, DEFER)
+problemaction=DEFER
+
+#reject message template if running in pre-queue mode
+rejectmessage=message identified as spam
 
 #consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks
 #requires the sql extension to be enabled
@@ -279,42 +331,6 @@ sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
 #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})
 
-#maximum size in bytes. larger messages will be skipped
-maxsize=256000
-
-#what header does SA set to indicate the spam status
-#Note that fuglu requires a standard header template configuration for spamstatus and score extraction
-#if 'forwardoriginal' is set to 0
-#eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
-spamheader=X-Spam-Status
-
-#hostname where spamd runs
-host=localhost
-
-#what should we do with high spam (spam score above highspamlevel)
-highspamaction=DEFAULTHIGHSPAMACTION
-
-#how long should we wait for an answer from sa
-timeout=30
-
-#spamscore threshold to mark a message as high spam
-highspamlevel=15
-
-#enable SA user configuration 
-peruserconfig=1
-
-#tcp port number or path to spamd unix socket
-port=783
-
-#should we scan the original message as retreived from postfix or scan the current state 
-#in fuglu (which might have been altered by previous plugins)
-#only set this to disabled if you have a custom plugin that adds special headers to the message that will be 
-#used in spamassassin rules
-scanoriginal=1
-
-#what should we do with low spam (eg. detected as spam, but score not over highspamlevel)
-lowspamaction=DEFAULTLOWSPAMACTION
-
 [debug]
 
 #messages incoming on this port will be debugged to a logfile
@@ -324,14 +340,15 @@ debugport=10888
 #debug log output
 debugfile=/tmp/fuglu_debug.log
 
-#don't re-inject debugged messages back to postfix
-noreinject=1
-
 #debugged message can not be bounced
 nobounce=1
+
+#don't re-inject debugged messages back to postfix
+noreinject=1
 
 #don't run appender plugins for debugged messages
 noappender=1
 
 [PluginSkipper]
+
 filterfile=/etc/fuglu/skipplugins.regex
