@@ -1,24 +1,12 @@
 
 [main]
 
-#where should fuglu search for additional plugins
-plugindir=
-
-#what SCANNER plugins do we load, comma separated
-plugins=archive,attachment,clamav,spamassassin
-
-#what PREPENDER plugins do we load, comma separated
-prependers=debug,skip
-
-#what APPENDER plugins do we load, comma separated
-#appender plugins are plugins run after the scanning plugins
-#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
-#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
-appenders=
-
 #outgoing hostname/ip where postfix is listening for re-injects.
 #use ${injecthost} to connect back to the IP where the incoming connection came from
 outgoinghost=127.0.0.1
+
+#what PREPENDER plugins do we load, comma separated
+prependers=debug,skip
 
 #run as group
 group=nobody
@@ -52,6 +40,15 @@ identifier=dist
 #String to prepend to added headers
 prependaddedheaders=X-Fuglu-
 
+#what SCANNER plugins do we load, comma separated
+plugins=archive,attachment,clamav,spamassassin
+
+#what APPENDER plugins do we load, comma separated
+#appender plugins are plugins run after the scanning plugins
+#appenders will always be run, even if a a scanner plugin decided to delete/bounce/whatever a message
+#(unless a mail is deferred in which case running the appender would not make sense as it will come again)
+appenders=
+
 #temp dir where fuglu can store messages while scanning
 tempdir=/tmp
 
@@ -64,6 +61,9 @@ logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spa
 ##outgoing helo we should use for re-injects
 #leave empty to auto-detect current hostname
 outgoinghelo=
+
+#where should fuglu search for additional plugins
+plugindir=
 
 #run as user
 user=nobody
@@ -84,22 +84,22 @@ daemonize=1
 mrtgdir=
 
 [PluginAlias]
+actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
 skip=fuglu.plugins.p_skipper.PluginSkipper
-clamav=fuglu.plugins.clamav.ClamavPlugin
-debug=fuglu.plugins.p_debug.MessageDebugger
-sssp=fuglu.plugins.sssp.SSSPPlugin
-fprot=fuglu.plugins.fprot.FprotPlugin
-icap=fuglu.plugins.icap.ICAPPlugin
-archive=fuglu.plugins.archive.ArchivePlugin
+dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
 spamassassin=fuglu.plugins.sa.SAPlugin
 vacation=fuglu.plugins.vacation.VacationPlugin
-actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
-attachment=fuglu.plugins.attachment.FiletypePlugin
 scriptfilter=fuglu.plugins.script.ScriptFilter
-dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
+fraction=fuglu.plugins.p_fraction.PluginFraction
+icap=fuglu.plugins.icap.ICAPPlugin
+sssp=fuglu.plugins.sssp.SSSPPlugin
+fprot=fuglu.plugins.fprot.FprotPlugin
+debug=fuglu.plugins.p_debug.MessageDebugger
+archive=fuglu.plugins.archive.ArchivePlugin
 spf=fuglu.plugins.domainauth.SPFPlugin
 dkimverify=fuglu.plugins.domainauth.DKIMVerifyPlugin
-fraction=fuglu.plugins.p_fraction.PluginFraction
+attachment=fuglu.plugins.attachment.FiletypePlugin
+clamav=fuglu.plugins.clamav.ClamavPlugin
 
 [databaseconfig]
 
@@ -193,7 +193,7 @@ chgrp=
 #If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
 sendbounce=1
 
-#read runtime configuration values from a database. requires sqlalchemy to be installed
+#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
 dbconnectstring=
 
 #sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
@@ -206,7 +206,7 @@ template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
 #directory that contains attachment rules
 rulesdir=/etc/fuglu/rules
 
-#enable scanning of filenames within archives (currently, only ZIP archives supported). This does not actually extract the files, it just looks at the filenames found in the archive.
+#enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive.
 checkarchivenames=0
 
 #what should the plugin do when a blocked attachment is detected
@@ -215,7 +215,7 @@ checkarchivenames=0
 #DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
 blockaction=DELETE
 
-#extract compressed archives(only ZIP supported currently) and check file content type with libmagics
+#extract compressed archives(zip,rar) and check file content type with libmagics
 #note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
 #fuglu does not extract archives within the archive(recursion)
 checkarchivecontent=0
@@ -259,7 +259,7 @@ retries=3
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
 
-#reject message template if running in pre-queue mode and virusaction=REJECT
+#reject message template if running in pre-queue mode
 rejectmessage=message identified as spam
 
 #forward the original message or replace the content as returned by spamassassin
@@ -279,23 +279,22 @@ sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
 #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})
 
-#maximum message size, larger messages will not be scanned.  
-#should match the 'StreamMaxLength' config option in clamd.conf 
+#maximum size in bytes. larger messages will be skipped
 maxsize=256000
 
 #what header does SA set to indicate the spam status
 #Note that fuglu requires a standard header template configuration for spamstatus and score extraction
-#if forwardoriginal is set to 0
+#if 'forwardoriginal' is set to 0
 #eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
 spamheader=X-Spam-Status
 
-#hostname where clamd runs
+#hostname where spamd runs
 host=localhost
 
 #what should we do with high spam (spam score above highspamlevel)
 highspamaction=DEFAULTHIGHSPAMACTION
 
-#socket timeout
+#how long should we wait for an answer from sa
 timeout=30
 
 #spamscore threshold to mark a message as high spam
@@ -304,8 +303,7 @@ highspamlevel=15
 #enable SA user configuration 
 peruserconfig=1
 
-#tcp port number or path to clamd.sock for unix domain sockets
-#example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl 
+#tcp port number or path to spamd unix socket
 port=783
 
 #should we scan the original message as retreived from postfix or scan the current state 

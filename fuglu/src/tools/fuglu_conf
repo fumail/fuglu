@@ -107,10 +107,7 @@ def make_config(controller, onlysection=None):
             continue
         print "\n[%s]" % sec
         for opt, val in config.items(sec):
-            # print sec,opt
             meta = get_config_meta(controller, sec, opt)
-            # print meta
-
             if meta != None and 'description' in meta:
                 desc = '\n#'.join(meta['description'].split('\n'))
                 print '\n#%s' % desc
@@ -135,8 +132,16 @@ def get_config_meta(controller, section, option):
                 if option in reqvars:
                     infodic = reqvars[option]
                     clone = infodic.copy()
-                    if 'section' not in clone and hasattr(obj, 'section'):
+                    msection = None
+                    if 'section' in clone:
+                        msection=clone['section']
+                    elif hasattr(obj,'section'):
                         clone['section'] = getattr(obj, 'section')
+                        msection=clone['section']
+                    else:
+                        sys.stderr.write("Warning, no section found. obj=%s meta=%s\n"%(obj,clone))
+                    if msection!=section:
+                        continue
                     return clone
 
 
