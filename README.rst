@@ -6,13 +6,9 @@ Quick links:
  * `Download <https://pypi.python.org/pypi/fuglu/>`_
  * `Issue Tracker <https://github.com/gryphius/fuglu/issues>`_
 
-.. image:: https://pypip.in/v/fuglu/badge.png
+.. image:: https://badge.fury.io/py/fuglu.svg
     :target: https://pypi.python.org/pypi/fuglu/
     :alt: Latest PyPI version
-
-.. image:: https://pypip.in/d/fuglu/badge.png
-    :target: https://pypi.python.org/pypi/fuglu/
-    :alt: Number of PyPI downloads
     
 .. image:: https://travis-ci.org/gryphius/fuglu.svg?branch=master
     :target: https://travis-ci.org/gryphius/fuglu
