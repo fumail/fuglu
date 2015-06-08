@@ -54,7 +54,7 @@ class ThreadPool(threading.Thread):
         self._stayalive = value
 
     def _send_poison_pills(self):
-        """flood tue queue with poison pills to tell all workers to shut down"""
+        """flood the queue with poison pills to tell all workers to shut down"""
         for _ in range(self.maxthreads):
             self.tasks.put_nowait(None)
 
