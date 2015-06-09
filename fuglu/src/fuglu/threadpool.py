@@ -179,21 +179,3 @@ class Worker(threading.Thread):
 
         self.threadinfo = 'ending'
         self.logger.debug('thread end')
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-
-    class SessionMock(object):
-
-        def handlesession(self, workerthread):
-            print "handle a session..."
-            workerthread.threadinfo = 'having fun'
-            time.sleep(4)
-            print "handle done"
-
-    t = ThreadPool(3, 10, 40)
-    for i in range(0, 50):
-        print "adding task %s" % i
-        t.add_task(SessionMock())
-    print "done adding tasks"
