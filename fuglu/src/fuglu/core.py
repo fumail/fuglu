@@ -36,6 +36,60 @@ from fuglu.connectors.esmtpconnector import ESMTPServer
 
 from fuglu.stats import StatsThread
 from fuglu.debug import ControlServer, CrashStore
+from fuglu import FUGLU_VERSION
+from fuglu.funkyconsole import FunkyConsole
+
+
+def check_version_status(lint=False):
+    """Check our version string in DNS for known issues and warn about them
+
+    the lookup should be <7 chars of commitid>.<patch>.<minor>.<major>.versioncheck.fuglu.org
+    in case of a release version, use 'release' instead of commit id
+
+    eg, the lookup for 0.6.3 would be:
+    release.3.6.0.versioncheck.fuglu.org
+
+    DNS will return NXDOMAIN or 127.0.0.<bitmask>
+    2: generic non security related issue
+    4: low risk security issue
+    8: high risk security issue
+    """
+    bitmaskmap={
+        2:"there is a known (not security related) issue with this version - consider upgrading",
+        4:"there is a known low-risk security issue with this version - an upgrade is recommended",
+        8:"there is a known high-risk security issue with this version - upgrade as soon as possible!",
+    }
+
+    m=re.match(r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))$',FUGLU_VERSION)
+    if m==None:
+        logging.warn("could not parse my version string %s"%FUGLU_VERSION)
+        return
+    parts=m.groupdict()
+    if 'commitid' not in parts:
+        parts['commitid']='release'
+
+    lookup="{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(**parts)
+    result=None
+    try:
+        result=socket.gethostbyname(lookup)
+    except:
+        #DNS fails happen - try again next time
+        pass
+
+    if result==None:
+        return
+
+    ret=re.match(r'^127\.0\.0\.(?P<replycode>\d{1,4})$',result)
+    if ret!=None:
+        code=int(ret.groupdict()['replycode'])
+        for bitmask,message in bitmaskmap.iteritems():
+            if code & bitmask == bitmask:
+                logging.warn(message)
+                if lint:
+                    fc=FunkyConsole()
+                    print fc.strcolor(message,"yellow")
+
+
 
 
 class MainController(object):
@@ -434,6 +488,9 @@ class MainController(object):
         if self.debugconsole:
             self.run_debugconsole()
         else:
+            # log possible issues with this version
+            check_version_status()
+
             # mainthread dummy loop
             while self.stayalive:
                 try:
@@ -598,7 +655,6 @@ class MainController(object):
 
     def lint(self):
         errors = 0
-        from fuglu.funkyconsole import FunkyConsole
         fc = FunkyConsole()
         self._lint_dependencies(fc)
 
@@ -667,6 +723,8 @@ class MainController(object):
                 errors = errors + 1
                 print fc.strcolor("ERROR", "red")
         print "%s plugins reported errors." % errors
+
+        check_version_status(lint=True)
 
     def propagate_defaults(self, requiredvars, config, defaultsection=None):
         """propagate defaults from requiredvars if they are missing in config"""
