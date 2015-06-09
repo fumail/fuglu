@@ -35,28 +35,44 @@ class ThreadPool(threading.Thread):
         self.threadlistlock = threading.Lock()
         self.checkinterval = 10
         self.threadcounter = 0
-        self.stayalive = True
+        self._stayalive = True
         self.laststats = 0
         self.statinverval = 60
         threading.Thread.__init__(self)
         self.setDaemon(False)
         self.start()
 
-    def add_task(self, session):
-        self.tasks.put(session)
+    @property
+    def stayalive(self):
+        return self._stayalive
 
-    def get_task(self, timeout=3):
-        try:
-            session = self.tasks.get(True, timeout)
-            return session
-        except Queue.Empty:
+    @stayalive.setter
+    def stayalive(self,value):
+        if self._stayalive and not value: #threadpool is shut down -> send poison pill to workers
+            self._stayalive = False
+            self._send_poison_pills()
+        self._stayalive = value
+
+    def _send_poison_pills(self):
+        """flood the queue with poison pills to tell all workers to shut down"""
+        for _ in range(self.maxthreads):
+            self.tasks.put_nowait(None)
+
+    def add_task(self, session):
+        if self._stayalive:
+            self.tasks.put(session)
+
+    def get_task(self):
+        if self._stayalive:
+            return self.tasks.get(True)
+        else:
             return None
 
     def run(self):
         self.logger.debug('Threadpool initializing. minthreads=%s maxthreads=%s maxqueue=%s checkinterval=%s' % (
             self.minthreads, self.maxthreads, self.queuesize, self.checkinterval))
 
-        while self.stayalive:
+        while self._stayalive:
             curthreads = self.workers
             numthreads = len(curthreads)
 
@@ -145,10 +161,11 @@ class Worker(threading.Thread):
             self.threadinfo = 'waiting for task'
             if self.noisy:
                 self.logger.debug('Getting new task...')
-            sesshandler = self.pool.get_task(3)
-            if sesshandler == None:
+            sesshandler = self.pool.get_task()
+            if sesshandler == None: #poison pill -> shut down
                 if self.noisy:
-                    self.logger.debug('Queue empty')
+                    self.logger.debug("got a poison pill .. good bye world")
+                self.stayalive=False
                 continue
 
             if self.noisy:
