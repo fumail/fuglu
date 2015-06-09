@@ -116,7 +116,7 @@ if __name__ == '__main__':
         elif isinstance(pluginstance, AppenderPlugin):
             appenders.append(plugin)
         else:
-            print "%s doesn't seem to be a fuglu plugin - ignoring"%plugin
+            print "%s doesn't seem to be a fuglu plugin - ignoring" % plugin
 
     config.set('main', 'plugins', ','.join(scanners))
     config.set('main', 'appenders', ','.join(appenders))
@@ -219,8 +219,7 @@ if __name__ == '__main__':
                 val = valstr
             suspect.set_tag(nme, val)
 
-
-    scannerlist=mc.plugins
+    scannerlist = mc.plugins
     for pluginstance in mc.prependers:
         logging.info("*** Running prepender: %s ***" % pluginstance)
 
@@ -237,7 +236,7 @@ if __name__ == '__main__':
                 logging.info(
                     'Prepender %s added plugins: %s' % (pluginstance, map(str, added)))
             scannerlist = resultset
-            logging.info("Scanner plugin list is now: %s"%scannerlist)
+            logging.info("Scanner plugin list is now: %s" % scannerlist)
 
     for pluginstance in scannerlist:
         logging.info("*** Running plugin: %s ***" % pluginstance)

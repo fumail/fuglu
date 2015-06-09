@@ -26,6 +26,7 @@ import logging
 import inspect
 import re
 
+
 def stderr(msg):
     sys.stderr.write(msg)
 
@@ -109,19 +110,19 @@ def make_config(controller, onlysection=None):
             continue
 
         print "\n[%s]" % sec
-        lines=[]
+        lines = []
 
         for opt, val in config.items(sec):
-            buff=""
-            meta,order = get_config_meta(controller, sec, opt)
+            buff = ""
+            meta, order = get_config_meta(controller, sec, opt)
             if meta != None and 'description' in meta:
                 desc = '\n#'.join(meta['description'].split('\n'))
-                buff+= '\n#%s' % desc
+                buff += '\n#%s' % desc
 
-            buff+="\n%s=%s" % (opt, val)
-            lines.append((buff,order))
+            buff += "\n%s=%s" % (opt, val)
+            lines.append((buff, order))
 
-        sortedlines=sorted(lines,key=lambda x:x[1])
+        sortedlines = sorted(lines, key=lambda x: x[1])
         for line in sortedlines:
             print line[0]
 
@@ -145,29 +146,31 @@ def get_config_meta(controller, section, option):
                     clone = infodic.copy()
                     msection = None
                     if 'section' in clone:
-                        msection=clone['section']
-                    elif hasattr(obj,'section'):
+                        msection = clone['section']
+                    elif hasattr(obj, 'section'):
                         clone['section'] = getattr(obj, 'section')
-                        msection=clone['section']
+                        msection = clone['section']
                     else:
-                        sys.stderr.write("Warning, no section found. obj=%s meta=%s\n"%(obj,clone))
-                    if msection!=section:
+                        sys.stderr.write(
+                            "Warning, no section found. obj=%s meta=%s\n" % (obj, clone))
+                    if msection != section:
                         continue
 
-                    order=extract_option_order(obj,option)
-                    return clone,order
-    return None,0
+                    order = extract_option_order(obj, option)
+                    return clone, order
+    return None, 0
 
-def extract_option_order(obj,option):
+
+def extract_option_order(obj, option):
     """Try to extract the order in which options where defined. (Evil source inspection hack.. dicts don't have an order)"""
-    sourcelines=inspect.getsourcelines(obj.__class__)[0]
-    counter=0
+    sourcelines = inspect.getsourcelines(obj.__class__)[0]
+    counter = 0
     for line in sourcelines:
-        m=re.match(r'''\s+['"](?P<name>[a-zA-Z_]+)['"]\s?:\s?{''',line)
-        if m!=None:
-            srcopt=m.groups()[0]
-            counter+=1
-            if option==srcopt:
+        m = re.match(r'''\s+['"](?P<name>[a-zA-Z_]+)['"]\s?:\s?{''', line)
+        if m != None:
+            srcopt = m.groups()[0]
+            counter += 1
+            if option == srcopt:
                 return counter
     return 0
 

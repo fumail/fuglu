@@ -29,7 +29,9 @@ import email
 from email.header import decode_header
 
 from threading import Lock
-from StringIO import StringIO  # do not use cStringIO - the python2.6 fix for opening some zipfiles does not work with cStringIO
+# do not use cStringIO - the python2.6 fix for opening some zipfiles does
+# not work with cStringIO
+from StringIO import StringIO
 import zipfile
 
 MAGIC_AVAILABLE = 0
@@ -76,15 +78,14 @@ KEY_ARCHIVENAME = u"archive-name"
 KEY_ARCHIVECTYPE = u"archive-ctype"
 
 
-RARFILE_AVAILABLE=0
+RARFILE_AVAILABLE = 0
 try:
     import rarfile
-    RARFILE_AVAILABLE=1
+    RARFILE_AVAILABLE = 1
 except ImportError:
     pass
 
 threadLocal = threading.local()
-
 
 
 class RulesCache(object):
@@ -410,12 +411,11 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
-        #remember that the order is important here, if we support tar.gz and gz in the future make sure tar.gz comes first!
-        self.supported_archive_extensions=['zip',]
+        # remember that the order is important here, if we support tar.gz and
+        # gz in the future make sure tar.gz comes first!
+        self.supported_archive_extensions = ['zip', ]
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions.append('rar')
-
-
 
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
@@ -478,8 +478,9 @@ The other common template variables are available as well.
             return ATTACHMENT_DUNNO
 
         for action, regex, description in ruleset:
-            if type(description)==unicode: #database description may be unicode
-                description=description.encode("utf-8","ignore")
+            # database description may be unicode
+            if type(description) == unicode:
+                description = description.encode("utf-8", "ignore")
 
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
@@ -595,7 +596,7 @@ The other common template variables are available as well.
             att_name = i.get_filename(None)
 
             if att_name:
-                #some filenames are encoded, try to decode
+                # some filenames are encoded, try to decode
                 try:
                     att_name = ''.join([x[0] for x in decode_header(att_name)])
                 except:
@@ -653,21 +654,24 @@ The other common template variables are available as well.
 
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
-                archive_type=None
+                archive_type = None
                 for arext in self.supported_archive_extensions:
-                    if att_name.lower().endswith('.%s'%arext):
-                        archive_type=arext
+                    if att_name.lower().endswith('.%s' % arext):
+                        archive_type = arext
                         break
 
-                if archive_type!=None:
+                if archive_type != None:
                     try:
                         pl = StringIO(i.get_payload(decode=True))
-                        archive_handle = self._archive_handle(archive_type,pl)
-                        namelist = self._archive_namelist(archive_type,archive_handle)
+                        archive_handle = self._archive_handle(archive_type, pl)
+                        namelist = self._archive_namelist(
+                            archive_type, archive_handle)
                         if self.config.getboolean(self.section, 'checkarchivenames'):
                             for name in namelist:
-                                if type(name)==unicode: #rarfile returns unicode objects which mess up generated bounces
-                                    name=name.encode("utf-8","ignore")
+                                # rarfile returns unicode objects which mess up
+                                # generated bounces
+                                if type(name) == unicode:
+                                    name = name.encode("utf-8", "ignore")
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -684,9 +688,11 @@ The other common template variables are available as well.
                         if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
                             for name in namelist:
                                 safename = self.asciionly(name)
-                                extracted = self._archive_extract(archive_type,archive_handle,name)
-                                if extracted==None:
-                                    self._debuginfo(suspect,'%s not extracted - too large'%(safename))
+                                extracted = self._archive_extract(
+                                    archive_type, archive_handle, name)
+                                if extracted == None:
+                                    self._debuginfo(
+                                        suspect, '%s not extracted - too large' % (safename))
                                 contenttype_magic = self.getBuffertype(
                                     extracted)
                                 res = self.matchMultipleSets(
@@ -707,8 +713,7 @@ The other common template variables are available as well.
                             "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
 
-
-    def _fix_python26_zipfile_bug(self,zipFileContainer):
+    def _fix_python26_zipfile_bug(self, zipFileContainer):
         "http://stackoverflow.com/questions/3083235/unzipping-file-results-in-badzipfile-file-is-not-a-zip-file/21996397#21996397"
         # HACK: See http://bugs.python.org/issue10694
         # The zip file generated is correct, but because of extra data after the 'central directory' section,
@@ -718,37 +723,44 @@ The other common template variables are available as well.
         # Finding the end of the central directory:
         #   http://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file
         #   http://stackoverflow.com/questions/20276105/why-cant-python-execute-a-zip-archive-passed-via-stdin
-        #       This second link is only losely related, but echos the first, "processing a ZIP archive often requires backwards seeking"
-        
+        # This second link is only losely related, but echos the first,
+        # "processing a ZIP archive often requires backwards seeking"
+
         content = zipFileContainer.read()
-        pos = content.rfind('\x50\x4b\x05\x06') # reverse find: this string of bytes is the end of the zip's central directory.
-        if pos>0:
-            zipFileContainer.seek(pos+20) # +20: see secion V.I in 'ZIP format' link above.
+        # reverse find: this string of bytes is the end of the zip's central
+        # directory.
+        pos = content.rfind('\x50\x4b\x05\x06')
+        if pos > 0:
+            # +20: see secion V.I in 'ZIP format' link above.
+            zipFileContainer.seek(pos + 20)
             zipFileContainer.truncate()
-            zipFileContainer.write('\x00\x00') # Zip file comment length: 0 byte length; tell zip applications to stop reading.
+            # Zip file comment length: 0 byte length; tell zip applications to
+            # stop reading.
+            zipFileContainer.write('\x00\x00')
             zipFileContainer.seek(0)
         return zipFileContainer
 
-
-    def _archive_handle(self,archive_type,payload):
+    def _archive_handle(self, archive_type, payload):
         """get a handle for this archive type"""
-        if archive_type=='zip':
-            if sys.version_info < (2,7):
+        if archive_type == 'zip':
+            if sys.version_info < (2, 7):
                 payload = self._fix_python26_zipfile_bug(payload)
             return zipfile.ZipFile(payload)
-        if archive_type=='rar':
+        if archive_type == 'rar':
             return rarfile.RarFile(payload)
 
-    def _archive_namelist(self,archive_type,handle):
+    def _archive_namelist(self, archive_type, handle):
         """returns a list of file paths within the archive"""
-        #this works for zip and rar. if a future archive uses a different api, add above
+        # this works for zip and rar. if a future archive uses a different api,
+        # add above
         return handle.namelist()
 
-    def _archive_extract(self,archive_type,handle,path):
+    def _archive_extract(self, archive_type, handle, path):
         """extract a file from the archive into memory
         returns the file content or None if the file would be larger than the setting archivecontentmaxsize
         """
-        #this works for zip and rar. if a future archive uses a different api, add above
+        # this works for zip and rar. if a future archive uses a different api,
+        # add above
         arinfo = handle.getinfo(path)
         if arinfo.file_size > self.config.getint(self.section, 'archivecontentmaxsize'):
             return None
@@ -764,7 +776,8 @@ The other common template variables are available as well.
         return "Attachment Blocker"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_magic() and self.lint_sql() and self.lint_archivetypes())
+        allok = (self.checkConfig() and self.lint_magic()
+                 and self.lint_sql() and self.lint_archivetypes())
         return allok
 
     def lint_magic(self):
@@ -782,7 +795,7 @@ The other common template variables are available as well.
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print "rarfile library not found, RAR support disabled"
-        print "Archive scan, available file extensions: %s"%(self.supported_archive_extensions)
+        print "Archive scan, available file extensions: %s" % (self.supported_archive_extensions)
         return True
 
     def lint_sql(self):

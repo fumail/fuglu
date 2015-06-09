@@ -11,7 +11,7 @@ import fuglu
 from fuglu.plugins.attachment import FiletypePlugin
 from fuglu.shared import actioncode_to_string, Suspect, DELETE, DUNNO
 
-#we import it here to make sure the test system has the library installed
+# we import it here to make sure the test system has the library installed
 import rarfile
 
 
@@ -167,7 +167,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
             try:
                 tempfilename = tempfile.mktemp(
                     suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-                shutil.copy("%s/%s"%(TESTDATADIR,testfile), tempfilename)
+                shutil.copy("%s/%s" % (TESTDATADIR, testfile), tempfilename)
 
                 user = 'recipient-sizetest@unittests.fuglu.org'
                 conffile = self.tempdir + "/%s-archivefiletypes.conf" % user
@@ -186,7 +186,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.failIf(result != DELETE, 'extracted large file should be blocked')
+                self.failIf(
+                    result != DELETE, 'extracted large file should be blocked')
 
                 # now set the limit to 5 mb, the file should be skipped now
                 self.candidate.config.set(
@@ -208,10 +209,10 @@ class AttachmentPluginTestCase(unittest.TestCase):
 
         for testfile in ['6mbzipattachment.eml', '6mbrarattachment.eml']:
             try:
-            # copy file rules
+                # copy file rules
                 tempfilename = tempfile.mktemp(
                     suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-                shutil.copy("%s/%s"%(TESTDATADIR,testfile), tempfilename)
+                shutil.copy("%s/%s" % (TESTDATADIR, testfile), tempfilename)
 
                 user = 'recipient-archivenametest@unittests.fuglu.org'
                 conffile = self.tempdir + "/%s-archivenames.conf" % user

@@ -47,8 +47,9 @@ class ThreadPool(threading.Thread):
         return self._stayalive
 
     @stayalive.setter
-    def stayalive(self,value):
-        if self._stayalive and not value: #threadpool is shut down -> send poison pill to workers
+    def stayalive(self, value):
+        # threadpool is shut down -> send poison pill to workers
+        if self._stayalive and not value:
             self._stayalive = False
             self._send_poison_pills()
         self._stayalive = value
@@ -162,10 +163,10 @@ class Worker(threading.Thread):
             if self.noisy:
                 self.logger.debug('Getting new task...')
             sesshandler = self.pool.get_task()
-            if sesshandler == None: #poison pill -> shut down
+            if sesshandler == None:  # poison pill -> shut down
                 if self.noisy:
                     self.logger.debug("got a poison pill .. good bye world")
-                self.stayalive=False
+                self.stayalive = False
                 continue
 
             if self.noisy:

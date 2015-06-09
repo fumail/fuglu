@@ -54,42 +54,42 @@ def check_version_status(lint=False):
     4: low risk security issue
     8: high risk security issue
     """
-    bitmaskmap={
-        2:"there is a known (not security related) issue with this version - consider upgrading",
-        4:"there is a known low-risk security issue with this version - an upgrade is recommended",
-        8:"there is a known high-risk security issue with this version - upgrade as soon as possible!",
+    bitmaskmap = {
+        2: "there is a known (not security related) issue with this version - consider upgrading",
+        4: "there is a known low-risk security issue with this version - an upgrade is recommended",
+        8: "there is a known high-risk security issue with this version - upgrade as soon as possible!",
     }
 
-    m=re.match(r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))$',FUGLU_VERSION)
-    if m==None:
-        logging.warn("could not parse my version string %s"%FUGLU_VERSION)
+    m = re.match(
+        r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))$', FUGLU_VERSION)
+    if m == None:
+        logging.warn("could not parse my version string %s" % FUGLU_VERSION)
         return
-    parts=m.groupdict()
+    parts = m.groupdict()
     if 'commitid' not in parts:
-        parts['commitid']='release'
+        parts['commitid'] = 'release'
 
-    lookup="{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(**parts)
-    result=None
+    lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(
+        **parts)
+    result = None
     try:
-        result=socket.gethostbyname(lookup)
+        result = socket.gethostbyname(lookup)
     except:
-        #DNS fails happen - try again next time
+        # DNS fails happen - try again next time
         pass
 
-    if result==None:
+    if result == None:
         return
 
-    ret=re.match(r'^127\.0\.0\.(?P<replycode>\d{1,4})$',result)
-    if ret!=None:
-        code=int(ret.groupdict()['replycode'])
-        for bitmask,message in bitmaskmap.iteritems():
+    ret = re.match(r'^127\.0\.0\.(?P<replycode>\d{1,4})$', result)
+    if ret != None:
+        code = int(ret.groupdict()['replycode'])
+        for bitmask, message in bitmaskmap.iteritems():
             if code & bitmask == bitmask:
                 logging.warn(message)
                 if lint:
-                    fc=FunkyConsole()
-                    print fc.strcolor(message,"yellow")
-
-
+                    fc = FunkyConsole()
+                    print fc.strcolor(message, "yellow")
 
 
 class MainController(object):
@@ -638,9 +638,8 @@ class MainController(object):
         except:
             print fc.strcolor('sqlalchemy: not installed', 'yellow') + " Optional dependency, required if you want to enable any database lookups"
 
-
         if HAVE_BEAUTIFULSOUP:
-            print fc.strcolor('BeautifulSoup: V%s installed'%BS_VERSION, 'green')
+            print fc.strcolor('BeautifulSoup: V%s installed' % BS_VERSION, 'green')
         else:
             print fc.strcolor('BeautifulSoup: not installed', 'yellow') + " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config"
 
