@@ -241,6 +241,12 @@ class MainController(object):
                 'default': 'Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}',
             },
 
+            'versioncheck': {
+                'section': 'main',
+                'description': "warn about known severe problems/security issues of current version.\nNote: This performs a DNS lookup of gitrelease.patchlevel.minorversion.majorversion.versioncheck.fuglu.org on startup and fuglu --lint lint.\nNo other information of any kind is transmitted to outside systems.\nDisable this if you consider the DNS lookup an unwanted information leak.",
+                'default': '1',
+            },
+
             # performance section
             'minthreads': {
                 'default': "2",
@@ -488,8 +494,9 @@ class MainController(object):
         if self.debugconsole:
             self.run_debugconsole()
         else:
-            # log possible issues with this version
-            check_version_status()
+            if self.config.getboolean('main', 'versioncheck'):
+                # log possible issues with this version
+                check_version_status()
 
             # mainthread dummy loop
             while self.stayalive:
@@ -723,7 +730,8 @@ class MainController(object):
                 print fc.strcolor("ERROR", "red")
         print "%s plugins reported errors." % errors
 
-        check_version_status(lint=True)
+        if self.config.getboolean('main', 'versioncheck'):
+            check_version_status(lint=True)
 
     def propagate_defaults(self, requiredvars, config, defaultsection=None):
         """propagate defaults from requiredvars if they are missing in config"""
