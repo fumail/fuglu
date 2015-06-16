@@ -58,6 +58,12 @@ Tags:
                 'default': '30',
                 'description': 'socket timeout',
             },
+
+            'pipelining':{
+                'default': '0',
+                'descpription': "*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.",
+            },
+
             'maxsize': {
                 'default': '22000000',
                 'description': "maximum message size, larger messages will not be scanned.  \nshould match the 'StreamMaxLength' config option in clamd.conf ",
@@ -148,7 +154,8 @@ Tags:
           - None if no virus found
           - raises Exception if something went wrong
         """
-        s = self.__init_socket__()
+        pipelining = self.config.getboolean(self.section,'pipelining')
+        s = self.__init_socket__(oneshot=not pipelining)
         s.sendall('zINSTREAM\0')
         default_chunk_size = 2048
         remainingbytes = buff
@@ -161,7 +168,6 @@ Tags:
             s.sendall(struct.pack('!L', chunklength))
             s.sendall(chunkdata)
         s.sendall(struct.pack('!L', 0))
-        result = '...'
         dr = {}
 
         result = self._read_until_delimiter(s).strip()
@@ -173,28 +179,39 @@ Tags:
             raise Exception(
                 "Clamd doesn't understand INSTREAM command. very old version?")
 
-        try:
-            ans_id,filename,virusinfo = result.split(':',2)
+        if pipelining:
+            try:
+                ans_id,filename,virusinfo = result.split(':',2)
+                filename=filename.strip()
+                virusinfo=virusinfo.strip()
+            except:
+                raise Exception("Protocol error, could not parse result: %s"%result)
+
+            threadLocal.expectedID+=1
+            if threadLocal.expectedID != int(ans_id):
+                raise Exception("Commands out of sync - expected ID %s - got %s"%(threadLocal.expectedID,ans_id))
+
+            self.logger.info("ans_id=%s virusinfo=%s"%(ans_id,virusinfo))
+            if virusinfo[-5:] == 'ERROR':
+                raise Exception, virusinfo
+            elif virusinfo != 'OK':
+                dr[filename] = virusinfo.replace(" FOUND", '')
+
+            if threadLocal.expectedID >= MAX_SCANS_PER_SOCKET:
+                try:
+                    s.sendall('zEND\0')
+                    s.close()
+                finally:
+                    self.__invalidate_socket()
+        else:
+            filename,virusinfo = result.split(':',1)
             filename=filename.strip()
             virusinfo=virusinfo.strip()
-        except:
-            raise Exception("Protocol error, could not parse result: %s"%result)
-
-        threadLocal.expectedID+=1
-        if threadLocal.expectedID != int(ans_id):
-            raise Exception("Commands out of sync - expected ID %s - got %s"%(threadLocal.expectedID,ans_id))
-
-        if virusinfo[-5:] == 'ERROR':
-            raise Exception, virusname
-        elif virusinfo != 'OK':
-            dr[filename] = virusinfo.replace(" FOUND", '')
-
-        if threadLocal.expectedID >= MAX_SCANS_PER_SOCKET:
-            try:
-                s.sendall('zEND\0')
-                s.close()
-            finally:
-                self.__invalidate_socket()
+            if virusinfo[-5:] == 'ERROR':
+                raise Exception, virusinfo
+            elif virusinfo != 'OK':
+                dr[filename] = virusinfo.replace(" FOUND", '')
+            s.close()
 
         if dr == {}:
             return None
@@ -217,7 +234,6 @@ Tags:
     def __invalidate_socket(self):
         threadLocal.clamdsocket = None
         threadLocal.expectedID = 0
-
 
     def __init_socket__(self,oneshot=False):
         """initialize a socket connection to clamd using host/port/file defined in the configuration
