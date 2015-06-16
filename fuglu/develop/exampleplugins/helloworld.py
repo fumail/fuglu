@@ -26,10 +26,12 @@ class HelloWorld(ScannerPlugin):
 
     def __init__(self, config, section=None):
         ScannerPlugin.__init__(self, config, section)
-        self.requiredvars = { # this defines the configuration options for a plugin
-            'greeting': { # name of the config
-                'default': 'hello world!', # default value, always use strings here
-                'description': 'greeting message the plugin should log to the console', #  included as comment when generating default config files
+        self.requiredvars = {  # this defines the configuration options for a plugin
+            'greeting': {  # name of the config
+                # default value, always use strings here
+                'default': 'hello world!',
+                # included as comment when generating default config files
+                'description': 'greeting message the plugin should log to the console',
             }
         }
         # DO NOT call self.config.get .. here!

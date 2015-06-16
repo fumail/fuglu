@@ -10,12 +10,12 @@ class Stopped(Exception):
 
 class ScriptFilter(ScannerPlugin):
 
-    """This plugins executes scripts found in a specified directory.
+    """This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.
 
 Filterscripts must be written in standard python but with the file ending ``.fgf`` ("fuglu filter")
 
-scripts are reloaded for every message and executed in alphabetic order
+Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.
 
 The API is basically the same as for normal plugins within the ``examine()`` method, with a few special cases:
 
@@ -30,7 +30,7 @@ the script should not return anything, but change the available variables ``acti
 use ``stop()`` to exit the script
 
 
-example script: 
+Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)
 
 ::

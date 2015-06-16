@@ -20,6 +20,7 @@ Example prepender plugin
 from fuglu.shared import PrependerPlugin
 from fuglu.extensions.sql import ENABLED as SQL_EXTENSION_AVAILABLE, get_session
 
+
 class SQLSkipper(PrependerPlugin):
 
     """Example prepender plugin which skips Spamassassin based on the result of a database query
@@ -40,7 +41,9 @@ class SQLSkipper(PrependerPlugin):
             'dbconnectstring': {
                 'default': 'mysql://root@localhost/test',
                 'description': "sqlalchemy db connect string",
-                'confidential': True, # this will hide the value in 'fuglu_conf -n' to protect confidential data
+                # this will hide the value in 'fuglu_conf -n' to protect
+                # confidential data
+                'confidential': True,
             }
         }
 
@@ -49,31 +52,43 @@ class SQLSkipper(PrependerPlugin):
 
     def pluginlist(self, suspect, pluginlist):
         if not SQL_EXTENSION_AVAILABLE:
-            self._logger().warn("SQLALCHEMY extension is not enabled, SQLSkipper will not run")
+            self._logger().warn(
+                "SQLALCHEMY extension is not enabled, SQLSkipper will not run")
             return
 
-        sqlsession = get_session(self.config.get(self.section,'dbconnectstring'))
+        sqlsession = get_session(
+            self.config.get(self.section, 'dbconnectstring'))
 
-        self._logger().debug("Checking database overrides for %s"%(suspect.recipients))
+        self._logger().debug("Checking database overrides for %s" %
+                             (suspect.recipients))
 
-        #if postfix->fuglu is not configured with xxx_destination_recipient_limit=1 the message might have multiple recipients
-        user_configs = sqlsession.execute("SELECT recipient,antispam_enabled FROM spamconfig WHERE recipient IN :recipient",dict(recipient=tuple(suspect.recipients)))
+        # if postfix->fuglu is not configured with
+        # xxx_destination_recipient_limit=1 the message might have multiple
+        # recipients
+        user_configs = sqlsession.execute(
+            "SELECT recipient,antispam_enabled FROM spamconfig WHERE recipient IN :recipient", dict(recipient=tuple(suspect.recipients)))
 
-        #if one recipient doesn't have a config, we assume antispam should run normally
-        if user_configs.rowcount<len(suspect.recipients):
-            self._logger().debug("Not all recipients have a database config - assuming normal run")
+        # if one recipient doesn't have a config, we assume antispam should run
+        # normally
+        if user_configs.rowcount < len(suspect.recipients):
+            self._logger().debug(
+                "Not all recipients have a database config - assuming normal run")
             return
 
         for row in user_configs:
             recipient, antispam_enabled = row
-            self._logger().debug("Recipient %s anti spam enabled in database: %s"%(recipient,bool(antispam_enabled)))
+            self._logger().debug("Recipient %s anti spam enabled in database: %s" %
+                                 (recipient, bool(antispam_enabled)))
             if antispam_enabled:
-                #at least one user has anti spam enabled
+                # at least one user has anti spam enabled
                 return
 
-        # if we reach this point, all recipients in the message have antispam disabled
-        self._logger().info("%s - antispam disabled by database override"%(suspect.id))
-        skippluginlist = ['SAPlugin', ] # add other plugins you want to skip here
+        # if we reach this point, all recipients in the message have antispam
+        # disabled
+        self._logger().info(
+            "%s - antispam disabled by database override" % (suspect.id))
+        # add other plugins you want to skip here
+        skippluginlist = ['SAPlugin', ]
 
         listcopy = pluginlist[:]
         for plug in pluginlist:
@@ -94,8 +109,8 @@ class SQLSkipper(PrependerPlugin):
         session = get_session(
             self.config.get(self.section, 'dbconnectstring'))
         try:
-            dbtime=session.execute(func.current_timestamp()).scalar()
-            print "DB connection successful. Server time: %s"%dbtime
+            dbtime = session.execute(func.current_timestamp()).scalar()
+            print "DB connection successful. Server time: %s" % dbtime
             session.close()
             return True
         except Exception, e:

@@ -81,7 +81,7 @@ Tags:
 
             'spamheader': {
                 'default': 'X-Spam-Status',
-                'description': 'what header does SA set to indicate the spam status\nNote that fuglu requires a standard header template configuration for spamstatus and score extraction\nif forwardoriginal is set to 0\neg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_',
+                'description': """what header does SA set to indicate the spam status\nNote that fuglu requires a standard header template configuration for spamstatus and score extraction\nif 'forwardoriginal' is set to 0\neg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_""",
             },
 
             'peruserconfig': {

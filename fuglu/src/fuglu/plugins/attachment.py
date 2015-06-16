@@ -24,12 +24,14 @@ import os.path
 import logging
 from fuglu.extensions.sql import DBFile
 import threading
+import sys
+import email
+from email.header import decode_header
 
 from threading import Lock
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+# do not use cStringIO - the python2.6 fix for opening some zipfiles does
+# not work with cStringIO
+from StringIO import StringIO
 import zipfile
 
 MAGIC_AVAILABLE = 0
@@ -76,15 +78,14 @@ KEY_ARCHIVENAME = u"archive-name"
 KEY_ARCHIVECTYPE = u"archive-ctype"
 
 
-RARFILE_AVAILABLE=0
+RARFILE_AVAILABLE = 0
 try:
     import rarfile
-    RARFILE_AVAILABLE=1
+    RARFILE_AVAILABLE = 1
 except ImportError:
     pass
 
 threadLocal = threading.local()
-
 
 
 class RulesCache(object):
@@ -253,7 +254,7 @@ Actions: This plugin will delete messages if they contain blocked attachments.
 Prerequisites: You must have the python ``file`` or ``magic`` module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python ``rarfile`` module.
 
 
-The attachment configuration files are in ``/etc/fuglu/rules``. You whould have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have. 
+The attachment configuration files are in ``/etc/fuglu/rules``. You should have two default files there: ``default-filenames.conf`` which defines what filenames are allowed and ``default-filetypes.conf`` which defines what content types a attachment may have.
 
 For domain rules, create a new file ``<domainname>-filenames.conf`` / ``<domainname>-filetypes.conf`` , eg. ``fuglu.org-filenames.conf`` / ``fuglu.org-filetypes.conf``
 
@@ -263,17 +264,17 @@ To scan filenames or even file contents within archives (zip, rar), use ``<...>-
 
 
 The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-<action>    <regular expression>   <description or error message>
+``<action>``    ``<regular expression>``   ``<description or error message>``
 
-<action> can be one of:
+``<action>`` can be one of:
  * allow : this file is ok, don't do further checks (you might use it for safe content types like text). Do not blindly create 'allow' rules. It's safer to make no rule at all, if no other rules hit, the file will be accepted
  * deny : delete this message and send the error message/description back to the sender
  * delete : silently delete the message, no error is sent back, and 'blockaction' is ignored
 
 
-<regular expression> is a standard python regex. in x-filenames.conf this will be applied to the attachment name . in x-filetypes.conf this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
+``<regular expression>`` is a standard python regex. in ``x-filenames.conf`` this will be applied to the attachment name . in ``x-filetypes.conf`` this will be applied to the mime type of the file as well as the file type returned by the ``file`` command.
 
-example of default-filetypes.conf:
+Example of ``default-filetypes.conf`` :
 
 ::
 
@@ -288,7 +289,7 @@ example of default-filetypes.conf:
 
 
 
-small extract from default-filenames.conf:
+A small extract from ``default-filenames.conf``:
 
 ::
 
@@ -304,7 +305,38 @@ small extract from default-filenames.conf:
 
 Note: The files will be reloaded automatically after a few seconds (you do not need to kill -HUP / restart fuglu)
 
-The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like this:
+Per domain/user overrides can also be fetched from a database instead of files (see dbconnectstring / query options).
+The query must return the same rule format as a file would. Multiple columns in the resultset will be concatenated.
+
+The default query assumes the following schema:
+
+::
+
+    CREATE TABLE `attachmentrules` (
+      `rule_id` int(11) NOT NULL AUTO_INCREMENT,
+      `action` varchar(10) NOT NULL,
+      `regex` varchar(255) NOT NULL,
+      `description` varchar(255) DEFAULT NULL,
+      `scope` varchar(255) DEFAULT NULL,
+      `checktype` varchar(20) NOT NULL,
+      `prio` int(11) NOT NULL,
+      PRIMARY KEY (`rule_id`)
+    )
+
+*action*: ``allow``, ``deny``, or ``delete``
+
+*regex*: a regular expression
+
+*description*: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled
+
+*scope*: a domain name or a recipient's email address
+
+*checktype*: one of ``filename``,``contenttype``,``archive-filename``,``archive-contenttype``
+
+*prio*: order in which the rules are run
+
+The bounce template (eg ``/etc/fuglu/templates/blockedfile.tmpl`` ) should
+start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:
 
 ::
 
@@ -316,8 +348,6 @@ The bounce template (eg /etc/fuglu/templates/blockedfile.tmpl) should look like 
     ${blockinfo}
 
 
-
-eg. define headers for your message at the beginning, followed by a blank line. Then append the message body.
 
 ``${blockinfo}`` will be replaced with the text you specified in the third column of the rule that blocked this message.
 
@@ -381,12 +411,11 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
-        #remember that the order is important here, if we support tar.gz and gz in the future make sure tar.gz comes first!
-        self.supported_archive_extensions=['zip',]
+        # remember that the order is important here, if we support tar.gz and
+        # gz in the future make sure tar.gz comes first!
+        self.supported_archive_extensions = ['zip', ]
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions.append('rar')
-
-
 
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
@@ -449,8 +478,9 @@ The other common template variables are available as well.
             return ATTACHMENT_DUNNO
 
         for action, regex, description in ruleset:
-            if type(description)==unicode: #database description may be unicode
-                description=description.encode("utf-8","ignore")
+            # database description may be unicode
+            if type(description) == unicode:
+                description = description.encode("utf-8", "ignore")
 
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
@@ -565,7 +595,13 @@ The other common template variables are available as well.
             contenttype_mime = i.get_content_type()
             att_name = i.get_filename(None)
 
-            if not att_name:
+            if att_name:
+                # some filenames are encoded, try to decode
+                try:
+                    att_name = ''.join([x[0] for x in decode_header(att_name)])
+                except:
+                    pass
+            else:
                 # workaround for mimetypes, it always takes .ksh for text/plain
                 if i.get_content_type() == 'text/plain':
                     ext = '.txt'
@@ -618,21 +654,24 @@ The other common template variables are available as well.
 
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
-                archive_type=None
+                archive_type = None
                 for arext in self.supported_archive_extensions:
-                    if att_name.lower().endswith('.%s'%arext):
-                        archive_type=arext
+                    if att_name.lower().endswith('.%s' % arext):
+                        archive_type = arext
                         break
 
-                if archive_type!=None:
+                if archive_type != None:
                     try:
                         pl = StringIO(i.get_payload(decode=True))
-                        archive_handle = self._archive_handle(archive_type,pl)
-                        namelist = self._archive_namelist(archive_type,archive_handle)
+                        archive_handle = self._archive_handle(archive_type, pl)
+                        namelist = self._archive_namelist(
+                            archive_type, archive_handle)
                         if self.config.getboolean(self.section, 'checkarchivenames'):
                             for name in namelist:
-                                if type(name)==unicode: #rarfile returns unicode objects which mess up generated bounces
-                                    name=name.encode("utf-8","ignore")
+                                # rarfile returns unicode objects which mess up
+                                # generated bounces
+                                if type(name) == unicode:
+                                    name = name.encode("utf-8", "ignore")
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -649,9 +688,11 @@ The other common template variables are available as well.
                         if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
                             for name in namelist:
                                 safename = self.asciionly(name)
-                                extracted = self._archive_extract(archive_type,archive_handle,name)
-                                if extracted==None:
-                                    self._debuginfo(suspect,'%s not extracted - too large'%(safename))
+                                extracted = self._archive_extract(
+                                    archive_type, archive_handle, name)
+                                if extracted == None:
+                                    self._debuginfo(
+                                        suspect, '%s not extracted - too large' % (safename))
                                 contenttype_magic = self.getBuffertype(
                                     extracted)
                                 res = self.matchMultipleSets(
@@ -672,23 +713,54 @@ The other common template variables are available as well.
                             "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
 
-    def _archive_handle(self,archive_type,payload):
+    def _fix_python26_zipfile_bug(self, zipFileContainer):
+        "http://stackoverflow.com/questions/3083235/unzipping-file-results-in-badzipfile-file-is-not-a-zip-file/21996397#21996397"
+        # HACK: See http://bugs.python.org/issue10694
+        # The zip file generated is correct, but because of extra data after the 'central directory' section,
+        # Some version of python (and some zip applications) can't read the file. By removing the extra data,
+        # we ensure that all applications can read the zip without issue.
+        # The ZIP format: http://www.pkware.com/documents/APPNOTE/APPNOTE-6.3.0.TXT
+        # Finding the end of the central directory:
+        #   http://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file
+        #   http://stackoverflow.com/questions/20276105/why-cant-python-execute-a-zip-archive-passed-via-stdin
+        # This second link is only losely related, but echos the first,
+        # "processing a ZIP archive often requires backwards seeking"
+
+        content = zipFileContainer.read()
+        # reverse find: this string of bytes is the end of the zip's central
+        # directory.
+        pos = content.rfind('\x50\x4b\x05\x06')
+        if pos > 0:
+            # +20: see secion V.I in 'ZIP format' link above.
+            zipFileContainer.seek(pos + 20)
+            zipFileContainer.truncate()
+            # Zip file comment length: 0 byte length; tell zip applications to
+            # stop reading.
+            zipFileContainer.write('\x00\x00')
+            zipFileContainer.seek(0)
+        return zipFileContainer
+
+    def _archive_handle(self, archive_type, payload):
         """get a handle for this archive type"""
-        if archive_type=='zip':
+        if archive_type == 'zip':
+            if sys.version_info < (2, 7):
+                payload = self._fix_python26_zipfile_bug(payload)
             return zipfile.ZipFile(payload)
-        if archive_type=='rar':
+        if archive_type == 'rar':
             return rarfile.RarFile(payload)
 
-    def _archive_namelist(self,archive_type,handle):
+    def _archive_namelist(self, archive_type, handle):
         """returns a list of file paths within the archive"""
-        #this works for zip and rar. if a future archive uses a different api, add above
+        # this works for zip and rar. if a future archive uses a different api,
+        # add above
         return handle.namelist()
 
-    def _archive_extract(self,archive_type,handle,path):
+    def _archive_extract(self, archive_type, handle, path):
         """extract a file from the archive into memory
         returns the file content or None if the file would be larger than the setting archivecontentmaxsize
         """
-        #this works for zip and rar. if a future archive uses a different api, add above
+        # this works for zip and rar. if a future archive uses a different api,
+        # add above
         arinfo = handle.getinfo(path)
         if arinfo.file_size > self.config.getint(self.section, 'archivecontentmaxsize'):
             return None
@@ -704,7 +776,8 @@ The other common template variables are available as well.
         return "Attachment Blocker"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_magic() and self.lint_sql() and self.lint_archivetypes())
+        allok = (self.checkConfig() and self.lint_magic()
+                 and self.lint_sql() and self.lint_archivetypes())
         return allok
 
     def lint_magic(self):
@@ -722,7 +795,7 @@ The other common template variables are available as well.
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print "rarfile library not found, RAR support disabled"
-        print "Archive scan, available file extensions: %s"%(self.supported_archive_extensions)
+        print "Archive scan, available file extensions: %s" % (self.supported_archive_extensions)
         return True
 
     def lint_sql(self):

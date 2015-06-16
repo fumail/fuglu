@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id$
+#
 #
 import logging
 import os
@@ -22,11 +22,11 @@ import uuid
 import HTMLParser
 
 HAVE_BEAUTIFULSOUP = False
-BS_VERSION=0
+BS_VERSION = 0
 try:
     import bs4 as BeautifulSoup
     HAVE_BEAUTIFULSOUP = True
-    BS_VERSION=4
+    BS_VERSION = 4
 except:
     pass
 
@@ -34,7 +34,7 @@ if not HAVE_BEAUTIFULSOUP:
     try:
         import BeautifulSoup
         HAVE_BEAUTIFULSOUP = True
-        BS_VERSION=3
+        BS_VERSION = 3
     except:
         pass
 
@@ -522,7 +522,6 @@ class BasicPlugin(object):
     def lint(self):
         return self.checkConfig()
 
-
     def checkConfig(self):
         """old name for check_config"""
         return self.check_config()
@@ -743,12 +742,12 @@ class SuspectFilter(object):
             for r in remove_tags:
                 [x.extract() for x in soup.findAll(r)]
 
-            if BS_VERSION>=4:
-                text=soup.getText()
+            if BS_VERSION >= 4:
+                text = soup.getText()
                 return text
             else:
                 stripped = ''.join(
-                [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
+                    [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
                 return stripped
 
         # no BeautifulSoup available, let's try a modified version of pyzor's

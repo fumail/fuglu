@@ -28,12 +28,12 @@ You can use this if you want message archives for your domains or to debug probl
 
 Examples for the archive.regex filter file:
 
-archive messages to domain ''test.com'':
+Archive messages to domain ''test.com'':
 
 ``to_domain test\.com``
 
 
-archive messages from oli@fuglu.org:
+Archive messages from oli@fuglu.org:
 
 
 ``envelope_from oli@fuglu\.org``
@@ -41,12 +41,16 @@ archive messages from oli@fuglu.org:
 
 you can also append "yes" and "no" to the rules to create a more advanced configuration. Lets say we want to archive all messages to sales@fuglu.org and all regular messages support@fuglu.org except the ones created by automated scripts like logwatch or daily backup messages etc.
 
-envelope_to sales@fuglu\.org yes
 envelope_from logwatch@.*fuglu.org   no
+
+envelope_to sales@fuglu\.org yes
+
 from backups@fuglu.org no
+
 envelope_to support@fuglu\.org      yes
 
 
+Note: The first rule to match in a message is the only rule that will be applied. Exclusion rules should therefore be put above generic/catch-all rules.
 """
 
     def __init__(self, config, section=None):

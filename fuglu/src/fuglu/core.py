@@ -36,6 +36,60 @@ from fuglu.connectors.esmtpconnector import ESMTPServer
 
 from fuglu.stats import StatsThread
 from fuglu.debug import ControlServer, CrashStore
+from fuglu import FUGLU_VERSION
+from fuglu.funkyconsole import FunkyConsole
+
+
+def check_version_status(lint=False):
+    """Check our version string in DNS for known issues and warn about them
+
+    the lookup should be <7 chars of commitid>.<patch>.<minor>.<major>.versioncheck.fuglu.org
+    in case of a release version, use 'release' instead of commit id
+
+    eg, the lookup for 0.6.3 would be:
+    release.3.6.0.versioncheck.fuglu.org
+
+    DNS will return NXDOMAIN or 127.0.0.<bitmask>
+    2: generic non security related issue
+    4: low risk security issue
+    8: high risk security issue
+    """
+    bitmaskmap = {
+        2: "there is a known (not security related) issue with this version - consider upgrading",
+        4: "there is a known low-risk security issue with this version - an upgrade is recommended",
+        8: "there is a known high-risk security issue with this version - upgrade as soon as possible!",
+    }
+
+    m = re.match(
+        r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))$', FUGLU_VERSION)
+    if m == None:
+        logging.warn("could not parse my version string %s" % FUGLU_VERSION)
+        return
+    parts = m.groupdict()
+    if 'commitid' not in parts:
+        parts['commitid'] = 'release'
+
+    lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(
+        **parts)
+    result = None
+    try:
+        result = socket.gethostbyname(lookup)
+    except:
+        # DNS fails happen - try again next time
+        pass
+
+    if result == None:
+        return
+
+    ret = re.match(r'^127\.0\.0\.(?P<replycode>\d{1,4})$', result)
+    if ret != None:
+        code = int(ret.groupdict()['replycode'])
+        for bitmask, message in bitmaskmap.iteritems():
+            if code & bitmask == bitmask:
+                logging.warn(message)
+                if lint:
+                    fc = FunkyConsole()
+                    print fc.strcolor(message, "yellow")
 
 
 class MainController(object):
@@ -59,21 +113,18 @@ class MainController(object):
                 'section': 'main',
                 'description': "run as a daemon? (fork)",
                 'default': "1",
-                # todo: validator...?
             },
 
             'user': {
                 'section': 'main',
                 'description': "run as user",
                 'default': "nobody",
-                # todo: validator, check user...?
             },
 
             'group': {
                 'section': 'main',
                 'description': "run as group",
                 'default': "nobody",
-                # todo: validator, check user...?
             },
 
             'plugindir': {
@@ -188,6 +239,12 @@ class MainController(object):
                 'section': 'main',
                 'description': "Log pattern to use for all suspects in fuglu log. set empty string to disable logging generic suspect info. Supports the usual template variables plus: ${size}, ${spam} ${highspam}, ${modified} ${decision} ${tags} (short tags representagion) ${fulltags} full tags output, ${decision}",
                 'default': 'Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}',
+            },
+
+            'versioncheck': {
+                'section': 'main',
+                'description': "warn about known severe problems/security issues of current version.\nNote: This performs a DNS lookup of gitrelease.patchlevel.minorversion.majorversion.versioncheck.fuglu.org on startup and fuglu --lint.\nNo other information of any kind is transmitted to outside systems.\nDisable this if you consider the DNS lookup an unwanted information leak.",
+                'default': '1',
             },
 
             # performance section
@@ -437,6 +494,10 @@ class MainController(object):
         if self.debugconsole:
             self.run_debugconsole()
         else:
+            if self.config.getboolean('main', 'versioncheck'):
+                # log possible issues with this version
+                check_version_status()
+
             # mainthread dummy loop
             while self.stayalive:
                 try:
@@ -584,9 +645,8 @@ class MainController(object):
         except:
             print fc.strcolor('sqlalchemy: not installed', 'yellow') + " Optional dependency, required if you want to enable any database lookups"
 
-
         if HAVE_BEAUTIFULSOUP:
-            print fc.strcolor('BeautifulSoup: V%s installed'%BS_VERSION, 'green')
+            print fc.strcolor('BeautifulSoup: V%s installed' % BS_VERSION, 'green')
         else:
             print fc.strcolor('BeautifulSoup: not installed', 'yellow') + " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config"
 
@@ -601,7 +661,6 @@ class MainController(object):
 
     def lint(self):
         errors = 0
-        from fuglu.funkyconsole import FunkyConsole
         fc = FunkyConsole()
         self._lint_dependencies(fc)
 
@@ -670,6 +729,9 @@ class MainController(object):
                 errors = errors + 1
                 print fc.strcolor("ERROR", "red")
         print "%s plugins reported errors." % errors
+
+        if self.config.getboolean('main', 'versioncheck'):
+            check_version_status(lint=True)
 
     def propagate_defaults(self, requiredvars, config, defaultsection=None):
         """propagate defaults from requiredvars if they are missing in config"""
