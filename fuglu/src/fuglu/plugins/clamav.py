@@ -196,7 +196,6 @@ Tags:
                 raise Exception(
                     "Commands out of sync - expected ID %s - got %s" % (threadLocal.expectedID, ans_id))
 
-            self.logger.info("ans_id=%s virusinfo=%s" % (ans_id, virusinfo))
             if virusinfo[-5:] == 'ERROR':
                 raise Exception, virusinfo
             elif virusinfo != 'OK':
