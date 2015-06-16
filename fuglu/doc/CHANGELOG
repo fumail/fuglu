@@ -1,3 +1,16 @@
+-- Fuglu 0.6.4, not yet released
+ * core: warn about known issues/security risks of current version in startup/lint.
+   Note: This performs a DNS lookup containing *only* the current version number
+   This check can be disabled by setting [main]versioncheck=0
+ * core: optimized thread handling to reduce CPU usage
+ * F-Prot plugin: support additional scan options
+ * new Plugin: DrWeb Antivirus (experimental)
+ * Attachment Plugin: Support rarfile extraction (requires additional lib) and improve zipfile extraction
+ * Clamav Plugin: new experimental option "pipelining", to scan multiple messages over the same connection
+
+Developers:
+ * plugdummy tool: now supports prepender plugins
+
 -- Fuglu 0.6.3, 2015-03-20
  * lint now also checks SuspectFilter files in some plugins
  * SuspectFilters: improved HTML stripping
