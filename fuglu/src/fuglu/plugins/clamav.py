@@ -22,7 +22,9 @@ import threading
 import errno
 
 threadLocal = threading.local()
-MAX_SCANS_PER_SOCKET = 5000 # it's probably a good idea to re-establish the connection every now and then
+# it's probably a good idea to re-establish the connection every now and then
+MAX_SCANS_PER_SOCKET = 5000
+
 
 class ClamavPlugin(ScannerPlugin):
 
@@ -59,7 +61,7 @@ Tags:
                 'description': 'socket timeout',
             },
 
-            'pipelining':{
+            'pipelining': {
                 'default': '0',
                 'descpription': "*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.",
             },
@@ -135,8 +137,9 @@ Tags:
             except Exception, e:
                 self.__invalidate_socket()
 
-                #don't warn the first time if it's just a broken pipe which can happen with the new pipelining protocol
-                if not (i == 0 and isinstance(e,socket.error) and e.errno == errno.EPIPE):
+                # don't warn the first time if it's just a broken pipe which
+                # can happen with the new pipelining protocol
+                if not (i == 0 and isinstance(e, socket.error) and e.errno == errno.EPIPE):
                     self.logger.warning("Error encountered while contacting clamd (try %s of %s): %s" % (
                         i + 1, self.config.getint(self.section, 'retries'), str(e)))
 
@@ -154,7 +157,7 @@ Tags:
           - None if no virus found
           - raises Exception if something went wrong
         """
-        pipelining = self.config.getboolean(self.section,'pipelining')
+        pipelining = self.config.getboolean(self.section, 'pipelining')
         s = self.__init_socket__(oneshot=not pipelining)
         s.sendall('zINSTREAM\0')
         default_chunk_size = 2048
@@ -181,17 +184,19 @@ Tags:
 
         if pipelining:
             try:
-                ans_id,filename,virusinfo = result.split(':',2)
-                filename=filename.strip()
-                virusinfo=virusinfo.strip()
+                ans_id, filename, virusinfo = result.split(':', 2)
+                filename = filename.strip()
+                virusinfo = virusinfo.strip()
             except:
-                raise Exception("Protocol error, could not parse result: %s"%result)
+                raise Exception(
+                    "Protocol error, could not parse result: %s" % result)
 
-            threadLocal.expectedID+=1
+            threadLocal.expectedID += 1
             if threadLocal.expectedID != int(ans_id):
-                raise Exception("Commands out of sync - expected ID %s - got %s"%(threadLocal.expectedID,ans_id))
+                raise Exception(
+                    "Commands out of sync - expected ID %s - got %s" % (threadLocal.expectedID, ans_id))
 
-            self.logger.info("ans_id=%s virusinfo=%s"%(ans_id,virusinfo))
+            self.logger.info("ans_id=%s virusinfo=%s" % (ans_id, virusinfo))
             if virusinfo[-5:] == 'ERROR':
                 raise Exception, virusinfo
             elif virusinfo != 'OK':
@@ -204,9 +209,9 @@ Tags:
                 finally:
                     self.__invalidate_socket()
         else:
-            filename,virusinfo = result.split(':',1)
-            filename=filename.strip()
-            virusinfo=virusinfo.strip()
+            filename, virusinfo = result.split(':', 1)
+            filename = filename.strip()
+            virusinfo = virusinfo.strip()
             if virusinfo[-5:] == 'ERROR':
                 raise Exception, virusinfo
             elif virusinfo != 'OK':
@@ -218,31 +223,32 @@ Tags:
         else:
             return dr
 
-    def _read_until_delimiter(self,socket):
-        data=''
+    def _read_until_delimiter(self, socket):
+        data = ''
         while True:
             chunk = socket.recv(4096)
-            if len(chunk)==0:
+            if len(chunk) == 0:
                 continue
-            data+=chunk
+            data += chunk
             if chunk.endswith('\0'):
                 break
             if '\0' in chunk:
-                raise Exception("Protocol error: got unexpected additional data after delimiter")
-        return data[:-1] # remove \0 at the end
+                raise Exception(
+                    "Protocol error: got unexpected additional data after delimiter")
+        return data[:-1]  # remove \0 at the end
 
     def __invalidate_socket(self):
         threadLocal.clamdsocket = None
         threadLocal.expectedID = 0
 
-    def __init_socket__(self,oneshot=False):
+    def __init_socket__(self, oneshot=False):
         """initialize a socket connection to clamd using host/port/file defined in the configuration
         this connection is initialized with clamd's "IDSESSION" and cached per thread
 
          set oneshot=True to get a socket without caching it and without initializing it with an IDSESSION
          """
 
-        existing_socket = getattr(threadLocal,'clamdsocket',None)
+        existing_socket = getattr(threadLocal, 'clamdsocket', None)
 
         socktimeout = self.config.getint(self.section, 'timeout')
 
@@ -279,7 +285,7 @@ Tags:
                 raise Exception(
                     'Could not reach clamd using network (%s, %s)' % (clamd_HOST, clamd_PORT))
 
-        #initialize an IDSESSION
+        # initialize an IDSESSION
         if not oneshot:
             s.sendall('zIDSESSION\0')
             threadLocal.clamdsocket = s
