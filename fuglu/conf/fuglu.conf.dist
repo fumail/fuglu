@@ -83,6 +83,9 @@ controlport=/tmp/fuglu_control.sock
 #Log pattern to use for all suspects in fuglu log. set empty string to disable logging generic suspect info. Supports the usual template variables plus: ${size}, ${spam} ${highspam}, ${modified} ${decision} ${tags} (short tags representagion) ${fulltags} full tags output, ${decision}
 logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}
 
+#warn about known severe problems/security issues of current version. This performs a DNS lookup containing the current version string.
+versioncheck=1
+
 [PluginAlias]
 
 debug=fuglu.plugins.p_debug.MessageDebugger
