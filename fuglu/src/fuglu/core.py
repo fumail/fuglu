@@ -61,7 +61,7 @@ def check_version_status(lint=False):
     }
 
     m = re.match(
-        r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))$', FUGLU_VERSION)
+        r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))?$', FUGLU_VERSION)
     if m == None:
         logging.warn("could not parse my version string %s" % FUGLU_VERSION)
         return
