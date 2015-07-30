@@ -1,4 +1,4 @@
--- Fuglu 0.6.4, not yet released
+-- Fuglu 0.6.4, 2015-07-30
  * core: warn about known issues/security risks of current version in startup/lint.
    Note: This performs a DNS lookup containing *only* the current version number
    This check can be disabled by setting [main]versioncheck=0
