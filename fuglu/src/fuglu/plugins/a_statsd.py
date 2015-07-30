@@ -37,6 +37,9 @@ class PluginTime(AppenderPlugin):
         addr = self.config.get(self.section,'host'),self.config.getint(self.section,'port')
         self.sock.sendto(buffer.encode('utf-8'), addr)
 
+    def __str__(self):
+        return 'Statsd Sender: Plugin Time'
+
 class MessageStatus(AppenderPlugin):
     """EXPERIMENTAL: Send message status to a statsd server"""
 
@@ -74,6 +77,9 @@ class MessageStatus(AppenderPlugin):
 
         addr = self.config.get(self.section,'host'),self.config.getint(self.section,'port')
         self.sock.sendto(buffer.encode('utf-8'), addr)
+
+    def __str__(self):
+        return 'Statsd Sender: Global Message Status'
 
 class MessageStatusPerRecipient(AppenderPlugin):
     """EXPERIMENTAL: Send per recipient stats to a statsd server"""
@@ -123,3 +129,6 @@ class MessageStatusPerRecipient(AppenderPlugin):
         addr = self.config.get(self.section,'host'),self.config.getint(self.section,'port')
         self.sock.sendto(buffer.encode('utf-8'), addr)
         #self.logger.info("buffer: %s"%buffer)
+
+    def __str__(self):
+        return 'Statsd Sender: Per Recipient Message Status'

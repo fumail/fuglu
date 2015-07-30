@@ -34,6 +34,7 @@ if __name__ == '__main__':
         sssp.SSSPPlugin(config),
         fprot.FprotPlugin(config),
         icap.ICAPPlugin(config),
+        drweb.DrWebPlugin(config),
         actionoverride.ActionOverridePlugin(config),
         script.ScriptFilter(config),
         domainauth.DKIMSignPlugin(config),
@@ -44,6 +45,11 @@ if __name__ == '__main__':
         p_skipper.PluginSkipper(config),
         p_fraction.PluginFraction(config),
         p_debug.MessageDebugger(config),
+
+        # appenders
+        a_statsd.PluginTime(config),
+        a_statsd.MessageStatus(config),
+        a_statsd.MessageStatusPerRecipient(config),
     ]
 
     headerchar = '.'
