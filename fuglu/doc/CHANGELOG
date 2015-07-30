@@ -3,10 +3,15 @@
    Note: This performs a DNS lookup containing *only* the current version number
    This check can be disabled by setting [main]versioncheck=0
  * core: optimized thread handling to reduce CPU usage
+ * core: lint now also checks the logging configuration
  * F-Prot plugin: support additional scan options
- * new Plugin: DrWeb Antivirus (experimental)
- * Attachment Plugin: Support rarfile extraction (requires additional lib) and improve zipfile extraction
- * Clamav Plugin: new experimental option "pipelining", to scan multiple messages over the same connection
+ * Attachment plugin: Support rarfile extraction (requires additional lib) and improve zipfile extraction
+ * Clamav plugin: new experimental option "pipelining" to scan multiple messages over the same connection
+ * new plugin: DrWeb Antivirus (experimental)
+ * new appender plugin: statsd sender (experimental) : Send various stats to a statsd/graphite system
+   * Plugin execution time
+   * Message decisions
+   * Per recipient message stats
 
 Developers:
  * plugdummy tool: now supports prepender plugins
