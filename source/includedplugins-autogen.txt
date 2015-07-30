@@ -132,6 +132,8 @@ Configuration
     #action if there is a problem (DUNNO, DEFER)
     problemaction=DEFER
 
+    pipelining=0
+
     #maximum message size, larger messages will not be scanned.  
     #should match the 'StreamMaxLength' config option in clamd.conf 
     maxsize=22000000

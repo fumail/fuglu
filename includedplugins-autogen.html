@@ -31,10 +31,10 @@
     <link rel="top" title="fuglu  documentation" href="index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body>
+  <body role="document">
     <div class="relbar-top">
         
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -53,7 +53,7 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="spamassassin">
 <h1>SpamAssassin<a class="headerlink" href="#spamassassin" title="Permalink to this headline">¶</a></h1>
@@ -65,11 +65,11 @@
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.skip</span></tt>, (boolean) skips scanning if this is True</li>
-<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.tempheader</span></tt>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
-<li>sets <tt class="docutils literal"><span class="pre">spam['spamassassin']</span></tt> (boolean)</li>
-<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.spamscore</span></tt> (float) if possible</li>
-<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.skipreason</span></tt> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
+<li>reads <code class="docutils literal"><span class="pre">SAPlugin.skip</span></code>, (boolean) skips scanning if this is True</li>
+<li>reads <code class="docutils literal"><span class="pre">SAPlugin.tempheader</span></code>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
+<li>sets <code class="docutils literal"><span class="pre">spam['spamassassin']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.spamscore</span></code> (float) if possible</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.skipreason</span></code> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
 </ul>
 </div></blockquote>
 <div class="section" id="configuration">
@@ -150,8 +150,8 @@ lowspamaction=DEFAULTLOWSPAMACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <tt class="docutils literal"><span class="pre">virus['ClamAV']</span></tt> (boolean)</li>
-<li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['ClamAV']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">ClamavPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id1">
@@ -171,6 +171,8 @@ timeout=30
 
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
+
+pipelining=0
 
 #maximum message size, larger messages will not be scanned.
 #should match the &#39;StreamMaxLength&#39; config option in clamd.conf
@@ -192,15 +194,15 @@ virusaction=DEFAULTVIRUSACTION
 <p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
 <p>Attachment rules can be defined globally, per domain or per user.</p>
 <p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
-<p>Prerequisites: You must have the python <tt class="docutils literal"><span class="pre">file</span></tt> or <tt class="docutils literal"><span class="pre">magic</span></tt> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <tt class="docutils literal"><span class="pre">rarfile</span></tt> module.</p>
-<p>The attachment configuration files are in <tt class="docutils literal"><span class="pre">/etc/fuglu/rules</span></tt>. You should have two default files there: <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt> which defines what filenames are allowed and <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> which defines what content types a attachment may have.</p>
-<p>For domain rules, create a new file <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></tt> , eg. <tt class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></tt></p>
-<p>For individual user rules, create a new file <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></tt>, eg. <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></tt></p>
-<p>To scan filenames or even file contents within archives (zip, rar), use <tt class="docutils literal"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></tt> and <tt class="docutils literal"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></tt>.</p>
+<p>Prerequisites: You must have the python <code class="docutils literal"><span class="pre">file</span></code> or <code class="docutils literal"><span class="pre">magic</span></code> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <code class="docutils literal"><span class="pre">rarfile</span></code> module.</p>
+<p>The attachment configuration files are in <code class="docutils literal"><span class="pre">/etc/fuglu/rules</span></code>. You should have two default files there: <code class="docutils literal"><span class="pre">default-filenames.conf</span></code> which defines what filenames are allowed and <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> which defines what content types a attachment may have.</p>
+<p>For domain rules, create a new file <code class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></code> , eg. <code class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></code></p>
+<p>For individual user rules, create a new file <code class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></code>, eg. <code class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></code></p>
+<p>To scan filenames or even file contents within archives (zip, rar), use <code class="docutils literal"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></code> and <code class="docutils literal"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></code>.</p>
 <p>The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-<tt class="docutils literal"><span class="pre">&lt;action&gt;</span></tt>    <tt class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></tt>   <tt class="docutils literal"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></tt></p>
+<code class="docutils literal"><span class="pre">&lt;action&gt;</span></code>    <code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code>   <code class="docutils literal"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></code></p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">&lt;action&gt;</span></tt> can be one of:</dt>
+<dt><code class="docutils literal"><span class="pre">&lt;action&gt;</span></code> can be one of:</dt>
 <dd><ul class="first last simple">
 <li>allow : this file is ok, don&#8217;t do further checks (you might use it for safe content types like text). Do not blindly create &#8216;allow&#8217; rules. It&#8217;s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
 <li>deny : delete this message and send the error message/description back to the sender</li>
@@ -208,8 +210,8 @@ virusaction=DEFAULTVIRUSACTION
 </ul>
 </dd>
 </dl>
-<p><tt class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></tt> is a standard python regex. in <tt class="docutils literal"><span class="pre">x-filenames.conf</span></tt> this will be applied to the attachment name . in <tt class="docutils literal"><span class="pre">x-filetypes.conf</span></tt> this will be applied to the mime type of the file as well as the file type returned by the <tt class="docutils literal"><span class="pre">file</span></tt> command.</p>
-<p>Example of <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> :</p>
+<p><code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code> is a standard python regex. in <code class="docutils literal"><span class="pre">x-filenames.conf</span></code> this will be applied to the attachment name . in <code class="docutils literal"><span class="pre">x-filetypes.conf</span></code> this will be applied to the mime type of the file as well as the file type returned by the <code class="docutils literal"><span class="pre">file</span></code> command.</p>
+<p>Example of <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> :</p>
 <div class="highlight-python"><div class="highlight"><pre>allow    text        -
 allow    script    -
 allow    archive        -
@@ -220,7 +222,7 @@ deny    ELF        No programs allowed
 deny    Registry    No Windows Registry files allowed
 </pre></div>
 </div>
-<p>A small extract from <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt>:</p>
+<p>A small extract from <code class="docutils literal"><span class="pre">default-filenames.conf</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>deny    \.ico$            Windows icon file security vulnerability
 deny    \.ani$            Windows animated cursor file security vulnerability
 deny    \.cur$            Windows cursor file security vulnerability
@@ -246,13 +248,13 @@ The query must return the same rule format as a file would. Multiple columns in 
 )
 </pre></div>
 </div>
-<p><em>action</em>: <tt class="docutils literal"><span class="pre">allow</span></tt>, <tt class="docutils literal"><span class="pre">deny</span></tt>, or <tt class="docutils literal"><span class="pre">delete</span></tt></p>
+<p><em>action</em>: <code class="docutils literal"><span class="pre">allow</span></code>, <code class="docutils literal"><span class="pre">deny</span></code>, or <code class="docutils literal"><span class="pre">delete</span></code></p>
 <p><em>regex</em>: a regular expression</p>
 <p><em>description</em>: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled</p>
 <p><em>scope</em>: a domain name or a recipient&#8217;s email address</p>
-<p><em>checktype</em>: one of <tt class="docutils literal"><span class="pre">filename</span></tt>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
+<p><em>checktype</em>: one of <code class="docutils literal"><span class="pre">filename</span></code>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
 <p><em>prio</em>: order in which the rules are run</p>
-<p>The bounce template (eg <tt class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></tt> ) should
+<p>The bounce template (eg <code class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></code> ) should
 start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre>To: ${from_address}
 Subject: Blocked attachment
@@ -262,7 +264,7 @@ Your message to ${to_address} contains a blocked attachment and has not been del
 ${blockinfo}
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
+<p><code class="docutils literal"><span class="pre">${blockinfo}</span></code> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
 <p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
 <h2>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
@@ -311,9 +313,9 @@ archivecontentmaxsize=5000000
 You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
 <p>Examples for the archive.regex filter file:</p>
 <p>Archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
-<p><tt class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></tt></p>
+<p><code class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></code></p>
 <p>Archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
-<p><tt class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></tt></p>
+<p><code class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></code></p>
 <p>you can also append &#8220;yes&#8221; and &#8220;no&#8221; to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
 <p>envelope_from logwatch&#64;.*fuglu.org   no</p>
 <p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes</p>
@@ -463,8 +465,8 @@ virusaction=DEFAULTVIRUSACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <tt class="docutils literal"><span class="pre">virus['F-Prot']</span></tt> (boolean)</li>
-<li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['F-Prot']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">FprotPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id6">
@@ -565,19 +567,19 @@ actionrules=/etc/fuglu/actionrules.regex
 <p>Plugin: fuglu.plugins.script.ScriptFilter</p>
 <p>This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
-<p>Filterscripts must be written in standard python but with the file ending <tt class="docutils literal"><span class="pre">.fgf</span></tt> (&#8220;fuglu filter&#8221;)</p>
+<p>Filterscripts must be written in standard python but with the file ending <code class="docutils literal"><span class="pre">.fgf</span></code> (&#8220;fuglu filter&#8221;)</p>
 <p>Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.</p>
-<p>The API is basically the same as for normal plugins within the <tt class="docutils literal"><span class="pre">examine()</span></tt> method, with a few special cases:</p>
+<p>The API is basically the same as for normal plugins within the <code class="docutils literal"><span class="pre">examine()</span></code> method, with a few special cases:</p>
 <p>there is no &#8216;self&#8217; which means:</p>
 <blockquote>
 <div><ul class="simple">
-<li>access the configuration by using <tt class="docutils literal"><span class="pre">config</span></tt> directly (instead of <tt class="docutils literal"><span class="pre">self.config</span></tt>)</li>
-<li>use <tt class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></tt> instead of <tt class="docutils literal"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
+<li>access the configuration by using <code class="docutils literal"><span class="pre">config</span></code> directly (instead of <code class="docutils literal"><span class="pre">self.config</span></code>)</li>
+<li>use <code class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></code> instead of <code class="docutils literal"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></code>, this will also automatically write to the message debug channel</li>
 </ul>
 </div></blockquote>
-<p>the script should not return anything, but change the available variables <tt class="docutils literal"><span class="pre">action</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt> instead
-(<tt class="docutils literal"><span class="pre">DUNNO</span></tt>, <tt class="docutils literal"><span class="pre">REJECT</span></tt>, <tt class="docutils literal"><span class="pre">DEFER</span></tt>, <tt class="docutils literal"><span class="pre">ACCEPT</span></tt>, <tt class="docutils literal"><span class="pre">DELETE</span></tt> are already imported)</p>
-<p>use <tt class="docutils literal"><span class="pre">stop()</span></tt> to exit the script</p>
+<p>the script should not return anything, but change the available variables <code class="docutils literal"><span class="pre">action</span></code> and <code class="docutils literal"><span class="pre">message</span></code> instead
+(<code class="docutils literal"><span class="pre">DUNNO</span></code>, <code class="docutils literal"><span class="pre">REJECT</span></code>, <code class="docutils literal"><span class="pre">DEFER</span></code>, <code class="docutils literal"><span class="pre">ACCEPT</span></code>, <code class="docutils literal"><span class="pre">DELETE</span></code> are already imported)</p>
+<p>use <code class="docutils literal"><span class="pre">stop()</span></code> to exit the script</p>
 <p>Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#block all messages from evilsender.example.com</span>
@@ -734,7 +736,7 @@ noappender=1
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper"><div class="sphinxlocaltoc">
     <h3><a href="index.html">Page contents</a></h3>
     <ul>
@@ -805,12 +807,14 @@ noappender=1
 </ul>
 
   </div>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/includedplugins-autogen.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/includedplugins-autogen.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -829,7 +833,7 @@ noappender=1
     </div>
     <div class="relbar-bottom">
         
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -844,9 +848,9 @@ noappender=1
     </div>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

@@ -33,10 +33,10 @@
     <link rel="prev" title="Operation" href="operation-index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body>
+  <body role="document">
     <div class="relbar-top">
         
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -61,7 +61,7 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="plugins">
 <h1>Plugins<a class="headerlink" href="#plugins" title="Permalink to this headline">¶</a></h1>
@@ -81,7 +81,7 @@ all of fuglu&#8217;s internals.</p>
 <div class="section" id="scanner-plugins">
 <h3>Scanner Plugins<a class="headerlink" href="#scanner-plugins" title="Permalink to this headline">¶</a></h3>
 <p>Scanner plugins are the most important type of plugins. They do the actual mail content filtering.
-Plugins are run in the order specified in the <tt class="docutils literal"><span class="pre">plugins=</span></tt> configuration option. Each plugin returns an action
+Plugins are run in the order specified in the <code class="docutils literal"><span class="pre">plugins=</span></code> configuration option. Each plugin returns an action
 for the message:</p>
 <blockquote>
 <div><ul class="simple">
@@ -109,41 +109,41 @@ run for incoming or outgoing mails or to skip whitelisted messages.</p>
 </div>
 <div class="section" id="plugin-configuration">
 <h2>Plugin configuration<a class="headerlink" href="#plugin-configuration" title="Permalink to this headline">¶</a></h2>
-<p>Each plugin has its own configuration section in <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> or any <tt class="docutils literal"><span class="pre">*.conf</span></tt> in <tt class="docutils literal"><span class="pre">/etc/fuglu/conf.d</span></tt>. The section is usually
+<p>Each plugin has its own configuration section in <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></code> or any <code class="docutils literal"><span class="pre">*.conf</span></code> in <code class="docutils literal"><span class="pre">/etc/fuglu/conf.d</span></code>. The section is usually
 named like the plugin itself.</p>
-<p>For example, the Spamassassin Plugin&#8217;s Name is <tt class="docutils literal"><span class="pre">SAplugin</span></tt>, so it would search for a <tt class="docutils literal"><span class="pre">[SAPlugin]</span></tt> config section.</p>
+<p>For example, the Spamassassin Plugin&#8217;s Name is <code class="docutils literal"><span class="pre">SAplugin</span></code>, so it would search for a <code class="docutils literal"><span class="pre">[SAPlugin]</span></code> config section.</p>
 <div class="section" id="suspect-filters">
 <h3>Suspect Filters<a class="headerlink" href="#suspect-filters" title="Permalink to this headline">¶</a></h3>
 <p>SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a message header or suspect tag.</p>
-<p>The format is : <tt class="docutils literal"><span class="pre">&lt;property&gt;</span> <span class="pre">&lt;regex&gt;</span> <span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt></p>
+<p>The format is : <code class="docutils literal"><span class="pre">&lt;property&gt;</span> <span class="pre">&lt;regex&gt;</span> <span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></code></p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">&lt;property&gt;</span></tt> can be any of...</dt>
+<dt><code class="docutils literal"><span class="pre">&lt;property&gt;</span></code> can be any of...</dt>
 <dd><ul class="first simple">
-<li>a email header name, e.g. <tt class="docutils literal"><span class="pre">Received</span></tt>, <tt class="docutils literal"><span class="pre">To</span></tt>, <tt class="docutils literal"><span class="pre">From</span></tt>, <tt class="docutils literal"><span class="pre">Subject</span></tt> ... also supports &#8216;*&#8217; as wildcard character</li>
-<li><tt class="docutils literal"><span class="pre">mime:headername</span></tt> to get mime Headers in the message payload  eg: <tt class="docutils literal"><span class="pre">mime:Content-Disposition</span></tt></li>
+<li>a email header name, e.g. <code class="docutils literal"><span class="pre">Received</span></code>, <code class="docutils literal"><span class="pre">To</span></code>, <code class="docutils literal"><span class="pre">From</span></code>, <code class="docutils literal"><span class="pre">Subject</span></code> ... also supports &#8216;*&#8217; as wildcard character</li>
+<li><code class="docutils literal"><span class="pre">mime:headername</span></code> to get mime Headers in the message payload  eg: <code class="docutils literal"><span class="pre">mime:Content-Disposition</span></code></li>
 <li>one of fuglus builtin names to get envelope data:</li>
 </ul>
 <blockquote>
 <div><ul class="simple">
-<li><tt class="docutils literal"><span class="pre">envelope_from</span></tt>  (the envelope from address)</li>
-<li><tt class="docutils literal"><span class="pre">from_domain</span></tt> (domain part of envelope_from)</li>
-<li><tt class="docutils literal"><span class="pre">envelope_to</span></tt> (envelope to address)</li>
-<li><tt class="docutils literal"><span class="pre">to_domain</span></tt> (domain part of envelope_to)</li>
+<li><code class="docutils literal"><span class="pre">envelope_from</span></code>  (the envelope from address)</li>
+<li><code class="docutils literal"><span class="pre">from_domain</span></code> (domain part of envelope_from)</li>
+<li><code class="docutils literal"><span class="pre">envelope_to</span></code> (envelope to address)</li>
+<li><code class="docutils literal"><span class="pre">to_domain</span></code> (domain part of envelope_to)</li>
 </ul>
 </div></blockquote>
 <ul class="last simple">
-<li>a <tt class="docutils literal"><span class="pre">message</span> <span class="pre">Tag</span></tt> prepended by the &#64; symbol, eg. <tt class="docutils literal"><span class="pre">&#64;incomingport</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">body:raw</span></tt> to match the the decoded message body (only applies to text/* parts)</li>
-<li><tt class="docutils literal"><span class="pre">body:stripped</span></tt> or just <tt class="docutils literal"><span class="pre">body</span></tt> to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)</li>
-<li><tt class="docutils literal"><span class="pre">body:full</span></tt> to match the full body</li>
+<li>a <code class="docutils literal"><span class="pre">message</span> <span class="pre">Tag</span></code> prepended by the &#64; symbol, eg. <code class="docutils literal"><span class="pre">&#64;incomingport</span></code></li>
+<li><code class="docutils literal"><span class="pre">body:raw</span></code> to match the the decoded message body (only applies to text/* parts)</li>
+<li><code class="docutils literal"><span class="pre">body:stripped</span></code> or just <code class="docutils literal"><span class="pre">body</span></code> to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)</li>
+<li><code class="docutils literal"><span class="pre">body:full</span></code> to match the full body</li>
 </ul>
 </dd>
 </dl>
-<p><tt class="docutils literal"><span class="pre">&lt;regex&gt;</span></tt> is a standard python regular expression applied to &lt;header&gt;. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use <tt class="docutils literal"><span class="pre">\s</span></tt>. all regexes that are not enclosed in forward slashes are automatically <tt class="docutils literal"><span class="pre">case</span> <span class="pre">insensitive</span></tt> and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.</p>
+<p><code class="docutils literal"><span class="pre">&lt;regex&gt;</span></code> is a standard python regular expression applied to &lt;header&gt;. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use <code class="docutils literal"><span class="pre">\s</span></code>. all regexes that are not enclosed in forward slashes are automatically <code class="docutils literal"><span class="pre">case</span> <span class="pre">insensitive</span></code> and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.</p>
 <div class="highlight-python"><div class="highlight"><pre>Subject /hello world/i match hello world, case insensitive
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></tt> depends on the plugin that reads this header filter file, some don&#8217;t need arguments at all. Please refer to the plugin documentation.</p>
+<p><code class="docutils literal"><span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></code> depends on the plugin that reads this header filter file, some don&#8217;t need arguments at all. Please refer to the plugin documentation.</p>
 <p>Filter files are automatically reloaded if you change anything, you don&#8217;t need to restart fuglu.</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre>#normal header test
@@ -170,22 +170,22 @@ body:full ^--SPAMMY-MIME-BOUNDARY
 mime:Content-Type ^application\/x-msdos-program$
 </pre></div>
 </div>
-<p>see <a class="reference internal" href="operation-index.html#debug-suspect-filter"><em>Debug a suspect filter</em></a> for info on how to debug suspect filter files on specific messages.</p>
+<p>see <a class="reference internal" href="operation-index.html#debug-suspect-filter"><span>Debug a suspect filter</span></a> for info on how to debug suspect filter files on specific messages.</p>
 </div>
 <div class="section" id="template-variables">
 <h3>Template Variables<a class="headerlink" href="#template-variables" title="Permalink to this headline">¶</a></h3>
 <p>Some plugins allow you to create templates (errormessages in bounces, Reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation.</p>
 <blockquote>
 <div><ul class="simple">
-<li><tt class="docutils literal"><span class="pre">${from_address}</span></tt> : Envelope Sender Address</li>
-<li><tt class="docutils literal"><span class="pre">${to_address}</span></tt>   : Envelope Recipient Address</li>
-<li><tt class="docutils literal"><span class="pre">${from_domain}</span></tt>  : Envelope Sender Domain</li>
-<li><tt class="docutils literal"><span class="pre">${to_domain}</span></tt>    : Envelope Recipient Domain</li>
-<li><tt class="docutils literal"><span class="pre">${timestamp}</span></tt>    : Unix Timestamp when the message was received</li>
-<li><tt class="docutils literal"><span class="pre">${subject}</span></tt>      : Message subject</li>
-<li><tt class="docutils literal"><span class="pre">${date}</span></tt>         : Current date</li>
-<li><tt class="docutils literal"><span class="pre">${time}</span></tt>         : Current time</li>
-<li><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt>    : Reason why this message was blocked (available in the attachment plugin)</li>
+<li><code class="docutils literal"><span class="pre">${from_address}</span></code> : Envelope Sender Address</li>
+<li><code class="docutils literal"><span class="pre">${to_address}</span></code>   : Envelope Recipient Address</li>
+<li><code class="docutils literal"><span class="pre">${from_domain}</span></code>  : Envelope Sender Domain</li>
+<li><code class="docutils literal"><span class="pre">${to_domain}</span></code>    : Envelope Recipient Domain</li>
+<li><code class="docutils literal"><span class="pre">${timestamp}</span></code>    : Unix Timestamp when the message was received</li>
+<li><code class="docutils literal"><span class="pre">${subject}</span></code>      : Message subject</li>
+<li><code class="docutils literal"><span class="pre">${date}</span></code>         : Current date</li>
+<li><code class="docutils literal"><span class="pre">${time}</span></code>         : Current time</li>
+<li><code class="docutils literal"><span class="pre">${blockinfo}</span></code>    : Reason why this message was blocked (available in the attachment plugin)</li>
 </ul>
 </div></blockquote>
 </div>
@@ -202,11 +202,11 @@ mime:Content-Type ^application\/x-msdos-program$
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.skip</span></tt>, (boolean) skips scanning if this is True</li>
-<li>reads <tt class="docutils literal"><span class="pre">SAPlugin.tempheader</span></tt>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
-<li>sets <tt class="docutils literal"><span class="pre">spam['spamassassin']</span></tt> (boolean)</li>
-<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.spamscore</span></tt> (float) if possible</li>
-<li>sets <tt class="docutils literal"><span class="pre">SAPlugin.skipreason</span></tt> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
+<li>reads <code class="docutils literal"><span class="pre">SAPlugin.skip</span></code>, (boolean) skips scanning if this is True</li>
+<li>reads <code class="docutils literal"><span class="pre">SAPlugin.tempheader</span></code>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
+<li>sets <code class="docutils literal"><span class="pre">spam['spamassassin']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.spamscore</span></code> (float) if possible</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.skipreason</span></code> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
 </ul>
 </div></blockquote>
 <div class="section" id="configuration">
@@ -287,8 +287,8 @@ lowspamaction=DEFAULTLOWSPAMACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <tt class="docutils literal"><span class="pre">virus['ClamAV']</span></tt> (boolean)</li>
-<li>sets <tt class="docutils literal"><span class="pre">ClamavPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['ClamAV']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">ClamavPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id1">
@@ -308,6 +308,8 @@ timeout=30
 
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
+
+pipelining=0
 
 #maximum message size, larger messages will not be scanned.
 #should match the &#39;StreamMaxLength&#39; config option in clamd.conf
@@ -329,15 +331,15 @@ virusaction=DEFAULTVIRUSACTION
 <p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
 <p>Attachment rules can be defined globally, per domain or per user.</p>
 <p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
-<p>Prerequisites: You must have the python <tt class="docutils literal"><span class="pre">file</span></tt> or <tt class="docutils literal"><span class="pre">magic</span></tt> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <tt class="docutils literal"><span class="pre">rarfile</span></tt> module.</p>
-<p>The attachment configuration files are in <tt class="docutils literal"><span class="pre">/etc/fuglu/rules</span></tt>. You should have two default files there: <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt> which defines what filenames are allowed and <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> which defines what content types a attachment may have.</p>
-<p>For domain rules, create a new file <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></tt> , eg. <tt class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></tt></p>
-<p>For individual user rules, create a new file <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></tt>, eg. <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></tt> / <tt class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></tt></p>
-<p>To scan filenames or even file contents within archives (zip, rar), use <tt class="docutils literal"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></tt> and <tt class="docutils literal"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></tt>.</p>
+<p>Prerequisites: You must have the python <code class="docutils literal"><span class="pre">file</span></code> or <code class="docutils literal"><span class="pre">magic</span></code> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <code class="docutils literal"><span class="pre">rarfile</span></code> module.</p>
+<p>The attachment configuration files are in <code class="docutils literal"><span class="pre">/etc/fuglu/rules</span></code>. You should have two default files there: <code class="docutils literal"><span class="pre">default-filenames.conf</span></code> which defines what filenames are allowed and <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> which defines what content types a attachment may have.</p>
+<p>For domain rules, create a new file <code class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></code> , eg. <code class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></code></p>
+<p>For individual user rules, create a new file <code class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></code>, eg. <code class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></code></p>
+<p>To scan filenames or even file contents within archives (zip, rar), use <code class="docutils literal"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></code> and <code class="docutils literal"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></code>.</p>
 <p>The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-<tt class="docutils literal"><span class="pre">&lt;action&gt;</span></tt>    <tt class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></tt>   <tt class="docutils literal"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></tt></p>
+<code class="docutils literal"><span class="pre">&lt;action&gt;</span></code>    <code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code>   <code class="docutils literal"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></code></p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">&lt;action&gt;</span></tt> can be one of:</dt>
+<dt><code class="docutils literal"><span class="pre">&lt;action&gt;</span></code> can be one of:</dt>
 <dd><ul class="first last simple">
 <li>allow : this file is ok, don&#8217;t do further checks (you might use it for safe content types like text). Do not blindly create &#8216;allow&#8217; rules. It&#8217;s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
 <li>deny : delete this message and send the error message/description back to the sender</li>
@@ -345,8 +347,8 @@ virusaction=DEFAULTVIRUSACTION
 </ul>
 </dd>
 </dl>
-<p><tt class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></tt> is a standard python regex. in <tt class="docutils literal"><span class="pre">x-filenames.conf</span></tt> this will be applied to the attachment name . in <tt class="docutils literal"><span class="pre">x-filetypes.conf</span></tt> this will be applied to the mime type of the file as well as the file type returned by the <tt class="docutils literal"><span class="pre">file</span></tt> command.</p>
-<p>Example of <tt class="docutils literal"><span class="pre">default-filetypes.conf</span></tt> :</p>
+<p><code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code> is a standard python regex. in <code class="docutils literal"><span class="pre">x-filenames.conf</span></code> this will be applied to the attachment name . in <code class="docutils literal"><span class="pre">x-filetypes.conf</span></code> this will be applied to the mime type of the file as well as the file type returned by the <code class="docutils literal"><span class="pre">file</span></code> command.</p>
+<p>Example of <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> :</p>
 <div class="highlight-python"><div class="highlight"><pre>allow    text        -
 allow    script    -
 allow    archive        -
@@ -357,7 +359,7 @@ deny    ELF        No programs allowed
 deny    Registry    No Windows Registry files allowed
 </pre></div>
 </div>
-<p>A small extract from <tt class="docutils literal"><span class="pre">default-filenames.conf</span></tt>:</p>
+<p>A small extract from <code class="docutils literal"><span class="pre">default-filenames.conf</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>deny    \.ico$            Windows icon file security vulnerability
 deny    \.ani$            Windows animated cursor file security vulnerability
 deny    \.cur$            Windows cursor file security vulnerability
@@ -383,13 +385,13 @@ The query must return the same rule format as a file would. Multiple columns in 
 )
 </pre></div>
 </div>
-<p><em>action</em>: <tt class="docutils literal"><span class="pre">allow</span></tt>, <tt class="docutils literal"><span class="pre">deny</span></tt>, or <tt class="docutils literal"><span class="pre">delete</span></tt></p>
+<p><em>action</em>: <code class="docutils literal"><span class="pre">allow</span></code>, <code class="docutils literal"><span class="pre">deny</span></code>, or <code class="docutils literal"><span class="pre">delete</span></code></p>
 <p><em>regex</em>: a regular expression</p>
 <p><em>description</em>: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled</p>
 <p><em>scope</em>: a domain name or a recipient&#8217;s email address</p>
-<p><em>checktype</em>: one of <tt class="docutils literal"><span class="pre">filename</span></tt>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
+<p><em>checktype</em>: one of <code class="docutils literal"><span class="pre">filename</span></code>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
 <p><em>prio</em>: order in which the rules are run</p>
-<p>The bounce template (eg <tt class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></tt> ) should
+<p>The bounce template (eg <code class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></code> ) should
 start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:</p>
 <div class="highlight-python"><div class="highlight"><pre>To: ${from_address}
 Subject: Blocked attachment
@@ -399,7 +401,7 @@ Your message to ${to_address} contains a blocked attachment and has not been del
 ${blockinfo}
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">${blockinfo}</span></tt> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
+<p><code class="docutils literal"><span class="pre">${blockinfo}</span></code> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
 <p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
 <h4>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
@@ -448,9 +450,9 @@ archivecontentmaxsize=5000000
 You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
 <p>Examples for the archive.regex filter file:</p>
 <p>Archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
-<p><tt class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></tt></p>
+<p><code class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></code></p>
 <p>Archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
-<p><tt class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></tt></p>
+<p><code class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></code></p>
 <p>you can also append &#8220;yes&#8221; and &#8220;no&#8221; to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
 <p>envelope_from logwatch&#64;.*fuglu.org   no</p>
 <p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes</p>
@@ -600,8 +602,8 @@ virusaction=DEFAULTVIRUSACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <tt class="docutils literal"><span class="pre">virus['F-Prot']</span></tt> (boolean)</li>
-<li>sets <tt class="docutils literal"><span class="pre">FprotPlugin.virus</span></tt> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['F-Prot']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">FprotPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id6">
@@ -702,19 +704,19 @@ actionrules=/etc/fuglu/actionrules.regex
 <p>Plugin: fuglu.plugins.script.ScriptFilter</p>
 <p>This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
-<p>Filterscripts must be written in standard python but with the file ending <tt class="docutils literal"><span class="pre">.fgf</span></tt> (&#8220;fuglu filter&#8221;)</p>
+<p>Filterscripts must be written in standard python but with the file ending <code class="docutils literal"><span class="pre">.fgf</span></code> (&#8220;fuglu filter&#8221;)</p>
 <p>Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.</p>
-<p>The API is basically the same as for normal plugins within the <tt class="docutils literal"><span class="pre">examine()</span></tt> method, with a few special cases:</p>
+<p>The API is basically the same as for normal plugins within the <code class="docutils literal"><span class="pre">examine()</span></code> method, with a few special cases:</p>
 <p>there is no &#8216;self&#8217; which means:</p>
 <blockquote>
 <div><ul class="simple">
-<li>access the configuration by using <tt class="docutils literal"><span class="pre">config</span></tt> directly (instead of <tt class="docutils literal"><span class="pre">self.config</span></tt>)</li>
-<li>use <tt class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></tt> instead of <tt class="docutils literal"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></tt>, this will also automatically write to the message debug channel</li>
+<li>access the configuration by using <code class="docutils literal"><span class="pre">config</span></code> directly (instead of <code class="docutils literal"><span class="pre">self.config</span></code>)</li>
+<li>use <code class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></code> instead of <code class="docutils literal"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></code>, this will also automatically write to the message debug channel</li>
 </ul>
 </div></blockquote>
-<p>the script should not return anything, but change the available variables <tt class="docutils literal"><span class="pre">action</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt> instead
-(<tt class="docutils literal"><span class="pre">DUNNO</span></tt>, <tt class="docutils literal"><span class="pre">REJECT</span></tt>, <tt class="docutils literal"><span class="pre">DEFER</span></tt>, <tt class="docutils literal"><span class="pre">ACCEPT</span></tt>, <tt class="docutils literal"><span class="pre">DELETE</span></tt> are already imported)</p>
-<p>use <tt class="docutils literal"><span class="pre">stop()</span></tt> to exit the script</p>
+<p>the script should not return anything, but change the available variables <code class="docutils literal"><span class="pre">action</span></code> and <code class="docutils literal"><span class="pre">message</span></code> instead
+(<code class="docutils literal"><span class="pre">DUNNO</span></code>, <code class="docutils literal"><span class="pre">REJECT</span></code>, <code class="docutils literal"><span class="pre">DEFER</span></code>, <code class="docutils literal"><span class="pre">ACCEPT</span></code>, <code class="docutils literal"><span class="pre">DELETE</span></code> are already imported)</p>
+<p>use <code class="docutils literal"><span class="pre">stop()</span></code> to exit the script</p>
 <p>Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#block all messages from evilsender.example.com</span>
@@ -869,8 +871,8 @@ noappender=1
 </div>
 <div class="section" id="writing-your-own-plugins">
 <h2>Writing your own plugins<a class="headerlink" href="#writing-your-own-plugins" title="Permalink to this headline">¶</a></h2>
-<p>Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from <tt class="docutils literal"><span class="pre">ScannerPlugin</span></tt>, override <tt class="docutils literal"><span class="pre">__str__</span></tt> to provide a nice human readable name and override <tt class="docutils literal"><span class="pre">examine</span></tt> to do the actual work of your plugins. <tt class="docutils literal"><span class="pre">examine</span></tt> should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. <tt class="docutils literal"><span class="pre">return</span> <span class="pre">DEFER,</span> <span class="pre">'please</span> <span class="pre">try</span> <span class="pre">again</span> <span class="pre">later'</span></tt>
-In plugin you usually only have to import things from <a class="reference internal" href="api.html#api-shared"><em>fuglu.shared</em></a> , so it&#8217;s probably a good idea to get familiar with  that module.</p>
+<p>Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from <code class="docutils literal"><span class="pre">ScannerPlugin</span></code>, override <code class="docutils literal"><span class="pre">__str__</span></code> to provide a nice human readable name and override <code class="docutils literal"><span class="pre">examine</span></code> to do the actual work of your plugins. <code class="docutils literal"><span class="pre">examine</span></code> should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. <code class="docutils literal"><span class="pre">return</span> <span class="pre">DEFER,</span> <span class="pre">'please</span> <span class="pre">try</span> <span class="pre">again</span> <span class="pre">later'</span></code>
+In plugin you usually only have to import things from <a class="reference internal" href="api.html#api-shared"><span>fuglu.shared</span></a> , so it&#8217;s probably a good idea to get familiar with  that module.</p>
 <p>This is a quick example of how your plugin code skeleton would look like:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
 
@@ -898,17 +900,17 @@ In plugin you usually only have to import things from <a class="reference intern
         <span class="k">return</span> <span class="n">DUNNO</span>
 </pre></div>
 </div>
-<p>First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, <tt class="docutils literal"><span class="pre">DUNNO</span></tt> might be enough depending on what your plugin does.</p>
+<p>First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, <code class="docutils literal"><span class="pre">DUNNO</span></code> might be enough depending on what your plugin does.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
 </pre></div>
 </div>
-<p>in <tt class="docutils literal"><span class="pre">__init__</span></tt> you only call BasicPlugin&#8217;s <tt class="docutils literal"><span class="pre">__init__</span></tt>  for now. This sets <tt class="docutils literal"><span class="pre">self.config</span></tt> and <tt class="docutils literal"><span class="pre">self.section</span></tt> on the object where you later can read config options (eg. <tt class="docutils literal"><span class="pre">self.config.get(self.section,'somevalue')</span></tt>.  Do <strong>NOT</strong> load the plugin configuration here. <tt class="docutils literal"><span class="pre">__init__</span></tt> is only called once when fuglu starts up. Always load plugin config in <tt class="docutils literal"><span class="pre">examine</span></tt>.</p>
+<p>in <code class="docutils literal"><span class="pre">__init__</span></code> you only call BasicPlugin&#8217;s <code class="docutils literal"><span class="pre">__init__</span></code>  for now. This sets <code class="docutils literal"><span class="pre">self.config</span></code> and <code class="docutils literal"><span class="pre">self.section</span></code> on the object where you later can read config options (eg. <code class="docutils literal"><span class="pre">self.config.get(self.section,'somevalue')</span></code>.  Do <strong>NOT</strong> load the plugin configuration here. <code class="docutils literal"><span class="pre">__init__</span></code> is only called once when fuglu starts up. Always load plugin config in <code class="docutils literal"><span class="pre">examine</span></code>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>then code your <tt class="docutils literal"><span class="pre">examine</span></tt> method. You will have to work with <a class="reference internal" href="api.html#api-suspect"><em>The Suspect class</em></a>, which is a representation of the message being analyzed. The suspect has <tt class="docutils literal"><span class="pre">tags</span></tt> that are read and written by plugins.
-You can tag a message as virus, as spam, define your own tags, read tags from previous plugins... it&#8217;s probably a good idea to look at the Suspect class in <tt class="docutils literal"><span class="pre">fuglu.shared</span></tt> to get a list of things you can do with the suspect.</p>
+<p>then code your <code class="docutils literal"><span class="pre">examine</span></code> method. You will have to work with <a class="reference internal" href="api.html#api-suspect"><span>The Suspect class</span></a>, which is a representation of the message being analyzed. The suspect has <code class="docutils literal"><span class="pre">tags</span></code> that are read and written by plugins.
+You can tag a message as virus, as spam, define your own tags, read tags from previous plugins... it&#8217;s probably a good idea to look at the Suspect class in <code class="docutils literal"><span class="pre">fuglu.shared</span></code> to get a list of things you can do with the suspect.</p>
 <div class="section" id="common-tasks-api-faq">
 <h3>Common Tasks (&#8220;API&#8221; FAQ)<a class="headerlink" href="#common-tasks-api-faq" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="define-configuration-options-for-your-plugin">
@@ -939,17 +941,17 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 <p>The &#8216;dict of dicts&#8217; uses your config option name as key for the outer dict. The inner dict supports the following keys:</p>
 <blockquote>
 <div><ul class="simple">
-<li><tt class="docutils literal"><span class="pre">default</span></tt> - default value, used if the option is not specified in the config file</li>
-<li><tt class="docutils literal"><span class="pre">section</span></tt> - config section to check. by default fuglu assumes that the plugin reads its own config section. override this if your plugin requires a config option from a different plugin or from the main config</li>
-<li><tt class="docutils literal"><span class="pre">confidential</span></tt> - set this to True if fuglu_conf should treat this option confidential and redact it in &#8216;fuglu_conf -n&#8217; (passwords etc)</li>
-<li><tt class="docutils literal"><span class="pre">validator</span></tt> - function that should be called to validate if the configured value is valid. the function will receive the value as argument and must return True or False</li>
-<li><tt class="docutils literal"><span class="pre">deprecated</span></tt> - mark a config option as deprecated</li>
+<li><code class="docutils literal"><span class="pre">default</span></code> - default value, used if the option is not specified in the config file</li>
+<li><code class="docutils literal"><span class="pre">section</span></code> - config section to check. by default fuglu assumes that the plugin reads its own config section. override this if your plugin requires a config option from a different plugin or from the main config</li>
+<li><code class="docutils literal"><span class="pre">confidential</span></code> - set this to True if fuglu_conf should treat this option confidential and redact it in &#8216;fuglu_conf -n&#8217; (passwords etc)</li>
+<li><code class="docutils literal"><span class="pre">validator</span></code> - function that should be called to validate if the configured value is valid. the function will receive the value as argument and must return True or False</li>
+<li><code class="docutils literal"><span class="pre">deprecated</span></code> - mark a config option as deprecated</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="read-the-config">
 <h4>Read the config<a class="headerlink" href="#read-the-config" title="Permalink to this headline">¶</a></h4>
-<p>Configs in fuglu are stored in <tt class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></tt> (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own Section named like the Plugin Class.</p>
+<p>Configs in fuglu are stored in <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></code> (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own Section named like the Plugin Class.</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">DemoPlugin</span><span class="p">]</span>
 <span class="n">maxsize</span><span class="o">=</span><span class="mi">10382</span>
@@ -959,17 +961,17 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 <div class="highlight-python"><div class="highlight"><pre><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;maxsize&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Important: always load the configs in <tt class="docutils literal"><span class="pre">examine</span></tt> (and not in <tt class="docutils literal"><span class="pre">init</span></tt> !). Reading the config in init breaks loading default values and prevents on-the-fly config reload</p>
+<p>Important: always load the configs in <code class="docutils literal"><span class="pre">examine</span></code> (and not in <code class="docutils literal"><span class="pre">init</span></code> !). Reading the config in init breaks loading default values and prevents on-the-fly config reload</p>
 </div>
 <div class="section" id="get-the-message-source">
 <h4>Get the message source<a class="headerlink" href="#get-the-message-source" title="Permalink to this headline">¶</a></h4>
-<p>Use <tt class="docutils literal"><span class="pre">suspect.get_source()</span></tt> to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.</p>
+<p>Use <code class="docutils literal"><span class="pre">suspect.get_source()</span></code> to get the message source. The maxbytes option allows you to get only a part of the source. Reading the whole source can slow down scanning of big messages.</p>
 </div>
 <div class="section" id="add-headers">
 <h4>Add headers<a class="headerlink" href="#add-headers" title="Permalink to this headline">¶</a></h4>
-<p><tt class="docutils literal"><span class="pre">suspect.add_header(headername,headervalue)</span></tt></p>
+<p><code class="docutils literal"><span class="pre">suspect.add_header(headername,headervalue)</span></code></p>
 <p>By default, headers are added to the message shortly before it is re-injected into postfix.
-add <tt class="docutils literal"><span class="pre">immediate=True</span></tt> to add the header immediately, so other plugins can see it.</p>
+add <code class="docutils literal"><span class="pre">immediate=True</span></code> to add the header immediately, so other plugins can see it.</p>
 </div>
 <div class="section" id="write-to-the-log">
 <h4>Write to the log<a class="headerlink" href="#write-to-the-log" title="Permalink to this headline">¶</a></h4>
@@ -981,19 +983,19 @@ add <tt class="docutils literal"><span class="pre">immediate=True</span></tt> to
 </div>
 <div class="section" id="write-debug-info">
 <h4>Write debug info<a class="headerlink" href="#write-debug-info" title="Permalink to this headline">¶</a></h4>
-<p>To make the plugin write special debug info when <tt class="docutils literal"><span class="pre">fuglu_debug</span></tt> is used, use:</p>
+<p>To make the plugin write special debug info when <code class="docutils literal"><span class="pre">fuglu_debug</span></code> is used, use:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">suspect</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;debug info from DemoPlugin!&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="make-plugin-lint-able">
 <h4>Make plugin &#8216;&#8211;lint&#8217;-able<a class="headerlink" href="#make-plugin-lint-able" title="Permalink to this headline">¶</a></h4>
-<p>By default, <tt class="docutils literal"><span class="pre">lint()</span></tt> only validates the plugin&#8217;s configuration settings from <tt class="docutils literal"><span class="pre">self.requiredvars</span></tt>. You can override <tt class="docutils literal"><span class="pre">lint()</span></tt> to do more stuff.</p>
+<p>By default, <code class="docutils literal"><span class="pre">lint()</span></code> only validates the plugin&#8217;s configuration settings from <code class="docutils literal"><span class="pre">self.requiredvars</span></code>. You can override <code class="docutils literal"><span class="pre">lint()</span></code> to do more stuff.</p>
 <blockquote>
 <div><ul class="simple">
-<li>use simple <tt class="docutils literal"><span class="pre">print</span></tt> in this method, no logging stuff.</li>
-<li>if you override <tt class="docutils literal"><span class="pre">lint()</span></tt> you should run <tt class="docutils literal"><span class="pre">self.checkConfig()</span></tt> to test the configuration</li>
-<li><tt class="docutils literal"><span class="pre">lint()</span></tt> must return True or False</li>
+<li>use simple <code class="docutils literal"><span class="pre">print</span></code> in this method, no logging stuff.</li>
+<li>if you override <code class="docutils literal"><span class="pre">lint()</span></code> you should run <code class="docutils literal"><span class="pre">self.checkConfig()</span></code> to test the configuration</li>
+<li><code class="docutils literal"><span class="pre">lint()</span></code> must return True or False</li>
 </ul>
 </div></blockquote>
 <p>Example of a plugin that would check if an imap account is available:</p>
@@ -1043,14 +1045,14 @@ class MyPlugin(ScannerPlugin):
         self.filter=None
 </pre></div>
 </div>
-<p>In <tt class="docutils literal"><span class="pre">examine</span></tt> create the filter if necessary</p>
+<p>In <code class="docutils literal"><span class="pre">examine</span></code> create the filter if necessary</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">=</span><span class="n">SuspectFilter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;myrulesfile&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Run the filter in examine: <tt class="docutils literal"><span class="pre">(match,arg)=self.filter.matches(suspect)</span></tt>
-<tt class="docutils literal"><span class="pre">match</span></tt> is a boolean, telling you if one of the rules matched
-<cite>arg`</cite> is an additional argument which have been appended to the filter rule in the config. lets say, the filter rule reads <tt class="docutils literal"><span class="pre">to_address</span> <span class="pre">example&#64;fuglu.org</span> <span class="pre">hello</span> <span class="pre">world!</span></tt>, you would get match=True and arg=&#8217;Hello world!&#8217; if the message is sent to <a class="reference external" href="mailto:example&#37;&#52;&#48;fuglu&#46;org">example<span>&#64;</span>fuglu<span>&#46;</span>org</a></p>
+<p>Run the filter in examine: <code class="docutils literal"><span class="pre">(match,arg)=self.filter.matches(suspect)</span></code>
+<code class="docutils literal"><span class="pre">match</span></code> is a boolean, telling you if one of the rules matched
+<cite>arg`</cite> is an additional argument which have been appended to the filter rule in the config. lets say, the filter rule reads <code class="docutils literal"><span class="pre">to_address</span> <span class="pre">example&#64;fuglu.org</span> <span class="pre">hello</span> <span class="pre">world!</span></code>, you would get match=True and arg=&#8217;Hello world!&#8217; if the message is sent to <a class="reference external" href="mailto:example&#37;&#52;&#48;fuglu&#46;org">example<span>&#64;</span>fuglu<span>&#46;</span>org</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">match</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">arg</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
@@ -1079,16 +1081,16 @@ with fuglu &gt;=0.6.0 you can also get the most recent exceptions with the follo
 </div>
 <div class="section" id="debug-the-plugin-while-fuglu-is-runnig">
 <h4>Debug the plugin while fuglu is runnig<a class="headerlink" href="#debug-the-plugin-while-fuglu-is-runnig" title="Permalink to this headline">¶</a></h4>
-<p>run <tt class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--console</span></tt> to enter an interactive python console after fuglu startup. Your plugin is then available via the list <tt class="docutils literal"><span class="pre">mc.plugins</span></tt></p>
+<p>run <code class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--console</span></code> to enter an interactive python console after fuglu startup. Your plugin is then available via the list <code class="docutils literal"><span class="pre">mc.plugins</span></code></p>
 </div>
 <div class="section" id="debug-a-plugin-without-running-fuglu">
 <h4>Debug a plugin without running fuglu<a class="headerlink" href="#debug-a-plugin-without-running-fuglu" title="Permalink to this headline">¶</a></h4>
-<p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn&#8217;t require a running fuglu or postfix. it will create a dummy suspect, call the plugin&#8217;s examine method and print the result (and debug output).</p>
-<p>the generated input messag is stored as: <tt class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_in.eml</span></tt></p>
-<p>if your plugin modified the message source, the resulting message can be found at <tt class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_out.eml</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">plugdummy.py</span></tt> is located in the <tt class="docutils literal"><span class="pre">develop/scripts</span></tt> directory.</p>
+<p><code class="docutils literal"><span class="pre">plugdummy.py</span></code> is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn&#8217;t require a running fuglu or postfix. it will create a dummy suspect, call the plugin&#8217;s examine method and print the result (and debug output).</p>
+<p>the generated input messag is stored as: <code class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_in.eml</span></code></p>
+<p>if your plugin modified the message source, the resulting message can be found at <code class="docutils literal"><span class="pre">/tmp/fuglu_dummy_message_out.eml</span></code></p>
+<p><code class="docutils literal"><span class="pre">plugdummy.py</span></code> is located in the <code class="docutils literal"><span class="pre">develop/scripts</span></code> directory.</p>
 <p>simple usage:</p>
-<p>assuming your plugin file (&#8216;myplugin.py&#8217;) is in <tt class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></tt> you can run <tt class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">&lt;pluginname&gt;</span></tt></p>
+<p>assuming your plugin file (&#8216;myplugin.py&#8217;) is in <code class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></code> you can run <code class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">&lt;pluginname&gt;</span></code></p>
 <div class="highlight-python"><div class="highlight"><pre>#./plugdummy.py myplugin.ExamplePlugin
 
 INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
@@ -1099,7 +1101,7 @@ INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=r
 </pre></div>
 </div>
 <p>Advanced usage:</p>
-<p>run <tt class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">--help</span></tt> to get a list of all options</p>
+<p>run <code class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">--help</span></code> to get a list of all options</p>
 <p>Examples:</p>
 <p>Running plugins from a different directory</p>
 <div class="highlight-python"><div class="highlight"><pre>./plugdummy.py -p /tmp/ myplugin.ExamplePlugin
@@ -1189,11 +1191,11 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
 <h3>Deploying Plugins<a class="headerlink" href="#deploying-plugins" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
-<li>If there is no <tt class="docutils literal"><span class="pre">plugindir</span></tt> set in fuglu.conf yet, define a new directory for custom plugins. eg <tt class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></tt>.</li>
+<li>If there is no <code class="docutils literal"><span class="pre">plugindir</span></code> set in fuglu.conf yet, define a new directory for custom plugins. eg <code class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></code>.</li>
 <li>Copy your plugin file to this directory</li>
-<li>Depending on the type of your plugin, add it to the plugin/prependers/appenders config option. Eg. if your scanner plugin class is <tt class="docutils literal"><span class="pre">MyHeloPlugin</span></tt> in the file myplugin.py you would add <tt class="docutils literal"><span class="pre">myplugin.MyHeloPlugin</span></tt> to the <tt class="docutils literal"><span class="pre">plugins</span></tt> config</li>
+<li>Depending on the type of your plugin, add it to the plugin/prependers/appenders config option. Eg. if your scanner plugin class is <code class="docutils literal"><span class="pre">MyHeloPlugin</span></code> in the file myplugin.py you would add <code class="docutils literal"><span class="pre">myplugin.MyHeloPlugin</span></code> to the <code class="docutils literal"><span class="pre">plugins</span></code> config</li>
 <li>If your plugin reads configuration entries, make sure those are present in fuglu.conf or in a custom conf-file in /etc/fuglu/conf.d</li>
-<li>Run <tt class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--lint</span></tt> to check if fuglu is happy with your new plugin</li>
+<li>Run <code class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--lint</span></code> to check if fuglu is happy with your new plugin</li>
 <li>(Re)start fuglu</li>
 </ul>
 </div></blockquote>
@@ -1205,7 +1207,7 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper"><div class="sphinxlocaltoc">
     <h3><a href="index.html">Page contents</a></h3>
     <ul>
@@ -1326,12 +1328,14 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
     <p class="topless"><a href="help-index.html"
                           title="Next page">&rarr; Support</a></p>
   </div>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/plugins-index.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/plugins-index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -1350,7 +1354,7 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
     </div>
     <div class="relbar-bottom">
         
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -1371,9 +1375,9 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
     </div>
     </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
