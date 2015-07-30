@@ -3,7 +3,7 @@ import platform
 from socket import socket, AF_INET, SOCK_DGRAM
 
 class PluginTime(AppenderPlugin):
-    """Send Plugin execution time to a statsd server"""
+    """EXPERIMENTAL: Send Plugin execution time to a statsd server"""
 
     def __init__(self,config,section=None):
         AppenderPlugin.__init__(self,config,section)
@@ -38,7 +38,7 @@ class PluginTime(AppenderPlugin):
         self.sock.sendto(buffer.encode('utf-8'), addr)
 
 class MessageStatus(AppenderPlugin):
-    """Send message status to a statsd server"""
+    """EXPERIMENTAL: Send message status to a statsd server"""
 
     def __init__(self,config,section=None):
         AppenderPlugin.__init__(self,config,section)
@@ -76,7 +76,7 @@ class MessageStatus(AppenderPlugin):
         self.sock.sendto(buffer.encode('utf-8'), addr)
 
 class MessageStatusPerRecipient(AppenderPlugin):
-    """Send per recipient stats to a statsd server"""
+    """EXPERIMENTAL: Send per recipient stats to a statsd server"""
 
     def __init__(self,config,section=None):
         AppenderPlugin.__init__(self,config,section)
@@ -94,7 +94,7 @@ class MessageStatusPerRecipient(AppenderPlugin):
             },
             'level':{
                 'default':'domain',
-                'description':'domain or email'
+                'description':'domain: send stats per recipient domain. email: send stats per recipient email address'
             }
         }
         self.sock = None
