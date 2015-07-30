@@ -27,6 +27,8 @@ Make sure all tests pass
 ------------------------
 cd fuglu/tests
 nosetests-2.7 unit
+
+#start clamd/spamassassin first
 nosetests-2.7 integration
 
 fix code style
