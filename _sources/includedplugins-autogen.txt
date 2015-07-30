@@ -594,6 +594,57 @@ Configuration
 
 
 
+DrWeb AV
+........
+
+Plugin: fuglu.plugins.drweb.DrWebPlugin
+
+ This plugin passes suspects to a DrWeb scan daemon
+
+EXPERIMENTAL Plugin: has not been tested in production.
+
+Prerequisites: Dr.Web unix version must be installed and running, not necessarily on the same box as fuglu though.
+
+Notes for developers:
+
+Tags:
+
+ * sets ``virus['drweb']`` (boolean)
+ * sets ``DrWebPlugin.virus`` (list of strings) - virus names found in message
+
+
+Configuration
+-------------
+
+::
+
+    [DrWebPlugin]
+    #maximum retries on failed connections
+    retries=3
+
+    #hostname where fpscand runs
+    host=localhost
+
+    #reject message template if running in pre-queue mode and virusaction=REJECT
+    rejectmessage=threat detected: ${virusname}
+
+    #network timeout
+    timeout=30
+
+    #plugin action if scan fails
+    problemaction=DEFER
+
+    #maximum message size to scan
+    maxsize=22000000
+
+    #DrWeb daemon port
+    port=3000
+
+    #plugin action if threat is detected
+    virusaction=DEFAULTVIRUSACTION
+
+
+
 Action Override
 ...............
 
@@ -837,5 +888,71 @@ Configuration
 
     #don't run appender plugins for debugged messages
     noappender=1
+
+
+
+Statsd Sender: Plugin Time
+..........................
+
+Plugin: fuglu.plugins.a_statsd.PluginTime
+
+EXPERIMENTAL: Send Plugin execution time to a statsd server
+
+Configuration
+-------------
+
+::
+
+    [PluginTime]
+    #statsd host
+    host=127.0.0.1
+
+    #statsd port
+    port=8125
+
+
+
+Statsd Sender: Global Message Status
+....................................
+
+Plugin: fuglu.plugins.a_statsd.MessageStatus
+
+EXPERIMENTAL: Send message status to a statsd server
+
+Configuration
+-------------
+
+::
+
+    [MessageStatus]
+    #statsd host
+    host=127.0.0.1
+
+    #statsd port
+    port=8125
+
+
+
+Statsd Sender: Per Recipient Message Status
+...........................................
+
+Plugin: fuglu.plugins.a_statsd.MessageStatusPerRecipient
+
+EXPERIMENTAL: Send per recipient stats to a statsd server
+
+Configuration
+-------------
+
+::
+
+    [MessageStatusPerRecipient]
+    #statsd host
+    host=127.0.0.1
+
+    #statsd port
+    port=8125
+
+    #domain: send stats per recipient domain. email: send stats per recipient email address
+    level=domain
 
 
