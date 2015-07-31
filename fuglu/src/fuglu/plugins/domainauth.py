@@ -201,7 +201,7 @@ If fuglu handles both incoming and outgoing mails you should make sure that this
     def examine(self, suspect):
         if not DKIMPY_AVAILABLE:
             suspect.debug("dkimpy not available, can not check")
-            self._logger.error("DKIM signing skipped - missing dkimpy library")
+            self._logger().error("DKIM signing skipped - missing dkimpy library")
             return DUNNO
 
         message = suspect.get_source()
