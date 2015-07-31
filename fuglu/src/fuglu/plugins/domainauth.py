@@ -126,6 +126,11 @@ It is currently recommended to leave both header and body canonicalization as 'r
 
         return self.checkConfig()
 
+#test:
+# plugdummy.py -p ...  domainauth.DKIMSignPlugin -s <sender> -o canonicalizeheaders:relaxed -o canonicalizebody:simple -o signbodylength:False
+# cat /tmp/fuglu_dummy_message_out.eml | swaks -f <sender>  -s <server> -au <username> -ap <password> -4 -p 587 -tls -d -  -t <someuser>@gmail.com
+
+
 
 class DKIMSignPlugin(ScannerPlugin):
 
@@ -145,6 +150,13 @@ Setting up your keys:
 
 
 If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails
+
+
+known issues:
+
+ - setting canonicalizeheaders = simple will cause invalid signature.
+ - signbodylength causes a crash in dkimlib "TypeError: sequence item 1: expected string, int found"
+
     """
 
     def __init__(self, config, section=None):
