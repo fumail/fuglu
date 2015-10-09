@@ -989,7 +989,7 @@ In plugin you usually only have to import things from <a class="reference intern
         <span class="c">#maxsize=self.config.getint(self.section, &#39;maxsize&#39;)</span>
 
         <span class="c">#debug example</span>
-        <span class="c">#self._logger().debug(&#39;hello world from StubPlugin&#39;)</span>
+        <span class="c">#self._logger().debug(&#39;hello world from DemoPlugin&#39;)</span>
 
         <span class="c">#PUT PLUGIN CODE HERE</span>
 
@@ -1120,7 +1120,7 @@ Note: It&#8217;s generally not recommended to change existing headers, this brea
             <span class="k">return</span> <span class="bp">False</span>
         <span class="k">return</span> <span class="bp">True</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s">&quot;Could not login to imap host:</span><span class="si">%s</span><span class="s"> - Error </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;StubPlugin&#39;</span><span class="p">,</span> <span class="s">&#39;host&#39;</span><span class="p">),</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;Could not login to imap host:</span><span class="si">%s</span><span class="s"> - Error </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s">&#39;host&#39;</span><span class="p">),</span><span class="n">e</span><span class="p">)</span>
     <span class="k">return</span> <span class="bp">False</span>
 </pre></div>
 </div>

@@ -181,7 +181,7 @@ This is a quick example of how your plugin code skeleton would look like:
 		#maxsize=self.config.getint(self.section, 'maxsize')
 		
 		#debug example
-		#self._logger().debug('hello world from StubPlugin')
+		#self._logger().debug('hello world from DemoPlugin')
 		  
 		#PUT PLUGIN CODE HERE
 		
@@ -356,7 +356,7 @@ Example of a plugin that would check if an imap account is available:
                 return False
             return True
         except Exception, e:
-            print "Could not login to imap host:%s - Error %s"%(self.config.get('StubPlugin', 'host'),e)
+            print "Could not login to imap host:%s - Error %s"%(self.config.get(self.section, 'host'),e)
         return False
 
 
