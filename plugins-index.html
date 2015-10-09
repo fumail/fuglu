@@ -1069,6 +1069,16 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 <p>By default, headers are added to the message shortly before it is re-injected into postfix.
 add <code class="docutils literal"><span class="pre">immediate=True</span></code> to add the header immediately, so other plugins can see it.</p>
 </div>
+<div class="section" id="replace-headers">
+<h4>Replace headers<a class="headerlink" href="#replace-headers" title="Permalink to this headline">¶</a></h4>
+<p>Here&#8217;s an example on how to change the subject of a message.
+Note: It&#8217;s generally not recommended to change existing headers, this breaks DKIM.</p>
+<p><code class="docutils literal"><span class="pre">`</span>
+<span class="pre">msgrep</span> <span class="pre">=</span> <span class="pre">suspect.get_message_rep()</span>
+<span class="pre">msgrep.replace_header('Subject',</span> <span class="pre">'Scanned:</span> <span class="pre">'+msgrep['Subject'])</span>
+<span class="pre">suspect.set_message_rep(msgrep)</span>
+<span class="pre">`</span></code></p>
+</div>
 <div class="section" id="write-to-the-log">
 <h4>Write to the log<a class="headerlink" href="#write-to-the-log" title="Permalink to this headline">¶</a></h4>
 <p>Your plugin has a _logger method that returns a standard python logger object, so you can use the info / debug / error / fatal methods.</p>
@@ -1409,6 +1419,7 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
 <li><a class="reference internal" href="#read-the-config">Read the config</a></li>
 <li><a class="reference internal" href="#get-the-message-source">Get the message source</a></li>
 <li><a class="reference internal" href="#add-headers">Add headers</a></li>
+<li><a class="reference internal" href="#replace-headers">Replace headers</a></li>
 <li><a class="reference internal" href="#write-to-the-log">Write to the log</a></li>
 <li><a class="reference internal" href="#write-debug-info">Write debug info</a></li>
 <li><a class="reference internal" href="#make-plugin-lint-able">Make plugin &#8216;&#8211;lint&#8217;-able</a></li>
