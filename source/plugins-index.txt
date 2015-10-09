@@ -284,7 +284,9 @@ Use ``suspect.get_source()`` to get the message source. The maxbytes option allo
 Add headers
 -----------
 
-``suspect.add_header(headername,headervalue)``
+::
+
+    suspect.add_header(headername,headervalue)
 
 By default, headers are added to the message shortly before it is re-injected into postfix.
 add ``immediate=True`` to add the header immediately, so other plugins can see it.

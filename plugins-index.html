@@ -1065,7 +1065,9 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 </div>
 <div class="section" id="add-headers">
 <h4>Add headers<a class="headerlink" href="#add-headers" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">suspect.add_header(headername,headervalue)</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="n">headername</span><span class="p">,</span><span class="n">headervalue</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>By default, headers are added to the message shortly before it is re-injected into postfix.
 add <code class="docutils literal"><span class="pre">immediate=True</span></code> to add the header immediately, so other plugins can see it.</p>
 </div>
