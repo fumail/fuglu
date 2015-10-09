@@ -297,11 +297,11 @@ Here's an example on how to change the subject of a message.
 Note: It's generally not recommended to change existing headers, this breaks DKIM.
 
 
-```
-msgrep = suspect.get_message_rep()
-msgrep.replace_header('Subject', 'Scanned: '+msgrep['Subject'])
-suspect.set_message_rep(msgrep)
-```
+::
+
+    msgrep = suspect.get_message_rep()
+    msgrep.replace_header('Subject', 'Scanned: '+msgrep['Subject'])
+    suspect.set_message_rep(msgrep)
 
 
 Write to the log

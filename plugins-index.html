@@ -1073,11 +1073,11 @@ add <code class="docutils literal"><span class="pre">immediate=True</span></code
 <h4>Replace headers<a class="headerlink" href="#replace-headers" title="Permalink to this headline">¶</a></h4>
 <p>Here&#8217;s an example on how to change the subject of a message.
 Note: It&#8217;s generally not recommended to change existing headers, this breaks DKIM.</p>
-<p><code class="docutils literal"><span class="pre">`</span>
-<span class="pre">msgrep</span> <span class="pre">=</span> <span class="pre">suspect.get_message_rep()</span>
-<span class="pre">msgrep.replace_header('Subject',</span> <span class="pre">'Scanned:</span> <span class="pre">'+msgrep['Subject'])</span>
-<span class="pre">suspect.set_message_rep(msgrep)</span>
-<span class="pre">`</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">msgrep</span> <span class="o">=</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_message_rep</span><span class="p">()</span>
+<span class="n">msgrep</span><span class="o">.</span><span class="n">replace_header</span><span class="p">(</span><span class="s">&#39;Subject&#39;</span><span class="p">,</span> <span class="s">&#39;Scanned: &#39;</span><span class="o">+</span><span class="n">msgrep</span><span class="p">[</span><span class="s">&#39;Subject&#39;</span><span class="p">])</span>
+<span class="n">suspect</span><span class="o">.</span><span class="n">set_message_rep</span><span class="p">(</span><span class="n">msgrep</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="write-to-the-log">
 <h4>Write to the log<a class="headerlink" href="#write-to-the-log" title="Permalink to this headline">¶</a></h4>
