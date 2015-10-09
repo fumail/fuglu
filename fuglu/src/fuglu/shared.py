@@ -191,9 +191,8 @@ class Suspect(object):
         self.timestamp = time.time()
         self.id = self._generate_id()
 
-        # headers
+        # headers which are prepended before re-injecting the message
         self.addheaders = {}
-        self.replaceheaders = {}
 
         # helper attributes
         if self.from_address == None:
