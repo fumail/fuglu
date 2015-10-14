@@ -39,9 +39,8 @@ class SuspectFilterTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_hf(self):
-        """Test header filters"""
-
+    def test_sf_get_args(self):
+        """Test SuspectFilter files"""
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         suspect.tags['testtag'] = 'testvalue'
@@ -75,7 +74,12 @@ class SuspectFilterTestCase(unittest.TestCase):
 
         # TODO: raw body rules
 
-        # extended
+    def test_sf_matches(self):
+        """Test SuspectFilter extended matches"""
+
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+
         (match, info) = self.candidate.matches(suspect, extended=True)
         self.failUnless(match, 'Match should return True')
         field, matchedvalue, arg, regex = info
@@ -83,6 +87,19 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.failUnless(matchedvalue == 'unittests.fuglu.org')
         self.failUnless(arg == 'Sent to unittest domain!')
         self.failUnless(regex == 'unittests\.fuglu\.org')
+
+    def test_sf_get_field(self):
+        """Test SuspectFilter field extract"""
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+
+        # additional field tests
+        self.assertEqual(self.candidate.get_field(
+            suspect, 'clienthelo')[0], 'helo1')
+        self.assertEqual(self.candidate.get_field(
+            suspect, 'clientip')[0], '10.0.0.1')
+        self.assertEqual(self.candidate.get_field(
+            suspect, 'clienthostname')[0], 'rdns1')
 
     def test_strip(self):
         html = """foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
