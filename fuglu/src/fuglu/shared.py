@@ -783,6 +783,9 @@ class SuspectFilter(object):
             envelope_to (or to_address)
             from_domain
             to_domain
+            clientip
+            clienthostname (fcrdns or 'unknown')
+            clienthelo
 
         tags
             @tagname
@@ -805,6 +808,17 @@ class SuspectFilter(object):
             return [suspect.to_domain, ]
         if headername == 'body:full':
             return [suspect.get_original_source()]
+
+        if headername in ['clientip', 'clienthostname', 'clienthelo']:
+            clinfo = suspect.get_client_info()
+            if clinfo == None:
+                return []
+            if headername == 'clienthelo':
+                return [clinfo[0], ]
+            if headername == 'clientip':
+                return [clinfo[1], ]
+            if headername == 'clienthostname':
+                return [clinfo[2], ]
 
         # if it starts with a @ we return a tag, not a header
         if headername[0:1] == '@':
