@@ -652,10 +652,15 @@ class MainController(object):
 
         try:
             import magic
-            magic_vers = "python-magic (https://github.com/ahupp/python-magic)"
+
             if hasattr(magic, 'open'):
                 magic_vers = "python-file/libmagic bindings (http://www.darwinsys.com/file/)"
-            print fc.strcolor('magic: found %s' % magic_vers, 'green')
+                print fc.strcolor('magic: found %s' % magic_vers, 'green')
+            elif hasattr(magic, 'from_buffer'):
+                magic_vers = "python-magic (https://github.com/ahupp/python-magic)"
+                print fc.strcolor('magic: found %s' % magic_vers, 'green')
+            else:
+                print fc.strcolor('magic: unsupported version', 'yellow') + " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic"
         except:
             print fc.strcolor('magic: not installed', 'yellow') + " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled"
 
