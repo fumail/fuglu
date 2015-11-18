@@ -354,6 +354,7 @@ class ESMTPPassthroughSession(object):
         return rv, keep
 
     def doData(self, data):
+        data = self.unquoteData(data)
         # store the last few bytes in memory to keep track when the msg is
         # finished
         self.dataAccum = self.dataAccum + data
@@ -373,6 +374,10 @@ class ESMTPPassthroughSession(object):
         else:
             self.tempfile.write(data)
             return None
+
+    def unquoteData(self, data):
+        """two leading dots at the beginning of a line must be unquoted to a single dot"""
+        return re.sub(r'(?m)^\.\.', '.', data)
 
     def stripAddress(self, address):
         """
