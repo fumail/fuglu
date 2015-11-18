@@ -6,7 +6,7 @@ RUN yum -y install python-setuptools wget gcc
 RUN easy_install supervisor
 
 #Clam
-RUN yum install -y http://mirror.switch.ch/ftp/mirror/epel/beta/7/x86_64/epel-release-7-0.2.noarch.rpm
+RUN yum install -y http://mirror.switch.ch/ftp/mirror/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 RUN yum install -y clamav clamav-scanner clamav-update
 RUN echo "Foreground yes" > /etc/freshclam.conf
 RUN echo "DatabaseMirror database.clamav.net" >> /etc/freshclam.conf
@@ -54,4 +54,6 @@ RUN mkdir -p /usr/local/fuglu/plugins && chown -R nobody:nobody /usr/local/fuglu
 RUN for file in /etc/fuglu/*.dist; do mv "$file" "/etc/fuglu/`basename -s .dist $file `" ; done
 ADD logging.conf /etc/fuglu/logging.conf
 
-
+#tools for container management
+RUN yum install -y psmisc
+ADD update-fuglu.sh /usr/local/bin/update-fuglu.sh
