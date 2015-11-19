@@ -66,7 +66,7 @@ def check_version_status(lint=False):
         logging.warn("could not parse my version string %s" % FUGLU_VERSION)
         return
     parts = m.groupdict()
-    if 'commitid' not in parts:
+    if 'commitid' not in parts or parts['commitid'] == None:
         parts['commitid'] = 'release'
 
     lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(
