@@ -1,3 +1,10 @@
+-- Fuglu 0.6.5, 2015-11-19
+ * core: Fix unquote lines with leading dots in pre-queue mode
+ * core: Specifiy stricter default permissions for daemon's pidfile
+ * SuspectFilters: support new fields clienthostname, clientip, clienthelo
+ * smtp connector: don't crash if a plugin tries to backscatter using REJECT
+ * Attachment Plugin: improve detection of installed filemagic lib
+
 -- Fuglu 0.6.4, 2015-07-30
  * core: warn about known issues/security risks of current version in startup/lint.
    Note: This performs a DNS lookup containing *only* the current version number
