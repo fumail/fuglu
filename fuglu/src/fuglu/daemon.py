@@ -82,7 +82,7 @@ class DaemonStuff(object):
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        pidfd=os.open(self.pidfile, os.O_WRONLY|os.O_CREAT, 0644)
+        pidfd = os.open(self.pidfile, os.O_WRONLY | os.O_CREAT, 0644)
         os.write(pidfd, "%s\n" % pid)
         os.close(pidfd)
         return(0)

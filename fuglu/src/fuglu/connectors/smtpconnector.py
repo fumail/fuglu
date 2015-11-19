@@ -139,6 +139,7 @@ class SMTPHandler(ProtocolHandler):
     def reject(self, reason):
         self.sess.endsession(550, reason)
 
+
 class FUSMTPClient(smtplib.SMTP):
 
     """

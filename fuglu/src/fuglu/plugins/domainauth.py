@@ -126,10 +126,11 @@ It is currently recommended to leave both header and body canonicalization as 'r
 
         return self.checkConfig()
 
-#test:
+# test:
 # plugdummy.py -p ...  domainauth.DKIMSignPlugin -s <sender> -o canonicalizeheaders:relaxed -o canonicalizebody:simple -o signbodylength:False
-# cat /tmp/fuglu_dummy_message_out.eml | swaks -f <sender>  -s <server> -au <username> -ap <password> -4 -p 587 -tls -d -  -t <someuser>@gmail.com
-
+# cat /tmp/fuglu_dummy_message_out.eml | swaks -f <sender>  -s <server>
+# -au <username> -ap <password> -4 -p 587 -tls -d -  -t
+# <someuser>@gmail.com
 
 
 class DKIMSignPlugin(ScannerPlugin):
@@ -213,7 +214,8 @@ known issues:
     def examine(self, suspect):
         if not DKIMPY_AVAILABLE:
             suspect.debug("dkimpy not available, can not check")
-            self._logger().error("DKIM signing skipped - missing dkimpy library")
+            self._logger().error(
+                "DKIM signing skipped - missing dkimpy library")
             return DUNNO
 
         message = suspect.get_source()
