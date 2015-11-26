@@ -88,11 +88,6 @@ class DaemonStuff(object):
         return(0)
 
     def drop_privs(self, username='nobody', groupname='nobody'):
-        #starting_uid = os.getuid()
-        #starting_gid = os.getgid()
-        #starting_uid_name = pwd.getpwuid(starting_uid).pw_name
-        #starting_gid_name = grp.getgrgid(starting_gid).gr_name
-
         try:
             running_uid = pwd.getpwnam(username).pw_uid
             running_gid = grp.getgrnam(groupname).gr_gid
