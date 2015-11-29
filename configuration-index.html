@@ -348,7 +348,7 @@ smtpd_milters=inet:127.0.0.1:10028
   `section` varchar(255) NOT NULL,
   `option` varchar(255) NOT NULL,
   `value` varchar(255) NOT NULL,
-  PRIMARY KEY (scope,section,option)
+  PRIMARY KEY (`scope`,`section`,`option`)
 )
 </pre></div>
 </div>
