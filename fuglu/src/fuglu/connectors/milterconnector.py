@@ -55,7 +55,6 @@ class MilterHandler(ProtocolHandler):
         return suspect
 
     def commitback(self, suspect):
-        self.logger.info("Commitback...")
         self.sess.answer = self.sess.Continue()
         self.sess.finish()
         self.sess = None
