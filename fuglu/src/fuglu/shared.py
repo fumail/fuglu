@@ -423,10 +423,12 @@ class Suspect(object):
         """returns information about the client that submitted this message.
         (helo,ip,reversedns)
 
-        This information is extracted from the message Received: headers and therefore probably not 100% reliable
+        In before-queue mode this info is extracted using the XFORWARD SMTP protocol extension.
+
+        In after-queue mode this information is extracted from the message Received: headers and therefore probably not 100% reliable
         all information is returned as-is, this means for example, that non-fcrdns client will show 'unknown' as reverse dns value.
 
-        if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA
+        if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA (trustedhostregex / boundarydistance)
         """
         if self.clientinfo != None:
             return self.clientinfo
@@ -454,6 +456,8 @@ class Suspect(object):
         both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA
 
         returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex
+
+        Note: this does not currently handle IPv6 received headers
         """
         ignorere = None
         if ignoreregex != None and ignoreregex != '':
