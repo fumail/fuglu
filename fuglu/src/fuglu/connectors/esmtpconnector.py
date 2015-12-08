@@ -85,7 +85,7 @@ class ESMTPHandler(ProtocolHandler):
         suspect.recipients = set(sess.recipients)
 
         if sess.xforward_helo is not None and sess.xforward_addr is not None and sess.xforward_rdns is not None:
-            suspect.clientinfo = sess.xforward_rdns, sess.xforward_addr, sess.xforward_helo
+            suspect.clientinfo = sess.xforward_helo, sess.xforward_addr, sess.xforward_rdns
 
         return suspect
 

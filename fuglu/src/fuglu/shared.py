@@ -212,7 +212,7 @@ class Suspect(object):
                 raise ValueError, "invalid from email address: '%s'" % self.from_address
 
         self.clientinfo = None
-        """holds client info tuple: hostname, ip, reversedns"""
+        """holds client info tuple: helo, ip, reversedns"""
 
     def _generate_id(self):
         """
