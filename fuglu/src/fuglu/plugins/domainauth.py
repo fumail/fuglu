@@ -307,7 +307,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
 
         clientinfo = suspect.get_client_info(self.config)
         if clientinfo == None:
-            suspect.debug("pyspf not available, can not check")
+            suspect.debug("client info not available for SPF check")
             self._logger().warning(
                 "%s: SPF Check skipped, could not get client info" % (suspect.id))
             suspect.set_tag('SPF.status', 'skipped')
