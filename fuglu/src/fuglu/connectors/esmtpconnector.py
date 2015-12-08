@@ -83,6 +83,10 @@ class ESMTPHandler(ProtocolHandler):
 
         suspect = Suspect(fromaddr, toaddr, tempfilename)
         suspect.recipients = set(sess.recipients)
+
+        if sess.xforward_helo is not None and sess.xforward_addr is not None and sess.xforward_rdns is not None:
+            suspect.clientinfo = sess.xforward_rdns, sess.xforward_addr, sess.xforward_helo
+
         return suspect
 
     def commitback(self, suspect):
@@ -187,6 +191,10 @@ class ESMTPPassthroughSession(object):
         self.logger = logging.getLogger("fuglu.smtpsession")
         self.tempfile = None
         self.forwardconn = None
+
+        self.xforward_helo = None
+        self.xforward_addr = None
+        self.xforward_rdns = None
 
     def endsession(self, code, message):
         """End session with incoming postfix"""
@@ -349,9 +357,39 @@ class ESMTPPassthroughSession(object):
 
             return ("354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1)
 
+        if data[0:8].upper() == 'XFORWARD':
+            self.store_xforward(data)
+
         rv = self.forwardCommand(data)
 
         return rv, keep
+
+    def store_xforward(self, data):
+        parts = data.split()[1:]
+        for part in parts:
+            try:
+                key, value = part.split('=', 1)
+                key = key.upper()
+                if key == 'NAME':  # rdns
+                    if value.upper() == '[UNAVAILABLE]':
+                        self.xforward_rdns = 'unknown'
+                    else:
+                        self.xforward_rdns = value
+
+                if key == 'ADDR':  # IP
+                    if value.upper() == '[UNAVAILABLE]':
+                        continue
+                    if value.upper().startswith('IPV6:'):
+                        self.xforward_addr = value[6:]
+                    else:
+                        self.xforward_addr = value
+
+                if key == 'HELO':  # SMTP HELO
+                    if value.upper() == '[UNAVAILABLE]':
+                        continue
+                    self.xforward_helo = value
+            except:
+                continue
 
     def doData(self, data):
         data = self.unquoteData(data)
