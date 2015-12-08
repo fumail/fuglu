@@ -273,14 +273,12 @@ class PpyMilterDispatcher(object):
         """
         (hostname, data) = data.split('\0', 1)
         family = struct.unpack('c', data[0])[0]
-
-        # http://code.google.com/p/ppymilter/issues/detail?id=6
-        if family == 4 or family == 6:
+        if family in ('4','6'): # SMFIA_INET / SMFIA_INET6
             port = struct.unpack('!H', data[1:3])[0]
-            address = data[3:]
-        else:
-            port = 0
-            address = 'unknown'
+            address,_ = data[3:].split('\0',1)
+        else: # SMFIA_UNKNOWN / SMFIA_UNIX
+            port = None
+            address = None
         return (cmd, hostname, family, port, address)
 
     def _ParseHelo(self, cmd, data):
@@ -295,6 +293,8 @@ class PpyMilterDispatcher(object):
             cmd: The single character command code representing this command.
             data: TODO: parse this better
         """
+        data = data.split('\0')[0]
+
         return (cmd, data)
 
     def _ParseMailFrom(self, cmd, data):
