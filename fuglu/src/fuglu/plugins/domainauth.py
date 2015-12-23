@@ -185,7 +185,7 @@ known issues:
 
             'signheaders': {
                 'description': 'comma separated list of headers to sign. empty string=sign all headers',
-                'default': '',
+                'default': 'From,Reply-To,Subject,Date,To,CC,Resent-Date,Resent-From,Resent-To,Resent-CC,In-Reply-To,References,List-Id,List-Help,List-Unsubscribe,List-Subscribe,List-Post,List-Owner,List-Archive',
             },
 
             'signbodylength': {
