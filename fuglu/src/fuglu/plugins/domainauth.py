@@ -109,8 +109,9 @@ It is currently recommended to leave both header and body canonicalization as 'r
             suspect.debug("No dkim signature header found")
             return DUNNO
         d = DKIM(source, logger=suspect.get_tag('debugfile'))
+
         try:
-            valid = d.verify(source)
+            valid = d.verify()
         except DKIMException, de:
             self.logger.warning("%s: DKIM validation failed: %s" % (str(de)))
             valid = False
