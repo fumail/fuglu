@@ -1010,7 +1010,7 @@ class FileList(object):
     """Map all lines from a textfile into a list. If the file is changed, the list is refreshed automatically
     Each line can be run through a callback filter which can change or remove the content.
 
-    filename: The textfile which should be mapped to a list
+    filename: The textfile which should be mapped to a list. This can be changed at runtime. If None, an empty list will be returned.
     strip: remove leading/trailing whitespace from each line. Note that the newline character is always stripped
     skip_empty: skip empty lines (if used in combination with strip: skip all lines with only whitespace)
     skip_comments: skip lines starting with #
