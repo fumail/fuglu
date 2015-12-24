@@ -114,7 +114,7 @@ It is currently recommended to leave both header and body canonicalization as 'r
         try:
             valid = d.verify()
         except DKIMException, de:
-            self.logger.warning("%s: DKIM validation failed: %s" % (str(de)))
+            self.logger.warning("%s: DKIM validation failed: %s" % (suspect.id, str(de)))
             valid = False
 
         suspect.set_tag("DKIMVerify.sigvalid", valid)
