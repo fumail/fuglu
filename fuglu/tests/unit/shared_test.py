@@ -2,7 +2,8 @@ from unittestsetup import TESTDATADIR
 import unittest
 import ConfigParser
 import string
-from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT
+from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
+import os
 
 
 class SuspectTestCase(unittest.TestCase):
@@ -259,3 +260,29 @@ class ClientInfoTestCase(unittest.TestCase):
         self.assertEquals(helo, 'helo3')
         self.assertEquals(ip, '10.0.0.3')
         self.assertEquals(revdns, 'rdns3')
+
+
+class FileListTestCase(unittest.TestCase):
+
+    def setUp(self):
+        testdata = """CASE?
+{whitespace}stripped ?{whitespace}
+{whitespace}
+
+{whitespace}# no comment!
+""".format(whitespace='    ')
+        self.filename = '/tmp/fuglufilelisttest.txt'
+        open(self.filename, 'w').write(testdata)
+
+    def tearDown(self):
+        os.unlink(self.filename)
+
+    def test_filelist(self):
+        self.assertEqual(FileList(filename=self.filename, strip=True, skip_empty=True, skip_comments=True,
+                                  lowercase=False, additional_filters=None).get_list(), ['CASE?', 'stripped ?'])
+        self.assertEqual(FileList(filename=self.filename, strip=False, skip_empty=True, skip_comments=True,
+                                  lowercase=False, additional_filters=None).get_list(), ['CASE?', '    stripped ?    ', '    '])
+        self.assertEqual(FileList(filename=self.filename, strip=True, skip_empty=False, skip_comments=False,
+                                  lowercase=False, additional_filters=None).get_list(), ['CASE?', 'stripped ?', '', '', '# no comment!'])
+        self.assertEqual(FileList(filename=self.filename, strip=True, skip_empty=True, skip_comments=True,
+                                  lowercase=True, additional_filters=None).get_list(), ['case?', 'stripped ?'])
