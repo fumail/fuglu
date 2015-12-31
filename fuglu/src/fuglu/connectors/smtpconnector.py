@@ -20,7 +20,6 @@ import string
 import tempfile
 import os
 import unittest
-import thread
 import ConfigParser
 import re
 
@@ -143,7 +142,7 @@ class SMTPHandler(ProtocolHandler):
 class FUSMTPClient(smtplib.SMTP):
 
     """
-    This class patches the sendmail method of SMTPLib so we can get the return message from postfix 
+    This class patches the sendmail method of SMTPLib so we can get the return message from postfix
     after we have successfully re-injected. We need this so we can find out the new Queue-ID
     """
 

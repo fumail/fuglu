@@ -21,7 +21,6 @@ import datetime
 import traceback
 import string
 import os
-import thread
 
 
 class ControlServer(object):
@@ -144,7 +143,7 @@ class ControlSession(object):
             port = int(args[0])
         if len(args) > 1:
             bind = args[1]
-        thread.start_new_thread(self.controller.run_netconsole, (port, bind))
+        threading.Thread(self.controller.run_netconsole, (port, bind)).start()
         return "Python interactive console starting on %s port %s" % (bind, port)
 
     def workerlist(self, args):
