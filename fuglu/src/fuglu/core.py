@@ -16,7 +16,6 @@
 import re
 import os
 import sys
-import thread
 import ConfigParser
 import datetime
 import logging
@@ -430,22 +429,22 @@ class MainController(object):
             if protocol == 'smtp':
                 smtpserver = SMTPServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(smtpserver.serve, ())
+                threading.Thread(target=smtpserver.serve, args=()).start()
                 self.servers.append(smtpserver)
             elif protocol == 'esmtp':
                 esmtpserver = ESMTPServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(esmtpserver.serve, ())
+                threading.Thread(target=esmtpserver.serve, args=()).start()
                 self.servers.append(esmtpserver)
             elif protocol == 'milter':
                 milterserver = MilterServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(milterserver.serve, ())
+                threading.Thread(target=milterserver.serve, args=()).start()
                 self.servers.append(milterserver)
             elif protocol == 'netcat':
                 ncserver = NCServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                thread.start_new_thread(ncserver.serve, ())
+                threading.Thread(target=ncserver.serve, args=()).start()
                 self.servers.append(ncserver)
             else:
                 self.logger.error(
@@ -464,7 +463,7 @@ class MainController(object):
             sys.exit(1)
         self.logger.info("Init Stat Engine")
         self.statsthread = StatsThread(self.config)
-        thread.start_new_thread(self.statsthread.writestats, ())
+        threading.Thread(target=self.statsthread.writestats, args=()).start() #KPG Not tested
 
         self.logger.info("Init Threadpool")
         try:
@@ -487,7 +486,7 @@ class MainController(object):
         # control socket
         control = ControlServer(self, address=self.config.get(
             'main', 'bindaddress'), port=self.config.get('main', 'controlport'))
-        thread.start_new_thread(control.serve, ())
+        threading.Thread(target=control.serve, args=()).start()
         self.controlserver = control
 
         self.logger.info('Startup complete')
