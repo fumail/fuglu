@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,18 +17,19 @@ Antiphish / Forging Plugins (DKIM / SPF / SRS etc)
 
 EXPERIMENTAL plugins
 
-TODO: SRS, DKIM
+TODO: SRS
 
 requires: dkimpy (not pydkim!!)
 requires: pyspf
 requires: pydns (or alternatively dnspython if only dkim is used) 
 """
 
-from fuglu.shared import ScannerPlugin, apply_template, DUNNO, Suspect
+from fuglu.shared import ScannerPlugin, apply_template, DUNNO, Suspect, FileList, string_to_actioncode
 import time
 import os
 import pkg_resources
 import re
+import string
 
 DKIMPY_AVAILABLE = False
 PYSPF_AVAILABLE = False
@@ -109,10 +110,11 @@ It is currently recommended to leave both header and body canonicalization as 'r
             suspect.debug("No dkim signature header found")
             return DUNNO
         d = DKIM(source, logger=suspect.get_tag('debugfile'))
+
         try:
-            valid = d.verify(source)
+            valid = d.verify()
         except DKIMException, de:
-            self.logger.warning("%s: DKIM validation failed: %s" % (str(de)))
+            self.logger.warning("%s: DKIM validation failed: %s" % (suspect.id, str(de)))
             valid = False
 
         suspect.set_tag("DKIMVerify.sigvalid", valid)
@@ -126,10 +128,11 @@ It is currently recommended to leave both header and body canonicalization as 'r
 
         return self.checkConfig()
 
-#test:
+# test:
 # plugdummy.py -p ...  domainauth.DKIMSignPlugin -s <sender> -o canonicalizeheaders:relaxed -o canonicalizebody:simple -o signbodylength:False
-# cat /tmp/fuglu_dummy_message_out.eml | swaks -f <sender>  -s <server> -au <username> -ap <password> -4 -p 587 -tls -d -  -t <someuser>@gmail.com
-
+# cat /tmp/fuglu_dummy_message_out.eml | swaks -f <sender>  -s <server>
+# -au <username> -ap <password> -4 -p 587 -tls -d -  -t
+# <someuser>@gmail.com
 
 
 class DKIMSignPlugin(ScannerPlugin):
@@ -184,7 +187,7 @@ known issues:
 
             'signheaders': {
                 'description': 'comma separated list of headers to sign. empty string=sign all headers',
-                'default': '',
+                'default': 'From,Reply-To,Subject,Date,To,CC,Resent-Date,Resent-From,Resent-To,Resent-CC,In-Reply-To,References,List-Id,List-Help,List-Unsubscribe,List-Subscribe,List-Post,List-Owner,List-Archive',
             },
 
             'signbodylength': {
@@ -213,7 +216,8 @@ known issues:
     def examine(self, suspect):
         if not DKIMPY_AVAILABLE:
             suspect.debug("dkimpy not available, can not check")
-            self._logger().error("DKIM signing skipped - missing dkimpy library")
+            self._logger().error(
+                "DKIM signing skipped - missing dkimpy library")
             return DUNNO
 
         message = suspect.get_source()
@@ -305,7 +309,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
 
         clientinfo = suspect.get_client_info(self.config)
         if clientinfo == None:
-            suspect.debug("pyspf not available, can not check")
+            suspect.debug("client info not available for SPF check")
             self._logger().warning(
                 "%s: SPF Check skipped, could not get client info" % (suspect.id))
             suspect.set_tag('SPF.status', 'skipped')
@@ -327,3 +331,110 @@ in combination with other factors to take action (for example a "DMARC" plugin c
             return False
 
         return self.checkConfig()
+
+class DomainAuthPlugin(ScannerPlugin):
+
+    """**EXPERIMENTAL**
+This plugin checks the header from domain against a list of domains which must be authenticated by DKIM and/or SPF.
+This is somewhat similar to DMARC but instead of asking the sender domain for a DMARC policy record this plugin allows you to force authentication on the recipient side.
+
+This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they must run beforehand.
+    """
+
+    def __init__(self, config, section=None):
+        ScannerPlugin.__init__(self, config, section)
+        self.requiredvars = {
+            'domainsfile': {
+                'description': "File containing a list of domains (one per line) which must be DKIM and/or SPF authenticated",
+                'default': "/etc/fuglu/auth_required_domains.txt",
+            },
+            'failaction': {
+                'default': 'DUNNO',
+                'description': "action if the message doesn't pass authentication (DUNNO, REJECT)",
+            },
+
+            'rejectmessage': {
+                'default': 'sender domain ${header_from_domain} must pass DKIM and/or SPF authentication',
+                'description': "reject message template if running in pre-queue mode",
+            },
+        }
+        self.logger = self._logger()
+        self.filelist=FileList(filename=None,strip=True, skip_empty=True, skip_comments=True,lowercase=True)
+
+    def examine(self,suspect):
+        self.filelist.filename=self.config.get(self.section,'domainsfile')
+        checkdomains = self.filelist.get_list()
+
+        envelope_sender_domain=suspect.from_domain.lower()
+        header_from_domain=self.extract_from_domain(suspect)
+        if header_from_domain==None:
+            return
+
+        if header_from_domain not in checkdomains:
+            return
+
+        #TODO: do we need a tag from dkim to check if the verified dkim domain actually matches the header from domain?
+        dkimresult = suspect.get_tag('DKIMVerify.sigvalid',False)
+        if dkimresult==True:
+            return DUNNO
+
+        #DKIM failed, check SPF if envelope senderdomain belongs to header from domain
+        spfresult = suspect.get_tag('SPF.status','unknown')
+        if (envelope_sender_domain == header_from_domain or envelope_sender_domain.endswith('.%s'%header_from_domain)) and spfresult=='pass':
+            return DUNNO
+
+        failaction=self.config.get(self.section,'failaction')
+        actioncode = string_to_actioncode(failaction, self.config)
+
+        values = dict(
+            header_from_domain=header_from_domain)
+        message = apply_template(
+            self.config.get(self.section, 'rejectmessage'), suspect, values)
+        return actioncode, message
+
+    def flag_as_spam(self,suspect):
+        suspect.tags['spam']['domainauth']=True
+
+    def extract_from_domain(self, suspect):
+        """
+        Try to extract from header domain
+        """
+        try:
+            msgrep=suspect.get_message_rep()
+            address= msgrep.get('From')
+            if address==None:
+                return None
+
+            start = address.find('<') + 1
+            if start < 1:
+                start = address.find(':') + 1
+
+            if start >= 0:
+                end = string.find(address, '>')
+                if end < 0:
+                    end = len(address)
+            retaddr = address[start:end]
+            retaddr = retaddr.strip()
+
+            if '@' not in retaddr:
+                return None
+
+            domain=retaddr.split('@',1)[1]
+
+            return domain.lower()
+        except:
+            return None
+
+    def __str__(self):
+        return "DomainAuth"
+
+    def lint(self):
+        allok=(self.checkConfig() and self.lint_file())
+        return allok
+
+    def lint_file(self):
+        filename=self.config.get(self.section,'domainsfile')
+        if not os.path.exists(filename):
+            print "domains file %s not found"%(filename)
+            return False
+        return True

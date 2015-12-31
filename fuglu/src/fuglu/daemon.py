@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -82,17 +82,15 @@ class DaemonStuff(object):
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        pidfd=os.open(self.pidfile, os.O_WRONLY|os.O_CREAT, 0644)
+        pidfd = os.open(self.pidfile, os.O_WRONLY | os.O_CREAT, 0644)
         os.write(pidfd, "%s\n" % pid)
         os.close(pidfd)
         return(0)
 
-    def drop_privs(self, username='nobody', groupname='nobody'):
-        #starting_uid = os.getuid()
-        #starting_gid = os.getgid()
-        #starting_uid_name = pwd.getpwuid(starting_uid).pw_name
-        #starting_gid_name = grp.getgrgid(starting_gid).gr_name
-
+    def drop_privs(self, username='nobody', groupname='nobody', keep_supplemental_groups=True):
+        """Drop privileges of the current process to specified unprivileged user and group. If keep_supplemental_groups is True,
+        the process will also be associated with all groups the unprivileged user belongs to.
+        """
         try:
             running_uid = pwd.getpwnam(username).pw_uid
             running_gid = grp.getgrnam(groupname).gr_gid
@@ -103,4 +101,13 @@ class DaemonStuff(object):
         os.umask(new_umask)
 
         os.setgid(running_gid)
+        if keep_supplemental_groups:
+            os.setgroups(self._get_group_ids(username))
         os.setuid(running_uid)
+
+    def _get_group_ids(self, username):
+        """Return a list of group ids the user belongs to"""
+        gids = [g.gr_gid for g in grp.getgrall() if username in g.gr_mem]
+        gid = pwd.getpwnam(username).pw_gid
+        gids.append(grp.getgrgid(gid).gr_gid)
+        return [groupid for groupid in set(gids)]

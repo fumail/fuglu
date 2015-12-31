@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -191,9 +191,8 @@ class Suspect(object):
         self.timestamp = time.time()
         self.id = self._generate_id()
 
-        # headers
+        # headers which are prepended before re-injecting the message
         self.addheaders = {}
-        self.replaceheaders = {}
 
         # helper attributes
         if self.from_address == None:
@@ -213,7 +212,7 @@ class Suspect(object):
                 raise ValueError, "invalid from email address: '%s'" % self.from_address
 
         self.clientinfo = None
-        """holds client info tuple: hostname, ip, reversedns"""
+        """holds client info tuple: helo, ip, reversedns"""
 
     def _generate_id(self):
         """
@@ -424,10 +423,12 @@ class Suspect(object):
         """returns information about the client that submitted this message.
         (helo,ip,reversedns)
 
-        This information is extracted from the message Received: headers and therefore probably not 100% reliable
+        In before-queue mode this info is extracted using the XFORWARD SMTP protocol extension.
+
+        In after-queue mode this information is extracted from the message Received: headers and therefore probably not 100% reliable
         all information is returned as-is, this means for example, that non-fcrdns client will show 'unknown' as reverse dns value.
 
-        if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA
+        if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA (trustedhostregex / boundarydistance)
         """
         if self.clientinfo != None:
             return self.clientinfo
@@ -455,6 +456,8 @@ class Suspect(object):
         both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA
 
         returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex
+
+        Note: this does not currently handle IPv6 received headers
         """
         ignorere = None
         if ignoreregex != None and ignoreregex != '':
@@ -784,6 +787,9 @@ class SuspectFilter(object):
             envelope_to (or to_address)
             from_domain
             to_domain
+            clientip
+            clienthostname (fcrdns or 'unknown')
+            clienthelo
 
         tags
             @tagname
@@ -806,6 +812,17 @@ class SuspectFilter(object):
             return [suspect.to_domain, ]
         if headername == 'body:full':
             return [suspect.get_original_source()]
+
+        if headername in ['clientip', 'clienthostname', 'clienthelo']:
+            clinfo = suspect.get_client_info()
+            if clinfo == None:
+                return []
+            if headername == 'clienthelo':
+                return [clinfo[0], ]
+            if headername == 'clientip':
+                return [clinfo[1], ]
+            if headername == 'clienthostname':
+                return [clinfo[2], ]
 
         # if it starts with a @ we return a tag, not a header
         if headername[0:1] == '@':
@@ -986,3 +1003,92 @@ class HTMLStripper(HTMLParser.HTMLParser):
 
     def get_stripped_data(self):
         return ''.join(self.stripped_data)
+
+
+class FileList(object):
+
+    """Map all lines from a textfile into a list. If the file is changed, the list is refreshed automatically
+    Each line can be run through a callback filter which can change or remove the content.
+
+    filename: The textfile which should be mapped to a list. This can be changed at runtime. If None, an empty list will be returned.
+    strip: remove leading/trailing whitespace from each line. Note that the newline character is always stripped
+    skip_empty: skip empty lines (if used in combination with strip: skip all lines with only whitespace)
+    skip_comments: skip lines starting with #
+    lowercase: lowercase each line
+    additional_filters: function or list of functions which will be called for each line on reload.
+        Each function accept a single argument and must return a (possibly modified) line or None to skip this line
+    minimum_time_between_reloads: number of seconds to cache the list before it will be reloaded if the file changes
+    """
+
+    def __init__(self, filename=None, strip=True, skip_empty=True, skip_comments=True, lowercase=False, additional_filters=None, minimum_time_between_reloads=5):
+        self.filename = filename
+        self.minium_time_between_reloads = minimum_time_between_reloads
+        self._lastreload = 0
+        self.linefilters = []
+        self.content = []
+        self.logger = logging.getLogger('filelist')
+
+        # we always strip newline
+        self.linefilters.append(lambda x: x.rstrip('\r\n'))
+
+        if strip:
+            self.linefilters.append(lambda x: x.strip())
+
+        if skip_empty:
+            self.linefilters.append(lambda x: x if x != '' else None)
+
+        if skip_comments:
+            self.linefilters.append(
+                lambda x: None if x.strip().startswith('#') else x)
+
+        if lowercase:
+            self.linefilters.append(lambda x: x.lower())
+
+        if filename != None:
+            self._reload_if_necessary()
+
+    def _reload_if_necessary(self):
+        """Calls _reload if the file has been changed since the last reload"""
+        now = time.time()
+        # check if reloadinterval has passed
+        if now - self._lastreload < self.minium_time_between_reloads:
+            return
+        if self.file_changed():
+            self._reload()
+
+    def _reload(self):
+        """Reload the file and build the list"""
+        self.logger.info('Reloading file %s' % self.filename)
+        statinfo = os.stat(self.filename)
+        ctime = statinfo.st_ctime
+        self._lastreload = ctime
+        fp = open(self.filename, 'r')
+        lines = fp.readlines()
+        fp.close()
+        newcontent = []
+
+        for line in lines:
+            for func in self.linefilters:
+                line = func(line)
+                if line == None:
+                    break
+
+            if line != None:
+                newcontent.append(line)
+
+        self.content = newcontent
+
+    def file_changed(self):
+        """Return True if the file has changed on disks since the last reload"""
+        if not os.path.isfile(self.filename):
+            return False
+        statinfo = os.stat(self.filename)
+        ctime = statinfo.st_ctime
+        if ctime > self._lastreload:
+            return True
+        return False
+
+    def get_list(self):
+        """Returns the current list. If the file has been changed since the last call, it will rebuild the list automatically."""
+        self._reload_if_necessary()
+        return self.content

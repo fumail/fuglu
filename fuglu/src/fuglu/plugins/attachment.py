@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,12 +40,17 @@ MAGIC_PYTHON_MAGIC = 2
 
 try:
     import magic
-    # python-file or python-magic? python-magic does not have an open attribute
+    # try to detect which magic version is installed
+    # python-file/libmagic bindings (http://www.darwinsys.com/file/)
     if hasattr(magic, 'open'):
         MAGIC_AVAILABLE = MAGIC_PYTHON_FILE
-    else:
+    # python-magic (https://github.com/ahupp/python-magic)
+    elif hasattr(magic, 'from_buffer'):
         MAGIC_AVAILABLE = MAGIC_PYTHON_MAGIC
-
+    # unsupported version, for example 'filemagic'
+    # https://github.com/aliles/filemagic
+    else:
+        pass
 except ImportError:
     pass
 
@@ -782,7 +787,10 @@ The other common template variables are available as well.
 
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
-            print "python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis"
+            if 'magic' in sys.modules:  # unsupported version
+                print "The installed version of the magic module is not supported. Content type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic"
+            else:
+                print "python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis"
             if self.config.getboolean(self.section, 'checkarchivecontent'):
                 print "->checkarviecontent setting ignored"
             return False

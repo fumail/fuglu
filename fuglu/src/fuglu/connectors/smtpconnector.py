@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -135,6 +135,9 @@ class SMTPHandler(ProtocolHandler):
     def discard(self, reason):
         self.sess.endsession(250, reason)
         # self.sess=None
+
+    def reject(self, reason):
+        self.sess.endsession(550, reason)
 
 
 class FUSMTPClient(smtplib.SMTP):

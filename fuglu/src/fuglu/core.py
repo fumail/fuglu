@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ def check_version_status(lint=False):
         logging.warn("could not parse my version string %s" % FUGLU_VERSION)
         return
     parts = m.groupdict()
-    if 'commitid' not in parts:
+    if 'commitid' not in parts or parts['commitid'] == None:
         parts['commitid'] = 'release'
 
     lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(
@@ -652,10 +652,15 @@ class MainController(object):
 
         try:
             import magic
-            magic_vers = "python-magic (https://github.com/ahupp/python-magic)"
+
             if hasattr(magic, 'open'):
                 magic_vers = "python-file/libmagic bindings (http://www.darwinsys.com/file/)"
-            print fc.strcolor('magic: found %s' % magic_vers, 'green')
+                print fc.strcolor('magic: found %s' % magic_vers, 'green')
+            elif hasattr(magic, 'from_buffer'):
+                magic_vers = "python-magic (https://github.com/ahupp/python-magic)"
+                print fc.strcolor('magic: found %s' % magic_vers, 'green')
+            else:
+                print fc.strcolor('magic: unsupported version', 'yellow') + " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic"
         except:
             print fc.strcolor('magic: not installed', 'yellow') + " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled"
 

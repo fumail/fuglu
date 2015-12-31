@@ -1,4 +1,4 @@
-#   Copyright 2009-2015 Oli Schacher
+#   Copyright 2009-2016 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,15 +47,15 @@ class MilterHandler(ProtocolHandler):
         fromaddr = sess.from_address
         toaddr = sess.to_address
         tempfilename = sess.tempfilename
-        body = open(tempfilename).read()
-        # self.logger.info("BODY=%s"%body)
-        #self.logger.info("MILTER: from=%s to=%s"%(fromaddr,toaddr))
         suspect = Suspect(fromaddr, toaddr, tempfilename)
         suspect.recipients = set(sess.recipients)
+
+        if sess.helo is not None and sess.addr is not None and sess.rdns is not None:
+            suspect.clientinfo = sess.helo, sess.addr, sess.rdns
+
         return suspect
 
     def commitback(self, suspect):
-        self.logger.info("Commitback...")
         self.sess.answer = self.sess.Continue()
         self.sess.finish()
         self.sess = None
@@ -111,6 +111,24 @@ class MilterSession(PpyMilter):
         self.currentmilterdata = None
 
         self.answer = self.Continue()
+
+        self.helo = None
+        self.ip = None
+        self.rdns = None
+
+    def OnConnect(self, cmd, hostname, family, port, address):
+        if family not in ('4','6'): #we don't handle unix socket
+            return self.Continue()
+        if hostname is None or hostname =='[%s]'%address:
+            hostname='unknown'
+
+        self.rdns = hostname
+        self.addr = address
+        return self.Continue()
+
+    def OnHelo(self, cmd, helo):
+        self.helo = helo
+        return self.Continue()
 
     def OnRcptTo(self, cmd, rcpt_to, esmtp_info):
         self.recipients.append(rcpt_to)
