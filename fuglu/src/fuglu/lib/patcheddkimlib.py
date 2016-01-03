@@ -16,11 +16,11 @@
 #
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
 
+from __future__ import print_function
 import base64
 import hashlib
 import re
 import time
-
 
 __all__ = [
     "Simple",
