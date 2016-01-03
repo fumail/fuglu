@@ -767,7 +767,7 @@ class SuspectFilter(object):
             return stripper.get_stripped_data()
         except UnicodeDecodeError:
             pass
-        except HTMLParser.HTMLParseError:
+        except HTMLParseError:
             pass
 
         # use regex replace
