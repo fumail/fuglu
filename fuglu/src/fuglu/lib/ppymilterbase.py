@@ -107,7 +107,7 @@ RESPONSE = {
 
 def printchar(char):
     """Useful debugging function for milter developers."""
-    print ('char: %s [qp=%s][hex=%s][base64=%s]' %
+    print('char: %s [qp=%s][hex=%s][base64=%s]' %
            (char, binascii.b2a_qp(char), binascii.b2a_hex(char),
             binascii.b2a_base64(char)))
 

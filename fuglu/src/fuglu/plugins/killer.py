@@ -32,5 +32,5 @@ class KillerPlugin(ScannerPlugin):
         return DELETE
 
     def lint(self):
-        print """!!! WARNING: You have enabled the KILLER plugin - NO message will forwarded to postfix. !!!"""
+        print("""!!! WARNING: You have enabled the KILLER plugin - NO message will forwarded to postfix. !!!""")
         return True

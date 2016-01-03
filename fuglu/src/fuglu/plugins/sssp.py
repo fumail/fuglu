@@ -113,7 +113,7 @@ def exchangeGreetings(s):
     s.send('SSSP/1.0\n')
 
     if not accepted(s):
-        print "Greeting Rejected!!"
+        print("Greeting Rejected!!")
         return 0
 
     return 1
@@ -358,7 +358,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
-        print "Virusaction: %s" % actioncode_to_string(string_to_actioncode(viract, self.config))
+        print("Virusaction: %s" % actioncode_to_string(string_to_actioncode(viract, self.config)))
         allok = (self.checkConfig() and self.lint_eicar())
         return allok
 
@@ -389,7 +389,7 @@ AAEAAQA3AAAAbQAAAAAA
 
         result = self.scan_stream(stream)
         if result == None:
-            print "EICAR Test virus not found!"
+            print("EICAR Test virus not found!")
             return False
-        print "SSSP server found virus", result
+        print("SSSP server found virus", result)
         return True

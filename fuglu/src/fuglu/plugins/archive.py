@@ -106,10 +106,10 @@ Note: The first rule to match in a message is the only rule that will be applied
 
     def check_deprecated(self):
         if self.config.has_option(self.section, 'makedomainsubdir'):
-            print "the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' "
-            print "please update your config"
-            print "makedomainsubdir=1 -> subdirtemplate=${to_domain}"
-            print "makedomainsubdir=0 -> subdirtemplate="
+            print("the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' ")
+            print("please update your config")
+            print("makedomainsubdir=1 -> subdirtemplate=${to_domain}")
+            print("makedomainsubdir=0 -> subdirtemplate=")
             return False
         return True
 
@@ -121,11 +121,11 @@ Note: The first rule to match in a message is the only rule that will be applied
     def lint_dirs(self):
         archivedir = self.config.get(self.section, 'archivedir')
         if archivedir == "":
-            print 'Archivedir is not specified'
+            print('Archivedir is not specified')
             return False
 
         if not os.path.isdir(archivedir):
-            print "Archivedir '%s' does not exist or is not a directory" % (archivedir)
+            print("Archivedir '%s' does not exist or is not a directory" % (archivedir))
             return False
 
         return True

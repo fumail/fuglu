@@ -146,7 +146,7 @@ Tags:
 
         from fuglu.extensions.sql import ENABLED, get_session
         if not ENABLED:
-            print "SQL Blacklist requested but SQLALCHEMY is not enabled"
+            print("SQL Blacklist requested but SQLALCHEMY is not enabled")
             return False
 
         session = get_session(
@@ -157,10 +157,10 @@ Tags:
         sql, params = self._replace_sql_params(suspect, conf_sql)
         try:
             session.execute(sql, params)
-            print "Blacklist SQL Query OK"
+            print("Blacklist SQL Query OK")
             return True
         except Exception, e:
-            print e
+            print(e)
             return False
 
     def lint_ping(self):
@@ -178,13 +178,13 @@ Tags:
                 line = socketfile.readline()
                 answer = line.strip().split()
                 if len(answer) != 3:
-                    print "Invalid SPAMD PONG: %s" % line
+                    print("Invalid SPAMD PONG: %s" % line)
                     return False
 
                 if answer[2] != "PONG":
-                    print "Invalid SPAMD Pong: %s" % line
+                    print("Invalid SPAMD Pong: %s" % line)
                     return False
-                print "Got: %s" % line
+                print("Got: %s" % line)
                 return True
             except socket.timeout:
                 print('SPAMD Socket timed out.')
@@ -208,10 +208,10 @@ Subject: test scanner
 """
         spamflag, score, rules = self.safilter_symbols(stream, 'test')
         if 'GTUBE' in rules:
-            print "GTUBE Has been detected correctly"
+            print("GTUBE Has been detected correctly")
             return True
         else:
-            print "SA did not detect GTUBE"
+            print("SA did not detect GTUBE")
             return False
 
     def _replace_sql_params(self, suspect, conf_sql):
@@ -632,7 +632,7 @@ Subject: test scanner
         s.shutdown(1)
         socketfile = s.makefile("rb")
         gotback = socketfile.read()
-        print gotback
+        print(gotback)
 
 
 if __name__ == '__main__':
@@ -646,7 +646,7 @@ Subject: test scanner
 
   XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
-    print "sending..."
-    print "--------------"
+    print("sending...")
+    print("--------------")
     plugin.debug_proto(stream, command)
-    print "--------------"
+    print("--------------")

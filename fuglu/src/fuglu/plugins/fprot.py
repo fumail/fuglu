@@ -265,7 +265,7 @@ AAEAAQA3AAAAbQAAAAAA
 
         result = self.scan_stream(stream)
         if result == None:
-            print "EICAR Test virus not found!"
+            print("EICAR Test virus not found!")
             return False
-        print "F-Prot found virus", result
+        print("F-Prot found virus", result)
         return True

@@ -122,8 +122,8 @@ It is currently recommended to leave both header and body canonicalization as 'r
 
     def lint(self):
         if not DKIMPY_AVAILABLE:
-            print "Missing dependency: dkimpy https://launchpad.net/dkimpy"
-            print "(also requires either dnspython or pydns)"
+            print("Missing dependency: dkimpy https://launchpad.net/dkimpy")
+            print("(also requires either dnspython or pydns)")
             return False
 
         return self.checkConfig()
@@ -264,14 +264,14 @@ known issues:
 
     def lint(self):
         if not DKIMPY_AVAILABLE:
-            print "Missing dependency: dkimpy https://launchpad.net/dkimpy"
-            print "(also requires either dnspython or pydns)"
+            print("Missing dependency: dkimpy https://launchpad.net/dkimpy")
+            print("(also requires either dnspython or pydns)")
             return False
 
         # if privkey is a filename (no placeholders) check if it exists
         privkeytemplate = self.config.get(self.section, 'privatekeyfile')
         if '{' not in privkeytemplate and not os.path.exists(privkeytemplate):
-            print "Private key file %s not found" % privkeytemplate
+            print("Private key file %s not found" % privkeytemplate)
             return False
 
         return self.checkConfig()
@@ -326,8 +326,8 @@ in combination with other factors to take action (for example a "DMARC" plugin c
 
     def lint(self):
         if not PYSPF_AVAILABLE:
-            print "Missing dependency: pyspf"
-            print "(also requires pydns)"
+            print("Missing dependency: pyspf")
+            print("(also requires pydns)")
             return False
 
         return self.checkConfig()
@@ -435,6 +435,6 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
     def lint_file(self):
         filename=self.config.get(self.section,'domainsfile')
         if not os.path.exists(filename):
-            print "domains file %s not found"%(filename)
+            print("domains file %s not found"%(filename))
             return False
         return True

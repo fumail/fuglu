@@ -220,9 +220,9 @@ Tags:
         try:
             version = self.get_version()
             bases = self.get_baseinfo()
-            print "DrWeb Version %s, found %s bases with a total of %s virus definitions" % (version, len(bases), sum([x[1] for x in bases]))
+            print("DrWeb Version %s, found %s bases with a total of %s virus definitions" % (version, len(bases), sum([x[1] for x in bases])))
         except Exception, e:
-            print "Could not get DrWeb Version info: %s" % str(e)
+            print("Could not get DrWeb Version info: %s" % str(e))
             return False
         return True
 
@@ -253,9 +253,9 @@ AAEAAQA3AAAAbQAAAAAA
 
         result = self.scan_stream(stream)
         if result == None:
-            print "EICAR Test virus not found!"
+            print("EICAR Test virus not found!")
             return False
-        print "DrWeb found ", result
+        print("DrWeb found ", result)
         return True
 
     def get_version(self):
@@ -324,13 +324,13 @@ if __name__ == '__main__':
             buf = open(file, 'rb').read()
             res = plugin.scan_stream(buf)
             if res == None:
-                print "%s: clean" % file
+                print("%s: clean" % file)
             else:
                 infected += 1
-                print "%s: infection(s) found: " % file
+                print("%s: infection(s) found: " % file)
                 for fname, infection in res.iteritems():
-                    print "- %s is infected with %s" % (fname, infection)
-        print ""
-        print "%s / %s files infected" % (infected, counter)
+                    print("- %s is infected with %s" % (fname, infection))
+        print("")
+        print("%s / %s files infected" % (infected, counter))
     else:
         plugin.lint_eicar()
