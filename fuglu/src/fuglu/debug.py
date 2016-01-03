@@ -130,7 +130,7 @@ class ControlSession(object):
         self.socket.close()
 
     def handle_command(self, command, args):
-        if not self.commands.has_key(command):
+        if command not in self.commands:
             return "ERR no such command"
 
         res = self.commands[command](args)

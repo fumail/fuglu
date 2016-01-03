@@ -83,23 +83,23 @@ def string_to_actioncode(actionstring, config=None):
     if config != None:
         if upper == 'DEFAULTHIGHSPAMACTION':
             confval = config.get('spam', 'defaulthighspamaction').upper()
-            if not ALLCODES.has_key(confval):
+            if confval not in ALLCODES:
                 return None
             return ALLCODES[confval]
 
         if upper == 'DEFAULTLOWSPAMACTION':
             confval = config.get('spam', 'defaultlowspamaction').upper()
-            if not ALLCODES.has_key(confval):
+            if confval not in ALLCODES:
                 return None
             return ALLCODES[confval]
 
         if upper == 'DEFAULTVIRUSACTION':
             confval = config.get('virus', 'defaultvirusaction').upper()
-            if not ALLCODES.has_key(confval):
+            if confval not in ALLCODES:
                 return None
             return ALLCODES[confval]
 
-    if not ALLCODES.has_key(upper):
+    if upper not in ALLCODES:
         return None
     return ALLCODES[upper]
 
@@ -235,7 +235,7 @@ class Suspect(object):
 
     def get_tag(self, key, defaultvalue=None):
         """returns the tag value. if the tag is not found, return defaultvalue instead (None if no defaultvalue passed)"""
-        if not self.tags.has_key(key):
+        if key not in self.tags:
             return defaultvalue
         return self.tags[key]
 

@@ -56,7 +56,7 @@ class SMTPHandler(ProtocolHandler):
 
     def is_signed(self, suspect):
         msgrep = suspect.get_message_rep()
-        if msgrep.has_key('Content-Type'):
+        if 'Content-Type' in msgrep:
             ctype = msgrep['Content-Type'].lower()
             if 'multipart/signed' in ctype or 'application/pkcs7-mime' in ctype:
                 return True

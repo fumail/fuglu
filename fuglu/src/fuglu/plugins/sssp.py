@@ -93,7 +93,7 @@ def readoptions(s):
     for l in resp:
         parts = optionsyntax.findall(l)
         for p in parts:
-            if not opts.has_key(p[0]):
+            if p[0] not in opts:
                 opts[p[0]] = []
 
             opts[p[0]].append(p[1])

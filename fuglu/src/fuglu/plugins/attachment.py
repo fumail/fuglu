@@ -115,10 +115,10 @@ class RulesCache(object):
 
     def getRules(self, ruletype, key):
         self.logger.debug('Rule cache request: [%s] [%s]' % (ruletype, key))
-        if not self.rules.has_key(ruletype):
+        if ruletype not in self.rules:
             self.logger.error('Invalid rule type requested: %s' % ruletype)
             return None
-        if not self.rules[ruletype].has_key(key):
+        if key not in self.rules[ruletype]:
             self.logger.debug(
                 'Ruleset not found : [%s] [%s]' % (ruletype, key))
             return None
