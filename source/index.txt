@@ -6,7 +6,7 @@ FuGlu is a mail scanning daemon for Postfix written in Python. It acts as the gl
  * `Overview and Documentation on github <http://gryphius.github.io/fuglu/>`_
  * `Source on github <https://github.com/gryphius/fuglu>`_
  * `latest version from git as package <http://github.com/gryphius/fuglu/tarball/master>`_
- * `Fuglu releases on pypi <https://pypi.python.org/pypi/fuglu/0.6.1>`_
+ * `Fuglu releases on pypi <https://pypi.python.org/pypi/fuglu/>`_
  * `Mailing List  <http://fuglu.org/mailman/listinfo/fuglu-users_fuglu.org>`_
  
  Fuglu comes with a bunch of plugins for doing all kinds of mail processing related tasks (content filter, header and body modifications, out-of-office autoreplies, archiving, statistics, ...) The simple plugin architecture makes it easy for anyone with basic python skills to add new functionality. 
