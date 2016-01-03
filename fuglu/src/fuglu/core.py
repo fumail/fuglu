@@ -431,22 +431,30 @@ class MainController(object):
             if protocol == 'smtp':
                 smtpserver = SMTPServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                threading.Thread(target=smtpserver.serve, args=()).start()
+                tr = threading.Thread(target=smtpserver.serve, args=())
+                tr.daemon = True
+                tr.start()
                 self.servers.append(smtpserver)
             elif protocol == 'esmtp':
                 esmtpserver = ESMTPServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                threading.Thread(target=esmtpserver.serve, args=()).start()
+                tr = threading.Thread(target=esmtpserver.serve, args=())
+                tr.daemon = True
+                tr.start()
                 self.servers.append(esmtpserver)
             elif protocol == 'milter':
                 milterserver = MilterServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                threading.Thread(target=milterserver.serve, args=()).start()
+                tr = threading.Thread(target=milterserver.serve, args=())
+                tr.daemon = True
+                tr.start()
                 self.servers.append(milterserver)
             elif protocol == 'netcat':
                 ncserver = NCServer(
                     self, port=port, address=self.config.get('main', 'bindaddress'))
-                threading.Thread(target=ncserver.serve, args=()).start()
+                tr = threading.Thread(target=ncserver.serve, args=())
+                tr.daemon = True
+                tr.start()
                 self.servers.append(ncserver)
             else:
                 self.logger.error(
@@ -465,7 +473,10 @@ class MainController(object):
             sys.exit(1)
         self.logger.info("Init Stat Engine")
         self.statsthread = StatsThread(self.config)
-        threading.Thread(target=self.statsthread.writestats, args=()).start()
+        mrtg_stats_thread = threading.Thread(
+            name='MRTG-Statswriter', target=self.statsthread.writestats, args=())
+        mrtg_stats_thread.daemon = True
+        mrtg_stats_thread.start()
 
         self.logger.info("Init Threadpool")
         try:
@@ -488,7 +499,11 @@ class MainController(object):
         # control socket
         control = ControlServer(self, address=self.config.get(
             'main', 'bindaddress'), port=self.config.get('main', 'controlport'))
-        threading.Thread(target=control.serve, args=()).start()
+        ctrl_server_thread = threading.Thread(
+            name='Control server', target=control.serve, args=())
+        ctrl_server_thread.daemon = True
+        ctrl_server_thread.start()
+
         self.controlserver = control
 
         self.logger.info('Startup complete')
@@ -644,12 +659,15 @@ class MainController(object):
             import sqlalchemy
             print(fc.strcolor('sqlalchemy: installed', 'green'))
         except:
-            print(fc.strcolor('sqlalchemy: not installed', 'yellow') + " Optional dependency, required if you want to enable any database lookups")
+            print(fc.strcolor('sqlalchemy: not installed', 'yellow') +
+                  " Optional dependency, required if you want to enable any database lookups")
 
         if HAVE_BEAUTIFULSOUP:
-            print(fc.strcolor('BeautifulSoup: V%s installed' % BS_VERSION, 'green'))
+            print(
+                fc.strcolor('BeautifulSoup: V%s installed' % BS_VERSION, 'green'))
         else:
-            print(fc.strcolor('BeautifulSoup: not installed', 'yellow') + " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config")
+            print(fc.strcolor('BeautifulSoup: not installed', 'yellow') +
+                  " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config")
 
         try:
             import magic
@@ -661,9 +679,11 @@ class MainController(object):
                 magic_vers = "python-magic (https://github.com/ahupp/python-magic)"
                 print(fc.strcolor('magic: found %s' % magic_vers, 'green'))
             else:
-                print(fc.strcolor('magic: unsupported version', 'yellow') + " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic")
+                print(fc.strcolor('magic: unsupported version', 'yellow') +
+                      " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic")
         except:
-            print(fc.strcolor('magic: not installed', 'yellow') + " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled")
+            print(fc.strcolor('magic: not installed', 'yellow') +
+                  " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled")
 
     def lint(self):
         errors = 0
@@ -695,7 +715,8 @@ class MainController(object):
         trashdir = self.config.get('main', 'trashdir').strip()
         if trashdir != "":
             if not os.path.isdir(trashdir):
-                print(fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
+                print(
+                    fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
 
         # sql config override
         sqlconfigdbconnectstring = self.config.get(
@@ -721,7 +742,8 @@ class MainController(object):
 
         for plugin in allplugins:
             print()
-            print("Linting Plugin ", fc.strcolor(str(plugin), 'cyan'), 'Config section:', fc.strcolor(str(plugin.section), 'cyan'))
+            print("Linting Plugin ", fc.strcolor(str(plugin), 'cyan'),
+                  'Config section:', fc.strcolor(str(plugin.section), 'cyan'))
             try:
                 result = plugin.lint()
             except Exception, e:
@@ -784,14 +806,17 @@ class MainController(object):
 
                 if 'validator' in infodic:
                     if not infodic["validator"](var):
-                        print("Validation failed for [%s] :: %s" % (section, config))
+                        print(
+                            "Validation failed for [%s] :: %s" % (section, config))
                         allOK = False
 
             except ConfigParser.NoSectionError:
-                print("Missing configuration section [%s] :: %s" % (section, config))
+                print(
+                    "Missing configuration section [%s] :: %s" % (section, config))
                 allOK = False
             except ConfigParser.NoOptionError:
-                print("Missing configuration value [%s] :: %s" % (section, config))
+                print(
+                    "Missing configuration value [%s] :: %s" % (section, config))
                 allOK = False
         return allOK
 

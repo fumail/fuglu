@@ -39,7 +39,8 @@ class ThreadPool(threading.Thread):
         self.laststats = 0
         self.statinverval = 60
         threading.Thread.__init__(self)
-        self.setDaemon(False)
+        self.name = 'Threadpool'
+        self.daemon = False
         self.start()
 
     @property
@@ -141,7 +142,7 @@ class ThreadPool(threading.Thread):
 class Worker(threading.Thread):
 
     def __init__(self, workerid, pool):
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name='Pool worker %s' % workerid)
         self.workerid = workerid
         self.birth = time.time()
         self.pool = pool

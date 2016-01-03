@@ -143,7 +143,10 @@ class ControlSession(object):
             port = int(args[0])
         if len(args) > 1:
             bind = args[1]
-        threading.Thread(self.controller.run_netconsole, (port, bind)).start()
+        nc_thread = threading.Thread(
+            name='net console', target=self.controller.run_netconsole, args=(port, bind))
+        nc_thread.daemon = True
+        nc_thread.start()
         return "Python interactive console starting on %s port %s" % (bind, port)
 
     def workerlist(self, args):
@@ -156,8 +159,9 @@ class ControlSession(object):
     def threadlist(self, args):
         """list of all threads"""
         threads = threading.enumerate()
-        workerlist = "\n%s" % '\n*******\n'.join(map(repr, threads))
-        res = "Total %s Threads\n%s" % (len(threads), workerlist)
+        threadinfo = "\n%s" % '\n*******\n'.join(
+            map(lambda t: "name=%s alive=%s daemon=%s" % (t.name, t.is_alive(), t.daemon), threads))
+        res = "Total %s Threads\n%s" % (len(threads), threadinfo)
         return res
 
     def uptime(self, args):
