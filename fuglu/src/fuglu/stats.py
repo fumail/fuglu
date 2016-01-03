@@ -178,6 +178,6 @@ class StatsThread(object):
                 fp.write("0\n")
             fp.write("%s\n%s\n" % (uptime, identifier))
             fp.close()
-        except Exception, e:
+        except Exception as e:
             self.logger.error(
                 'Could not write mrtg stats file %s : %s)' % (filename, e))

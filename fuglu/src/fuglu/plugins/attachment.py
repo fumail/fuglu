@@ -713,7 +713,7 @@ The other common template variables are available as well.
                                         'FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                    except Exception, e:
+                    except Exception as e:
                         self.logger.warning(
                             "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
@@ -820,7 +820,7 @@ The other common template variables are available as well.
             try:
                 dbfile.getContent(
                     {'scope': 'lint', 'checktype': FUATT_CHECKTYPE_FN})
-            except Exception, e:
+            except Exception as e:
                 import traceback
                 print("Could not get attachment rules from database. Exception: %s" % str(e))
                 print(traceback.format_exc())

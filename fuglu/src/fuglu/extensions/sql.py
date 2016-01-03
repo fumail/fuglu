@@ -47,7 +47,7 @@ def get_session(connectstring, **kwargs):
     global _engines
 
     if not ENABLED:
-        raise Exception, "sql extension not enabled"
+        raise Exception("sql extension not enabled")
 
     if connectstring in _engines:
         engine = _engines[connectstring]

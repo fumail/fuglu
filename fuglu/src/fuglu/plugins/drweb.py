@@ -132,7 +132,7 @@ Tags:
                     return actioncode, message
                 else:
                     return DUNNO
-            except Exception, e:
+            except Exception as e:
                 self.logger.warning("Error encountered while contacting drweb (try %s of %s): %s" %
                                     (i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("drweb scan failed after %s retries" %
@@ -204,8 +204,8 @@ Tags:
             s.connect((self.config.get(self.section, 'host'),
                        self.config.getint(self.section, 'port')))
         except socket.error:
-            raise Exception, 'Could not reach drweb using network (%s, %s)' % (
-                self.config.get(self.section, 'host'), self.config.getint(self.section, 'port'))
+            raise Exception('Could not reach drweb using network (%s, %s)' % (
+                self.config.get(self.section, 'host'), self.config.getint(self.section, 'port')))
 
         return s
 
@@ -221,7 +221,7 @@ Tags:
             version = self.get_version()
             bases = self.get_baseinfo()
             print("DrWeb Version %s, found %s bases with a total of %s virus definitions" % (version, len(bases), sum([x[1] for x in bases])))
-        except Exception, e:
+        except Exception as e:
             print("Could not get DrWeb Version info: %s" % str(e))
             return False
         return True
@@ -265,7 +265,7 @@ AAEAAQA3AAAAbQAAAAAA
             self._sendint(s, DRWEBD_VERSION_CMD)
             version = self._readint(s)
             return version
-        except Exception, e:
+        except Exception as e:
             self.logger.error("Could not get DrWeb Version: %s" % str(e))
         return None
 
@@ -280,7 +280,7 @@ AAEAAQA3AAAAbQAAAAAA
                 idstr = self._readstr(s)
                 numviruses = self._readint(s)
                 ret.append((idstr, numviruses))
-        except Exception, e:
+        except Exception as e:
             self.logger.error(
                 "Could not get DrWeb Base Information: %s" % str(e))
             return None

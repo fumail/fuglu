@@ -129,7 +129,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                         self.config.get(self.section, 'rejectmessage'), suspect, values)
                     return actioncode, message
                 return DUNNO
-            except Exception, e:
+            except Exception as e:
                 self.logger.warning("Error encountered while contacting ICAP server (try %s of %s): %s" % (
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("ICAP scan failed after %s retries" %

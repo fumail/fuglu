@@ -159,7 +159,7 @@ Tags:
             session.execute(sql, params)
             print("Blacklist SQL Query OK")
             return True
-        except Exception, e:
+        except Exception as e:
             print(e)
             return False
 
@@ -188,11 +188,11 @@ Tags:
                 return True
             except socket.timeout:
                 print('SPAMD Socket timed out.')
-            except socket.herror, h:
+            except socket.herror as h:
                 print('SPAMD Herror encountered : %s' % str(h))
-            except socket.gaierror, g:
+            except socket.gaierror as g:
                 print('SPAMD gaierror encountered: %s' % str(g))
-            except socket.error, e:
+            except socket.error as e:
                 print('SPAMD socket error: %s' % str(e))
 
             time.sleep(1)
@@ -258,7 +258,7 @@ Subject: test scanner
             sql, params = self._replace_sql_params(suspect, conf_sql)
 
             resultproxy = dbsession.execute(sql, params)
-        except Exception, e:
+        except Exception as e:
             self.logger.error('Could not read blacklist from DB: %s' % e)
             suspect.debug('Blacklist check failed: %s' % e)
             return DUNNO
@@ -520,11 +520,11 @@ Subject: test scanner
                 return content
             except socket.timeout:
                 self.logger.error('SPAMD Socket timed out.')
-            except socket.herror, h:
+            except socket.herror as h:
                 self.logger.error('SPAMD Herror encountered : %s' % str(h))
-            except socket.gaierror, g:
+            except socket.gaierror as g:
                 self.logger.error('SPAMD gaierror encountered: %s' % str(g))
-            except socket.error, e:
+            except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
 
             time.sleep(1)
@@ -598,11 +598,11 @@ Subject: test scanner
                 return (spstatus, float(score), content)
             except socket.timeout:
                 self.logger.error('SPAMD Socket timed out.')
-            except socket.herror, h:
+            except socket.herror as h:
                 self.logger.error('SPAMD Herror encountered : %s' % str(h))
-            except socket.gaierror, g:
+            except socket.gaierror as g:
                 self.logger.error('SPAMD gaierror encountered: %s' % str(g))
-            except socket.error, e:
+            except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
 
             time.sleep(1)

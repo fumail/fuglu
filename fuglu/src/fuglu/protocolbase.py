@@ -63,7 +63,7 @@ class BasicTCPServer(object):
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._socket.bind((address, port))
             self._socket.listen(5)
-        except Exception, e:
+        except Exception as e:
             self.logger.error(
                 'Could not start incoming Server on port %s: %s' % (port, e))
             self.stayalive = False
@@ -103,7 +103,7 @@ class BasicTCPServer(object):
                     threadpool.add_task(engine)
                 else:
                     engine.handlesession()
-            except Exception, e:
+            except Exception as e:
                 exc = traceback.format_exc()
                 self.logger.error(
                     'Exception in serve(): %s - %s' % (str(e), exc))

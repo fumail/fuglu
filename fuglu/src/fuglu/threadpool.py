@@ -174,7 +174,7 @@ class Worker(threading.Thread):
                 self.logger.debug('Doing work')
             try:
                 sesshandler.handlesession(self)
-            except Exception, e:
+            except Exception as e:
                 self.logger.error('Unhandled Exception : %s' % e)
             self.threadinfo = 'task completed'
 

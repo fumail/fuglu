@@ -342,7 +342,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         raise KeyFormatError("Private key not found")
     try:
         pkdata = base64.b64decode(m.group(1))
-    except TypeError, e:
+    except TypeError as e:
         raise KeyFormatError(str(e))
     if debuglog is not None:
         print(" ".join("%02x" % ord(x) for x in pkdata), file=debuglog)

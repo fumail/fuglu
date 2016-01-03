@@ -287,6 +287,6 @@ Note: The first rule to match in a message is the only rule that will be applied
         if changetogroup != -1 or changetouser != -1:
             try:
                 os.chown(filename, changetouser, changetogroup)
-            except Exception, e:
+            except Exception as e:
                 self.logger.error(
                     "Could not change user/group of file %s : %s" % (filename, str(e)))

@@ -201,15 +201,15 @@ class Suspect(object):
         try:
             (user, self.to_domain) = self.to_address.rsplit('@', 1)
         except:
-            raise ValueError, "invalid to email address: %s" % self.to_address
+            raise ValueError("invalid to email address: %s" % self.to_address)
 
         if self.from_address == '':
             self.from_domain = ''
         else:
             try:
                 (user, self.from_domain) = self.from_address.rsplit('@', 1)
-            except Exception, e:
-                raise ValueError, "invalid from email address: '%s'" % self.from_address
+            except Exception as e:
+                raise ValueError("invalid from email address: '%s'" % self.from_address)
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
@@ -229,7 +229,7 @@ class Suspect(object):
         try:
             fp.write('%s %s\n' % (isotime, message))
             fp.flush()
-        except Exception, e:
+        except Exception as e:
             logging.getLogger('suspect').error(
                 'Could not write to logfile: %s' % e)
 
@@ -403,7 +403,7 @@ class Suspect(object):
             readbytes = maxbytes
         try:
             source = open(self.tempfile).read(readbytes)
-        except Exception, e:
+        except Exception as e:
             logging.getLogger('fuglu.suspect').error(
                 'Cannot retrieve original source from tempfile %s : %s' % (self.tempfile, str(e)))
             raise e
@@ -649,7 +649,7 @@ class SuspectFilter(object):
         regex = sp[1]
         try:
             pattern = re.compile(regex, re.IGNORECASE | re.DOTALL)
-        except Exception, e:
+        except Exception as e:
             raise Exception(
                 'Could not compile regex %s in file %s (%s)' % (regex, self.filename, e))
 
@@ -684,7 +684,7 @@ class SuspectFilter(object):
 
         try:
             pattern = re.compile(regex, reflags)
-        except Exception, e:
+        except Exception as e:
             raise Exception(
                 'Could not compile regex %s in file %s (%s)' % (regex, self.filename, e))
 
@@ -715,7 +715,7 @@ class SuspectFilter(object):
                 if tup != None:
                     newpatterns.append(tup)
                     continue
-            except Exception, e:
+            except Exception as e:
                 self.logger.error(
                     "perl style line failed %s, error: %s" % (line, str(e)))
                 continue
@@ -725,7 +725,7 @@ class SuspectFilter(object):
                 tup = self._load_simplestyle_line(line)
                 newpatterns.append(tup)
                 continue
-            except Exception, e:
+            except Exception as e:
                 self.logger.error(str(e))
                 continue
 
@@ -972,7 +972,7 @@ class SuspectFilter(object):
                 if tup != None:
                     continue
                 tup = self._load_simplestyle_line(line)
-            except Exception, e:
+            except Exception as e:
                 print("Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e)))
                 return False
         return True
