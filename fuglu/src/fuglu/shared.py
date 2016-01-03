@@ -544,10 +544,10 @@ class BasicPlugin(object):
                 try:
                     var = self.config.get(section, config)
                 except ConfigParser.NoOptionError:
-                    print "Missing configuration value [%s] :: %s" % (section, config)
+                    print("Missing configuration value [%s] :: %s" % (section, config))
                     allOK = False
                 except ConfigParser.NoSectionError:
-                    print "Missing configuration section %s" % (section)
+                    print("Missing configuration section %s" % (section))
                     allOK = False
 
         # new config style
@@ -561,13 +561,13 @@ class BasicPlugin(object):
                     var = self.config.get(section, config)
                     if 'validator' in infodic:
                         if not infodic["validator"](var):
-                            print "Validation failed for [%s] :: %s" % (section, config)
+                            print("Validation failed for [%s] :: %s" % (section, config))
                             allOK = False
                 except ConfigParser.NoSectionError:
-                    print "Missing configuration section [%s] :: %s" % (section, config)
+                    print("Missing configuration section [%s] :: %s" % (section, config))
                     allOK = False
                 except ConfigParser.NoOptionError:
-                    print "Missing configuration value [%s] :: %s" % (section, config)
+                    print("Missing configuration value [%s] :: %s" % (section, config))
                     allOK = False
 
         return allOK
@@ -956,7 +956,7 @@ class SuspectFilter(object):
     def lint(self):
         """check file and print warnings to console. returns True if everything is ok, False otherwise"""
         if not os.path.isfile(self.filename):
-            print "SuspectFilter file not found: %s" % self.filename
+            print("SuspectFilter file not found: %s" % self.filename)
             return False
         lines = open(self.filename, 'r').readlines()
         lineno = 0
@@ -973,7 +973,7 @@ class SuspectFilter(object):
                     continue
                 tup = self._load_simplestyle_line(line)
             except Exception, e:
-                print "Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e))
+                print("Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e)))
                 return False
         return True
 

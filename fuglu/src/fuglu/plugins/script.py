@@ -82,7 +82,7 @@ Example script:
     def lint_code(self):
         scriptdir = self.config.get(self.section, 'scriptdir')
         if not os.path.isdir(scriptdir):
-            print "Script dir %s does not exist" % scriptdir
+            print("Script dir %s does not exist" % scriptdir)
             return False
         scripts = self.get_scripts()
         counter = 0
@@ -93,9 +93,9 @@ Example script:
                 compile(source, script, 'exec')
             except:
                 trb = traceback.format_exc()
-                print "Script %s failed to compile: %s" % (script, trb)
+                print("Script %s failed to compile: %s" % (script, trb))
                 return False
-        print "%s scripts found" % counter
+        print("%s scripts found" % counter)
         return True
 
     def _debug(self, suspect, message):

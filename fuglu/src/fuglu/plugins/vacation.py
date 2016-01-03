@@ -473,7 +473,7 @@ SQL Example for mysql:
 
     def lint_sql(self):
         if not fuglu.extensions.sql.ENABLED:
-            print "Vacation requires the fuglu sql extension to be enabled"
+            print("Vacation requires the fuglu sql extension to be enabled")
             return False
 
         try:
@@ -485,9 +485,9 @@ SQL Example for mysql:
             allvacs = dbsession.query(Vacation).filter_by(enabled=True).filter(
                 Vacation.start < now).filter(Vacation.end > now)
             for vac in allvacs:
-                print vac
+                print(vac)
         except Exception, e:
-            print "Database error: %s" % str(e)
+            print("Database error: %s" % str(e))
             return False
 
         return True

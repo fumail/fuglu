@@ -788,22 +788,22 @@ The other common template variables are available as well.
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
             if 'magic' in sys.modules:  # unsupported version
-                print "The installed version of the magic module is not supported. Content type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic"
+                print("The installed version of the magic module is not supported. Content type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic")
             else:
-                print "python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis"
+                print("python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis")
             if self.config.getboolean(self.section, 'checkarchivecontent'):
-                print "->checkarviecontent setting ignored"
+                print("->checkarchivecontent setting ignored")
             return False
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            print "Found python-file/libmagic bindings (http://www.darwinsys.com/file/)"
+            print("Found python-file/libmagic bindings (http://www.darwinsys.com/file/)")
         if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            print "Found python-magic (https://github.com/ahupp/python-magic)"
+            print("Found python-magic (https://github.com/ahupp/python-magic)")
         return True
 
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
-            print "rarfile library not found, RAR support disabled"
-        print "Archive scan, available file extensions: %s" % (self.supported_archive_extensions)
+            print("rarfile library not found, RAR support disabled")
+        print("Archive scan, available file extensions: %s" % (self.supported_archive_extensions))
         return True
 
     def lint_sql(self):
@@ -811,9 +811,9 @@ The other common template variables are available as well.
         if self.config.has_option(self.section, 'dbconnectstring'):
             dbconn = self.config.get(self.section, 'dbconnectstring')
         if dbconn.strip() != '':
-            print "Reading per user/domain attachment rules from database"
+            print("Reading per user/domain attachment rules from database")
             if not fuglu.extensions.sql.ENABLED:
-                print "Fuglu SQL Extension not available, cannot load attachment rules from database"
+                print("Fuglu SQL Extension not available, cannot load attachment rules from database")
                 return False
             query = self.config.get(self.section, 'query')
             dbfile = DBFile(dbconn, query)
@@ -822,9 +822,9 @@ The other common template variables are available as well.
                     {'scope': 'lint', 'checktype': FUATT_CHECKTYPE_FN})
             except Exception, e:
                 import traceback
-                print "Could not get attachment rules from database. Exception: %s" % str(e)
-                print traceback.format_exc()
+                print("Could not get attachment rules from database. Exception: %s" % str(e))
+                print(traceback.format_exc())
                 return False
         else:
-            print "No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir')
+            print("No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir'))
         return True

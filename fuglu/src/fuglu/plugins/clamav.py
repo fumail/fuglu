@@ -293,7 +293,7 @@ Tags:
 
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
-        print "Virusaction: %s" % actioncode_to_string(string_to_actioncode(viract, self.config))
+        print("Virusaction: %s" % actioncode_to_string(string_to_actioncode(viract, self.config)))
         allok = (self.checkConfig() and self.lint_ping() and self.lint_eicar())
         return allok
 
@@ -301,13 +301,13 @@ Tags:
         try:
             s = self.__init_socket__(oneshot=True)
         except Exception, e:
-            print "Could not contact clamd: %s" % (str(e))
+            print("Could not contact clamd: %s" % (str(e)))
             return False
         s.sendall('PING')
         result = s.recv(20000)
-        print "Got Pong: %s" % result
+        print("Got Pong: %s" % result)
         if result.strip() != 'PONG':
-            print "Invalid PONG:" % result
+            print("Invalid PONG:" % result)
         return True
 
     def lint_eicar(self):
@@ -337,7 +337,7 @@ AAEAAQA3AAAAbQAAAAAA
 
         result = self.scan_stream(stream)
         if result == None:
-            print "EICAR Test virus not found!"
+            print("EICAR Test virus not found!")
             return False
-        print "Clamav found virus", result
+        print("Clamav found virus", result)
         return True

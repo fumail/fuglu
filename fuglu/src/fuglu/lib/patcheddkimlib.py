@@ -345,7 +345,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     except TypeError, e:
         raise KeyFormatError(str(e))
     if debuglog is not None:
-        print >>debuglog, " ".join("%02x" % ord(x) for x in pkdata)
+        print(" ".join("%02x" % ord(x) for x in pkdata), file=debuglog)
     pka = asn1_parse(ASN1_RSAPrivateKey, pkdata)
     pk = {
         'version': pka[0][0],
@@ -395,9 +395,9 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     sig = fold(sig)
 
     if debuglog is not None:
-        print >>debuglog, "sign headers:", sign_headers + \
+        print("sign headers:", sign_headers + \
             [("DKIM-Signature", " " + "; ".join("%s=%s" %
-                                                x for x in sigfields))]
+                                                x for x in sigfields))], file=debuglog)
     h = hashlib.sha256()
     for x in sign_headers:
         h.update(x[0])
@@ -406,7 +406,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     h.update(sig)
     d = h.digest()
     if debuglog is not None:
-        print >>debuglog, "sign digest:", " ".join("%02x" % ord(x) for x in d)
+        print("sign digest:", " ".join("%02x" % ord(x) for x in d), file=debuglog)
 
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -445,95 +445,95 @@ def verify(message, debuglog=None):
 
     a = re.split(r"\s*;\s*", sigheaders[0][1].strip())
     if debuglog is not None:
-        print >>debuglog, "a:", a
+        print("a:", a, file=debuglog)
     sig = {}
     for x in a:
         if x:
             m = re.match(r"(\w+)\s*=\s*(.*)", x, re.DOTALL)
             if m is None:
                 if debuglog is not None:
-                    print >>debuglog, "invalid format of signature part: %s" % x
+                    print("invalid format of signature part: %s" % x, file=debuglog)
                 return False
             sig[m.group(1)] = m.group(2)
     if debuglog is not None:
-        print >>debuglog, "sig:", sig
+        print("sig:", sig, file=debuglog)
 
     if 'v' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing v="
+            print("signature missing v=", file=debuglog)
         return False
     if sig['v'] != "1":
         if debuglog is not None:
-            print >>debuglog, "v= value is not 1 (%s)" % sig['v']
+            print("v= value is not 1 (%s)" % sig['v'], file=debuglog)
         return False
     if 'a' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing a="
+            print("signature missing a=", file=debuglog)
         return False
     if 'b' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing b="
+            print("signature missing b=", file=debuglog)
         return False
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['b']) is None:
         if debuglog is not None:
-            print >>debuglog, "b= value is not valid base64 (%s)" % sig['b']
+            print("b= value is not valid base64 (%s)" % sig['b'], file=debuglog)
         return False
     if 'bh' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing bh="
+            print("signature missing bh=", file=debuglog)
         return False
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['bh']) is None:
         if debuglog is not None:
-            print >>debuglog, "bh= value is not valid base64 (%s)" % sig['bh']
+            print("bh= value is not valid base64 (%s)" % sig['bh'], file=debuglog)
         return False
     if 'd' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing d="
+            print("signature missing d=", file=debuglog)
         return False
     if 'h' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing h="
+            print("signature missing h=", file=debuglog)
         return False
     if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d']) - 1] not in "@."):
         if debuglog is not None:
-            print >>debuglog, "i= domain is not a subdomain of d= (i=%s d=%d)" % (
-                sig['i'], sig['d'])
+            print("i= domain is not a subdomain of d= (i=%s d=%d)" % (
+                sig['i'], sig['d']), file=debuglog)
         return False
     if 'l' in sig and re.match(r"\d{,76}$", sig['l']) is None:
         if debuglog is not None:
-            print >>debuglog, "l= value is not a decimal integer (%s)" % sig[
-                'l']
+            print("l= value is not a decimal integer (%s)" % sig[
+                'l'], file=debuglog)
         return False
     if 'q' in sig and sig['q'] != "dns/txt":
         if debuglog is not None:
-            print >>debuglog, "q= value is not dns/txt (%s)" % sig['q']
+            print("q= value is not dns/txt (%s)" % sig['q'], file=debuglog)
         return False
     if 's' not in sig:
         if debuglog is not None:
-            print >>debuglog, "signature missing s="
+            print("signature missing s=", file=debuglog)
         return False
     if 't' in sig and re.match(r"\d+$", sig['t']) is None:
         if debuglog is not None:
-            print >>debuglog, "t= value is not a decimal integer (%s)" % sig[
-                't']
+            print("t= value is not a decimal integer (%s)" % sig[
+                't'], file=debuglog)
         return False
     if 'x' in sig:
         if re.match(r"\d+$", sig['x']) is None:
             if debuglog is not None:
-                print >>debuglog, "x= value is not a decimal integer (%s)" % sig[
-                    'x']
+                print("x= value is not a decimal integer (%s)" % sig[
+                    'x'], file=debuglog)
             return False
         if int(sig['x']) < int(sig['t']):
             if debuglog is not None:
-                print >>debuglog, "x= value is less than t= value (x=%s t=%s)" % (
-                    sig['x'], sig['t'])
+                print("x= value is less than t= value (x=%s t=%s)" % (
+                    sig['x'], sig['t']), file=debuglog)
             return False
 
     m = re.match("(\w+)(?:/(\w+))?$", sig['c'])
     if m is None:
         if debuglog is not None:
-            print >>debuglog, "c= value is not in format method/method (%s)" % sig[
-                'c']
+            print("c= value is not in format method/method (%s)" % sig[
+                'c'], file=debuglog)
         return False
     can_headers = m.group(1)
     if m.group(2) is not None:
@@ -547,7 +547,7 @@ def verify(message, debuglog=None):
         canonicalize_headers = Relaxed
     else:
         if debuglog is not None:
-            print >>debuglog, "Unknown header canonicalization (%s)" % can_headers
+            print("Unknown header canonicalization (%s)" % can_headers, file=debuglog)
         return False
 
     headers = canonicalize_headers.canonicalize_headers(headers)
@@ -558,7 +558,7 @@ def verify(message, debuglog=None):
         body = Relaxed.canonicalize_body(body)
     else:
         if debuglog is not None:
-            print >>debuglog, "Unknown body canonicalization (%s)" % can_body
+            print("Unknown body canonicalization (%s)" % can_body, file=debuglog)
         return False
 
     if sig['a'] == "rsa-sha1":
@@ -569,7 +569,7 @@ def verify(message, debuglog=None):
         hashid = HASHID_SHA256
     else:
         if debuglog is not None:
-            print >>debuglog, "Unknown signature algorithm (%s)" % sig['a']
+            print("Unknown signature algorithm (%s)" % sig['a'], file=debuglog)
         return False
 
     if 'l' in sig:
@@ -579,11 +579,11 @@ def verify(message, debuglog=None):
     h.update(body)
     bodyhash = h.digest()
     if debuglog is not None:
-        print >>debuglog, "bh:", base64.b64encode(bodyhash)
+        print("bh:", base64.b64encode(bodyhash), file=debuglog)
     if bodyhash != base64.b64decode(re.sub(r"\s+", "", sig['bh'])):
         if debuglog is not None:
-            print >>debuglog, "body hash mismatch (got %s, expected %s)" % (
-                base64.b64encode(bodyhash), sig['bh'])
+            print("body hash mismatch (got %s, expected %s)" % (
+                base64.b64encode(bodyhash), sig['bh']), file=debuglog)
         return False
 
     s = dnstxt(sig['s'] + "._domainkey." + sig['d'] + ".")
@@ -597,7 +597,7 @@ def verify(message, debuglog=None):
             pub[m.group(1)] = m.group(2)
         else:
             if debuglog is not None:
-                print >>debuglog, "invalid format in _domainkey txt record"
+                print("invalid format in _domainkey txt record", file=debuglog)
             return False
     x = asn1_parse(ASN1_Object, base64.b64decode(pub['p']))
     # Not sure why the [1:] is necessary to skip a byte.
@@ -608,11 +608,11 @@ def verify(message, debuglog=None):
     }
     modlen = len(int2str(pk['modulus']))
     if debuglog is not None:
-        print >>debuglog, "modlen:", modlen
+        print("modlen:", modlen, file=debuglog)
 
     include_headers = re.split(r"\s*:\s*", sig['h'])
     if debuglog is not None:
-        print >>debuglog, "include_headers:", include_headers
+        print("include_headers:", include_headers, file=debuglog)
     sign_headers = []
     lastindex = {}
     for h in include_headers:
@@ -628,7 +628,7 @@ def verify(message, debuglog=None):
     sign_headers += [(x[0], x[1].rstrip()) for x in canonicalize_headers.canonicalize_headers(
         [(sigheaders[0][0], _remove(sigheaders[0][1], sig['b']))])]
     if debuglog is not None:
-        print >>debuglog, "verify headers:", sign_headers
+        print("verify headers:", sign_headers, file=debuglog)
 
     h = hasher()
     for x in sign_headers:
@@ -637,8 +637,8 @@ def verify(message, debuglog=None):
         h.update(x[1])
     d = h.digest()
     if debuglog is not None:
-        print >>debuglog, "verify digest:", " ".join(
-            "%02x" % ord(x) for x in d)
+        print("verify digest:", " ".join(
+            "%02x" % ord(x) for x in d), file=debuglog)
 
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -650,30 +650,30 @@ def verify(message, debuglog=None):
         ])
     )
     if debuglog is not None:
-        print >>debuglog, "dinfo:", " ".join("%02x" % ord(x) for x in dinfo)
+        print("dinfo:", " ".join("%02x" % ord(x) for x in dinfo), file=debuglog)
     if len(dinfo) + 3 > modlen:
         if debuglog is not None:
-            print >>debuglog, "Hash too large for modulus"
+            print("Hash too large for modulus", file=debuglog)
         return False
     sig2 = "\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) + "\x00" + dinfo
     if debuglog is not None:
-        print >>debuglog, "sig2:", " ".join("%02x" % ord(x) for x in sig2)
-        print >>debuglog, sig['b']
-        print >>debuglog, re.sub(r"\s+", "", sig['b'])
+        print("sig2:", " ".join("%02x" % ord(x) for x in sig2), file=debuglog)
+        print(sig['b'], file=debuglog)
+        print(re.sub(r"\s+", "", sig['b']), file=debuglog)
     v = int2str(pow(str2int(base64.b64decode(
         re.sub(r"\s+", "", sig['b']))), pk['publicExponent'], pk['modulus']), modlen)
     if debuglog is not None:
-        print >>debuglog, "v:", " ".join("%02x" % ord(x) for x in v)
+        print("v:", " ".join("%02x" % ord(x) for x in v), file=debuglog)
     assert len(v) == len(sig2)
     # Byte-by-byte compare of signatures
     return not [1 for x in zip(v, sig2) if x[0] != x[1]]
 
 if __name__ == "__main__":
     message = """From: greg@hewgill.com\r\nSubject: test\r\n message\r\n\r\nHi.\r\n\r\nWe lost the game. Are you hungry yet?\r\n\r\nJoe.\r\n"""
-    print rfc822_parse(message)
+    print(rfc822_parse(message))
     sig = sign(message, "greg", "hewgill.com", open(
         "/home/greg/.domainkeys/rsa.private").read())
-    print sig
-    print verify(sig + message)
+    print(sig)
+    print(verify(sig + message))
     # print sign(open("/home/greg/tmp/message").read(), "greg", "hewgill.com",
     # open("/home/greg/.domainkeys/rsa.private").read())

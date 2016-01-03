@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 
+from __future__ import print_function
+
 import re
 import os
 import sys
@@ -88,7 +90,7 @@ def check_version_status(lint=False):
                 logging.warn(message)
                 if lint:
                     fc = FunkyConsole()
-                    print fc.strcolor(message, "yellow")
+                    print(fc.strcolor(message, "yellow"))
 
 
 class MainController(object):
@@ -512,12 +514,12 @@ class MainController(object):
         # http://stackoverflow.com/questions/15760712/python-readline-module-prints-escape-character-during-import
         import readline
 
-        print "Fuglu Interactive Console started"
-        print ""
-        print "pre-defined locals:"
+        print("Fuglu Interactive Console started")
+        print("")
+        print("pre-defined locals:")
 
         mc = self
-        print "mc : maincontroller"
+        print("mc : maincontroller")
 
         terp = code.InteractiveConsole(locals())
         terp.interact("")
@@ -637,38 +639,38 @@ class MainController(object):
         self.logger.info('Remaining threads: %s' % threading.enumerate())
 
     def _lint_dependencies(self, fc):
-        print fc.strcolor('Checking dependencies...', 'magenta')
+        print(fc.strcolor('Checking dependencies...', 'magenta'))
         try:
             import sqlalchemy
-            print fc.strcolor('sqlalchemy: installed', 'green')
+            print(fc.strcolor('sqlalchemy: installed', 'green'))
         except:
-            print fc.strcolor('sqlalchemy: not installed', 'yellow') + " Optional dependency, required if you want to enable any database lookups"
+            print(fc.strcolor('sqlalchemy: not installed', 'yellow') + " Optional dependency, required if you want to enable any database lookups")
 
         if HAVE_BEAUTIFULSOUP:
-            print fc.strcolor('BeautifulSoup: V%s installed' % BS_VERSION, 'green')
+            print(fc.strcolor('BeautifulSoup: V%s installed' % BS_VERSION, 'green'))
         else:
-            print fc.strcolor('BeautifulSoup: not installed', 'yellow') + " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config"
+            print(fc.strcolor('BeautifulSoup: not installed', 'yellow') + " Optional dependency, this improves accuracy for stripped body searches in filters - not required with a default config")
 
         try:
             import magic
 
             if hasattr(magic, 'open'):
                 magic_vers = "python-file/libmagic bindings (http://www.darwinsys.com/file/)"
-                print fc.strcolor('magic: found %s' % magic_vers, 'green')
+                print(fc.strcolor('magic: found %s' % magic_vers, 'green'))
             elif hasattr(magic, 'from_buffer'):
                 magic_vers = "python-magic (https://github.com/ahupp/python-magic)"
-                print fc.strcolor('magic: found %s' % magic_vers, 'green')
+                print(fc.strcolor('magic: found %s' % magic_vers, 'green'))
             else:
-                print fc.strcolor('magic: unsupported version', 'yellow') + " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic"
+                print(fc.strcolor('magic: unsupported version', 'yellow') + " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic")
         except:
-            print fc.strcolor('magic: not installed', 'yellow') + " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled"
+            print(fc.strcolor('magic: not installed', 'yellow') + " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled")
 
     def lint(self):
         errors = 0
         fc = FunkyConsole()
         self._lint_dependencies(fc)
 
-        print fc.strcolor('Loading extensions...', 'magenta')
+        print(fc.strcolor('Loading extensions...', 'magenta'))
         exts = self.load_extensions()
         for ext in exts:
             (name, enabled, status) = ext
@@ -677,30 +679,30 @@ class MainController(object):
                 penabled = fc.strcolor('enabled', 'green')
             else:
                 penabled = fc.strcolor('disabled', 'red')
-            print "%s: %s (%s)" % (pname, penabled, status)
+            print("%s: %s (%s)" % (pname, penabled, status))
 
-        print fc.strcolor('Loading plugins...', 'magenta')
+        print(fc.strcolor('Loading plugins...', 'magenta'))
         if not self.load_plugins():
-            print fc.strcolor('At least one plugin failed to load', 'red')
-        print fc.strcolor('Plugin loading complete', 'magenta')
+            print(fc.strcolor('At least one plugin failed to load', 'red'))
+        print(fc.strcolor('Plugin loading complete', 'magenta'))
 
-        print "Linting ", fc.strcolor("main configuration", 'cyan')
+        print("Linting ", fc.strcolor("main configuration", 'cyan'))
         if not self.checkConfig():
-            print fc.strcolor("ERROR", "red")
+            print(fc.strcolor("ERROR", "red"))
         else:
-            print fc.strcolor("OK", "green")
+            print(fc.strcolor("OK", "green"))
 
         trashdir = self.config.get('main', 'trashdir').strip()
         if trashdir != "":
             if not os.path.isdir(trashdir):
-                print fc.strcolor("Trashdir %s does not exist" % trashdir, 'red')
+                print(fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
 
         # sql config override
         sqlconfigdbconnectstring = self.config.get(
             'databaseconfig', 'dbconnectstring')
         if sqlconfigdbconnectstring.strip() != '':
-            print ""
-            print "Linting ", fc.strcolor("sql configuration", 'cyan')
+            print("")
+            print("Linting ", fc.strcolor("sql configuration", 'cyan'))
             try:
                 from fuglu.extensions.sql import get_session
                 sess = get_session(sqlconfigdbconnectstring)
@@ -711,28 +713,28 @@ class MainController(object):
                 default_template_values(tempsuspect, sqlvars)
                 sess.execute(self.config.get('databaseconfig', 'sql'), sqlvars)
                 sess.remove()
-                print fc.strcolor("OK", 'green')
+                print(fc.strcolor("OK", 'green'))
             except Exception, e:
-                print fc.strcolor("Failed %s" % str(e), 'red')
+                print(fc.strcolor("Failed %s" % str(e), 'red'))
 
         allplugins = self.plugins + self.prependers + self.appenders
 
         for plugin in allplugins:
-            print
-            print "Linting Plugin ", fc.strcolor(str(plugin), 'cyan'), 'Config section:', fc.strcolor(str(plugin.section), 'cyan')
+            print()
+            print("Linting Plugin ", fc.strcolor(str(plugin), 'cyan'), 'Config section:', fc.strcolor(str(plugin.section), 'cyan'))
             try:
                 result = plugin.lint()
             except Exception, e:
                 CrashStore.store_exception()
-                print "ERROR: %s" % e
+                print("ERROR: %s" % e)
                 result = False
 
             if result:
-                print fc.strcolor("OK", "green")
+                print(fc.strcolor("OK", "green"))
             else:
                 errors = errors + 1
-                print fc.strcolor("ERROR", "red")
-        print "%s plugins reported errors." % errors
+                print(fc.strcolor("ERROR", "red"))
+        print("%s plugins reported errors." % errors)
 
         if self.config.getboolean('main', 'versioncheck'):
             check_version_status(lint=True)
@@ -782,14 +784,14 @@ class MainController(object):
 
                 if 'validator' in infodic:
                     if not infodic["validator"](var):
-                        print "Validation failed for [%s] :: %s" % (section, config)
+                        print("Validation failed for [%s] :: %s" % (section, config))
                         allOK = False
 
             except ConfigParser.NoSectionError:
-                print "Missing configuration section [%s] :: %s" % (section, config)
+                print("Missing configuration section [%s] :: %s" % (section, config))
                 allOK = False
             except ConfigParser.NoOptionError:
-                print "Missing configuration value [%s] :: %s" % (section, config)
+                print("Missing configuration value [%s] :: %s" % (section, config))
                 allOK = False
         return allOK
 
