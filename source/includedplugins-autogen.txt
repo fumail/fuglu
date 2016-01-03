@@ -10,7 +10,7 @@ Prerequisites: SPAMD must be installed and running (not necessarily on the same 
 
 Notes for developers:
 
-if forwardoriginal=False, the message source will be completely replaced with the answer from spamd.
+If you have forwardoriginal=False set the message source will be completely replaced with the answer from spamd.
 
 Tags:
 

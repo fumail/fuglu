@@ -60,7 +60,7 @@ The ``fuglu_control`` command offers various options to get real-time informatio
 	[107]: waiting for task
 
 
-run fuglu_control without arguments to get a list of all supported commands. 
+Run fuglu_control without arguments to get a list of all supported commands. 
 
 Logs
 ....
@@ -74,7 +74,7 @@ Full documentation on the python logging configuration: http://docs.python.org/l
 
 Logging is configured in ``/etc/fuglu/logging.conf``
 
-in standard configuration, fuglu logs only INFO messages. Let's say you wanted to debug the spamassassin plugin. So you'd check if there is a section dealing with spamassassin and you'd find this:
+In standard configuration, fuglu logs only INFO messages. Let's say you wanted to debug the spamassassin plugin. So you'd check if there is a section dealing with spamassassin and you'd find this:
 
 ::
 
@@ -96,7 +96,7 @@ You would change ``level=INFO`` to ``level=DEBUG``. Also you need to activate th
 	keys=root,saplugin
 
 
-after reloading fuglu, the spamassassin plugin should be very verbose:
+After reloading fuglu, the spamassassin plugin should be very verbose:
 
 ::
 
@@ -110,7 +110,7 @@ after reloading fuglu, the spamassassin plugin should be very verbose:
 
 
 
-there should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this. 
+There should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this. 
 
 
 **Qualnames for new loggers** :
@@ -218,9 +218,9 @@ You'll need *mrtg* and a *webserver* for this to work... create a file called ``
 	AbsMax[virus]: 600000
 
 
-make sure, the path in WorkDir exists.
+Make sure, the path in WorkDir exists.
 
-then create a script ``/usr/local/bin/fuglu_mrtg.sh`` 
+Then create a script ``/usr/local/bin/fuglu_mrtg.sh`` 
 
 ::
 
@@ -231,7 +231,7 @@ then create a script ``/usr/local/bin/fuglu_mrtg.sh``
 
 run ``fuglu_mrtg.sh`` to check for errors. 
 
-if all went well, add it to your crontab: 
+If all went well, add it to your crontab: 
 
 ::
 
@@ -317,15 +317,15 @@ fuglu_suspectfilter to the rescue! just pass a rule file and a message eml file 
   Rule argument : Messages from Edgar
 
 
-add a `-D` argument for a full debug trace of the suspect filter.
+Add a `-D` argument for a full debug trace of the suspect filter.
 
 Debug the fuglu core
 ....................
 
 If you are a python developer and would like to inspect fuglu at run-time, add the argument ``--console`` when starting fuglu.
-You will then get an interactive python console where all plugins etc are available from the 'mc' (MainController) object
+You will then get an interactive python console where all plugins etc are available from the 'mc' (MainController) object.
 
-starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command ``fuglu_control netconsole [<port> [<bindaddress>]]``
+Starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command ``fuglu_control netconsole [<port> [<bindaddress>]]``
 
 Example:
 on the host running fuglu:

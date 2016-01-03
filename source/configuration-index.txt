@@ -102,7 +102,7 @@ example:
 
 
 If all went fine, run ``fuglu`` without parameters to start the daemon. 
-in ``/var/log/fuglu/fuglu.log`` you should then see output similar to this:
+In ``/var/log/fuglu/fuglu.log`` you should then see output similar to this:
 
 ::
 
@@ -129,7 +129,7 @@ Once fuglu is up and running, we need to tell Postfix to use it as an after queu
 
 Detailed documentation is available on the `postfix <http://www.postfix.org/FILTER_README.html>`_ website, but here is a quick example. 
 
-add to ``master.cf`` :
+Add to ``master.cf`` :
 
 
 ::
@@ -157,7 +157,7 @@ add to ``master.cf`` :
 
 This creates two filters ``fuglu_trusted`` for outgoing mail and ``fuglu_default`` for incoming mail. An additional postfix instance will listen on port *10026* where fuglu can re-inject filtered messages.
 
-create a new file ``/etc/postfix/filter_default``
+Create a new file ``/etc/postfix/filter_default``
 
 ::
 
@@ -165,18 +165,18 @@ create a new file ``/etc/postfix/filter_default``
 	/./ FILTER fuglu_default:[127.0.0.1]:10025
 
 
-this tells postfix to send untrusted messages to fuglu on port 10025
+This tells postfix to send untrusted messages to fuglu on port 10025
 
-create a new file ``/etc/postfix/filter_trusted``
+Create a new file ``/etc/postfix/filter_trusted``
 
 ::
 
 	# filter for authenticated users 
 	/./ FILTER fuglu_trusted:[127.0.0.1]:10099
 
-this tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning 
+This tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning 
 
-in ``main.cf`` add
+In ``main.cf`` add
 
 
 ::
@@ -192,7 +192,7 @@ in ``main.cf`` add
 
 
 
-run ``postfix reload`` and check your maillog for errors. from now on, messages should be filtered by fuglu!
+Run ``postfix reload`` and check your maillog for errors. from now on, messages should be filtered by fuglu!
 
 
 ---------------
@@ -258,7 +258,7 @@ edit ``master.cf`` as described in http://www.postfix.org/SMTPD_PROXY_README.htm
 
 fuglu config:
 
-enable the esmtp connector on the incoming port (10025) in ``/etc/fuglu/fuglu.conf``:
+Enable the esmtp connector on the incoming port (10025) in ``/etc/fuglu/fuglu.conf``:
 
 ::
 
@@ -267,7 +267,7 @@ enable the esmtp connector on the incoming port (10025) in ``/etc/fuglu/fuglu.co
 
 **rejecting spam**:
 
-in the fuglu configuration set ``DEFAULTHIGHSPAMACTION=REJECT`` (do the same for ``DEFAULTLOWSPAMACTION`` if you want to reject all spam). in the Spamassassin Pluginconfiguration, you can configure a custom reject message which supports various template variables: 
+In the fuglu configuration set ``DEFAULTHIGHSPAMACTION=REJECT`` (do the same for ``DEFAULTLOWSPAMACTION`` if you want to reject all spam). in the Spamassassin Pluginconfiguration, you can configure a custom reject message which supports various template variables: 
 
  * *${from_address}* : sender address
  * *${to_address}* : recipient address
@@ -287,7 +287,7 @@ Example:
 
 **rejecting viruses**:
 
-this works the same way as rejecting spam, by setting ``DEFAULTVIRUSACTION=REJECT`` and configuring the ``rejectmessage`` in the antivirus plugin section.
+This works the same way as rejecting spam, by setting ``DEFAULTVIRUSACTION=REJECT`` and configuring the ``rejectmessage`` in the antivirus plugin section.
 
 
 
@@ -330,7 +330,7 @@ To run fuglu as a milter, add ``milter:<portnumber`` to the ``incomingport`` con
 
 	incomingport=10025,10099,10888,milter:10028
 
-then enable milters in your MTA. postfix example (main.cf) :
+Then enable milters in your MTA. postfix example (main.cf) :
 
 ::
 
@@ -349,16 +349,16 @@ fuglu supports message processing by simply "piping" them into a socket. To enab
 
 	incomingport=10025,10099,10888,netcat:20099
 
-when restarting fuglu, you should see something like ``INFO NETCAT Server running on port 20099`` in the logs. you may then pipe an eml from the shell
+When restarting fuglu, you should see something like ``INFO NETCAT Server running on port 20099`` in the logs. you may then pipe an eml from the shell
 
 ::
 
 	(sleep 0.1; cat eicar.eml) | nc -c localhost 20099
 
 
-in some special setups, people use fuglu as an after-delivery filter with this method.
+In some special setups, people use fuglu as an after-delivery filter with this method.
 
-example procmail filter:
+Example procmail filter:
 
 ::
 
@@ -395,14 +395,14 @@ The process is very similar to spamassassin's SQL configuration  (http://wiki.ap
  * username is called `scope`
  * fuglu does not load the full configuration per user, only the actual config options requested by plugins supporting db overrides
  
-enable configuration lookups by providing a standard sql alchemy connectstring in your configuration (section `databaseconfig` option `dbconnectstring`)
+Enable configuration lookups by providing a standard sql alchemy connectstring in your configuration (section `databaseconfig` option `dbconnectstring`)
  
 ::
 
 	[databaseconfig]
 	dbconnectstring=mysql://root@localhost/fuglu
 
-if you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (`sql=SELECT ....` in the same section.  ) use `:section`, `:option` and the usual suspect variables like `:to_domain` and `:to_address` as placeholders.
+If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (`sql=SELECT ....` in the same section.  ) use `:section`, `:option` and the usual suspect variables like `:to_domain` and `:to_address` as placeholders.
 
 
 Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: `lowspamaction`, `highspamaction`, `highspamlevel`
