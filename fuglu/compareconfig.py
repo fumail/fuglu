@@ -19,7 +19,10 @@ import sys
 import os
 
 sys.path.insert(0, 'src')
-from ConfigParser import ConfigParser
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
 
 from fuglu.funkyconsole import FunkyConsole
 

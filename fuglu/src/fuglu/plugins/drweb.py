@@ -304,7 +304,10 @@ AAEAAQA3AAAAbQAAAAAA
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    from ConfigParser import RawConfigParser
+    try:
+        from configparser import RawConfigParser
+    except ImportError:
+        from ConfigParser import RawConfigParser
     config = RawConfigParser()
     sec = 'dev'
     config.add_section(sec)

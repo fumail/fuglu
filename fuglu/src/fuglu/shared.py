@@ -19,7 +19,10 @@ import os
 import time
 import socket
 import uuid
-import HTMLParser
+try:
+	from html.parser import HTMLParser
+except ImportError:
+	from HTMLParser import HTMLParser
 
 HAVE_BEAUTIFULSOUP = False
 BS_VERSION = 0
@@ -40,7 +43,10 @@ if not HAVE_BEAUTIFULSOUP:
 
 import email
 import re
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import datetime
 from string import Template
 from email.Header import Header
@@ -543,10 +549,10 @@ class BasicPlugin(object):
                     section = self.section
                 try:
                     var = self.config.get(section, config)
-                except ConfigParser.NoOptionError:
+                except configparser.NoOptionError:
                     print("Missing configuration value [%s] :: %s" % (section, config))
                     allOK = False
-                except ConfigParser.NoSectionError:
+                except configparser.NoSectionError:
                     print("Missing configuration section %s" % (section))
                     allOK = False
 
@@ -563,10 +569,10 @@ class BasicPlugin(object):
                         if not infodic["validator"](var):
                             print("Validation failed for [%s] :: %s" % (section, config))
                             allOK = False
-                except ConfigParser.NoSectionError:
+                except configparser.NoSectionError:
                     print("Missing configuration section [%s] :: %s" % (section, config))
                     allOK = False
-                except ConfigParser.NoOptionError:
+                except configparser.NoOptionError:
                     print("Missing configuration value [%s] :: %s" % (section, config))
                     allOK = False
 
@@ -978,10 +984,10 @@ class SuspectFilter(object):
         return True
 
 
-class HTMLStripper(HTMLParser.HTMLParser):
+class HTMLStripper(HTMLParser):
 
     def __init__(self, strip_tags=None):
-        HTMLParser.HTMLParser.__init__(self)
+        HTMLParser.__init__(self)
         self.strip_tags = strip_tags or ['script', 'style']
         self.reset()
         self.collect = True
@@ -992,12 +998,12 @@ class HTMLStripper(HTMLParser.HTMLParser):
             self.stripped_data.append(data)
 
     def handle_starttag(self, tag, attrs):
-        HTMLParser.HTMLParser.handle_starttag(self, tag, attrs)
+        HTMLParser.handle_starttag(self, tag, attrs)
         if tag.lower() in self.strip_tags:
             self.collect = False
 
     def handle_endtag(self, tag):
-        HTMLParser.HTMLParser.handle_endtag(self, tag)
+        HTMLParser.handle_endtag(self, tag)
         if tag.lower() in self.strip_tags:
             self.collect = True
 

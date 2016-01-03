@@ -18,7 +18,10 @@ from __future__ import print_function
 import re
 import os
 import sys
-import ConfigParser
+try:
+	import configparser
+except ImportError:
+	import ConfigParser as configparser
 import datetime
 import logging
 import threading
@@ -482,7 +485,7 @@ class MainController(object):
         try:
             minthreads = self.config.getint('performance', 'minthreads')
             maxthreads = self.config.getint('performance', 'maxthreads')
-        except ConfigParser.NoSectionError:
+        except configparser.NoSectionError:
             self.logger.warning(
                 'Performance section not configured, using default thread numbers')
             minthreads = 1
@@ -810,11 +813,11 @@ class MainController(object):
                             "Validation failed for [%s] :: %s" % (section, config))
                         allOK = False
 
-            except ConfigParser.NoSectionError:
+            except configparser.NoSectionError:
                 print(
                     "Missing configuration section [%s] :: %s" % (section, config))
                 allOK = False
-            except ConfigParser.NoOptionError:
+            except configparser.NoOptionError:
                 print(
                     "Missing configuration value [%s] :: %s" % (section, config))
                 allOK = False
@@ -902,7 +905,7 @@ class MainController(object):
                 plugininstance = self._load_component(
                     structured_name, configsection=configoverride)
                 pluglist.append(plugininstance)
-            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            except (configparser.NoSectionError, configparser.NoOptionError):
                 CrashStore.store_exception()
                 self._logger().error(
                     "The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
