@@ -11,7 +11,7 @@ Prerequisites
 required
 --------
 
- * **python** (>=2.4)
+ * **python** (>=2.6)
  * **python-setuptools**
  * **postfix**
 
