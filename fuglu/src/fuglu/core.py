@@ -465,7 +465,7 @@ class MainController(object):
             sys.exit(1)
         self.logger.info("Init Stat Engine")
         self.statsthread = StatsThread(self.config)
-        threading.Thread(target=self.statsthread.writestats, args=()).start() #KPG Not tested
+        threading.Thread(target=self.statsthread.writestats, args=()).start()
 
         self.logger.info("Init Threadpool")
         try:
