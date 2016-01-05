@@ -115,10 +115,10 @@ class RulesCache(object):
 
     def getRules(self, ruletype, key):
         self.logger.debug('Rule cache request: [%s] [%s]' % (ruletype, key))
-        if not self.rules.has_key(ruletype):
+        if ruletype not in self.rules:
             self.logger.error('Invalid rule type requested: %s' % ruletype)
             return None
-        if not self.rules[ruletype].has_key(key):
+        if key not in self.rules[ruletype]:
             self.logger.debug(
                 'Ruleset not found : [%s] [%s]' % (ruletype, key))
             return None
@@ -713,7 +713,7 @@ The other common template variables are available as well.
                                         'FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                    except Exception, e:
+                    except Exception as e:
                         self.logger.warning(
                             "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
@@ -820,7 +820,7 @@ The other common template variables are available as well.
             try:
                 dbfile.getContent(
                     {'scope': 'lint', 'checktype': FUATT_CHECKTYPE_FN})
-            except Exception, e:
+            except Exception as e:
                 import traceback
                 print("Could not get attachment rules from database. Exception: %s" % str(e))
                 print(traceback.format_exc())

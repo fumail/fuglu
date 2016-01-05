@@ -195,10 +195,10 @@ class MilterSession(PpyMilter):
                             self.__send_response(r)
                     elif response:
                         self.__send_response(response)
-                except PpyMilterCloseConnection, e:
+                except PpyMilterCloseConnection as e:
                     #logging.info('Closing connection ("%s")', str(e))
                     break
-        except Exception, e:
+        except Exception as e:
             # TODO: here we get broken pipe if we're not using self.Continue(), but the milter client seems happy
             # so, silently discarding this exception for now
             pass
@@ -219,10 +219,10 @@ class MilterSession(PpyMilter):
                             self.__send_response(r)
                     elif response:
                         self.__send_response(response)
-                except PpyMilterCloseConnection, e:
+                except PpyMilterCloseConnection as e:
                     #logging.info('Closing connection ("%s")', str(e))
                     break
-        except Exception, e:
+        except Exception as e:
             exc = traceback.format_exc()
             self.logger.error('Exception in MilterSession: %s %s' % (e, exc))
             return False

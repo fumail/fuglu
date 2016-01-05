@@ -16,7 +16,10 @@
 #
 import threading
 import time
-import Queue
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 import logging
 
 
@@ -25,7 +28,7 @@ class ThreadPool(threading.Thread):
     def __init__(self, minthreads=1, maxthreads=20, queuesize=100):
         self.workers = []
         self.queuesize = queuesize
-        self.tasks = Queue.Queue(queuesize)
+        self.tasks = queue.Queue(queuesize)
         self.minthreads = minthreads
         self.maxthreads = maxthreads
         assert self.minthreads > 0
@@ -174,7 +177,7 @@ class Worker(threading.Thread):
                 self.logger.debug('Doing work')
             try:
                 sesshandler.handlesession(self)
-            except Exception, e:
+            except Exception as e:
                 self.logger.error('Unhandled Exception : %s' % e)
             self.threadinfo = 'task completed'
 

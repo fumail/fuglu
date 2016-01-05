@@ -299,7 +299,7 @@ SQL Example for mysql:
                 self.logger.debug('Vacation message candidate detected: Sender: %s recipient(on vacation): %s' % (
                     suspect.from_address, suspect.to_address))
                 self.send_vacation_reply(suspect, vac)
-        except Exception, e:
+        except Exception as e:
             exc = traceback.format_exc()
             self.logger.error("Exception in Vacation Plugin: %s" % e)
             self.logger.error(exc)
@@ -415,7 +415,7 @@ SQL Example for mysql:
         try:
             from email.mime.text import MIMEText
             from email.header import Header
-        except ImportError, e:
+        except ImportError as e:
             # python 2.4
             from email.MIMEText import MIMEText
             from email.Header import Header
@@ -486,7 +486,7 @@ SQL Example for mysql:
                 Vacation.start < now).filter(Vacation.end > now)
             for vac in allvacs:
                 print(vac)
-        except Exception, e:
+        except Exception as e:
             print("Database error: %s" % str(e))
             return False
 

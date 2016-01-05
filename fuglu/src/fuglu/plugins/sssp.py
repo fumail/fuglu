@@ -93,7 +93,7 @@ def readoptions(s):
     for l in resp:
         parts = optionsyntax.findall(l)
         for p in parts:
-            if not opts.has_key(p[0]):
+            if p[0] not in opts:
                 opts[p[0]] = []
 
             opts[p[0]].append(p[1])
@@ -221,7 +221,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                         self.config.get(self.section, 'rejectmessage'), suspect, values)
                     return actioncode, message
                 return DUNNO
-            except Exception, e:
+            except Exception as e:
                 self.logger.warning("Error encountered while contacting SSSP server (try %s of %s): %s" % (
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("SSSP scan failed after %s retries" %

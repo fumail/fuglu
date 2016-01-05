@@ -56,7 +56,7 @@ class SMTPHandler(ProtocolHandler):
 
     def is_signed(self, suspect):
         msgrep = suspect.get_message_rep()
-        if msgrep.has_key('Content-Type'):
+        if 'Content-Type' in msgrep:
             ctype = msgrep['Content-Type'].lower()
             if 'multipart/signed' in ctype or 'application/pkcs7-mime' in ctype:
                 return True
@@ -94,7 +94,7 @@ class SMTPHandler(ProtocolHandler):
         serveranswer = client.lastserveranswer
         try:
             client.quit()
-        except Exception, e:
+        except Exception as e:
             self.logger.warning(
                 'Exception while quitting re-inject session: %s' % str(e))
 
@@ -288,7 +288,7 @@ class SMTPSession(object):
                     prefix='fuglu', dir=self.config.get('main', 'tempdir'))
                 self.tempfilename = tempfilename
                 self.tempfile = os.fdopen(handle, 'w+b')
-            except Exception, e:
+            except Exception as e:
                 self.endsession(421, "could not create file: %s" % str(e))
 
             return ("354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1)

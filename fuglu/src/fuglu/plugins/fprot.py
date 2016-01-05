@@ -128,7 +128,7 @@ Tags:
                     return actioncode, message
                 else:
                     return DUNNO
-            except Exception, e:
+            except Exception as e:
                 self._logger().warning("Error encountered while contacting fpscand (try %s of %s): %s" %
                                        (i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self._logger().error("fpscand failed after %s retries" %
@@ -143,7 +143,7 @@ Tags:
             if m == None:
                 self._logger().error(
                     'Could not parse line from f-prot: %s' % line)
-                raise Exception, 'f-prot: Unparseable answer: %s' % result
+                raise Exception('f-prot: Unparseable answer: %s' % result)
             status = m.group(1)
             text = m.group(2)
             details = m.group(3)
@@ -226,8 +226,8 @@ Tags:
             s.connect((self.config.get(self.section, 'host'),
                        self.config.getint(self.section, 'port')))
         except socket.error:
-            raise Exception, 'Could not reach fpscand using network (%s, %s)' % (
-                self.config.get(self.section, 'host'), self.config.getint(self.section, 'port'))
+            raise Exception('Could not reach fpscand using network (%s, %s)' % (
+                self.config.get(self.section, 'host'), self.config.getint(self.section, 'port')))
 
         return s
 

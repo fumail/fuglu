@@ -95,7 +95,7 @@ class Bounce(object):
         message = apply_template(templatecontent, suspect, values)
         try:
             message = self._add_required_headers(recipient, message)
-        except Exception, e:
+        except Exception as e:
             self.logger.warning(
                 "Bounce message template could not be verified: %s" % str(e))
 

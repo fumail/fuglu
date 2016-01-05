@@ -18,7 +18,10 @@ from __future__ import print_function
 import re
 import os
 import sys
-import ConfigParser
+try:
+	import configparser
+except ImportError:
+	import ConfigParser as configparser
 import datetime
 import logging
 import threading
@@ -459,7 +462,7 @@ class MainController(object):
             else:
                 self.logger.error(
                     'Unknown Interface Protocol: %s, ignoring server on port %s' % (protocol, port))
-        except Exception, e:
+        except Exception as e:
             self.logger.error(
                 "could not start connector %s/%s : %s" % (protocol, port, str(e)))
 
@@ -482,7 +485,7 @@ class MainController(object):
         try:
             minthreads = self.config.getint('performance', 'minthreads')
             maxthreads = self.config.getint('performance', 'maxthreads')
-        except ConfigParser.NoSectionError:
+        except configparser.NoSectionError:
             self.logger.warning(
                 'Performance section not configured, using default thread numbers')
             minthreads = 1
@@ -583,12 +586,12 @@ class MainController(object):
         sys.stderr = old_stderr
         try:
             clientsocket.close()
-        except Exception, e:
+        except Exception as e:
             self.logger.warning(
                 "Failed to close shell client socket: %s" % str(e))
         try:
             serversocket.close()
-        except Exception, e:
+        except Exception as e:
             self.logger.warning(
                 "Failed to close shell server socket: %s" % str(e))
 
@@ -735,7 +738,7 @@ class MainController(object):
                 sess.execute(self.config.get('databaseconfig', 'sql'), sqlvars)
                 sess.remove()
                 print(fc.strcolor("OK", 'green'))
-            except Exception, e:
+            except Exception as e:
                 print(fc.strcolor("Failed %s" % str(e), 'red'))
 
         allplugins = self.plugins + self.prependers + self.appenders
@@ -746,7 +749,7 @@ class MainController(object):
                   'Config section:', fc.strcolor(str(plugin.section), 'cyan'))
             try:
                 result = plugin.lint()
-            except Exception, e:
+            except Exception as e:
                 CrashStore.store_exception()
                 print("ERROR: %s" % e)
                 result = False
@@ -810,11 +813,11 @@ class MainController(object):
                             "Validation failed for [%s] :: %s" % (section, config))
                         allOK = False
 
-            except ConfigParser.NoSectionError:
+            except configparser.NoSectionError:
                 print(
                     "Missing configuration section [%s] :: %s" % (section, config))
                 allOK = False
-            except ConfigParser.NoOptionError:
+            except configparser.NoOptionError:
                 print(
                     "Missing configuration value [%s] :: %s" % (section, config))
                 allOK = False
@@ -902,11 +905,11 @@ class MainController(object):
                 plugininstance = self._load_component(
                     structured_name, configsection=configoverride)
                 pluglist.append(plugininstance)
-            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            except (configparser.NoSectionError, configparser.NoOptionError):
                 CrashStore.store_exception()
                 self._logger().error(
                     "The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
-            except Exception, e:
+            except Exception as e:
                 CrashStore.store_exception()
                 self._logger().error('Could not load plugin %s : %s' %
                                      (structured_name, e))
@@ -931,6 +934,6 @@ class MainController(object):
             if 'section' in inspect.getargspec(mod.__init__)[0]:
                 plugininstance = mod(self.config, section=configsection)
             else:
-                raise Exception, 'Cannot set Config Section %s : Plugin %s does not support config override' % (
-                    configsection, mod)
+                raise Exception('Cannot set Config Section %s : Plugin %s does not support config override' % (
+                    configsection, mod))
         return plugininstance

@@ -213,10 +213,10 @@ class PpyMilterDispatcher(object):
             callback = getattr(self.__milter, handler_callback_name)
             args = parser(cmd, data)
             return callback(*args)
-        except PpyMilterTempFailure, e:
+        except PpyMilterTempFailure as e:
             logging.info('Temp Failure: %s', str(e))
             return RESPONSE['TEMPFAIL']
-        except PpyMilterPermFailure, e:
+        except PpyMilterPermFailure as e:
             logging.info('Perm Failure: %s', str(e))
             return RESPONSE['REJECT']
         return RESPONSE['CONTINUE']

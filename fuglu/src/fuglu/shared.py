@@ -19,7 +19,10 @@ import os
 import time
 import socket
 import uuid
-import HTMLParser
+try:
+	from html.parser import HTMLParser
+except ImportError:
+	from HTMLParser import HTMLParser
 
 HAVE_BEAUTIFULSOUP = False
 BS_VERSION = 0
@@ -40,7 +43,10 @@ if not HAVE_BEAUTIFULSOUP:
 
 import email
 import re
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import datetime
 from string import Template
 from email.Header import Header
@@ -83,23 +89,23 @@ def string_to_actioncode(actionstring, config=None):
     if config != None:
         if upper == 'DEFAULTHIGHSPAMACTION':
             confval = config.get('spam', 'defaulthighspamaction').upper()
-            if not ALLCODES.has_key(confval):
+            if confval not in ALLCODES:
                 return None
             return ALLCODES[confval]
 
         if upper == 'DEFAULTLOWSPAMACTION':
             confval = config.get('spam', 'defaultlowspamaction').upper()
-            if not ALLCODES.has_key(confval):
+            if confval not in ALLCODES:
                 return None
             return ALLCODES[confval]
 
         if upper == 'DEFAULTVIRUSACTION':
             confval = config.get('virus', 'defaultvirusaction').upper()
-            if not ALLCODES.has_key(confval):
+            if confval not in ALLCODES:
                 return None
             return ALLCODES[confval]
 
-    if not ALLCODES.has_key(upper):
+    if upper not in ALLCODES:
         return None
     return ALLCODES[upper]
 
@@ -201,15 +207,15 @@ class Suspect(object):
         try:
             (user, self.to_domain) = self.to_address.rsplit('@', 1)
         except:
-            raise ValueError, "invalid to email address: %s" % self.to_address
+            raise ValueError("invalid to email address: %s" % self.to_address)
 
         if self.from_address == '':
             self.from_domain = ''
         else:
             try:
                 (user, self.from_domain) = self.from_address.rsplit('@', 1)
-            except Exception, e:
-                raise ValueError, "invalid from email address: '%s'" % self.from_address
+            except Exception as e:
+                raise ValueError("invalid from email address: '%s'" % self.from_address)
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
@@ -229,13 +235,13 @@ class Suspect(object):
         try:
             fp.write('%s %s\n' % (isotime, message))
             fp.flush()
-        except Exception, e:
+        except Exception as e:
             logging.getLogger('suspect').error(
                 'Could not write to logfile: %s' % e)
 
     def get_tag(self, key, defaultvalue=None):
         """returns the tag value. if the tag is not found, return defaultvalue instead (None if no defaultvalue passed)"""
-        if not self.tags.has_key(key):
+        if key not in self.tags:
             return defaultvalue
         return self.tags[key]
 
@@ -403,7 +409,7 @@ class Suspect(object):
             readbytes = maxbytes
         try:
             source = open(self.tempfile).read(readbytes)
-        except Exception, e:
+        except Exception as e:
             logging.getLogger('fuglu.suspect').error(
                 'Cannot retrieve original source from tempfile %s : %s' % (self.tempfile, str(e)))
             raise e
@@ -543,10 +549,10 @@ class BasicPlugin(object):
                     section = self.section
                 try:
                     var = self.config.get(section, config)
-                except ConfigParser.NoOptionError:
+                except configparser.NoOptionError:
                     print("Missing configuration value [%s] :: %s" % (section, config))
                     allOK = False
-                except ConfigParser.NoSectionError:
+                except configparser.NoSectionError:
                     print("Missing configuration section %s" % (section))
                     allOK = False
 
@@ -563,10 +569,10 @@ class BasicPlugin(object):
                         if not infodic["validator"](var):
                             print("Validation failed for [%s] :: %s" % (section, config))
                             allOK = False
-                except ConfigParser.NoSectionError:
+                except configparser.NoSectionError:
                     print("Missing configuration section [%s] :: %s" % (section, config))
                     allOK = False
-                except ConfigParser.NoOptionError:
+                except configparser.NoOptionError:
                     print("Missing configuration value [%s] :: %s" % (section, config))
                     allOK = False
 
@@ -649,7 +655,7 @@ class SuspectFilter(object):
         regex = sp[1]
         try:
             pattern = re.compile(regex, re.IGNORECASE | re.DOTALL)
-        except Exception, e:
+        except Exception as e:
             raise Exception(
                 'Could not compile regex %s in file %s (%s)' % (regex, self.filename, e))
 
@@ -684,7 +690,7 @@ class SuspectFilter(object):
 
         try:
             pattern = re.compile(regex, reflags)
-        except Exception, e:
+        except Exception as e:
             raise Exception(
                 'Could not compile regex %s in file %s (%s)' % (regex, self.filename, e))
 
@@ -715,7 +721,7 @@ class SuspectFilter(object):
                 if tup != None:
                     newpatterns.append(tup)
                     continue
-            except Exception, e:
+            except Exception as e:
                 self.logger.error(
                     "perl style line failed %s, error: %s" % (line, str(e)))
                 continue
@@ -725,7 +731,7 @@ class SuspectFilter(object):
                 tup = self._load_simplestyle_line(line)
                 newpatterns.append(tup)
                 continue
-            except Exception, e:
+            except Exception as e:
                 self.logger.error(str(e))
                 continue
 
@@ -759,11 +765,8 @@ class SuspectFilter(object):
         try:
             stripper.feed(content)
             return stripper.get_stripped_data()
-        except UnicodeDecodeError:
+        except: #ignore parsing/encoding errors
             pass
-        except HTMLParser.HTMLParseError:
-            pass
-
         # use regex replace
         return re.sub(self.stripre, '', content)
 
@@ -972,16 +975,16 @@ class SuspectFilter(object):
                 if tup != None:
                     continue
                 tup = self._load_simplestyle_line(line)
-            except Exception, e:
+            except Exception as e:
                 print("Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e)))
                 return False
         return True
 
 
-class HTMLStripper(HTMLParser.HTMLParser):
+class HTMLStripper(HTMLParser):
 
     def __init__(self, strip_tags=None):
-        HTMLParser.HTMLParser.__init__(self)
+        HTMLParser.__init__(self)
         self.strip_tags = strip_tags or ['script', 'style']
         self.reset()
         self.collect = True
@@ -992,12 +995,12 @@ class HTMLStripper(HTMLParser.HTMLParser):
             self.stripped_data.append(data)
 
     def handle_starttag(self, tag, attrs):
-        HTMLParser.HTMLParser.handle_starttag(self, tag, attrs)
+        HTMLParser.handle_starttag(self, tag, attrs)
         if tag.lower() in self.strip_tags:
             self.collect = False
 
     def handle_endtag(self, tag):
-        HTMLParser.HTMLParser.handle_endtag(self, tag)
+        HTMLParser.handle_endtag(self, tag)
         if tag.lower() in self.strip_tags:
             self.collect = True
 

@@ -131,7 +131,7 @@ class ESMTPServer(object):
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._socket.bind((address, port))
             self._socket.listen(5)
-        except Exception, e:
+        except Exception as e:
             self.logger.error('Could not start incoming ESMTP Server: %s' % e)
             sys.exit(1)
 
@@ -167,7 +167,7 @@ class ESMTPServer(object):
                     threadpool.add_task(engine)
                 else:
                     engine.handlesession()
-            except Exception, e:
+            except Exception as e:
                 self.logger.error('Exception in serve(): %s' % str(e))
 
 
@@ -352,7 +352,7 @@ class ESMTPPassthroughSession(object):
                     prefix='fuglu', dir=self.config.get('main', 'tempdir'))
                 self.tempfilename = tempfilename
                 self.tempfile = os.fdopen(handle, 'w+b')
-            except Exception, e:
+            except Exception as e:
                 self.endsession(421, "could not create file: %s" % str(e))
 
             return ("354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1)

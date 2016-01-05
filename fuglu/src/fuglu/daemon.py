@@ -42,15 +42,15 @@ class DaemonStuff(object):
 
         try:
             pid = os.fork()
-        except OSError, e:
-            raise Exception, "%s [%d]" % (e.strerror, e.errno)
+        except OSError as e:
+            raise Exception("%s [%d]" % (e.strerror, e.errno))
 
         if (pid == 0):
             os.setsid()
             try:
                 pid = os.fork()    # Fork a second child.
-            except OSError, e:
-                raise Exception, "%s [%d]" % (e.strerror, e.errno)
+            except OSError as e:
+                raise Exception("%s [%d]" % (e.strerror, e.errno))
 
             if (pid == 0):    # The second child.
                 os.chdir('/')

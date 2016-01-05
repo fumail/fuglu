@@ -30,7 +30,7 @@ def git_version():
             return vers
         else:
             return FUGLU_VERSION
-    except Exception, e:
+    except Exception as e:
         return FUGLU_VERSION
 
 

@@ -73,7 +73,7 @@ class SessionHandler(object):
                 port = self.protohandler.socket.getsockname()[1]
                 if port is not None:
                     suspect.tags['incomingport'] = port
-            except Exception, e:
+            except Exception as e:
                 self.logger.warning('Could not get incoming port: %s' % str(e))
 
             pluglist = self.run_prependers(suspect)
@@ -119,7 +119,7 @@ class SessionHandler(object):
 
                 except KeyboardInterrupt:
                     sys.exit()
-                except Exception, e:
+                except Exception as e:
                     message_is_deferred = True
                     self.logger.error(
                         "Could not commit message. Error: %s" % e)
@@ -165,7 +165,7 @@ class SessionHandler(object):
                     'Could not remove tempfile %s' % suspect.tempfile)
         except KeyboardInterrupt:
             sys.exit(0)
-        except Exception, e:
+        except Exception as e:
             exc = traceback.format_exc()
             self.logger.error('Exception %s: %s' % (e, exc))
             self.protohandler.defer("internal problem - message deferred")
@@ -193,7 +193,7 @@ class SessionHandler(object):
             trashfile.write(suspect.get_source())
             trashfile.close()
             self.logger.debug('Message stored to trash: %s' % trashfilename)
-        except Exception, e:
+        except Exception as e:
             self.logger.error(
                 "could not create file %s: %s" % (trashfilename, e))
 
@@ -208,7 +208,7 @@ class SessionHandler(object):
                     time, suspect.from_address, suspect.to_address, killerplugin, trashfilename))
                 handle.write("\n")
                 handle.close()
-            except Exception, e:
+            except Exception as e:
                 self.logger.error("Could not update trash log: %s" % e)
 
     def run_plugins(self, suspect, pluglist):
@@ -273,7 +273,7 @@ class SessionHandler(object):
                     self.logger.error(
                         'Invalid Message action Code: %s. Using DUNNO' % result)
 
-            except Exception, e:
+            except Exception as e:
                 CrashStore.store_exception()
                 exc = traceback.format_exc()
                 self.logger.error('Plugin %s failed: %s' % (str(plugin), exc))

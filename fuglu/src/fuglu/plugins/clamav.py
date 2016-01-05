@@ -134,7 +134,7 @@ Tags:
                         self.config.get(self.section, 'rejectmessage'), suspect, values)
                     return actioncode, message
                 return DUNNO
-            except Exception, e:
+            except Exception as e:
                 self.__invalidate_socket()
 
                 # don't warn the first time if it's just a broken pipe which
@@ -197,7 +197,7 @@ Tags:
                     "Commands out of sync - expected ID %s - got %s" % (threadLocal.expectedID, ans_id))
 
             if virusinfo[-5:] == 'ERROR':
-                raise Exception, virusinfo
+                raise Exception(virusinfo)
             elif virusinfo != 'OK':
                 dr[filename] = virusinfo.replace(" FOUND", '')
 
@@ -212,7 +212,7 @@ Tags:
             filename = filename.strip()
             virusinfo = virusinfo.strip()
             if virusinfo[-5:] == 'ERROR':
-                raise Exception, virusinfo
+                raise Exception(virusinfo)
             elif virusinfo != 'OK':
                 dr[filename] = virusinfo.replace(" FOUND", '')
             s.close()
@@ -300,7 +300,7 @@ Tags:
     def lint_ping(self):
         try:
             s = self.__init_socket__(oneshot=True)
-        except Exception, e:
+        except Exception as e:
             print("Could not contact clamd: %s" % (str(e)))
             return False
         s.sendall('PING')

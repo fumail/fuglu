@@ -68,7 +68,7 @@ class ControlServer(object):
                 self._socket.bind(port)
 
             self._socket.listen(5)
-        except Exception, e:
+        except Exception as e:
             self.logger.error('Could not start control server: %s' % e)
             sys.exit(1)
 
@@ -97,7 +97,7 @@ class ControlServer(object):
                 self.logger.debug('Incoming connection from %s' % str(nsd[1]))
                 engine.handlesession()
 
-            except Exception, e:
+            except Exception as e:
                 fmt = traceback.format_exc()
                 self.logger.error('Exception in serve(): %s' % fmt)
 
@@ -130,7 +130,7 @@ class ControlSession(object):
         self.socket.close()
 
     def handle_command(self, command, args):
-        if not self.commands.has_key(command):
+        if command not in self.commands:
             return "ERR no such command"
 
         res = self.commands[command](args)

@@ -91,7 +91,7 @@ class NCSession(object):
                 prefix='fuglu', dir=self.config.get('main', 'tempdir'))
             self.tempfilename = tempfilename
             self.tempfile = os.fdopen(handle, 'w+b')
-        except Exception, e:
+        except Exception as e:
             self.endsession('could not write to tempfile')
 
         while True:
