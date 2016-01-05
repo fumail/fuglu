@@ -20,9 +20,9 @@ import time
 import socket
 import uuid
 try:
-	from html.parser import HTMLParser
+    from html.parser import HTMLParser
 except ImportError:
-	from HTMLParser import HTMLParser
+    from HTMLParser import HTMLParser
 
 HAVE_BEAUTIFULSOUP = False
 BS_VERSION = 0
