@@ -765,11 +765,8 @@ class SuspectFilter(object):
         try:
             stripper.feed(content)
             return stripper.get_stripped_data()
-        except UnicodeDecodeError:
+        except: #ignore parsing/encoding errors
             pass
-        except HTMLParseError:
-            pass
-
         # use regex replace
         return re.sub(self.stripre, '', content)
 
