@@ -436,7 +436,7 @@ Subject: test scanner
         suspect.tags['highspam']['SpamAssassin'] = False
         if spamscore != None:
             suspect.tags['SAPlugin.spamscore'] = spamscore
-            highspamlevel = runtimeconfig.getint(self.section, 'highspamlevel')
+            highspamlevel = runtimeconfig.getfloat(self.section, 'highspamlevel')
             if spamscore >= highspamlevel:
                 suspect.tags['highspam']['SpamAssassin'] = True
                 configaction = string_to_actioncode(
