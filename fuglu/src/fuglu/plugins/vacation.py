@@ -28,6 +28,8 @@ from threading import Lock
 from datetime import datetime, timedelta
 import logging
 import traceback
+from email.mime.text import MIMEText
+from email.header import Header
 
 # from address regex
 vacation_ignoresenderregex = ["^owner-",
@@ -412,13 +414,6 @@ SQL Example for mysql:
         bounce = Bounce(self.config)
         self.logger.debug('generating vacation message from %s to %s' % (
             suspect.to_address, suspect.from_address))
-        try:
-            from email.mime.text import MIMEText
-            from email.header import Header
-        except ImportError as e:
-            # python 2.4
-            from email.MIMEText import MIMEText
-            from email.Header import Header
 
         # check subject
         subj = vacation.subject
