@@ -331,7 +331,7 @@ if __name__ == '__main__':
             else:
                 infected += 1
                 print("%s: infection(s) found: " % file)
-                for fname, infection in res.iteritems():
+                for fname, infection in res.items():
                     print("- %s is infected with %s" % (fname, infection))
         print("")
         print("%s / %s files infected" % (infected, counter))
