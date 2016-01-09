@@ -124,7 +124,7 @@ Tags:
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
-                    firstinfected, firstvirusname = viruses.items()[0]
+                    firstinfected, firstvirusname = list(viruses.items())[0]
                     values = dict(
                         infectedfile=firstinfected, virusname=firstvirusname)
                     message = apply_template(
