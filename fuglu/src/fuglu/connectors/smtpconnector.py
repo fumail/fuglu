@@ -335,7 +335,7 @@ class SMTPSession(object):
         if start < 1:
             start = address.find(':') + 1
         if start < 1:
-            raise ValueError, "Could not parse address %s" % address
+            raise ValueError("Could not parse address %s" % address)
         end = string.find(address, '>')
         if end < 0:
             end = len(address)
