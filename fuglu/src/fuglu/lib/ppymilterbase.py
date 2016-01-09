@@ -447,7 +447,7 @@ class PpyMilter(object):
         """
         self.__actions = 0
         self.__protocol = NO_CALLBACKS
-        for (callback, flag) in CALLBACKS.iteritems():
+        for (callback, flag) in CALLBACKS.items():
             if hasattr(self, callback):
                 self.__protocol &= ~flag
 

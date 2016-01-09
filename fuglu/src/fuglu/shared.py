@@ -307,7 +307,7 @@ class Suspect(object):
         blacklist = ['decisions', 'scantimes', 'debugfile']
         tagscopy = {}
 
-        for k, v in self.tags.iteritems():
+        for k, v in self.tags.items():
             if k in blacklist:
                 continue
 
@@ -558,7 +558,7 @@ class BasicPlugin(object):
 
         # new config style
         if type(self.requiredvars) == dict:
-            for config, infodic in self.requiredvars.iteritems():
+            for config, infodic in self.requiredvars.items():
                 section = self.section
                 if 'section' in infodic:
                     section = infodic['section']

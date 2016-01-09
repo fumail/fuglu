@@ -88,7 +88,7 @@ def check_version_status(lint=False):
     ret = re.match(r'^127\.0\.0\.(?P<replycode>\d{1,4})$', result)
     if ret != None:
         code = int(ret.groupdict()['replycode'])
-        for bitmask, message in bitmaskmap.iteritems():
+        for bitmask, message in bitmaskmap.items():
             if code & bitmask == bitmask:
                 logging.warn(message)
                 if lint:
@@ -766,7 +766,7 @@ class MainController(object):
 
     def propagate_defaults(self, requiredvars, config, defaultsection=None):
         """propagate defaults from requiredvars if they are missing in config"""
-        for option, infodic in requiredvars.iteritems():
+        for option, infodic in requiredvars.items():
             if 'section' in infodic:
                 section = infodic['section']
             else:
@@ -802,7 +802,7 @@ class MainController(object):
         Fill missing values with defaults if possible
         """
         allOK = True
-        for config, infodic in self.requiredvars.iteritems():
+        for config, infodic in self.requiredvars.items():
             section = infodic['section']
             try:
                 var = self.config.get(section, config)
