@@ -272,8 +272,8 @@ class Suspect(object):
         """
         if immediate:
             # is ignore the right thing to do here?
-            val = unicode(value, errors='ignore')
-            hdr = Header(val, header_name=key, continuation_ws=' ')
+            value.encode('UTF-8', errors='ignore')
+            hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
             src = hdrline + self.get_source()
             self.set_source(src)
