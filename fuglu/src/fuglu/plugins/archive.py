@@ -206,7 +206,7 @@ Note: The first rule to match in a message is the only rule that will be applied
 
         finaldir = os.path.dirname(requested_path)
         if not os.path.isdir(finaldir):
-            os.makedirs(finaldir, 0755)
+            os.makedirs(finaldir, 0o755)
 
         if self.config.getboolean(self.section, 'storeoriginal'):
             shutil.copy(suspect.tempfile, requested_path)
