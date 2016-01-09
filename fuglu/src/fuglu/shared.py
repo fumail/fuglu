@@ -70,7 +70,7 @@ ALLCODES = {
 
 def actioncode_to_string(actioncode):
     """Return the human readable string for this code"""
-    for key, val in ALLCODES.items():
+    for key, val in list(ALLCODES.items()):
         if val == actioncode:
             return key
     if actioncode == None:
@@ -251,7 +251,7 @@ class Suspect(object):
 
     def is_highspam(self):
         """Returns True if ANY of the spam engines tagged this suspect as high spam"""
-        for key in self.tags['highspam'].keys():
+        for key in list(self.tags['highspam'].keys()):
             val = self.tags['highspam'][key]
             if val:
                 return True
@@ -259,7 +259,7 @@ class Suspect(object):
 
     def is_spam(self):
         """Returns True if ANY of the spam engines tagged this suspect as spam"""
-        for key in self.tags['spam'].keys():
+        for key in list(self.tags['spam'].keys()):
             val = self.tags['spam'][key]
             if val:
                 return True
@@ -286,7 +286,7 @@ class Suspect(object):
 
     def is_virus(self):
         """Returns True if ANY of the antivirus engines tagged this suspect as infected"""
-        for key in self.tags['virus'].keys():
+        for key in list(self.tags['virus'].keys()):
             val = self.tags['virus'][key]
             if val:
                 return True
@@ -844,7 +844,7 @@ class SuspectFilter(object):
             return self.get_decoded_textparts(messagerep)
 
         if headername == 'body' or headername == 'body:stripped':
-            return map(self.strip_text, self.get_decoded_textparts(messagerep))
+            return list(map(self.strip_text, self.get_decoded_textparts(messagerep)))
 
         if headername.startswith('mime:'):
             allvalues = []
@@ -865,7 +865,7 @@ class SuspectFilter(object):
             regex = regex.replace('\*', '.*')
             patt = re.compile(regex, re.IGNORECASE)
 
-            for h in payload.keys():
+            for h in list(payload.keys()):
                 if re.match(patt, h) != None:
                     valuelist.extend(payload.get_all(h))
         else:

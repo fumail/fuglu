@@ -382,7 +382,7 @@ SQL Example for mysql:
                 self.logger.debug('Blacklisted header: %s' % ignoheader)
                 return True
 
-        for header, restring in vacation_ignoreheaderregex.items():
+        for header, restring in list(vacation_ignoreheaderregex.items()):
             #self.logger.info("searching for header %s"%header)
             vals = messagerep.get_all(header)
             if vals != None:

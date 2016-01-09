@@ -299,10 +299,10 @@ class SessionHandler(object):
                     added = list(resultset - plugcopyset)
                     if len(removed) > 0:
                         self.logger.debug(
-                            'Prepender %s removed plugins: %s' % (plugin, map(str, removed)))
+                            'Prepender %s removed plugins: %s' % (plugin, list(map(str, removed))))
                     if len(added) > 0:
                         self.logger.debug(
-                            'Prepender %s added plugins: %s' % (plugin, map(str, added)))
+                            'Prepender %s added plugins: %s' % (plugin, list(map(str, added))))
                     plugcopy = result
 
             except Exception:
