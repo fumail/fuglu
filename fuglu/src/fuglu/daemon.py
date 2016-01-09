@@ -82,7 +82,7 @@ class DaemonStuff(object):
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        pidfd = os.open(self.pidfile, os.O_WRONLY | os.O_CREAT, 0644)
+        pidfd = os.open(self.pidfile, os.O_WRONLY | os.O_CREAT, 0o644)
         os.write(pidfd, "%s\n" % pid)
         os.close(pidfd)
         return(0)
@@ -97,7 +97,7 @@ class DaemonStuff(object):
         except:
             raise Exception('Can not drop privileges, user %s or group %s does not exist' % (
                 username, groupname))
-        new_umask = 077
+        new_umask = 0o077
         os.umask(new_umask)
 
         os.setgid(running_gid)
