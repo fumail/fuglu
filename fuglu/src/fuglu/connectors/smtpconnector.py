@@ -20,7 +20,6 @@ import string
 import tempfile
 import os
 import unittest
-import ConfigParser
 import re
 
 from fuglu.shared import Suspect, apply_template
