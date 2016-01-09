@@ -127,7 +127,7 @@ Example script:
 
         scriptglobals = globals().copy()
         try:
-            execfile(filename, scriptglobals, scriptlocals)
+            exec(compile(open(filename).read(), filename, 'exec'), scriptglobals, scriptlocals)
             action = scriptlocals['action']
             message = scriptlocals['message']
         except Stopped:
