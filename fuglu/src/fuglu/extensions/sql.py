@@ -14,11 +14,18 @@
 #
 # Fuglu SQLAlchemy Extension
 #
-from ConfigParser import RawConfigParser
 try:
-    import cStringIO as StringIO
-except:
-    import StringIO
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
+
+try:
+    from io import StringIO
+except ImportError:
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from StringIO import StringIO
 
 import logging
 import traceback
@@ -104,9 +111,9 @@ class DBConfig(RawConfigParser):
 
     def cloneFrom(self, config):
         """Clone this object from a RawConfigParser"""
-        stringout = StringIO.StringIO()
+        stringout = StringIO()
         config.write(stringout)
-        stringin = StringIO.StringIO(stringout.getvalue())
+        stringin = StringIO(stringout.getvalue())
         del stringout
         self.readfp(stringin)
         del stringin
