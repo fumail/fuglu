@@ -10,7 +10,10 @@ class SAPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""
 
     def setUp(self):
-        from ConfigParser import RawConfigParser
+        try:
+            from configparser import RawConfigParser
+        except ImportError:
+            from ConfigParser import RawConfigParser
         config = RawConfigParser()
         config.add_section('main')
         config.set('main', 'prependaddedheaders', 'X-Fuglu-')
@@ -61,9 +64,9 @@ Subject: test scanner
         if type(result) is tuple:
             result, message = result
         score = int(suspect.get_tag('SAPlugin.spamscore'))
-        self.failUnless(
+        self.assertTrue(
             score > 999, "GTUBE mails should score ~1000 , we got %s" % score)
-        self.failUnless(result == REJECT, 'High spam should be rejected')
+        self.assertTrue(result == REJECT, 'High spam should be rejected')
 
     def test_symbols(self):
         stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
@@ -75,9 +78,9 @@ Subject: test scanner
 """
         spamstatus, spamscore, rules = self.candidate.safilter_symbols(
             stream, 'oli@unittests.fuglu.org')
-        self.failUnless('GTUBE' in rules, "GTUBE not found in SYMBOL scan")
-        self.failIf(spamscore < 500)
-        self.failUnless(spamstatus)
+        self.assertTrue('GTUBE' in rules, "GTUBE not found in SYMBOL scan")
+        self.assertFalse(spamscore < 500)
+        self.assertTrue(spamstatus)
 
         stream2 = """Received: from mail.python.org (mail.python.org [82.94.164.166])
     by bla.fuglu.org (Postfix) with ESMTPS id 395743E03A5
@@ -94,7 +97,7 @@ This is a test mailing """
         spamstatus, spamscore, rules = self.candidate.safilter_symbols(
             stream2, 'oli@unittests.fuglu.org')
         # print rules
-        self.failIf(spamstatus, "This message should not be detected as spam")
+        self.assertFalse(spamstatus, "This message should not be detected as spam")
 
     def test_sql_blacklist(self):
         self.candidate.config.set('SAPlugin', 'check_sql_blacklist', 'True')
@@ -103,7 +106,7 @@ This is a test mailing """
 
         import fuglu.extensions.sql
         if not fuglu.extensions.sql.ENABLED:
-            print "Excluding test that needs sqlalchemy extension"
+            print("Excluding test that needs sqlalchemy extension")
             return
 
         session = fuglu.extensions.sql.get_session(self.testdb)
@@ -115,27 +118,27 @@ This is a test mailing """
 )"""
 
         session.execute(createsql)
-        self.assertEquals(self.candidate.check_sql_blacklist(
+        self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), DUNNO), 'sender is not blacklisted'
 
         insertsql = """INSERT INTO userpref (username,preference,value) VALUES ('%unittests.fuglu.org','blacklist_from','*@unittests.fuglu.org')"""
         session.execute(insertsql)
 
-        self.assertEquals(self.candidate.check_sql_blacklist(
+        self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), REJECT), 'sender should be blacklisted'
 
         fuglu.extensions.sql.ENABLED = False
-        self.assertEquals(self.candidate.check_sql_blacklist(
+        self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), DUNNO), 'problem if sqlalchemy is not available'
         fuglu.extensions.sql.ENABLED = True
 
         self.candidate.config.set(
             'SAPlugin', 'sql_blacklist_sql', 'this is a buggy sql statement')
-        self.assertEquals(self.candidate.check_sql_blacklist(
+        self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), DUNNO), 'error coping with db problems'
 
         # simulate unavailable db
         self.candidate.config.set(
             'SAPlugin', 'sql_blacklist_dbconnectstring', 'mysql://127.0.0.1:9977/idonotexist')
-        self.assertEquals(self.candidate.check_sql_blacklist(
+        self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), DUNNO), 'error coping with db problems'

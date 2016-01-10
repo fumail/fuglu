@@ -1,9 +1,13 @@
 from unittestsetup import TESTDATADIR
 
 import unittest
-import ConfigParser
 import tempfile
 import os
+
+try:
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
 
 from fuglu.plugins.archive import ArchivePlugin
 
@@ -14,7 +18,7 @@ class ArchiveTestcase(unittest.TestCase):
 
         self.tempfiles = []
 
-        config = ConfigParser.RawConfigParser()
+        config = RawConfigParser()
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
 

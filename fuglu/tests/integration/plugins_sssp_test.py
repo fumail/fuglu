@@ -10,7 +10,10 @@ class SSSPPluginTestCase(unittest.TestCase):
     """Testcases for the Stub Plugin"""
 
     def setUp(self):
-        from ConfigParser import RawConfigParser
+        try:
+            from configparser import RawConfigParser
+        except ImportError:
+            from ConfigParser import RawConfigParser
         import os
         config = RawConfigParser()
         config.add_section('main')

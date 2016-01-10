@@ -8,7 +8,10 @@ import email
 class ICAPPluginTestCase(unittest.TestCase):
 
     def setUp(self):
-        from ConfigParser import RawConfigParser
+        try:
+            from configparser import RawConfigParser
+        except ImportError:
+            from ConfigParser import RawConfigParser
         config = RawConfigParser()
         config.add_section('main')
         config.add_section('virus')

@@ -13,7 +13,10 @@ class VacationTestCase(unittest.TestCase):
 
     def setUp(self):
         import os
-        from ConfigParser import RawConfigParser
+        try:
+            from configparser import RawConfigParser
+        except ImportError:
+            from ConfigParser import RawConfigParser
         testfile = "/tmp/vacation_test.db"
         if os.path.exists(testfile):
             os.remove(testfile)

@@ -2,7 +2,10 @@ from unittestsetup import TESTDATADIR, CONFDIR
 
 import unittest
 import os
-from ConfigParser import RawConfigParser
+try:
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
 
 from fuglu.shared import Suspect
 from fuglu.extensions.sql import get_session, DBConfig
