@@ -102,7 +102,7 @@ class SQLSkipper(PrependerPlugin):
 
     def lint_sql(self):
         if not SQL_EXTENSION_AVAILABLE:
-            print "SQLALCHEMY extension is not enabled"
+            print("SQLALCHEMY extension is not enabled")
             return False
 
         from sqlalchemy.sql.expression import func
@@ -110,9 +110,9 @@ class SQLSkipper(PrependerPlugin):
             self.config.get(self.section, 'dbconnectstring'))
         try:
             dbtime = session.execute(func.current_timestamp()).scalar()
-            print "DB connection successful. Server time: %s" % dbtime
+            print("DB connection successful. Server time: %s" % dbtime)
             session.close()
             return True
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             return False

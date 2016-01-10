@@ -2,10 +2,14 @@ from unittestsetup import TESTDATADIR, CONFDIR
 
 import unittest
 import os
-from ConfigParser import RawConfigParser
 import tempfile
 import shutil
 from nose.tools import nottest
+
+try:
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
 
 import fuglu
 from fuglu.plugins.attachment import FiletypePlugin
@@ -81,7 +85,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
 
         result = self.candidate.examine(suspect)
         resstr = actioncode_to_string(result)
-        self.assertEquals(resstr, "DUNNO")
+        self.assertEqual(resstr, "DUNNO")
 
         # another recipient should still get the block
         suspect = Suspect(
@@ -91,7 +95,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
         if type(result) is tuple:
             result, message = result
         resstr = actioncode_to_string(result)
-        self.assertEquals(resstr, "DELETE")
+        self.assertEqual(resstr, "DELETE")
         os.remove(tempfilename)
 
 
@@ -141,7 +145,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         if type(result) is tuple:
             result, message = result
         os.remove(tempfilename)
-        self.failIf(result != DELETE)
+        self.assertFalse(result != DELETE)
 
     @nottest
     def test_utf8msg(self):
@@ -158,7 +162,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         if type(result) is tuple:
             result, message = result
         os.remove(tempfilename)
-        self.assertEquals(result, DUNNO)
+        self.assertEqual(result, DUNNO)
 
     def test_archiveextractsize(self):
         """Test archive extract max filesize"""
@@ -186,7 +190,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.failIf(
+                self.assertFalse(
                     result != DELETE, 'extracted large file should be blocked')
 
                 # now set the limit to 5 mb, the file should be skipped now
@@ -195,7 +199,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.failIf(result != DUNNO, 'large file should be skipped')
+                self.assertFalse(result != DUNNO, 'large file should be skipped')
 
                 # reset config
                 self.candidate.config.set(
@@ -225,7 +229,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.failIf(
+                self.assertFalse(
                     result != DELETE, 'archive containing blocked filename was not blocked')
             finally:
                 os.remove(tempfilename)

@@ -1,10 +1,13 @@
 from unittestsetup import TESTDATADIR
 import unittest
-import ConfigParser
 import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
 import os
 
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
 
 class SuspectTestCase(unittest.TestCase):
 
@@ -47,30 +50,30 @@ class SuspectFilterTestCase(unittest.TestCase):
         suspect.tags['testtag'] = 'testvalue'
 
         headermatches = self.candidate.get_args(suspect)
-        self.failUnless(
+        self.assertTrue(
             'Sent to unittest domain!' in headermatches, "To_domain not found in headercheck")
-        self.failUnless('Envelope sender is sender@unittests.fuglu.org' in headermatches,
+        self.assertTrue('Envelope sender is sender@unittests.fuglu.org' in headermatches,
                         "Envelope Sender not matched in header chekc")
-        self.failUnless('Mime Version is 1.0' in headermatches,
+        self.assertTrue('Mime Version is 1.0' in headermatches,
                         "Standard header Mime Version not found")
-        self.failUnless(
+        self.assertTrue(
             'A tag match' in headermatches, "Tag match did not work")
-        self.failUnless(
+        self.assertTrue(
             'Globbing works' in headermatches, "header globbing failed")
-        self.failUnless(
+        self.assertTrue(
             'body rule works' in headermatches, "decoded body rule failed")
-        self.failUnless(
+        self.assertTrue(
             'full body rule works' in headermatches, "full body failed")
-        self.failUnless('mime rule works' in headermatches, "mime rule failed")
-        self.failIf('this should not match in a body rule' in headermatches,
+        self.assertTrue('mime rule works' in headermatches, "mime rule failed")
+        self.assertFalse('this should not match in a body rule' in headermatches,
                     'decoded body rule matched raw body')
 
         # perl style advanced rules
-        self.failUnless('perl-style /-notation works!' in headermatches,
+        self.assertTrue('perl-style /-notation works!' in headermatches,
                         "new rule format failed: %s" % headermatches)
-        self.failUnless('perl-style recipient match' in headermatches,
+        self.assertTrue('perl-style recipient match' in headermatches,
                         "new rule format failed for to_domain: %s" % headermatches)
-        self.failIf('this should not match' in headermatches,
+        self.assertFalse('this should not match' in headermatches,
                     "rule flag ignorecase was not detected")
 
         # TODO: raw body rules
@@ -82,12 +85,12 @@ class SuspectFilterTestCase(unittest.TestCase):
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
 
         (match, info) = self.candidate.matches(suspect, extended=True)
-        self.failUnless(match, 'Match should return True')
+        self.assertTrue(match, 'Match should return True')
         field, matchedvalue, arg, regex = info
-        self.failUnless(field == 'to_domain')
-        self.failUnless(matchedvalue == 'unittests.fuglu.org')
-        self.failUnless(arg == 'Sent to unittest domain!')
-        self.failUnless(regex == 'unittests\.fuglu\.org')
+        self.assertTrue(field == 'to_domain')
+        self.assertTrue(matchedvalue == 'unittests.fuglu.org')
+        self.assertTrue(arg == 'Sent to unittest domain!')
+        self.assertTrue(regex == 'unittests\.fuglu\.org')
 
     def test_sf_get_field(self):
         """Test SuspectFilter field extract"""
@@ -188,7 +191,7 @@ class ActionCodeTestCase(unittest.TestCase):
 
     def test_defaultcodes(self):
         """test actioncode<->string conversion"""
-        conf = ConfigParser.ConfigParser()
+        conf = ConfigParser()
         conf.add_section('spam')
         conf.add_section('virus')
         conf.set('spam', 'defaultlowspamaction', 'REJEcT')
@@ -229,7 +232,7 @@ class TemplateTestcase(unittest.TestCase):
 
         result = apply_template(template, suspect, dict(reason=reason))
         expected = """Your message 'Hello world!' from sender@unittests.fuglu.org to recipient@unittests.fuglu.org could not be delivered because a three-headed monkey stole it"""
-        self.assertEquals(
+        self.assertEqual(
             result, expected), "Got unexpected template result: %s" % result
 
 
@@ -247,19 +250,19 @@ class ClientInfoTestCase(unittest.TestCase):
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         helo, ip, revdns = suspect.client_info_from_rcvd(None, 0)
-        self.assertEquals(helo, 'helo1')
-        self.assertEquals(ip, '10.0.0.1')
-        self.assertEquals(revdns, 'rdns1')
+        self.assertEqual(helo, 'helo1')
+        self.assertEqual(ip, '10.0.0.1')
+        self.assertEqual(revdns, 'rdns1')
 
         helo, ip, revdns = suspect.client_info_from_rcvd(None, 1)
-        self.assertEquals(helo, 'helo2')
-        self.assertEquals(ip, '10.0.0.2')
-        self.assertEquals(revdns, 'rdns2')
+        self.assertEqual(helo, 'helo2')
+        self.assertEqual(ip, '10.0.0.2')
+        self.assertEqual(revdns, 'rdns2')
 
         helo, ip, revdns = suspect.client_info_from_rcvd('10\.0\.0\.2', 1)
-        self.assertEquals(helo, 'helo3')
-        self.assertEquals(ip, '10.0.0.3')
-        self.assertEquals(revdns, 'rdns3')
+        self.assertEqual(helo, 'helo3')
+        self.assertEqual(ip, '10.0.0.3')
+        self.assertEqual(revdns, 'rdns3')
 
 
 class FileListTestCase(unittest.TestCase):

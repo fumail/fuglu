@@ -12,7 +12,7 @@ class SPFTestCase(unittest.TestCase):
     def _make_dummy_suspect(self, senderdomain, clientip, helo='foo.example.com'):
         s = Suspect('sender@%s' %
                     senderdomain, 'recipient@example.com', '/dev/null')
-        s.clientinfo = (helo, unicode(clientip), 'ptr.example.com')
+        s.clientinfo = (helo, clientip.encode('UTF-8'), 'ptr.example.com')
         return s
 
     def setUp(self):
@@ -45,4 +45,4 @@ class SPFTestCase(unittest.TestCase):
         # no spf record
         suspect = self._make_dummy_suspect('fuglu.org', '1.2.3.4')
         self.candidate.examine(suspect)
-        self.assertEquals(suspect.get_tag('SPF.status'), 'none')
+        self.assertEqual(suspect.get_tag('SPF.status'), 'none')

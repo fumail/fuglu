@@ -17,8 +17,8 @@ class SMTPServer:
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._socket.bind((address, port))
             self._socket.listen(5)
-        except Exception, e:
-            print 'Could not start incoming SMTP Server: %s' % e
+        except Exception as e:
+            print('Could not start incoming SMTP Server: %s' % e)
             sys.exit(1)
 
     def shutdown(self):
@@ -27,18 +27,18 @@ class SMTPServer:
 
     def serve(self):
 
-        print 'SMTP Server running to port %s' % self.port
+        print('SMTP Server running to port %s' % self.port)
         while self.stayalive:
             try:
                 nsd = self._socket.accept()
                 if not self.stayalive:
                     break
-                print 'Incoming connection from %s' % str(nsd[1])
+                print('Incoming connection from %s' % str(nsd[1]))
                 sess = SMTPSession(nsd[0])
                 success = sess.getincomingmail()
                 sess.endsession(250, "stored to /dev/null")
-            except Exception, e:
-                print 'Exception in serve(): %s' % str(e)
+            except Exception as e:
+                print('Exception in serve(): %s' % str(e))
 
 
 class SMTPSession:
@@ -60,7 +60,7 @@ class SMTPSession:
         self.tempfilename = None
 
     def _send(self, content):
-        print "> %s" % content.strip()
+        print("> %s" % content.strip())
         self.socket.send(content)
 
     def endsession(self, code, message):
@@ -105,7 +105,7 @@ class SMTPSession:
                     data += lump
                     if (len(data) >= 2) and data[-2:] == '\r\n':
                         completeLine = 1
-                        print "< %s" % data
+                        print("< %s" % data)
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
                         else:
@@ -120,7 +120,7 @@ class SMTPSession:
                                 continue
                             else:
                                 # data finished.. keep connection open though
-                                print'incoming message finished'
+                                print('incoming message finished')
                                 return True
 
                         self._send(rsp + "\r\n")
@@ -169,7 +169,7 @@ class SMTPSession:
             try:
                 (handle, self.tempfilename) = tempfile.mkstemp()
                 self.tempfile = os.fdopen(handle, 'w+b')
-                print "Created file %s" % self.tempfilename
+                print("Created file %s" % self.tempfilename)
             except:
                 self.endsession(
                     421, "could not create file %s" % self.tempfilename)
@@ -212,7 +212,7 @@ class SMTPSession:
         if start < 1:
             start = address.find(':') + 1
         if start < 1:
-            raise ValueError, "Could not parse address %s" % address
+            raise ValueError("Could not parse address %s" % address)
         end = string.find(address, '>')
         if end < 0:
             end = len(address)

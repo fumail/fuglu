@@ -1,15 +1,27 @@
 from integrationtestsetup import guess_clamav_socket, TESTDATADIR, CONFDIR, DummySMTPServer
 import unittest
-import ConfigParser
 import tempfile
 import os
-import thread
+import threading
 import time
 import smtplib
-import commands
-import cStringIO
 import mock
 from email.mime.text import MIMEText
+
+try:
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+try:
+    from subprocess import getstatusoutput
+except ImportError:
+    from commands import getstatusoutput
 
 import fuglu
 from fuglu.lib.patcheddkimlib import verify, sign
@@ -22,7 +34,7 @@ class AllpluginTestCase(unittest.TestCase):
     """Tests that pass with a default config"""
 
     def setUp(self):
-        config = ConfigParser.RawConfigParser()
+        config = RawConfigParser()
         config.read([CONFDIR + '/fuglu.conf.dist'])
         config.set('main', 'disablebounces', '1')
         guess_clamav_socket(config)
@@ -41,7 +53,7 @@ class AllpluginTestCase(unittest.TestCase):
 
         self.mc.load_plugins()
         if len(self.mc.plugins) == 0:
-            raise Exception, "plugins not loaded"
+            raise Exception("plugins not loaded")
 
         sesshandler = SessionHandler(
             None, self.mc.config, self.mc.prependers, self.mc.plugins, self.mc.appenders)
@@ -52,10 +64,10 @@ class AllpluginTestCase(unittest.TestCase):
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
         pluglist = sesshandler.run_prependers(suspect)
-        self.failIf(
+        self.assertFalse(
             len(pluglist) == 0, "Viruscheck will fail, pluginlist empty after run_prependers")
         sesshandler.run_plugins(suspect, pluglist)
-        self.failUnless(
+        self.assertTrue(
             suspect.is_virus(), "Eicar message was not detected as virus")
 
 
@@ -69,7 +81,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
     FUGLUCONTROL_PORT = 7713
 
     def setUp(self):
-        self.config = ConfigParser.RawConfigParser()
+        self.config = RawConfigParser()
         self.config.read([TESTDATADIR + '/endtoendtest.conf'])
         self.config.set(
             'main', 'incomingport', str(EndtoEndTestTestCase.FUGLU_PORT))
@@ -86,10 +98,14 @@ class EndtoEndTestTestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
             self.config, EndtoEndTestTestCase.DUMMY_PORT, EndtoEndTestTestCase.FUGLU_HOST)
-        thread.start_new_thread(self.smtp.serve, ())
+        e2edss = threading.Thread(self.smtp.serve, ())
+        e2edss.daemon = True
+        e2edss.start()
 
-        # start fuglus listening server
-        thread.start_new_thread(self.mc.startup, ())
+        # start fuglu's listening server
+        fls = threading.Thread(self.mc.startup, ())
+        fls.daemon = True
+        fls.start()
 
     def tearDown(self):
         self.mc.shutdown()
@@ -121,16 +137,15 @@ Don't dare you change any of my bytes or even remove one!"""
 
         # get answer
         gotback = self.smtp.suspect
-        self.failIf(
+        self.assertFalse(
             gotback == None, "Did not get message from dummy smtp server")
 
         # check a few things on the received message
         msgrep = gotback.get_message_rep()
-        self.failUnless(msgrep.has_key(
-            'X-Fuglutest-Spamstatus'), "Fuglu SPAM Header not found in message")
+        self.assertTrue('X-Fuglutest-Spamstatus' in msgrep, "Fuglu SPAM Header not found in message")
         payload = msgrep.get_payload()
         outbytes = len(payload)
-        self.failUnlessEqual(testmessage, payload, "Message body has been altered. In: %s bytes, Out: %s bytes, teststring=->%s<- result=->%s<-" %
+        self.assertEqual(testmessage, payload, "Message body has been altered. In: %s bytes, Out: %s bytes, teststring=->%s<- result=->%s<-" %
                              (inbytes, outbytes, testmessage, payload))
 
 
@@ -153,7 +168,7 @@ class DKIMTestCase(unittest.TestCase):
         record = "v=DKIM1; k=rsa; p=%s" % k
         fuglu.lib.patcheddkimlib.dnstxt = mock.Mock(return_value=record)
 
-        self.config = ConfigParser.RawConfigParser()
+        self.config = RawConfigParser()
         self.config.read([TESTDATADIR + '/endtoendtest.conf'])
         self.config.set('main', 'incomingport', str(DKIMTestCase.FUGLU_PORT))
         self.config.set('main', 'outgoinghost', str(DKIMTestCase.FUGLU_HOST))
@@ -168,10 +183,14 @@ class DKIMTestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(self.config, self.config.getint(
             'main', 'outgoingport'), DKIMTestCase.FUGLU_HOST)
-        thread.start_new_thread(self.smtp.serve, ())
+        dkdss = threading.Thread(self.smtp.serve, ())
+        dkdss.daemon = True
+        dkdss.start()
 
-        # start fuglus listening server
-        thread.start_new_thread(self.mc.startup, ())
+        # start fuglu's listening server
+        fls = threading.Thread(self.mc.startup, ())
+        fls.daemon = True
+        fls.start()
 
     def tearDown(self):
         self.mc.shutdown()
@@ -186,14 +205,14 @@ class DKIMTestCase(unittest.TestCase):
         dkimheader = sign(msgstring, 'whatever', 'testfuglu.org', open(
             TESTDATADIR + '/dkim/testfuglu.org.private').read(), include_headers=['From', 'To'])
         signedcontent = dkimheader + msgstring
-        logbuffer = cStringIO.StringIO()
+        logbuffer = StringIO()
         self.assertTrue(verify(signedcontent, debuglog=logbuffer),
                         "Failed DKIM verification immediately after signing %s" % logbuffer.getvalue())
 
         # send test message
         try:
             smtpclient = smtplib.SMTP('127.0.0.1', DKIMTestCase.FUGLU_PORT)
-        except Exception, e:
+        except Exception as e:
             self.fail("Could not connect to fuglu on port %s : %s" %
                       (DKIMTestCase.FUGLU_PORT, str(e)))
         # smtpServer.set_debuglevel(1)
@@ -209,7 +228,7 @@ class DKIMTestCase(unittest.TestCase):
         self.assertTrue(tmpfile != None, 'Send to dummy smtp server failed')
 
         result = open(tmpfile, 'r').read()
-        logbuffer = cStringIO.StringIO()
+        logbuffer = StringIO()
         verify_ok = verify(result, debuglog=logbuffer)
         self.assertTrue(
             verify_ok, "Failed DKIM verification: %s" % logbuffer.getvalue())
@@ -226,7 +245,7 @@ class SMIMETestCase(unittest.TestCase):
 
     def setUp(self):
         time.sleep(5)
-        self.config = ConfigParser.RawConfigParser()
+        self.config = RawConfigParser()
         self.config.read([TESTDATADIR + '/endtoendtest.conf'])
         self.config.set('main', 'incomingport', str(SMIMETestCase.FUGLU_PORT))
         self.config.set('main', 'outgoinghost', str(SMIMETestCase.FUGLU_HOST))
@@ -241,10 +260,14 @@ class SMIMETestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
             self.config, SMIMETestCase.DUMMY_PORT, SMIMETestCase.FUGLU_HOST)
-        thread.start_new_thread(self.smtp.serve, ())
+        smdss = threading.Thread(self.smtp.serve, ())
+        smdss.daemon = True
+        smdss.start()
 
-        # start fuglus listening server
-        thread.start_new_thread(self.mc.startup, ())
+        # start fuglu's listening server
+        fls = threading.Thread(self.mc.startup, ())
+        fls.daemon = True
+        fls.start()
 
     def tearDown(self):
         self.mc.shutdown()
@@ -279,6 +302,6 @@ class SMIMETestCase(unittest.TestCase):
             status == 0, "S/MIME verification failed: \n%s\n tmpfile is:%s" % (output, tmpfile))
 
     def verifyOpenSSL(self, file):
-        (status, output) = commands.getstatusoutput(
+        (status, output) = getstatusoutput(
             "openssl smime -verify -noverify -in %s" % file)
         return (status, output)

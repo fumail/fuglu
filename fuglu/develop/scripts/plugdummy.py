@@ -3,11 +3,15 @@
 
 import optparse
 import sys
-import ConfigParser
 import logging
 import tempfile
 import os
 import email
+
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
 
 try:
     from email.message import Message
@@ -37,11 +41,11 @@ def run_debugconsole(**kwargs):
     import readline
     import code
     from fuglu.shared import DUNNO, ACCEPT, DELETE, REJECT, DEFER, Suspect
-    print "Fuglu Interactive Console started"
-    print ""
-    print "pre-defined locals:"
-    print kwargs
-    print ""
+    print("Fuglu Interactive Console started")
+    print("")
+    print("pre-defined locals:")
+    print(kwargs)
+    print("")
 
     available = locals()
     available.update(kwargs)
@@ -78,13 +82,13 @@ if __name__ == '__main__':
                       default=False, help="run lint instead of examine/process")
     (opts, args) = parser.parse_args()
     if opts.help:
-        print parser.format_help().strip()
+        print(parser.format_help().strip())
         sys.exit(0)
     # start with INFO, so we don't have fuglus internal debug noise
     logging.basicConfig(level=logging.INFO)
 
     if len(args) < 1:
-        print "usage: plugdummy.py [options] [plugin] [plugin...]"
+        print("usage: plugdummy.py [options] [plugin] [plugin...]")
         sys.exit(1)
     pluginlist = args
 
@@ -93,7 +97,7 @@ if __name__ == '__main__':
             sys.path.insert(0, plugindir)
 
     # prepare config
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser()
     config.add_section('main')
 
     prependers = []
@@ -105,8 +109,8 @@ if __name__ == '__main__':
     for plugin in pluginlist:
         try:
             pluginstance = tempmc._load_component(plugin)
-        except Exception, e:
-            print "Could not load plugin %s: %s" % (plugin, str(e))
+        except Exception as e:
+            print("Could not load plugin %s: %s" % (plugin, str(e)))
             sys.exit(1)
 
         if isinstance(pluginstance, ScannerPlugin):
@@ -116,7 +120,7 @@ if __name__ == '__main__':
         elif isinstance(pluginstance, AppenderPlugin):
             appenders.append(plugin)
         else:
-            print "%s doesn't seem to be a fuglu plugin - ignoring" % plugin
+            print("%s doesn't seem to be a fuglu plugin - ignoring" % plugin)
 
     config.set('main', 'plugins', ','.join(scanners))
     config.set('main', 'appenders', ','.join(appenders))
@@ -135,12 +139,12 @@ if __name__ == '__main__':
     if opts.defaultconfig:
         sec = pluginstance.section
 
-        print "Default config options for %s\n" % sec
+        print("Default config options for %s\n" % sec)
         try:
             for opt, val in config.items(sec):
-                print "%s:%s" % (opt, val)
-        except ConfigParser.NoSectionError:
-            print "Plugin does not provide default options"
+                print("%s:%s" % (opt, val))
+        except NoSectionError:
+            print("Plugin does not provide default options")
         sys.exit(0)
 
     # now switch to debug
@@ -161,7 +165,7 @@ if __name__ == '__main__':
 
         if opts.lint:
             ret = pluginstance.lint()
-            print "Lint success: %s" % ret
+            print("Lint success: %s" % ret)
             sys.exit(0)
 
     # prepare the suspect
@@ -231,10 +235,10 @@ if __name__ == '__main__':
             added = list(resultset - origset)
             if len(removed) > 0:
                 logging.info(
-                    'Prepender %s removed plugins: %s' % (pluginstance, map(str, removed)))
+                    'Prepender %s removed plugins: %s' % (pluginstance, list(map(str, removed))))
             if len(added) > 0:
                 logging.info(
-                    'Prepender %s added plugins: %s' % (pluginstance, map(str, added)))
+                    'Prepender %s added plugins: %s' % (pluginstance, list(map(str, added))))
             scannerlist = resultset
             logging.info("Scanner plugin list is now: %s" % scannerlist)
 

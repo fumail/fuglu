@@ -8,7 +8,10 @@ import logging
 class FprotTestCase(unittest.TestCase):
 
     def setUp(self):
-        from ConfigParser import RawConfigParser
+        try:
+            from configparser import RawConfigParser
+        except ImportError:
+            from ConfigParser import RawConfigParser
         config = RawConfigParser()
         config.add_section('FprotPlugin')
         config.set('FprotPlugin', 'host', 'localhost')
@@ -28,12 +31,12 @@ class FprotTestCase(unittest.TestCase):
             return
 
         virlist = self.candidate.scan_file('testdata/eicar.eml')
-        self.failUnless(
-            "EICAR_Test_File" in virlist.values(), "Eicar not found in scan_file")
+        self.assertTrue(
+            "EICAR_Test_File" in list(virlist.values()), "Eicar not found in scan_file")
 
         fp = open('testdata/eicar.eml', 'r')
         buffer = fp.read()
         fp.close()
         virlist = self.candidate.scan_stream(buffer)
-        self.failUnless(
-            "EICAR_Test_File" in virlist.values(), "Eicar not found in scan_stream")
+        self.assertTrue(
+            "EICAR_Test_File" in list(virlist.values()), "Eicar not found in scan_stream")

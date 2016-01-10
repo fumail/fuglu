@@ -1,9 +1,13 @@
 from unittestsetup import TESTDATADIR
 
 import unittest
-import ConfigParser
 import tempfile
 import os
+
+try:
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
 
 from fuglu.plugins.sa import SAPlugin
 from fuglu.shared import Suspect
@@ -14,7 +18,7 @@ from email.header import Header
 class SATestCase(unittest.TestCase):
 
     def setUp(self):
-        config = ConfigParser.RawConfigParser()
+        config = RawConfigParser()
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
         config.add_section('SAPlugin')
