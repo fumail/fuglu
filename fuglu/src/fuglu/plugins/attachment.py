@@ -29,9 +29,12 @@ import email
 from email.header import decode_header
 
 from threading import Lock
-# do not use cStringIO - the python2.6 fix for opening some zipfiles does
-# not work with cStringIO
-from StringIO import StringIO
+try:
+    # do not use cStringIO - the python2.6 fix for opening some zipfiles does
+    # not work with cStringIO
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import zipfile
 
 MAGIC_AVAILABLE = 0
