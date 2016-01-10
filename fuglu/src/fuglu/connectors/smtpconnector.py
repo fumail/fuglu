@@ -24,7 +24,7 @@ import re
 
 from fuglu.shared import Suspect, apply_template
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
-from email.Header import Header
+from email.header import Header
 
 
 def buildmsgsource(suspect):

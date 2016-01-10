@@ -49,7 +49,7 @@ except ImportError:
     import ConfigParser as configparser
 import datetime
 from string import Template
-from email.Header import Header
+from email.header import Header
 
 # constants
 

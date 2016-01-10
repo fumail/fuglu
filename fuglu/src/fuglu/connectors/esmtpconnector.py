@@ -26,7 +26,7 @@ from fuglu.protocolbase import ProtocolHandler
 from fuglu.scansession import SessionHandler
 from fuglu.shared import Suspect, apply_template
 
-from email.Header import Header
+from email.header import Header
 import re
 
 
