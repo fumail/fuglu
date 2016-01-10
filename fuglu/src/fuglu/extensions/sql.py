@@ -107,7 +107,7 @@ class DBConfig(RawConfigParser):
         RawConfigParser.__init__(self)
         self.suspect = suspect
         self.logger = logging.getLogger('fuglu.sql.dbconfig')
-        self.cloneFrom(config)
+        self.cloneFrom(config.encode('UTF-8'))
 
     def cloneFrom(self, config):
         """Clone this object from a RawConfigParser"""
