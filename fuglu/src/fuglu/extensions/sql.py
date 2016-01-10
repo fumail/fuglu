@@ -20,12 +20,12 @@ except ImportError:
     from ConfigParser import RawConfigParser
 
 try:
-    from io import StringIO
+    from cStringIO import StringIO
 except ImportError:
     try:
-        from cStringIO import StringIO
-    except ImportError:
         from StringIO import StringIO
+    except ImportError:
+        from io import StringIO
 
 import logging
 import traceback
@@ -107,7 +107,7 @@ class DBConfig(RawConfigParser):
         RawConfigParser.__init__(self)
         self.suspect = suspect
         self.logger = logging.getLogger('fuglu.sql.dbconfig')
-        self.cloneFrom(config.encode('UTF-8'))
+        self.cloneFrom(config)
 
     def cloneFrom(self, config):
         """Clone this object from a RawConfigParser"""
