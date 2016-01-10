@@ -756,6 +756,7 @@ class SuspectFilter(object):
                 return text
             else:
                 stripped = ''.join(
+                    # Can retain unicode check since BS < 4 is Py2 only
                     [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
                 return stripped
 
