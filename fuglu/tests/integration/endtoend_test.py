@@ -2,7 +2,7 @@ from integrationtestsetup import guess_clamav_socket, TESTDATADIR, CONFDIR, Dumm
 import unittest
 import tempfile
 import os
-import thread
+import threading
 import time
 import smtplib
 import mock
@@ -98,10 +98,14 @@ class EndtoEndTestTestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
             self.config, EndtoEndTestTestCase.DUMMY_PORT, EndtoEndTestTestCase.FUGLU_HOST)
-        thread.start_new_thread(self.smtp.serve, ())
+        e2edss = threading.Thread(self.smtp.serve, ())
+        e2edss.daemon = True
+        e2edss.start()
 
-        # start fuglus listening server
-        thread.start_new_thread(self.mc.startup, ())
+        # start fuglu's listening server
+        fls = threading.Thread(self.mc.startup, ())
+        fls.daemon = True
+        fls.start()
 
     def tearDown(self):
         self.mc.shutdown()
@@ -179,10 +183,14 @@ class DKIMTestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(self.config, self.config.getint(
             'main', 'outgoingport'), DKIMTestCase.FUGLU_HOST)
-        thread.start_new_thread(self.smtp.serve, ())
+        dkdss = threading.Thread(self.smtp.serve, ())
+        dkdss.daemon = True
+        dkdss.start()
 
-        # start fuglus listening server
-        thread.start_new_thread(self.mc.startup, ())
+        # start fuglu's listening server
+        fls = threading.Thread(self.mc.startup, ())
+        fls.daemon = True
+        fls.start()
 
     def tearDown(self):
         self.mc.shutdown()
@@ -252,10 +260,14 @@ class SMIMETestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
             self.config, SMIMETestCase.DUMMY_PORT, SMIMETestCase.FUGLU_HOST)
-        thread.start_new_thread(self.smtp.serve, ())
+        smdss = threading.Thread(self.smtp.serve, ())
+        smdss.daemon = True
+        smdss.start()
 
-        # start fuglus listening server
-        thread.start_new_thread(self.mc.startup, ())
+        # start fuglu's listening server
+        fls = threading.Thread(self.mc.startup, ())
+        fls.daemon = True
+        fls.start()
 
     def tearDown(self):
         self.mc.shutdown()
