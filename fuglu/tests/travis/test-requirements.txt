@@ -4,3 +4,4 @@ SQLAlchemy
 pydns
 pyspf
 rarfile
+lxml

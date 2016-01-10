@@ -747,7 +747,10 @@ class SuspectFilter(object):
         content = content.replace("\n", " ")
 
         if HAVE_BEAUTIFULSOUP and use_bfs:
-            soup = BeautifulSoup.BeautifulSoup(content)
+            if BS_VERSION >= 4:
+                soup = BeautifulSoup.BeautifulSoup(content, "lxml")
+            else:
+                soup = BeautifulSoup.BeautifulSoup(content)
             for r in remove_tags:
                 [x.extract() for x in soup.findAll(r)]
 
