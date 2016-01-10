@@ -12,7 +12,7 @@ class SPFTestCase(unittest.TestCase):
     def _make_dummy_suspect(self, senderdomain, clientip, helo='foo.example.com'):
         s = Suspect('sender@%s' %
                     senderdomain, 'recipient@example.com', '/dev/null')
-        s.clientinfo = (helo, clientip.encode('UTF-8'), 'ptr.example.com')
+        s.clientinfo = (helo, clientip, 'ptr.example.com')
         return s
 
     def setUp(self):
