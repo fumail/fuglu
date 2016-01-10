@@ -1,7 +1,6 @@
 BeautifulSoup4
 python-magic
 SQLAlchemy
-ipaddr
 pydns
 pyspf
 rarfile
