@@ -19,7 +19,10 @@ sys.path.insert(0, '../../src')
 
 import fuglu
 from fuglu.plugins import *
-from ConfigParser import RawConfigParser
+try:
+    from configparser import RawConfigParser
+except ImportError:
+    from ConfigParser import RawConfigParser
 
 
 if __name__ == '__main__':
@@ -86,7 +89,7 @@ if __name__ == '__main__':
                              ) + "\n\n::\n\n"
         tab = "    "
         sphinxdoc += tab + "[%s]\n" % plug_class
-        for optionname, infodic in plugin.requiredvars.iteritems():
+        for optionname, infodic in plugin.requiredvars.items():
             defaultval = ''
 
             if 'default' in infodic:
@@ -98,5 +101,5 @@ if __name__ == '__main__':
                 sphinxdoc += tab + "#%s\n" % description
             sphinxdoc += tab + optionname + "=" + defaultval + "\n\n"
 
-        print ""
-        print sphinxdoc
+        print("")
+        print(sphinxdoc)

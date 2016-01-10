@@ -55,7 +55,7 @@ class HelloWorld(ScannerPlugin):
 
         # header access example
         msgrep = suspect.get_message_rep()
-        if msgrep.has_key("From"):
+        if "From" in msgrep:
             self._logger().info("Message from: %s" % msgrep['From'])
         else:
             self._logger().warning("Message has no 'From' header!")
