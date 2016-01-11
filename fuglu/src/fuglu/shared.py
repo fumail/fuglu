@@ -743,8 +743,9 @@ class SuspectFilter(object):
         if remove_tags == None:
             remove_tags = ['script', 'style']
 
+        # content lands as a bytes object in py3, so we have to convert to a string so we can:
         # replace newline with space
-        content = content.replace("\n", " ")
+        content = str(content).replace("\n", " ")
 
         if HAVE_BEAUTIFULSOUP and use_bfs:
             if BS_VERSION >= 4:

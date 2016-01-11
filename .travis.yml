@@ -17,10 +17,10 @@ script: nosetests fuglu/tests/unit/
 
 branches:
   only:
-    - master
+    - py3
 
 notifications:
   email: true
-  
+
 cache:
   apt: true
