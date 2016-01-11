@@ -487,8 +487,7 @@ The other common template variables are available as well.
 
         for action, regex, description in ruleset:
             # database description may be unicode
-            if sys.version_info[0] == 3 or type(description) == unicode:
-                description = description.encode("utf-8", "ignore")
+            description = description.encode("utf-8", "ignore")
 
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
@@ -678,8 +677,7 @@ The other common template variables are available as well.
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
                                 # generated bounces
-                                if sys.version_info[0] == 3 or type(description) == unicode:
-                                    name = name.encode("utf-8", "ignore")
+                                name = name.encode("utf-8", "ignore")
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
