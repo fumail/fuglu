@@ -28,6 +28,7 @@ except ImportError:
         from io import StringIO
 
 import logging
+import sys
 import traceback
 from fuglu.shared import default_template_values
 
@@ -115,7 +116,10 @@ class DBConfig(RawConfigParser):
         config.write(stringout)
         stringin = StringIO(stringout.getvalue())
         del stringout
-        self.readfp(stringin)
+        if sys.version_info < (3, 2):
+            self.readfp(stringin)
+        else:
+            self.read_file(stringin)
         del stringin
 
     def get(self, section, option):
