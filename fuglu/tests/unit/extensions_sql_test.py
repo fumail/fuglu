@@ -76,8 +76,8 @@ class DBConfigTestCase(unittest.TestCase):
         self.insert_override(
             '%unittests.fuglu.org', 'testsection', 'override', '300')
         self.insert_override('$GLOBAL', 'testsection', 'override', '400')
-        self.assertEqual(candidate.getint('testsection', 'nooverride'), 100)
-        self.assertEqual(candidate.getint('testsection', 'override'), 200)
+        self.assertEqual(int(candidate.get('testsection', 'nooverride')), 100)
+        self.assertEqual(int(candidate.get('testsection', 'override')), 200)
 
     def test_domain_override(self):
         """Test basic config overrdide functionality"""
@@ -96,8 +96,8 @@ class DBConfigTestCase(unittest.TestCase):
         self.insert_override(
             '%unittests.fuglu.org', 'testsection', 'override', '300')
         self.insert_override('$GLOBAL', 'testsection', 'override', '400')
-        self.assertEqual(candidate.getint('testsection', 'nooverride'), 100)
-        self.assertEqual(candidate.getint('testsection', 'override'), 300)
+        self.assertEqual(int(candidate.get('testsection', 'nooverride')), 100)
+        self.assertEqual(int(candidate.get('testsection', 'override')), 300)
 
     def test_global_override(self):
         """Test basic config overrdide functionality"""
@@ -116,5 +116,5 @@ class DBConfigTestCase(unittest.TestCase):
         self.insert_override(
             '%unittests.fuglu.org', 'testsection', 'override', '300')
         self.insert_override('$GLOBAL', 'testsection', 'override', '400')
-        self.assertEqual(candidate.getint('testsection', 'nooverride'), 100)
-        self.assertEqual(candidate.getint('testsection', 'override'), 400)
+        self.assertEqual(int(candidate.get('testsection', 'nooverride')), 100)
+        self.assertEqual(int(candidate.get('testsection', 'override')), 400)
