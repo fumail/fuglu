@@ -95,7 +95,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
         if type(result) is tuple:
             result, message = result
         resstr = actioncode_to_string(result)
-        self.assertEqual(resstr, "DELETE")
+        self.assertEqual(resstr, "DELETE") # Firing
         os.remove(tempfilename)
 
 
@@ -145,7 +145,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         if type(result) is tuple:
             result, message = result
         os.remove(tempfilename)
-        self.assertFalse(result != DELETE)
+        self.assertEqual(result, DELETE) # Firing
 
     @nottest
     def test_utf8msg(self):
@@ -190,8 +190,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.assertFalse(
-                    result != DELETE, 'extracted large file should be blocked')
+                self.assertEqual(
+                    result, DELETE, 'extracted large file should be blocked') #Firing
 
                 # now set the limit to 5 mb, the file should be skipped now
                 self.candidate.config.set(
@@ -199,7 +199,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.assertFalse(result != DUNNO, 'large file should be skipped')
+                self.assertEqual(result, DUNNO, 'large file should be skipped')
 
                 # reset config
                 self.candidate.config.set(
@@ -229,8 +229,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
-                self.assertFalse(
-                    result != DELETE, 'archive containing blocked filename was not blocked')
+                self.assertEqual(
+                    result, DELETE, 'archive containing blocked filename was not blocked') # Firing
             finally:
                 os.remove(tempfilename)
                 os.remove(conffile)
