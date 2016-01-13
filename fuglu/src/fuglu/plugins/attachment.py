@@ -463,10 +463,7 @@ The other common template variables are available as well.
 
     def asciionly(self, stri):
         """return stri with all non-ascii chars removed"""
-        if sys.version_info[0] == 2:
-            return "".join([x for x in stri if ord(x) < 128])
-        else:
-            return "".join([x for x in stri if x < 128])
+        return stri.encode('ascii', 'ignore')
 
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
         if attachmentname == None:
