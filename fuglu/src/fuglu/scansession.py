@@ -82,7 +82,7 @@ class SessionHandler(object):
             self.run_plugins(suspect, pluglist)
 
             # Set fuglu spam status if wanted
-            if self.config.getboolean('SAPlugin', 'spamstatusheader'):
+            if self.config.getboolean('main', 'spamstatusheader'):
                 if suspect.is_spam():
                     suspect.addheader("%sSpamstatus" % prependheader, 'YES')
                 else:

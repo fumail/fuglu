@@ -299,9 +299,6 @@ scanoriginal=1
 #message as retreived from previous plugins 
 forwardoriginal=0
 
-# Should the spamheader (Default X-Spam-Status) be written to the Header?
-spamstatusheader=1
-
 #what header does SA set to indicate the spam status
 #Note that fuglu requires a standard header template configuration for spamstatus and score extraction
 #if 'forwardoriginal' is set to 0
