@@ -81,11 +81,12 @@ class SessionHandler(object):
             starttime = time.time()
             self.run_plugins(suspect, pluglist)
 
-            # Set fuglu spam status
-            if suspect.is_spam():
-                suspect.addheader("%sSpamstatus" % prependheader, 'YES')
-            else:
-                suspect.addheader("%sSpamstatus" % prependheader, 'NO')
+            # Set fuglu spam status if wanted
+            if self.config.getboolean('SAPlugin', 'spamstatusheader'):
+                if suspect.is_spam():
+                    suspect.addheader("%sSpamstatus" % prependheader, 'YES')
+                else:
+                    suspect.addheader("%sSpamstatus" % prependheader, 'NO')
 
             # how long did it all take?
             difftime = time.time() - starttime
