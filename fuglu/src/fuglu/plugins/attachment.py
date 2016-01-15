@@ -806,7 +806,7 @@ The other common template variables are available as well.
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print("rarfile library not found, RAR support disabled")
-        print("Archive scan, available file extensions: %s" % (self.supported_archive_extensions))
+        print("Archive scan, available file extensions: %s" % (self.supported_archive_extensions.keys()))
         return True
 
     def lint_sql(self):
