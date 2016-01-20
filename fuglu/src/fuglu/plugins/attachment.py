@@ -466,8 +466,8 @@ The other common template variables are available as well.
         if isinstance(stri, str):
             return stri.encode('ascii', 'ignore')
         else:
-            # Already a bytes object therefore ascii
-            return stri
+            # Already a bytes object therefore ascii, but not a string yet
+            return stri.decode(encoding='UTF-8')
 
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
         if attachmentname == None:
