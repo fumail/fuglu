@@ -416,11 +416,14 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
-        # remember that the order is important here, if we support tar.gz and
-        # gz in the future make sure tar.gz comes first!
-        self.supported_archive_extensions = ['zip', ]
+
+        #key: file ending, value: archive type
+        self.supported_archive_extensions = {
+            'zip':'zip',
+            'z':'zip',
+        }
         if RARFILE_AVAILABLE:
-            self.supported_archive_extensions.append('rar')
+            self.supported_archive_extensions['rar']='rar'
 
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
@@ -659,9 +662,9 @@ The other common template variables are available as well.
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
                 archive_type = None
-                for arext in self.supported_archive_extensions:
+                for arext in sorted(self.supported_archive_extensions.keys(),key=lambda x:len(x), reverse=True): #sort by length, so tar.gz is checked before .gz
                     if att_name.lower().endswith('.%s' % arext):
-                        archive_type = arext
+                        archive_type = self.supported_archive_extensions[arext]
                         break
 
                 if archive_type != None:
@@ -803,7 +806,7 @@ The other common template variables are available as well.
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print("rarfile library not found, RAR support disabled")
-        print("Archive scan, available file extensions: %s" % (self.supported_archive_extensions))
+        print("Archive scan, available file extensions: %s" % (self.supported_archive_extensions.keys()))
         return True
 
     def lint_sql(self):

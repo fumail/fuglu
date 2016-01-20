@@ -221,6 +221,12 @@ class MainController(object):
                 'default': "0",
             },
 
+            'spamstatusheader': {
+                'section': 'main',
+                'description': "write a Spamstatus YES/NO header",
+                'default': "1",
+            },
+
             'suspectidheader': {
                 'section': 'main',
                 'description': "write suspect ID to every mail",

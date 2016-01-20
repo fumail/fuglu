@@ -63,7 +63,7 @@ Tags:
 
             'pipelining': {
                 'default': '0',
-                'descpription': "*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.",
+                'description': "*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.",
             },
 
             'maxsize': {

@@ -71,6 +71,9 @@ disablebounces=0
 #write debug info header to every mail
 debuginfoheader=0
 
+#write a Spamstatus YES/NO header
+spamstatusheader=1
+
 #write suspect ID to every mail
 suspectidheader=1
 
@@ -83,7 +86,10 @@ controlport=/tmp/fuglu_control.sock
 #Log pattern to use for all suspects in fuglu log. set empty string to disable logging generic suspect info. Supports the usual template variables plus: ${size}, ${spam} ${highspam}, ${modified} ${decision} ${tags} (short tags representagion) ${fulltags} full tags output, ${decision}
 logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision}
 
-#warn about known severe problems/security issues of current version. This performs a DNS lookup containing the current version string.
+#warn about known severe problems/security issues of current version.
+#Note: This performs a DNS lookup of gitrelease.patchlevel.minorversion.majorversion.versioncheck.fuglu.org on startup and fuglu --lint.
+#No other information of any kind is transmitted to outside systems.
+#Disable this if you consider the DNS lookup an unwanted information leak.
 versioncheck=1
 
 [PluginAlias]
@@ -253,6 +259,9 @@ port=3310
 
 #socket timeout
 timeout=30
+
+#*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.
+pipelining=0
 
 #maximum message size, larger messages will not be scanned.  
 #should match the 'StreamMaxLength' config option in clamd.conf 
