@@ -77,11 +77,11 @@ class DatabaseConfigTestCase(unittest.TestCase):
         """
         self.session.execute(testdata)
         # copy file rules
-        tempfilename = tempfile.mktemp(
+        tmpfile = tempfile.NamedTemporaryFile(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR + '/binaryattachment.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/binaryattachment.eml', tmpfile.name)
         suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tmpfile.name)
 
         result = self.candidate.examine(suspect)
         resstr = actioncode_to_string(result)
@@ -89,14 +89,14 @@ class DatabaseConfigTestCase(unittest.TestCase):
 
         # another recipient should still get the block
         suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient2@unittests.fuglu.org', tempfilename)
+            'sender@unittests.fuglu.org', 'recipient2@unittests.fuglu.org', tmpfile.name)
 
         result = self.candidate.examine(suspect)
         if type(result) is tuple:
             result, message = result
         resstr = actioncode_to_string(result)
-        self.assertEqual(resstr, "DELETE") # Firing
-        os.remove(tempfilename)
+        self.assertEqual(resstr, "DELETE")
+        tmpfile.close()
 
 
 class AttachmentPluginTestCase(unittest.TestCase):
@@ -135,33 +135,34 @@ class AttachmentPluginTestCase(unittest.TestCase):
     def test_hiddenbinary(self):
         """Test if hidden binaries get detected correctly"""
         # copy file rules
-        tempfilename = tempfile.mktemp(
+        tmpfile = tempfile.NamedTemporaryFile(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR + '/binaryattachment.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/binaryattachment.eml', tmpfile.name)
         suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tmpfile.name)
 
         result = self.candidate.examine(suspect)
         if type(result) is tuple:
             result, message = result
-        os.remove(tempfilename)
-        self.assertEqual(result, DELETE) # Firing
+        tmpfile.close()
+        self.assertEqual(result, DELETE)
 
     @nottest
     def test_utf8msg(self):
         """Test utf8 msgs are parsed ok - can cause bugs on some magic implementations (eg. centos)
         disabled - need new sample"""
 
-        tempfilename = tempfile.mktemp(
+        tmpfile = tempfile.NamedTemporaryFile(
             suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-        shutil.copy(TESTDATADIR + '/utf8message.eml', tempfilename)
+        shutil.copy(TESTDATADIR + '/utf8message.eml', tmpfile.name)
         suspect = Suspect(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tempfilename)
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tmpfile.name)
 
         result = self.candidate.examine(suspect)
         if type(result) is tuple:
             result, message = result
-        os.remove(tempfilename)
+        tmpfile.close()
+        os.remove(tmpfile.name)
         self.assertEqual(result, DUNNO)
 
     def test_archiveextractsize(self):
@@ -169,9 +170,9 @@ class AttachmentPluginTestCase(unittest.TestCase):
         # copy file rules
         for testfile in ['6mbzipattachment.eml', '6mbrarattachment.eml']:
             try:
-                tempfilename = tempfile.mktemp(
+                tmpfile = tempfile.NamedTemporaryFile(
                     suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-                shutil.copy("%s/%s" % (TESTDATADIR, testfile), tempfilename)
+                shutil.copy("%s/%s" % (TESTDATADIR, testfile), tmpfile.name)
 
                 user = 'recipient-sizetest@unittests.fuglu.org'
                 conffile = self.tempdir + "/%s-archivefiletypes.conf" % user
@@ -180,7 +181,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                     "deny application\/octet\-stream no data allowed")
 
                 suspect = Suspect(
-                    'sender@unittests.fuglu.org', user, tempfilename)
+                    'sender@unittests.fuglu.org', user, tmpfile.name)
 
                 # test with high limit first
                 oldlimit = self.candidate.config.get(
@@ -191,7 +192,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 if type(result) is tuple:
                     result, message = result
                 self.assertEqual(
-                    result, DELETE, 'extracted large file should be blocked') #Firing
+                    result, DELETE, 'extracted large file should be blocked')
 
                 # now set the limit to 5 mb, the file should be skipped now
                 self.candidate.config.set(
@@ -205,7 +206,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 self.candidate.config.set(
                     'FiletypePlugin', 'archivecontentmaxsize', oldlimit)
             finally:
-                os.remove(tempfilename)
+                tmpfile.close()
                 os.remove(conffile)
 
     def test_archivename(self):
@@ -214,9 +215,9 @@ class AttachmentPluginTestCase(unittest.TestCase):
         for testfile in ['6mbzipattachment.eml', '6mbrarattachment.eml']:
             try:
                 # copy file rules
-                tempfilename = tempfile.mktemp(
+                tmpfile = tempfile.NamedTemporaryFile(
                     suffix='virus', prefix='fuglu-unittest', dir='/tmp')
-                shutil.copy("%s/%s" % (TESTDATADIR, testfile), tempfilename)
+                shutil.copy("%s/%s" % (TESTDATADIR, testfile), tmpfile.name)
 
                 user = 'recipient-archivenametest@unittests.fuglu.org'
                 conffile = self.tempdir + "/%s-archivenames.conf" % user
@@ -224,13 +225,13 @@ class AttachmentPluginTestCase(unittest.TestCase):
                     "deny largefile user does not like the largefile within a zip\ndeny 6mbfile user does not like the largefile within a zip")
 
                 suspect = Suspect(
-                    'sender@unittests.fuglu.org', user, tempfilename)
+                    'sender@unittests.fuglu.org', user, tmpfile.name)
 
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
                 self.assertEqual(
-                    result, DELETE, 'archive containing blocked filename was not blocked') # Firing
+                    result, DELETE, 'archive containing blocked filename was not blocked')
             finally:
-                os.remove(tempfilename)
+                tmpfile.close()
                 os.remove(conffile)

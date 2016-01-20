@@ -29,12 +29,7 @@ import email
 from email.header import decode_header
 
 from threading import Lock
-try:
-    # do not use cStringIO - the python2.6 fix for opening some zipfiles does
-    # not work with cStringIO
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import BytesIO
 import zipfile
 
 MAGIC_AVAILABLE = 0
@@ -227,7 +222,9 @@ class RulesCache(object):
             self.logger.warning('Ignoring file %s - not a file' % filename)
             return None
         handle = open(filename)
-        return self.get_rules_from_config_lines(handle.readlines())
+        rules = self.get_rules_from_config_lines(handle.readlines())
+        handle.close()
+        return rules
 
     def get_rules_from_config_lines(self, lineslist):
         ret = []
@@ -669,7 +666,7 @@ The other common template variables are available as well.
 
                 if archive_type != None:
                     try:
-                        pl = StringIO(i.get_payload(decode=True))
+                        pl = BytesIO(i.get_payload(decode=True))
                         archive_handle = self._archive_handle(archive_type, pl)
                         namelist = self._archive_namelist(
                             archive_type, archive_handle)
@@ -677,7 +674,9 @@ The other common template variables are available as well.
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
                                 # generated bounces
-                                name = name.encode("utf-8", "ignore")
+                                if sys.version_info[0] == 2:
+                                    # Py3 defaults to unicode
+                                    name = name.encode("utf-8", "ignore")
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
