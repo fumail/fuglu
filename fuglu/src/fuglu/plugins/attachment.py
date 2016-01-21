@@ -466,7 +466,7 @@ The other common template variables are available as well.
         if isinstance(stri, str):
             return stri.encode('ascii', 'ignore')
         else:
-            # Already a bytes object therefore ascii, but not a string yet
+            # A bytes object therefore already ascii, but not a string yet
             return stri.decode(encoding='UTF-8')
 
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
@@ -496,11 +496,11 @@ The other common template variables are available as well.
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
-            if prog.search(obj):
+            if prog.search(asciirep):
                 self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
-                    obj, regex, description, action))
+                    asciirep, regex, description, action))
                 suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
-                    obj, regex, description, action))
+                    asciirep, regex, description, action))
                 if action == 'deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s' % (
                         suspect.id, displayname, asciirep))
