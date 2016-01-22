@@ -496,6 +496,8 @@ The other common template variables are available as well.
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
+            if isinstance(obj, bytes):
+                obj = obj.decode('UTF-8', 'ignore')
             if prog.search(obj):
                 self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
                     obj, regex, description, action))
