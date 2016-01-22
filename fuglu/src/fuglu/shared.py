@@ -756,7 +756,7 @@ class SuspectFilter(object):
                 [x.extract() for x in soup.findAll(r)]
 
             if BS_VERSION >= 4:
-                text = soup.getText()
+                text = soup.get_text()
                 return text
             else:
                 stripped = ''.join(
