@@ -496,11 +496,11 @@ The other common template variables are available as well.
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
-            if prog.search(asciirep):
+            if prog.search(obj):
                 self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
-                    asciirep, regex, description, action))
+                    obj, regex, description, action))
                 suspect.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
-                    asciirep, regex, description, action))
+                    obj, regex, description, action))
                 if action == 'deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s' % (
                         suspect.id, displayname, asciirep))
