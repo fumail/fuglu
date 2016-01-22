@@ -1,3 +1,2 @@
-.vagrant/
-.gem-bin/
+.gems/
 *.deb

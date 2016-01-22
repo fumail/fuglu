@@ -1,5 +1,5 @@
-GEM_BINDIR = .gem-bin/
-FPM_BIN = $(GEM_BINDIR)fpm 
+GEMDIR = .gems/
+FPM_BIN = $(GEMDIR)bin/fpm 
 GIT_BIN = /usr/bin/git
 PACKAGE = fuglu
 
@@ -7,7 +7,7 @@ all: deb
 
 # debian package from latest version on pypi
 deb: clean fpm
-	$(FPM_BIN) -s python -t deb \
+	GEM_HOME=$(GEMDIR) $(FPM_BIN) -s python -t deb \
 		-d python-magic \
 		-d libmagic1 \
 		-d python-beautifulsoup \
@@ -27,8 +27,8 @@ git: $(GIT_BIN)
 # helper tools
 $(FPM_BIN):
 	sudo apt-get install -y -qq ruby-dev build-essential python-setuptools
-	mkdir -p $(GEM_BINDIR)
-	gem install --no-ri --no-rdoc --user-install --bindir $(GEM_BINDIR) fpm
+	mkdir -p $(GEMDIR)
+	gem install --no-ri --no-rdoc --install-dir $(GEMDIR) fpm
 
 $(GIT_BIN):
 	sudo apt-get install -y -qq git
@@ -38,4 +38,4 @@ clean:
 	rm -f *.deb
 
 mrproper: clean
-	rm -rf $(GEM_BINDIR)
+	rm -rf $(GEMDIR)
