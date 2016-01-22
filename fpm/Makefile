@@ -20,6 +20,10 @@ deb: clean fpm
 deb-checkout: PACKAGE = ../fuglu/setup.py
 deb-checkout: clean git deb
 
+deb-rarfile: fpm
+	GEM_HOME=$(GEMDIR) $(FPM_BIN) -s python -t deb \
+		rarfile
+
 # aliases to helper tools
 fpm: $(FPM_BIN)
 git: $(GIT_BIN)
