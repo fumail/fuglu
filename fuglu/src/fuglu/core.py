@@ -25,7 +25,7 @@ except ImportError:
 import datetime
 import logging
 import threading
-from threadpool import ThreadPool
+from fuglu.threadpool import ThreadPool
 import inspect
 import traceback
 import time
