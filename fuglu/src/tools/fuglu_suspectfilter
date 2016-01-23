@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     logging.info("%s valid rules found" % (len(sfilter.patterns)))
 
-    messagecontent = open(messagefilename, 'rb').read()
+    messagecontent = open(messagefilename, 'r').read()
     if '\r\n\r\n' not in messagecontent and '\n\n' not in messagecontent:
         logging.debug("adding dummy body")
         messagecontent = messagecontent.strip() + "\r\n\r\ndummy body"
