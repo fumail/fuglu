@@ -23,7 +23,8 @@ deb: clean fpm
 deb-checkout: PACKAGE = ../fuglu/setup.py
 deb-checkout: clean git deb
 
-deb-rarfile: fpm
+# rarfile package is not available on all supported ubuntu versions
+deb-rarfile: clean fpm
 	GEM_HOME=$(GEMDIR) $(FPM_BIN) -s python -t deb \
 		rarfile
 
