@@ -1,11 +1,11 @@
 #!/bin/sh
 # user setup
 if ! getent passwd fuglu > /dev/null; then
-    /usr/sbin/adduser --system --group --home /var/lib/fuglu fuglu
+    useradd --system --home-dir /var/lib/fuglu --create-home --user-group fuglu
 fi
 
 # logging directory
-/usr/bin/install --directory --owner root --group fuglu --mode 0775 /var/log/fuglu
+install --directory --owner root --group fuglu --mode 0775 /var/log/fuglu
 
 # adapt the config file
 /bin/sed -i \
