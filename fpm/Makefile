@@ -8,11 +8,12 @@ all: deb
 # debian package from latest version on pypi
 deb: clean fpm
 	GEM_HOME=$(GEMDIR) $(FPM_BIN) -s python -t deb \
-		-d python-magic \
-		-d libmagic1 \
-		-d python-beautifulsoup \
-		-d spamassassin \
-		-d clamav-daemon \
+		--depends python-magic \
+		--depends libmagic1 \
+		--depends python-beautifulsoup \
+		--depends spamassassin \
+		--depends clamav-daemon \
+		--deb-init ../fuglu/scripts/startscripts/debian/7/fuglu \
 		--after-install after-install.sh \
 		$(PACKAGE)
 
