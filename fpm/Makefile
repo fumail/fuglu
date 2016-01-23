@@ -13,6 +13,8 @@ deb: clean fpm
 		--depends python-beautifulsoup \
 		--depends spamassassin \
 		--depends clamav-daemon \
+		--deb-suggests python-sqlalchemy \
+		--deb-suggests python-rarfile \
 		--deb-init ../fuglu/scripts/startscripts/debian/7/fuglu \
 		--after-install after-install.sh \
 		$(PACKAGE)
