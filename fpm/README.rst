@@ -8,7 +8,7 @@ pypi, or local source code.
 To use it, basically open a console at this directory, and run
 a ``make <target>`` command. It assumes that your OS is debian(-based).
 If you have something else, you can use a simple VM (f.i. a clean
-vagrant `ubuntu/trusty64` box) for the build process.
+vagrant ``ubuntu/trusty64`` box) for the build process.
 
 -------------
 Debian/Ubuntu
