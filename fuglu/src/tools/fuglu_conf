@@ -20,8 +20,11 @@
 from optparse import OptionParser
 import sys
 import os
-import ConfigParser
-import StringIO
+try:
+	import configparser
+except ImportError:
+	import ConfigParser as configparser
+import io
 import logging
 import inspect
 import re
@@ -33,16 +36,16 @@ def stderr(msg):
 
 def print_config(config):
     for sec in config.sections():
-        print ""
-        print "[%s]" % sec
+        print("")
+        print("[%s]" % sec)
         for op, val in config.items(sec):
-            print "%s=%s" % (op, val)
+            print("%s=%s" % (op, val))
 
 
 def cloneConfig(config):
-    tmpfile = StringIO.StringIO()
+    tmpfile = io.StringIO()
     config.write(tmpfile)
-    theClone = ConfigParser.ConfigParser()
+    theClone = configparser.ConfigParser()
     tmpfile.seek(0)
     theClone.readfp(tmpfile)
     return theClone
@@ -82,8 +85,8 @@ def print_overrides(defaultconfig, userconfig, controller):
                 userval = userconfig.get(sec, opt)
                 if not config_equals(defaultval, userval):
                     if not have_printed_section:
-                        print ""
-                        print "[%s]" % sec
+                        print("")
+                        print("[%s]" % sec)
                         have_printed_section = True
 
                     pdef = defaultval
@@ -99,7 +102,7 @@ def print_overrides(defaultconfig, userconfig, controller):
                     if pval.strip() != '' and meta != None and 'confidential' in meta and meta['confidential']:
                         pval = "***REDACTED***"
 
-                    print "%s=%s (def: %s)" % (opt, pval, pdef)
+                    print("%s=%s (def: %s)" % (opt, pval, pdef))
 
 
 def make_config(controller, onlysection=None):
@@ -109,7 +112,7 @@ def make_config(controller, onlysection=None):
         if onlysection != None and sec != onlysection:
             continue
 
-        print "\n[%s]" % sec
+        print("\n[%s]" % sec)
         lines = []
 
         for opt, val in config.items(sec):
@@ -124,7 +127,7 @@ def make_config(controller, onlysection=None):
 
         sortedlines = sorted(lines, key=lambda x: x[1])
         for line in sortedlines:
-            print line[0]
+            print(line[0])
 
 
 def get_config_meta(controller, section, option):
@@ -200,7 +203,7 @@ if __name__ == '__main__':
     dconfdir = confdir + "/conf.d"
 
     fugluconfigfile = confdir + "/fuglu.conf"
-    userconfig = ConfigParser.ConfigParser()
+    userconfig = configparser.ConfigParser()
     if not os.path.exists(fugluconfigfile):
         stderr("""Configfile (%s) not found. """ % fugluconfigfile)
         sys.exit(1)
@@ -213,7 +216,7 @@ if __name__ == '__main__':
         readfiles = userconfig.read(configfiles)
 
     from fuglu.core import MainController
-    defaultconfig = ConfigParser.ConfigParser()
+    defaultconfig = configparser.ConfigParser()
 
     # copy plugindir, pluginalias and active plugins from current config
     defaultconfig.add_section("main")

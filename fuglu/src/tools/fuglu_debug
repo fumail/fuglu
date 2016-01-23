@@ -20,21 +20,24 @@
 
 import smtplib
 import sys
-import ConfigParser
+try:
+	import configparser
+except ImportError:
+	import ConfigParser as configparser
 
 if len(sys.argv) < 2:
-    print ""
-    print "Usage fuglu_debug <messagefile> [ <envelope_from> [ <envelope_to ] ]"
-    print "<messagefile> : Message content to be sent to the fuglu debug port"
-    print "<envelope_from> : Envelope From Address, default sender@fuglu.local"
-    print "<envelope_to> : Envelope To Address, default recipient@fuglu.local"
-    print ""
+    print("")
+    print("Usage fuglu_debug <messagefile> [ <envelope_from> [ <envelope_to ] ]")
+    print("<messagefile> : Message content to be sent to the fuglu debug port")
+    print("<envelope_from> : Envelope From Address, default sender@fuglu.local")
+    print("<envelope_to> : Envelope To Address, default recipient@fuglu.local")
+    print("")
 
     sys.exit(1)
 
 # what port is fuglu debugging?
 fugluconfigfile = '/etc/fuglu/fuglu.conf'
-newconfig = ConfigParser.ConfigParser()
+newconfig = configparser.ConfigParser()
 readconfig = newconfig.read([fugluconfigfile])
 
 try:

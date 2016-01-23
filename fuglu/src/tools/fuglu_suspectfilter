@@ -39,19 +39,19 @@ def extract_email(header):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print "FuGlu suspect filter debugger"
-        print "Usage:"
-        print "fuglu_suspectfilter </path/to/filterfile> </path/to/message.eml> [-D]"
+        print("FuGlu suspect filter debugger")
+        print("Usage:")
+        print("fuglu_suspectfilter </path/to/filterfile> </path/to/message.eml> [-D]")
         sys.exit(1)
 
     filterfilename = sys.argv[1]
     messagefilename = sys.argv[2]
     if not os.path.exists(filterfilename):
-        print "File not found: %s" % (filterfilename)
+        print("File not found: %s" % (filterfilename))
         sys.exit(1)
 
     if not os.path.exists(messagefilename):
-        print "File not found: %s" % (messagefilename)
+        print("File not found: %s" % (messagefilename))
         sys.exit(1)
 
     debuglevel = logging.INFO
@@ -94,9 +94,9 @@ if __name__ == '__main__':
     counter = 0
     for details in matchlist:
         counter += 1
-        print "\nMatch #%s:" % counter
+        print("\nMatch #%s:" % counter)
         fieldname, matchedvalue, arg, regex = details
-        print "Matched header/field: %s" % fieldname
-        print "Matched value in message: %s" % matchedvalue
-        print "Regex : %s" % regex
-        print "Rule argument : %s" % arg
+        print("Matched header/field: %s" % fieldname)
+        print("Matched value in message: %s" % matchedvalue)
+        print("Regex : %s" % regex)
+        print("Rule argument : %s" % arg)
