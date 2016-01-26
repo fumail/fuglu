@@ -2,7 +2,8 @@ from fuglu.shared import ScannerPlugin, DUNNO, ACCEPT, DELETE, DEFER, REJECT, ac
 import os
 import traceback
 import time
-
+import sys
+import runpy
 
 class Stopped(Exception):
     pass
@@ -112,7 +113,7 @@ Example script:
         def stop():
             raise Stopped()
 
-        scriptlocals = dict(
+        scriptenv = dict(
             action=action,
             message=message,
             suspect=suspect,
@@ -125,14 +126,17 @@ Example script:
 
         )
 
-        scriptglobals = globals().copy()
         try:
-            exec(compile(open(filename).read(), filename, 'exec'), scriptglobals, scriptlocals)
-            action = scriptlocals['action']
-            message = scriptlocals['message']
+            if sys.version<(2,7):
+                execfile(filename, scriptenv )
+            else:
+                runpy.run_path(filename, scriptenv)
+
+            action = scriptenv['action']
+            message = scriptenv['message']
         except Stopped:
-            action = scriptlocals['action']
-            message = scriptlocals['message']
+            action = scriptenv['action']
+            message = scriptenv['message']
         except:
             trb = traceback.format_exc()
             self.logger.error("Script %s failed: %s" % (filename, trb))
