@@ -85,7 +85,7 @@ class DBFile(object):
                           (self.query, templatevars))
         buff = []
         for row in res:
-            line = " ".join(row)
+            line = " ".join(filter(None, row))
             buff.append(line)
         sess.close()
         return buff
