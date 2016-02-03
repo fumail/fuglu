@@ -40,7 +40,7 @@ def buildmsgsource(suspect):
     for key in suspect.addheaders:
         # is ignore the right thing to do here?
         val = suspect.addheaders[key]
-        val.encode('UTF-8', errors='ignore')
+        val.encode('UTF-8', 'ignore')
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
         newheaders += "%s: %s\n" % (key, hdr.encode())

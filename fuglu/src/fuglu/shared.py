@@ -272,7 +272,7 @@ class Suspect(object):
         """
         if immediate:
             # is ignore the right thing to do here?
-            value.encode('UTF-8', errors='ignore')
+            value.encode('UTF-8', 'ignore')
             hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
             src = hdrline + self.get_source()
@@ -743,9 +743,11 @@ class SuspectFilter(object):
         if remove_tags == None:
             remove_tags = ['script', 'style']
 
-        # content lands as a bytes object in py3, so we have to convert to a string so we can:
+        # content may as a bytes object in py3, so we have to convert to a string so we can:
         # replace newline with space
-        content = str(content).replace("\n", " ")
+        if type(content) == bytes: #in py2 bytes is an alias for str, no change
+            content=str(content)
+        content = content.replace("\n", " ")
 
         if HAVE_BEAUTIFULSOUP and use_bfs:
             if BS_VERSION >= 4:
