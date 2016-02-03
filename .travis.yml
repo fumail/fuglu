@@ -20,6 +20,7 @@ script: nosetests fuglu/tests/unit/
 branches:
   only:
     - master
+    - travistest
 
 notifications:
   email: true
