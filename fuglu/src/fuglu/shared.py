@@ -743,8 +743,9 @@ class SuspectFilter(object):
         if remove_tags == None:
             remove_tags = ['script', 'style']
 
-        # content may as a bytes object in py3, so we have to convert to a string so we can:
+        # content may land as a bytes object in py3, so we have to convert to a string so we can
         # replace newline with space
+        # if it's unicode, we don't convert
         if type(content) == bytes: #in py2 bytes is an alias for str, no change
             content=str(content)
         content = content.replace("\n", " ")
