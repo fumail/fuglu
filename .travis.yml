@@ -16,7 +16,6 @@ install:
   - pip install -r fuglu/tests/travis/test-requirements.txt
 
 script:
-  - python --version
   - python -m compileall fuglu/src/
   - nosetests fuglu/tests/unit/
 
