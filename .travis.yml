@@ -17,7 +17,7 @@ install:
 
 script:
   - python --version
-  - python -m compileall fuglu/fuglu/src/
+  - python -m compileall fuglu/src/
   - nosetests fuglu/tests/unit/
 
 branches:

@@ -210,5 +210,3 @@ else:
     if console:
         controller.debugconsole = True
     controller.startup()
-
-print "this should fail travis on py3!"

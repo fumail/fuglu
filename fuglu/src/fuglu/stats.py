@@ -181,3 +181,5 @@ class StatsThread(object):
         except Exception as e:
             self.logger.error(
                 'Could not write mrtg stats file %s : %s)' % (filename, e))
+
+print "this should fail on python3"
