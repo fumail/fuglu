@@ -15,7 +15,9 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then pip install py3dns; fi
   - pip install -r fuglu/tests/travis/test-requirements.txt
 
-script: nosetests fuglu/tests/unit/
+script:
+  - python -m compileall fuglu/fuglu/src/
+  - nosetests fuglu/tests/unit/
 
 branches:
   only:
