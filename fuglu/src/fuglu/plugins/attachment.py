@@ -85,7 +85,7 @@ RARFILE_AVAILABLE = 0
 try:
     import rarfile
     RARFILE_AVAILABLE = 1
-except ImportError:
+except (ImportError, OSError):
     pass
 
 threadLocal = threading.local()
@@ -463,11 +463,14 @@ The other common template variables are available as well.
 
     def asciionly(self, stri):
         """return stri with all non-ascii chars removed"""
-        if isinstance(stri, str):
-            return stri.encode('ascii', 'ignore')
-        else:
-            # A bytes object therefore already ascii, but not a string yet
-            return stri.decode('UTF-8', 'ignore')
+        if sys.version_info>(3,):
+            if isinstance(stri, str):
+                return stri.encode('ascii', 'ignore').decode()
+            elif isinstance(stri, bytes): #python3
+                # A bytes object therefore already ascii, but not a string yet
+                return stri.decode('ascii', 'ignore')
+        return "".join([x for x in stri if ord(x) < 128])
+
 
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
         if attachmentname == None:
@@ -496,7 +499,7 @@ The other common template variables are available as well.
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
-            if isinstance(obj, bytes):
+            if isinstance(obj, bytes) and sys.version_info>(3,):
                 obj = obj.decode('UTF-8', 'ignore')
             if prog.search(obj):
                 self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
