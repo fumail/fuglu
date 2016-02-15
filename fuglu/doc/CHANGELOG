@@ -1,3 +1,19 @@
+-- Fuglu 0.6.6, not released
+ * Minimum python version 2.6
+ * Many changes to start making fuglu python3 compatible
+ * core: Keep additional groups when dropping privileges
+ * ScriptFilter : stop() now requires action and message arguments for any action other than DUNNO
+ * Attachment Plugin: treat .z archives like .zip
+ * improve DKIMVerify plugin - it is now slightly less experimental and actually works in most cases ;-)
+ * new experimental Plugin "DomainAuth" ( poor man's DMARC: check if message is either DKIM or SPF authenticated)
+ * make writing the SpamStatus header configurable
+ * fix crash when reading null values from db config overrides
+ * support float values for highspamlevel
+ * start the fuglu-extra-plugins repository to reduce the amount of mostly unused plugins in the core distro
+
+Developers:
+ * new helper class fuglu.shared.FileList : maps lines in a file to a list which refreshes automatically
+
 -- Fuglu 0.6.5, 2015-11-19
  * core: Fix unquote lines with leading dots in pre-queue mode
  * core: Specifiy stricter default permissions for daemon's pidfile
