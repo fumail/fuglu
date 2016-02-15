@@ -21,7 +21,7 @@ class ScriptfilterTestCase(unittest.TestCase):
 
         self.candidate = ScriptFilter(config)
 
-    def test_script_execution(self):
+    def test_script_stop(self):
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
 
@@ -29,3 +29,12 @@ class ScriptfilterTestCase(unittest.TestCase):
         action, message = self.candidate.examine(suspect)
         self.assertEqual(action, REJECT)
         self.assertEqual(message, 'rejected')
+
+    def test_script_normalexit(self):
+        suspect = Suspect(
+            'sender@unittests2.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
+
+        self.assertTrue(len(self.candidate.get_scripts()) == 1) # we expect to find one test script
+        action, message = self.candidate.examine(suspect)
+        self.assertEqual(action, DUNNO)
+        self.assertEqual(message, 'accepted')

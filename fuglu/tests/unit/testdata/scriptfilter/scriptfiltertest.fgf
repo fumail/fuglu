@@ -1,7 +1,8 @@
+
 if suspect.from_domain=='unittests.fuglu.org':
     message = 'rejected'
     action = REJECT
-    stop()
+    stop(action, message)
 
 action = DUNNO
 message = 'accepted'

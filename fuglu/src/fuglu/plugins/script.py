@@ -6,7 +6,9 @@ import sys
 import runpy
 
 class Stopped(Exception):
-    pass
+    def __init__(self, action, message):
+        self.action = action
+        self.message = message
 
 
 class ScriptFilter(ScannerPlugin):
@@ -28,7 +30,7 @@ there is no 'self' which means:
 the script should not return anything, but change the available variables ``action`` and ``message`` instead
 (``DUNNO``, ``REJECT``, ``DEFER``, ``ACCEPT``, ``DELETE`` are already imported)
 
-use ``stop()`` to exit the script
+use ``stop(action=DUNNO, message='')`` to exit the script early
 
 
 Example script:
@@ -69,9 +71,11 @@ Example script:
             send = time.time()
             self.logger.debug("Script %s done in %.4fs result: %s %s" % (
                 script, send - sstart, actioncode_to_string(action), message))
+            
+            retaction = action
+            retmessage = message
+
             if action != DUNNO:
-                retaction = action
-                retmessage = message
                 break
 
         return retaction, retmessage
@@ -110,8 +114,8 @@ Example script:
         info = lambda message: self.logger.info(message)
         warn = lambda message: self.logger.warn(message)
 
-        def stop():
-            raise Stopped()
+        def stop(action=DUNNO,message=''):
+            raise Stopped(action, message)
 
         scriptenv = dict(
             action=action,
@@ -130,13 +134,15 @@ Example script:
             if sys.version_info < (2,7):
                 execfile(filename, scriptenv )
             else:
-                runpy.run_path(filename, scriptenv)
-
+                scriptenv=runpy.run_path(filename, scriptenv)
+                print("script ran through!")
+            import pprint
+            pprint.pprint(scriptenv)
             action = scriptenv['action']
             message = scriptenv['message']
-        except Stopped:
-            action = scriptenv['action']
-            message = scriptenv['message']
+        except Stopped as stp:
+            action = stp.action
+            message = stp.message
         except:
             trb = traceback.format_exc()
             self.logger.error("Script %s failed: %s" % (filename, trb))
