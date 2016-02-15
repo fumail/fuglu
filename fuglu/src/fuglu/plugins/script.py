@@ -71,7 +71,7 @@ Example script:
             send = time.time()
             self.logger.debug("Script %s done in %.4fs result: %s %s" % (
                 script, send - sstart, actioncode_to_string(action), message))
-            
+
             retaction = action
             retmessage = message
 
