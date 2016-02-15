@@ -127,7 +127,7 @@ Example script:
         )
 
         try:
-            if sys.version<(2,7):
+            if sys.version_info < (2,7):
                 execfile(filename, scriptenv )
             else:
                 runpy.run_path(filename, scriptenv)
