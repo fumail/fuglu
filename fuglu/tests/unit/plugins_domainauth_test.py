@@ -43,6 +43,6 @@ class SPFTestCase(unittest.TestCase):
         #self.assertEquals(suspect.get_tag('SPF.status'), 'pass')
 
         # no spf record
-        suspect = self._make_dummy_suspect('fuglu.org', '1.2.3.4')
+        suspect = self._make_dummy_suspect('fuglu.org', u'1.2.3.4')
         self.candidate.examine(suspect)
         self.assertEqual(suspect.get_tag('SPF.status'), 'none')
