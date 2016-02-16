@@ -48,7 +48,7 @@ def reloadconfig():
     """reload configuration file"""
     logger = logging.getLogger('fuglu')
     logger.info('Reloading configuration')
-    newconfig = configparser.ConfigParser()
+    newconfig = configparser.RawConfigParser()
     newconfig.readfp(open(theconfigfile))
 
     identifier = "no identifier given"
@@ -121,7 +121,7 @@ if opts.configfile:
         os.path.split(theconfigfile)[0], os.path.split(theloggingfile)[1])
     dconfdir = None
 
-config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
 if not os.path.exists(theconfigfile):
     print("""Configfile (%s) not found. Please create it by renaming the .dist file and modifying it to your needs""" % theconfigfile)
     sys.exit(1)

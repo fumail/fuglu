@@ -45,7 +45,7 @@ def print_config(config):
 def cloneConfig(config):
     tmpfile = io.StringIO()
     config.write(tmpfile)
-    theClone = configparser.ConfigParser()
+    theClone = configparser.RawConfigParser()
     tmpfile.seek(0)
     theClone.readfp(tmpfile)
     return theClone
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     dconfdir = confdir + "/conf.d"
 
     fugluconfigfile = confdir + "/fuglu.conf"
-    userconfig = configparser.ConfigParser()
+    userconfig = configparser.RawConfigParser()
     if not os.path.exists(fugluconfigfile):
         stderr("""Configfile (%s) not found. """ % fugluconfigfile)
         sys.exit(1)
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         readfiles = userconfig.read(configfiles)
 
     from fuglu.core import MainController
-    defaultconfig = configparser.ConfigParser()
+    defaultconfig = configparser.RawConfigParser()
 
     # copy plugindir, pluginalias and active plugins from current config
     defaultconfig.add_section("main")
