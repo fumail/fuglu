@@ -37,7 +37,7 @@ if len(sys.argv) < 2:
 
 # what port is fuglu debugging?
 fugluconfigfile = '/etc/fuglu/fuglu.conf'
-newconfig = configparser.ConfigParser()
+newconfig = configparser.RawConfigParser()
 readconfig = newconfig.read([fugluconfigfile])
 
 try:
