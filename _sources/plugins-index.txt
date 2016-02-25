@@ -73,9 +73,9 @@ The format is : ``<property> <regex> <optional argument>``
  * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
 
-  * ``envelope_from``  (the envelope from address) 
+  * ``envelope_from`` or ``from_address``  (the envelope from address)
   * ``from_domain`` (domain part of envelope_from)
-  * ``envelope_to`` (envelope to address)
+  * ``envelope_to`` or ``to_address`` (envelope to address)
   * ``to_domain`` (domain part of envelope_to)
 
  * a ``message Tag`` prepended by the @ symbol, eg. ``@incomingport``
@@ -128,7 +128,7 @@ see :ref:`debug-suspect-filter` for info on how to debug suspect filter files on
 Template Variables
 ..................
 
-Some plugins allow you to create templates (errormessages in bounces, Reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation. 
+Some plugins allow you to create templates (errormessages in bounces, reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation. 
 
  * ``${from_address}`` : Envelope Sender Address
  * ``${to_address}``   : Envelope Recipient Address
@@ -254,7 +254,7 @@ The 'dict of dicts' uses your config option name as key for the outer dict. The 
 Read the config
 ---------------
 
-Configs in fuglu are stored in ``/etc/fuglu/fuglu.conf`` (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own Section named like the Plugin Class. 
+Configs in fuglu are stored in ``/etc/fuglu/fuglu.conf`` (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own section named like the plugin class. 
 
 Example:
 
