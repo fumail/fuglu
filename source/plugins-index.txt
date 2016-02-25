@@ -73,9 +73,9 @@ The format is : ``<property> <regex> <optional argument>``
  * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
 
-  * ``envelope_from``  (the envelope from address) 
+  * ``envelope_from`` or ``from_address``  (the envelope from address)
   * ``from_domain`` (domain part of envelope_from)
-  * ``envelope_to`` (envelope to address)
+  * ``envelope_to`` or ``to_address`` (envelope to address)
   * ``to_domain`` (domain part of envelope_to)
 
  * a ``message Tag`` prepended by the @ symbol, eg. ``@incomingport``
