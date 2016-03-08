@@ -112,7 +112,7 @@ Total 10 Threads
 [107]: waiting for task
 </pre></div>
 </div>
-<p>run fuglu_control without arguments to get a list of all supported commands.</p>
+<p>Run fuglu_control without arguments to get a list of all supported commands.</p>
 </div>
 <div class="section" id="logs">
 <h3>Logs<a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h3>
@@ -120,7 +120,7 @@ Total 10 Threads
 <p>Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, ...)</p>
 <p>Full documentation on the python logging configuration: <a class="reference external" href="http://docs.python.org/library/logging.html#configuring-logging">http://docs.python.org/library/logging.html#configuring-logging</a></p>
 <p>Logging is configured in <code class="docutils literal"><span class="pre">/etc/fuglu/logging.conf</span></code></p>
-<p>in standard configuration, fuglu logs only INFO messages. Let&#8217;s say you wanted to debug the spamassassin plugin. So you&#8217;d check if there is a section dealing with spamassassin and you&#8217;d find this:</p>
+<p>In standard configuration, fuglu logs only INFO messages. Let&#8217;s say you wanted to debug the spamassassin plugin. So you&#8217;d check if there is a section dealing with spamassassin and you&#8217;d find this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">logger_saplugin</span><span class="p">]</span>
 <span class="n">level</span><span class="o">=</span><span class="n">INFO</span>
 <span class="n">handlers</span><span class="o">=</span><span class="n">logfile</span>
@@ -133,7 +133,7 @@ Total 10 Threads
 <span class="n">keys</span><span class="o">=</span><span class="n">root</span><span class="p">,</span><span class="n">saplugin</span>
 </pre></div>
 </div>
-<p>after reloading fuglu, the spamassassin plugin should be very verbose:</p>
+<p>After reloading fuglu, the spamassassin plugin should be very verbose:</p>
 <div class="highlight-python"><div class="highlight"><pre>2009-04-08 17:11:07,693 fuglu.plugin.SAPlugin: DEBUG Contacting spamd localhost (Try 1 of 5)
 2009-04-08 17:11:07,701 fuglu.plugin.SAPlugin: DEBUG Sent 4065 bytes to spamd
 2009-04-08 17:11:10,033 fuglu.plugin.SAPlugin: DEBUG SPAMD/1.1 0 EX_OK
@@ -143,7 +143,7 @@ Total 10 Threads
 2009-04-08 17:11:10,047 fuglu.plugin.SAPlugin: DEBUG Message is not spam
 </pre></div>
 </div>
-<p>there should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this.</p>
+<p>There should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this.</p>
 <p><strong>Qualnames for new loggers</strong> :</p>
 <p>Plugins usually use <code class="docutils literal"><span class="pre">fuglu.plugin.&lt;classname&gt;</span></code></p>
 <p>fuglu internal qualnames:</p>
@@ -242,14 +242,14 @@ MaxBytes[virus]: 600000
 AbsMax[virus]: 600000
 </pre></div>
 </div>
-<p>make sure, the path in WorkDir exists.</p>
-<p>then create a script <code class="docutils literal"><span class="pre">/usr/local/bin/fuglu_mrtg.sh</span></code></p>
+<p>Make sure, the path in WorkDir exists.</p>
+<p>Then create a script <code class="docutils literal"><span class="pre">/usr/local/bin/fuglu_mrtg.sh</span></code></p>
 <div class="highlight-python"><div class="highlight"><pre>#!/bin/sh
 /usr/bin/env LANG=C /usr/bin/mrtg /etc/fuglu/fuglu_mrtg.cfg
 </pre></div>
 </div>
 <p>run <code class="docutils literal"><span class="pre">fuglu_mrtg.sh</span></code> to check for errors.</p>
-<p>if all went well, add it to your crontab:</p>
+<p>If all went well, add it to your crontab:</p>
 <div class="highlight-python"><div class="highlight"><pre>*/5 * * * * /usr/local/bin/fuglu_mrtg.sh &gt;/dev/null 2&gt;&amp;1
 </pre></div>
 </div>
@@ -315,13 +315,13 @@ Regex : edgarmail@example\.com
 Rule argument : Messages from Edgar
 </pre></div>
 </div>
-<p>add a <cite>-D</cite> argument for a full debug trace of the suspect filter.</p>
+<p>Add a <cite>-D</cite> argument for a full debug trace of the suspect filter.</p>
 </div>
 <div class="section" id="debug-the-fuglu-core">
 <h3>Debug the fuglu core<a class="headerlink" href="#debug-the-fuglu-core" title="Permalink to this headline">¶</a></h3>
 <p>If you are a python developer and would like to inspect fuglu at run-time, add the argument <code class="docutils literal"><span class="pre">--console</span></code> when starting fuglu.
-You will then get an interactive python console where all plugins etc are available from the &#8216;mc&#8217; (MainController) object</p>
-<p>starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command <code class="docutils literal"><span class="pre">fuglu_control</span> <span class="pre">netconsole</span> <span class="pre">[&lt;port&gt;</span> <span class="pre">[&lt;bindaddress&gt;]]</span></code></p>
+You will then get an interactive python console where all plugins etc are available from the &#8216;mc&#8217; (MainController) object.</p>
+<p>Starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command <code class="docutils literal"><span class="pre">fuglu_control</span> <span class="pre">netconsole</span> <span class="pre">[&lt;port&gt;</span> <span class="pre">[&lt;bindaddress&gt;]]</span></code></p>
 <p>Example:
 on the host running fuglu:</p>
 <div class="highlight-python"><div class="highlight"><pre># fuglu_control netconsole 9999 0.0.0.0
@@ -424,7 +424,7 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

@@ -181,7 +181,7 @@ This is a quick example of how your plugin code skeleton would look like:
 		#maxsize=self.config.getint(self.section, 'maxsize')
 		
 		#debug example
-		#self._logger().debug('hello world from StubPlugin')
+		#self._logger().debug('hello world from DemoPlugin')
 		  
 		#PUT PLUGIN CODE HERE
 		
@@ -284,10 +284,27 @@ Use ``suspect.get_source()`` to get the message source. The maxbytes option allo
 Add headers
 -----------
 
-``suspect.add_header(headername,headervalue)``
+::
+
+    suspect.add_header(headername,headervalue)
 
 By default, headers are added to the message shortly before it is re-injected into postfix.
 add ``immediate=True`` to add the header immediately, so other plugins can see it.
+
+
+Replace headers
+---------------
+
+Here's an example on how to change the subject of a message.
+Note: It's generally not recommended to change existing headers, this breaks DKIM.
+
+
+::
+
+    msgrep = suspect.get_message_rep()
+    msgrep.replace_header('Subject', 'Scanned: '+msgrep['Subject'])
+    suspect.set_message_rep(msgrep)
+
 
 Write to the log
 ----------------
@@ -339,7 +356,7 @@ Example of a plugin that would check if an imap account is available:
                 return False
             return True
         except Exception, e:
-            print "Could not login to imap host:%s - Error %s"%(self.config.get('StubPlugin', 'host'),e)
+            print "Could not login to imap host:%s - Error %s"%(self.config.get(self.section, 'host'),e)
         return False
 
 
