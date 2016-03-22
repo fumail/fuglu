@@ -462,8 +462,6 @@ class Suspect(object):
         both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA
 
         returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex
-
-        Note: this does not currently handle IPv6 received headers
         """
         ignorere = None
         if ignoreregex != None and ignoreregex != '':
@@ -471,18 +469,18 @@ class Suspect(object):
 
         unknown = None
 
-        receivedpattern = re.compile(
-            '^from\s(?P<helo>[^\s]+)\s\((?P<revdns>[^\s]+)\s\[(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\]\)')
+
 
         receivedheaders = self.get_message_rep().get_all('Received')
         if receivedheaders == None:
             return unknown
 
         for rcvdline in receivedheaders[skip:]:
-            match = receivedpattern.search(rcvdline)
-            if match == None:
+            h_rev_ip = self._parse_rcvd_header(rcvdline)
+            if h_rev_ip is None:
                 return unknown
-            helo, revdns, ip = match.groups()
+
+            helo, revdns, ip = h_rev_ip
 
             # check if hostname or ip matches the ignore re, try next header if
             # it does
@@ -504,6 +502,17 @@ class Suspect(object):
         # we should only land here if we only have received headers in
         # mynetworks
         return unknown
+
+    def _parse_rcvd_header(self,rcvdline):
+        """return tuple HELO,REVERSEDNS,IP from received Header line, or None, if extraction fails"""
+        receivedpattern = re.compile(
+            '^from\s(?P<helo>[^\s]+)\s\((?P<revdns>[^\s]+)\s\[(?:IPv6\:)?(?P<ip>(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:[0-9a-f:]{3,40}))\]\)')
+        match = receivedpattern.search(rcvdline)
+        if match == None:
+            return None
+        return match.groups()
+
+
 
 # it is important that this class explicitly extends from object, or
 # __subclasses__() will not work!

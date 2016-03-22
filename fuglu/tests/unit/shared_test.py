@@ -246,7 +246,17 @@ class ClientInfoTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_parse_rcvd_header(self):
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', '/dev/null')
+        self.assertEqual(suspect._parse_rcvd_header("from helo1 (rdns1 [10.0.0.1])"),('helo1','rdns1','10.0.0.1'))
+        self.assertEqual(suspect._parse_rcvd_header("from mx0.slc.paypal.com (mx1.slc.paypal.com [173.0.84.226])"),('mx0.slc.paypal.com','mx1.slc.paypal.com','173.0.84.226'))
+        self.assertEqual(suspect._parse_rcvd_header("from mail1a.tilaa.nl (mail1a.tilaa.nl [IPv6:2a02:2770:6:0:21a:4aff:fea8:1328])"),('mail1a.tilaa.nl','mail1a.tilaa.nl','2a02:2770:6:0:21a:4aff:fea8:1328'))
+
+
+
     def test_client_info(self):
+        """Test client info using eml file"""
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         helo, ip, revdns = suspect.client_info_from_rcvd(None, 0)
