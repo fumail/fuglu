@@ -402,7 +402,7 @@ class ESMTPPassthroughSession(object):
             self.dataAccum = self.dataAccum[-5:]
 
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
-            # check if there is more data to write tot he file
+            # check if there is more data to write to the file
             if len(data) > 4:
                 self.tempfile.write(data[0:-5])
 
