@@ -381,7 +381,7 @@ class ESMTPPassthroughSession(object):
                     if value.upper() == '[UNAVAILABLE]':
                         continue
                     if value.upper().startswith('IPV6:'):
-                        self.xforward_addr = value[6:]
+                        self.xforward_addr = value[5:]
                     else:
                         self.xforward_addr = value
 
