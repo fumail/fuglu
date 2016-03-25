@@ -28,6 +28,7 @@ from fuglu.daemon import DaemonStuff
 import logging
 import logging.config
 import fuglu.funkyconsole
+from fuglu import loghandlers
 import sys
 from fuglu.core import MainController
 import signal
@@ -42,6 +43,9 @@ theconfigfile = '/etc/fuglu/fuglu.conf'
 dconfdir = '/etc/fuglu/conf.d'
 theloggingfile = '/etc/fuglu/logging.conf'
 thepidfile = '/var/run/fuglu.pid'
+
+#register custom log handlers
+logging.custom_handlers = loghandlers
 
 
 def reloadconfig():
