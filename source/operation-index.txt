@@ -125,7 +125,16 @@ fuglu internal qualnames:
  * ``fuglu.smtpsession`` - information on the incoming smtp transaction 
  * ``fuglu.threadpool`` - information when threads are created / destroyed 
  * ``fuglu.suspectfilter`` - debug info on parsing/applying the special header filter config files 
-
+ 
+ 
+ **Additional handlers** 
+ 
+ In addition to python's [builtin handlers](https://docs.python.org/2/library/logging.handlers.html), fuglu supports:
+ 
+  * ``logging.custom_handlers.GroupReadableRotatingFileHandler`` - Like python's [RotatingFileHandler](https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler), but the file is readable by fuglu's group
+ * ``logging.custom_handlers.GroupWritableRotatingFileHandler`` - Like python's [RotatingFileHandler](https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler), but the file is readable/writable by fuglu's group
+ * ``logging.custom_handlers.GroupReadableTimedRotatingFileHandler`` - Like python's [TimedRotatingFileHandler](https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler), but the file is readable by fuglu's group
+ * ``logging.custom_handlers.GroupWritableTimedRotatingFileHandler`` - Like python's [TimedRotatingFileHandler](https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler), but the file is readable/writable by fuglu's group
 
 MRTG
 ....
