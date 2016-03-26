@@ -37,13 +37,13 @@ class GroupWritableRotatingFileHandler(logging.handlers.RotatingFileHandler):
 class GroupReadableTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
     def _open(self):
         prevumask=os.umask(0o137)
-        rtv=logging.handlers.RotatingFileHandler._open(self)
+        rtv=logging.handlers.TimedRotatingFileHandler._open(self)
         os.umask(prevumask)
         return rtv
 
 class GroupWritableTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
     def _open(self):
         prevumask=os.umask(0o117)
-        rtv=logging.handlers.RotatingFileHandler._open(self)
+        rtv=logging.handlers.TimedRotatingFileHandler._open(self)
         os.umask(prevumask)
         return rtv
