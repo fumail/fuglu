@@ -124,7 +124,7 @@ fuglu internal qualnames:
  * ``fuglu.smtp.incoming.<portnumber>`` - Incoming smtp sessions on port <portnumber>
  * ``fuglu.smtpsession`` - information on the incoming smtp transaction 
  * ``fuglu.threadpool`` - information when threads are created / destroyed 
- * ``fuglu.headerfilter`` - debug info on parsing/applying the special header filter config files 
+ * ``fuglu.suspectfilter`` - debug info on parsing/applying the special header filter config files 
 
 
 MRTG
