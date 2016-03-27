@@ -154,7 +154,19 @@ Total 10 Threads
 <li><code class="docutils literal"><span class="pre">fuglu.smtp.incoming.&lt;portnumber&gt;</span></code> - Incoming smtp sessions on port &lt;portnumber&gt;</li>
 <li><code class="docutils literal"><span class="pre">fuglu.smtpsession</span></code> - information on the incoming smtp transaction</li>
 <li><code class="docutils literal"><span class="pre">fuglu.threadpool</span></code> - information when threads are created / destroyed</li>
-<li><code class="docutils literal"><span class="pre">fuglu.headerfilter</span></code> - debug info on parsing/applying the special header filter config files</li>
+<li><code class="docutils literal"><span class="pre">fuglu.suspectfilter</span></code> - debug info on parsing/applying the special header filter config files</li>
+</ul>
+<p><strong>Additional handlers</strong></p>
+<p>In addition to python&#8217;s [builtin handlers](<a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html">https://docs.python.org/2/library/logging.handlers.html</a>), fuglu supports:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">logging.custom_handlers.GroupReadableRotatingFileHandler</span></code> - Like python&#8217;s [RotatingFileHandler](<a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler</a>), but the file is readable by fuglu&#8217;s group</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">logging.custom_handlers.GroupWritableRotatingFileHandler</span></code> - Like python&#8217;s [RotatingFileHandler](<a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler</a>), but the file is readable/writable by fuglu&#8217;s group</li>
+<li><code class="docutils literal"><span class="pre">logging.custom_handlers.GroupReadableTimedRotatingFileHandler</span></code> - Like python&#8217;s [TimedRotatingFileHandler](<a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler</a>), but the file is readable by fuglu&#8217;s group</li>
+<li><code class="docutils literal"><span class="pre">logging.custom_handlers.GroupWritableTimedRotatingFileHandler</span></code> - Like python&#8217;s [TimedRotatingFileHandler](<a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler</a>), but the file is readable/writable by fuglu&#8217;s group</li>
 </ul>
 </div></blockquote>
 </div>
@@ -424,7 +436,7 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
