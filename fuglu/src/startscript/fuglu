@@ -146,6 +146,27 @@ if not lint and not console and not opts.foreground:
             daemon.createDaemon()
     else:  # option not specified -> default to run daemon
         daemon.createDaemon()
+
+
+# drop privileges
+try:
+    running_user = config.get('main', 'user')
+    running_group = config.get('main', 'group')
+except:
+    running_user = 'nobody'
+    running_group = 'nobody'
+
+priv_drop_ok = False
+try:
+    daemon.drop_privs(running_user, running_group)
+    priv_drop_ok = True
+except:
+    err = sys.exc_info()[1]
+    print("Could not drop privileges to %s/%s : %s" %
+                     (running_user, running_group, str(err)))
+
+
+# set up logging
 if lint:
     # define a Handler which writes INFO messages or higher to the sys.stderr
     console = logging.StreamHandler()
@@ -164,28 +185,12 @@ if lint:
 else:
     logging.config.fileConfig(theloggingfile)
 
-
-controller = MainController(config)
-controller.propagate_core_defaults()
 baselogger = logging.getLogger('')
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
-
-try:
-    running_user = config.get('main', 'user')
-    running_group = config.get('main', 'group')
-except:
-    running_user = 'nobody'
-    running_group = 'nobody'
-
-priv_drop_ok = False
-try:
-    daemon.drop_privs(running_user, running_group)
-    priv_drop_ok = True
-except:
-    err = sys.exc_info()[1]
-    baselogger.error("Could not drop privileges to %s/%s : %s" %
-                     (running_user, running_group, str(err)))
+# instantiate the MainController and load default configuration
+controller = MainController(config)
+controller.propagate_core_defaults()
 
 
 if lint:
