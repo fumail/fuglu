@@ -139,7 +139,7 @@ named like the plugin itself.</p>
 </ul>
 </dd>
 </dl>
-<p><code class="docutils literal"><span class="pre">&lt;regex&gt;</span></code> is a standard python regular expression applied to &lt;header&gt;. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use <code class="docutils literal"><span class="pre">\s</span></code>. all regexes that are not enclosed in forward slashes are automatically <code class="docutils literal"><span class="pre">case</span> <span class="pre">insensitive</span></code> and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.</p>
+<p><code class="docutils literal"><span class="pre">&lt;regex&gt;</span></code> is a standard python regular expression applied to <code class="docutils literal"><span class="pre">&lt;property&gt;</span></code>. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use <code class="docutils literal"><span class="pre">\s</span></code>. all regexes that are not enclosed in forward slashes are automatically <code class="docutils literal"><span class="pre">case</span> <span class="pre">insensitive</span></code> and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span>Subject /hello world/i match hello world, case insensitive
 </pre></div>
 </div>
