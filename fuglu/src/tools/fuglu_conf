@@ -21,9 +21,9 @@ from optparse import OptionParser
 import sys
 import os
 try:
-	import configparser
+    import configparser
 except ImportError:
-	import ConfigParser as configparser
+    import ConfigParser as configparser
 import io
 import logging
 import inspect
@@ -43,7 +43,10 @@ def print_config(config):
 
 
 def cloneConfig(config):
-    tmpfile = io.StringIO()
+    if sys.version_info>(3,):
+        tmpfile = io.StringIO()
+    else:
+        tmpfile = io.BytesIO()
     config.write(tmpfile)
     theClone = configparser.RawConfigParser()
     tmpfile.seek(0)
