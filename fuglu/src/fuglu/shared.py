@@ -1064,6 +1064,12 @@ class FileList(object):
         if lowercase:
             self.linefilters.append(lambda x: x.lower())
 
+        if additional_filters != None:
+            if type(additional_filters)==list:
+                self.linefilters.extend(additional_filters)
+            else:
+                self.linefilters.append(additional_filters)
+
         if filename != None:
             self._reload_if_necessary()
 
