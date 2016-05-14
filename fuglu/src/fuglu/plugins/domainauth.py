@@ -114,7 +114,8 @@ It is currently recommended to leave both header and body canonicalization as 'r
         try:
             valid = d.verify()
         except DKIMException as de:
-            self.logger.warning("%s: DKIM validation failed: %s" % (suspect.id, str(de)))
+            self.logger.warning("%s: DKIM validation failed: %s" %
+                                (suspect.id, str(de)))
             valid = False
 
         suspect.set_tag("DKIMVerify.sigvalid", valid)
@@ -332,6 +333,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
 
         return self.checkConfig()
 
+
 class DomainAuthPlugin(ScannerPlugin):
 
     """**EXPERIMENTAL**
@@ -359,31 +361,34 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
             },
         }
         self.logger = self._logger()
-        self.filelist=FileList(filename=None,strip=True, skip_empty=True, skip_comments=True,lowercase=True)
+        self.filelist = FileList(
+            filename=None, strip=True, skip_empty=True, skip_comments=True, lowercase=True)
 
-    def examine(self,suspect):
-        self.filelist.filename=self.config.get(self.section,'domainsfile')
+    def examine(self, suspect):
+        self.filelist.filename = self.config.get(self.section, 'domainsfile')
         checkdomains = self.filelist.get_list()
 
-        envelope_sender_domain=suspect.from_domain.lower()
-        header_from_domain=self.extract_from_domain(suspect)
-        if header_from_domain==None:
+        envelope_sender_domain = suspect.from_domain.lower()
+        header_from_domain = self.extract_from_domain(suspect)
+        if header_from_domain == None:
             return
 
         if header_from_domain not in checkdomains:
             return
 
-        #TODO: do we need a tag from dkim to check if the verified dkim domain actually matches the header from domain?
-        dkimresult = suspect.get_tag('DKIMVerify.sigvalid',False)
-        if dkimresult==True:
+        # TODO: do we need a tag from dkim to check if the verified dkim domain
+        # actually matches the header from domain?
+        dkimresult = suspect.get_tag('DKIMVerify.sigvalid', False)
+        if dkimresult == True:
             return DUNNO
 
-        #DKIM failed, check SPF if envelope senderdomain belongs to header from domain
-        spfresult = suspect.get_tag('SPF.status','unknown')
-        if (envelope_sender_domain == header_from_domain or envelope_sender_domain.endswith('.%s'%header_from_domain)) and spfresult=='pass':
+        # DKIM failed, check SPF if envelope senderdomain belongs to header
+        # from domain
+        spfresult = suspect.get_tag('SPF.status', 'unknown')
+        if (envelope_sender_domain == header_from_domain or envelope_sender_domain.endswith('.%s' % header_from_domain)) and spfresult == 'pass':
             return DUNNO
 
-        failaction=self.config.get(self.section,'failaction')
+        failaction = self.config.get(self.section, 'failaction')
         actioncode = string_to_actioncode(failaction, self.config)
 
         values = dict(
@@ -392,17 +397,17 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
             self.config.get(self.section, 'rejectmessage'), suspect, values)
         return actioncode, message
 
-    def flag_as_spam(self,suspect):
-        suspect.tags['spam']['domainauth']=True
+    def flag_as_spam(self, suspect):
+        suspect.tags['spam']['domainauth'] = True
 
     def extract_from_domain(self, suspect):
         """
         Try to extract from header domain
         """
         try:
-            msgrep=suspect.get_message_rep()
-            address= msgrep.get('From')
-            if address==None:
+            msgrep = suspect.get_message_rep()
+            address = msgrep.get('From')
+            if address == None:
                 return None
 
             start = address.find('<') + 1
@@ -419,7 +424,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
             if '@' not in retaddr:
                 return None
 
-            domain=retaddr.split('@',1)[1]
+            domain = retaddr.split('@', 1)[1]
 
             return domain.lower()
         except:
@@ -429,12 +434,12 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
         return "DomainAuth"
 
     def lint(self):
-        allok=(self.checkConfig() and self.lint_file())
+        allok = (self.checkConfig() and self.lint_file())
         return allok
 
     def lint_file(self):
-        filename=self.config.get(self.section,'domainsfile')
+        filename = self.config.get(self.section, 'domainsfile')
         if not os.path.exists(filename):
-            print("domains file %s not found"%(filename))
+            print("domains file %s not found" % (filename))
             return False
         return True

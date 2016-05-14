@@ -20,9 +20,9 @@
 from __future__ import print_function
 
 try:
-	import configparser
+    import configparser
 except ImportError:
-	import ConfigParser as configparser
+    import ConfigParser as configparser
 from fuglu import FUGLU_VERSION
 from fuglu.daemon import DaemonStuff
 import logging
@@ -44,7 +44,7 @@ dconfdir = '/etc/fuglu/conf.d'
 theloggingfile = '/etc/fuglu/logging.conf'
 thepidfile = '/var/run/fuglu.pid'
 
-#register custom log handlers
+# register custom log handlers
 logging.custom_handlers = loghandlers
 
 
@@ -163,7 +163,7 @@ try:
 except:
     err = sys.exc_info()[1]
     print("Could not drop privileges to %s/%s : %s" %
-                     (running_user, running_group, str(err)))
+          (running_user, running_group, str(err)))
 
 
 # set up logging
@@ -180,7 +180,8 @@ if lint:
     fc = fuglu.funkyconsole.FunkyConsole()
     print(fc.strcolor("Fuglu", "yellow"), end=' ')
     print(fc.strcolor(FUGLU_VERSION, "green"))
-    print("----------", fc.strcolor("LINT MODE", (fc.MODE["blink"], fc.FG["magenta"])), "----------")
+    print("----------", fc.strcolor("LINT MODE",
+                                    (fc.MODE["blink"], fc.FG["magenta"])), "----------")
 
 else:
     logging.config.fileConfig(theloggingfile)
@@ -206,7 +207,8 @@ if lint:
         except Exception as e:
             print("Logging configuration check failed: %s " % str(e))
             print("This may prevent the daemon from starting up.")
-            print("Make sure the log directory exists and is writable by user '%s' " % running_user)
+            print(
+                "Make sure the log directory exists and is writable by user '%s' " % running_user)
             print(fc.strcolor("NOT OK", "red"))
     else:
         print(fc.strcolor("WARNING:", "yellow"))

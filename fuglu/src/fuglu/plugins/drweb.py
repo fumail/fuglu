@@ -220,7 +220,8 @@ Tags:
         try:
             version = self.get_version()
             bases = self.get_baseinfo()
-            print("DrWeb Version %s, found %s bases with a total of %s virus definitions" % (version, len(bases), sum([x[1] for x in bases])))
+            print("DrWeb Version %s, found %s bases with a total of %s virus definitions" % (
+                version, len(bases), sum([x[1] for x in bases])))
         except Exception as e:
             print("Could not get DrWeb Version info: %s" % str(e))
             return False

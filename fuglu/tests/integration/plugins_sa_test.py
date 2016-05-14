@@ -97,7 +97,8 @@ This is a test mailing """
         spamstatus, spamscore, rules = self.candidate.safilter_symbols(
             stream2, 'oli@unittests.fuglu.org')
         # print rules
-        self.assertFalse(spamstatus, "This message should not be detected as spam")
+        self.assertFalse(
+            spamstatus, "This message should not be detected as spam")
 
     def test_sql_blacklist(self):
         self.candidate.config.set('SAPlugin', 'check_sql_blacklist', 'True')

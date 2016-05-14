@@ -16,8 +16,8 @@ class ScriptfilterTestCase(unittest.TestCase):
         config = RawConfigParser()
 
         config.add_section('ScriptFilter')
-        config.set('ScriptFilter', 'scriptdir', os.path.abspath(os.path.dirname(__file__)+'/testdata/scriptfilter'))
-
+        config.set('ScriptFilter', 'scriptdir', os.path.abspath(
+            os.path.dirname(__file__) + '/testdata/scriptfilter'))
 
         self.candidate = ScriptFilter(config)
 
@@ -25,7 +25,8 @@ class ScriptfilterTestCase(unittest.TestCase):
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
 
-        self.assertTrue(len(self.candidate.get_scripts()) == 1) # we expect to find one test script
+        # we expect to find one test script
+        self.assertTrue(len(self.candidate.get_scripts()) == 1)
         action, message = self.candidate.examine(suspect)
         self.assertEqual(action, REJECT)
         self.assertEqual(message, 'rejected')
@@ -34,7 +35,8 @@ class ScriptfilterTestCase(unittest.TestCase):
         suspect = Suspect(
             'sender@unittests2.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
 
-        self.assertTrue(len(self.candidate.get_scripts()) == 1) # we expect to find one test script
+        # we expect to find one test script
+        self.assertTrue(len(self.candidate.get_scripts()) == 1)
         action, message = self.candidate.examine(suspect)
         self.assertEqual(action, DUNNO)
         self.assertEqual(message, 'accepted')

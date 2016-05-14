@@ -41,7 +41,8 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         print("FuGlu suspect filter debugger")
         print("Usage:")
-        print("fuglu_suspectfilter </path/to/filterfile> </path/to/message.eml> [-D]")
+        print(
+            "fuglu_suspectfilter </path/to/filterfile> </path/to/message.eml> [-D]")
         sys.exit(1)
 
     filterfilename = sys.argv[1]

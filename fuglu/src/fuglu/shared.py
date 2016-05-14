@@ -215,7 +215,8 @@ class Suspect(object):
             try:
                 (user, self.from_domain) = self.from_address.rsplit('@', 1)
             except Exception as e:
-                raise ValueError("invalid from email address: '%s'" % self.from_address)
+                raise ValueError(
+                    "invalid from email address: '%s'" % self.from_address)
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
@@ -469,8 +470,6 @@ class Suspect(object):
 
         unknown = None
 
-
-
         receivedheaders = self.get_message_rep().get_all('Received')
         if receivedheaders == None:
             return unknown
@@ -503,7 +502,7 @@ class Suspect(object):
         # mynetworks
         return unknown
 
-    def _parse_rcvd_header(self,rcvdline):
+    def _parse_rcvd_header(self, rcvdline):
         """return tuple HELO,REVERSEDNS,IP from received Header line, or None, if extraction fails"""
         receivedpattern = re.compile(
             '^from\s(?P<helo>[^\s]+)\s\((?P<revdns>[^\s]+)\s\[(?:IPv6\:)?(?P<ip>(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:[0-9a-f:]{3,40}))\]\)')
@@ -511,7 +510,6 @@ class Suspect(object):
         if match == None:
             return None
         return match.groups()
-
 
 
 # it is important that this class explicitly extends from object, or
@@ -559,7 +557,8 @@ class BasicPlugin(object):
                 try:
                     var = self.config.get(section, config)
                 except configparser.NoOptionError:
-                    print("Missing configuration value [%s] :: %s" % (section, config))
+                    print("Missing configuration value [%s] :: %s" % (
+                        section, config))
                     allOK = False
                 except configparser.NoSectionError:
                     print("Missing configuration section %s" % (section))
@@ -576,13 +575,16 @@ class BasicPlugin(object):
                     var = self.config.get(section, config)
                     if 'validator' in infodic:
                         if not infodic["validator"](var):
-                            print("Validation failed for [%s] :: %s" % (section, config))
+                            print("Validation failed for [%s] :: %s" % (
+                                section, config))
                             allOK = False
                 except configparser.NoSectionError:
-                    print("Missing configuration section [%s] :: %s" % (section, config))
+                    print("Missing configuration section [%s] :: %s" % (
+                        section, config))
                     allOK = False
                 except configparser.NoOptionError:
-                    print("Missing configuration value [%s] :: %s" % (section, config))
+                    print("Missing configuration value [%s] :: %s" % (
+                        section, config))
                     allOK = False
 
         return allOK
@@ -755,8 +757,8 @@ class SuspectFilter(object):
         # content may land as a bytes object in py3, so we have to convert to a string so we can
         # replace newline with space
         # if it's unicode, we don't convert
-        if type(content) == bytes: #in py2 bytes is an alias for str, no change
-            content=str(content)
+        if type(content) == bytes:  # in py2 bytes is an alias for str, no change
+            content = str(content)
         content = content.replace("\n", " ")
 
         if HAVE_BEAUTIFULSOUP and use_bfs:
@@ -782,7 +784,7 @@ class SuspectFilter(object):
         try:
             stripper.feed(content)
             return stripper.get_stripped_data()
-        except: #ignore parsing/encoding errors
+        except:  # ignore parsing/encoding errors
             pass
         # use regex replace
         return re.sub(self.stripre, '', content)
@@ -993,7 +995,8 @@ class SuspectFilter(object):
                     continue
                 tup = self._load_simplestyle_line(line)
             except Exception as e:
-                print("Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (self.filename, lineno, line, str(e)))
+                print("Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (
+                    self.filename, lineno, line, str(e)))
                 return False
         return True
 
@@ -1065,7 +1068,7 @@ class FileList(object):
             self.linefilters.append(lambda x: x.lower())
 
         if additional_filters != None:
-            if type(additional_filters)==list:
+            if type(additional_filters) == list:
                 self.linefilters.extend(additional_filters)
             else:
                 self.linefilters.append(additional_filters)

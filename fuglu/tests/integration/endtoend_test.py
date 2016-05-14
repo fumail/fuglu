@@ -142,11 +142,12 @@ Don't dare you change any of my bytes or even remove one!"""
 
         # check a few things on the received message
         msgrep = gotback.get_message_rep()
-        self.assertTrue('X-Fuglutest-Spamstatus' in msgrep, "Fuglu SPAM Header not found in message")
+        self.assertTrue('X-Fuglutest-Spamstatus' in msgrep,
+                        "Fuglu SPAM Header not found in message")
         payload = msgrep.get_payload()
         outbytes = len(payload)
         self.assertEqual(testmessage, payload, "Message body has been altered. In: %s bytes, Out: %s bytes, teststring=->%s<- result=->%s<-" %
-                             (inbytes, outbytes, testmessage, payload))
+                         (inbytes, outbytes, testmessage, payload))
 
 
 class DKIMTestCase(unittest.TestCase):

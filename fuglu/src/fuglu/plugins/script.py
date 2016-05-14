@@ -5,7 +5,9 @@ import time
 import sys
 import runpy
 
+
 class Stopped(Exception):
+
     def __init__(self, action, message):
         self.action = action
         self.message = message
@@ -114,7 +116,7 @@ Example script:
         info = lambda message: self.logger.info(message)
         warn = lambda message: self.logger.warn(message)
 
-        def stop(action=DUNNO,message=''):
+        def stop(action=DUNNO, message=''):
             raise Stopped(action, message)
 
         scriptenv = dict(
@@ -131,10 +133,10 @@ Example script:
         )
 
         try:
-            if sys.version_info < (2,7):
-                execfile(filename, scriptenv )
+            if sys.version_info < (2, 7):
+                execfile(filename, scriptenv)
             else:
-                scriptenv=runpy.run_path(filename, scriptenv)
+                scriptenv = runpy.run_path(filename, scriptenv)
                 print("script ran through!")
             import pprint
             pprint.pprint(scriptenv)

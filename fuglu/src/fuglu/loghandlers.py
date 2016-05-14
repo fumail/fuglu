@@ -14,36 +14,45 @@
 #
 
 
-#additional loggers
-#source: http://stackoverflow.com/questions/1407474/does-python-logging-handlers-rotatingfilehandler-allow-creation-of-a-group-writa
+# additional loggers
+# source:
+# http://stackoverflow.com/questions/1407474/does-python-logging-handlers-rotatingfilehandler-allow-creation-of-a-group-writa
 
 import logging
 import os
 
+
 class GroupReadableRotatingFileHandler(logging.handlers.RotatingFileHandler):
+
     def _open(self):
-        prevumask=os.umask(0o137)
-        rtv=logging.handlers.RotatingFileHandler._open(self)
+        prevumask = os.umask(0o137)
+        rtv = logging.handlers.RotatingFileHandler._open(self)
         os.umask(prevumask)
         return rtv
+
 
 class GroupWritableRotatingFileHandler(logging.handlers.RotatingFileHandler):
+
     def _open(self):
-        prevumask=os.umask(0o117)
-        rtv=logging.handlers.RotatingFileHandler._open(self)
-        os.umask(prevumask)
-        return rtv
-        
-class GroupReadableTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
-    def _open(self):
-        prevumask=os.umask(0o137)
-        rtv=logging.handlers.TimedRotatingFileHandler._open(self)
+        prevumask = os.umask(0o117)
+        rtv = logging.handlers.RotatingFileHandler._open(self)
         os.umask(prevumask)
         return rtv
 
-class GroupWritableTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
+
+class GroupReadableTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
+
     def _open(self):
-        prevumask=os.umask(0o117)
-        rtv=logging.handlers.TimedRotatingFileHandler._open(self)
+        prevumask = os.umask(0o137)
+        rtv = logging.handlers.TimedRotatingFileHandler._open(self)
+        os.umask(prevumask)
+        return rtv
+
+
+class GroupWritableTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
+
+    def _open(self):
+        prevumask = os.umask(0o117)
+        rtv = logging.handlers.TimedRotatingFileHandler._open(self)
         os.umask(prevumask)
         return rtv

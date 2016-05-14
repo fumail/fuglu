@@ -293,7 +293,8 @@ Tags:
 
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
-        print("Virusaction: %s" % actioncode_to_string(string_to_actioncode(viract, self.config)))
+        print("Virusaction: %s" % actioncode_to_string(
+            string_to_actioncode(viract, self.config)))
         allok = (self.checkConfig() and self.lint_ping() and self.lint_eicar())
         return allok
 

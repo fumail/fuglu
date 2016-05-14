@@ -108,8 +108,8 @@ RESPONSE = {
 def printchar(char):
     """Useful debugging function for milter developers."""
     print('char: %s [qp=%s][hex=%s][base64=%s]' %
-           (char, binascii.b2a_qp(char), binascii.b2a_hex(char),
-            binascii.b2a_base64(char)))
+          (char, binascii.b2a_qp(char), binascii.b2a_hex(char),
+           binascii.b2a_base64(char)))
 
 
 def CanonicalizeAddress(addr):
@@ -273,10 +273,10 @@ class PpyMilterDispatcher(object):
         """
         (hostname, data) = data.split('\0', 1)
         family = struct.unpack('c', data[0])[0]
-        if family in ('4','6'): # SMFIA_INET / SMFIA_INET6
+        if family in ('4', '6'):  # SMFIA_INET / SMFIA_INET6
             port = struct.unpack('!H', data[1:3])[0]
-            address,_ = data[3:].split('\0',1)
-        else: # SMFIA_UNKNOWN / SMFIA_UNIX
+            address, _ = data[3:].split('\0', 1)
+        else:  # SMFIA_UNKNOWN / SMFIA_UNIX
             port = None
             address = None
         return (cmd, hostname, family, port, address)

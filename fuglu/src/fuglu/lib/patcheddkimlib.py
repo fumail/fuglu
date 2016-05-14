@@ -395,9 +395,9 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     sig = fold(sig)
 
     if debuglog is not None:
-        print("sign headers:", sign_headers + \
-            [("DKIM-Signature", " " + "; ".join("%s=%s" %
-                                                x for x in sigfields))], file=debuglog)
+        print("sign headers:", sign_headers +
+              [("DKIM-Signature", " " + "; ".join("%s=%s" %
+                                                  x for x in sigfields))], file=debuglog)
     h = hashlib.sha256()
     for x in sign_headers:
         h.update(x[0])
@@ -406,7 +406,8 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     h.update(sig)
     d = h.digest()
     if debuglog is not None:
-        print("sign digest:", " ".join("%02x" % ord(x) for x in d), file=debuglog)
+        print("sign digest:", " ".join("%02x" % ord(x)
+                                       for x in d), file=debuglog)
 
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -452,7 +453,8 @@ def verify(message, debuglog=None):
             m = re.match(r"(\w+)\s*=\s*(.*)", x, re.DOTALL)
             if m is None:
                 if debuglog is not None:
-                    print("invalid format of signature part: %s" % x, file=debuglog)
+                    print("invalid format of signature part: %s" %
+                          x, file=debuglog)
                 return False
             sig[m.group(1)] = m.group(2)
     if debuglog is not None:
@@ -476,7 +478,8 @@ def verify(message, debuglog=None):
         return False
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['b']) is None:
         if debuglog is not None:
-            print("b= value is not valid base64 (%s)" % sig['b'], file=debuglog)
+            print("b= value is not valid base64 (%s)" %
+                  sig['b'], file=debuglog)
         return False
     if 'bh' not in sig:
         if debuglog is not None:
@@ -484,7 +487,8 @@ def verify(message, debuglog=None):
         return False
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['bh']) is None:
         if debuglog is not None:
-            print("bh= value is not valid base64 (%s)" % sig['bh'], file=debuglog)
+            print("bh= value is not valid base64 (%s)" %
+                  sig['bh'], file=debuglog)
         return False
     if 'd' not in sig:
         if debuglog is not None:
@@ -547,7 +551,8 @@ def verify(message, debuglog=None):
         canonicalize_headers = Relaxed
     else:
         if debuglog is not None:
-            print("Unknown header canonicalization (%s)" % can_headers, file=debuglog)
+            print("Unknown header canonicalization (%s)" %
+                  can_headers, file=debuglog)
         return False
 
     headers = canonicalize_headers.canonicalize_headers(headers)
@@ -558,7 +563,8 @@ def verify(message, debuglog=None):
         body = Relaxed.canonicalize_body(body)
     else:
         if debuglog is not None:
-            print("Unknown body canonicalization (%s)" % can_body, file=debuglog)
+            print("Unknown body canonicalization (%s)" %
+                  can_body, file=debuglog)
         return False
 
     if sig['a'] == "rsa-sha1":
@@ -650,7 +656,8 @@ def verify(message, debuglog=None):
         ])
     )
     if debuglog is not None:
-        print("dinfo:", " ".join("%02x" % ord(x) for x in dinfo), file=debuglog)
+        print("dinfo:", " ".join("%02x" % ord(x)
+                                 for x in dinfo), file=debuglog)
     if len(dinfo) + 3 > modlen:
         if debuglog is not None:
             print("Hash too large for modulus", file=debuglog)

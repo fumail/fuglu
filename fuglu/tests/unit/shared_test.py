@@ -9,6 +9,7 @@ try:
 except ImportError:
     from ConfigParser import ConfigParser
 
+
 class SuspectTestCase(unittest.TestCase):
 
     """Test Suspect functions"""
@@ -66,7 +67,7 @@ class SuspectFilterTestCase(unittest.TestCase):
             'full body rule works' in headermatches, "full body failed")
         self.assertTrue('mime rule works' in headermatches, "mime rule failed")
         self.assertFalse('this should not match in a body rule' in headermatches,
-                    'decoded body rule matched raw body')
+                         'decoded body rule matched raw body')
 
         # perl style advanced rules
         self.assertTrue('perl-style /-notation works!' in headermatches,
@@ -74,7 +75,7 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.assertTrue('perl-style recipient match' in headermatches,
                         "new rule format failed for to_domain: %s" % headermatches)
         self.assertFalse('this should not match' in headermatches,
-                    "rule flag ignorecase was not detected")
+                         "rule flag ignorecase was not detected")
 
         # TODO: raw body rules
 
@@ -249,11 +250,12 @@ class ClientInfoTestCase(unittest.TestCase):
     def test_parse_rcvd_header(self):
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', '/dev/null')
-        self.assertEqual(suspect._parse_rcvd_header("from helo1 (rdns1 [10.0.0.1])"),('helo1','rdns1','10.0.0.1'))
-        self.assertEqual(suspect._parse_rcvd_header("from mx0.slc.paypal.com (mx1.slc.paypal.com [173.0.84.226])"),('mx0.slc.paypal.com','mx1.slc.paypal.com','173.0.84.226'))
-        self.assertEqual(suspect._parse_rcvd_header("from mail1a.tilaa.nl (mail1a.tilaa.nl [IPv6:2a02:2770:6:0:21a:4aff:fea8:1328])"),('mail1a.tilaa.nl','mail1a.tilaa.nl','2a02:2770:6:0:21a:4aff:fea8:1328'))
-
-
+        self.assertEqual(suspect._parse_rcvd_header(
+            "from helo1 (rdns1 [10.0.0.1])"), ('helo1', 'rdns1', '10.0.0.1'))
+        self.assertEqual(suspect._parse_rcvd_header("from mx0.slc.paypal.com (mx1.slc.paypal.com [173.0.84.226])"), (
+            'mx0.slc.paypal.com', 'mx1.slc.paypal.com', '173.0.84.226'))
+        self.assertEqual(suspect._parse_rcvd_header("from mail1a.tilaa.nl (mail1a.tilaa.nl [IPv6:2a02:2770:6:0:21a:4aff:fea8:1328])"), (
+            'mail1a.tilaa.nl', 'mail1a.tilaa.nl', '2a02:2770:6:0:21a:4aff:fea8:1328'))
 
     def test_client_info(self):
         """Test client info using eml file"""

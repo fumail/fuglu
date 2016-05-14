@@ -106,7 +106,8 @@ Note: The first rule to match in a message is the only rule that will be applied
 
     def check_deprecated(self):
         if self.config.has_option(self.section, 'makedomainsubdir'):
-            print("the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' ")
+            print(
+                "the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' ")
             print("please update your config")
             print("makedomainsubdir=1 -> subdirtemplate=${to_domain}")
             print("makedomainsubdir=0 -> subdirtemplate=")
@@ -125,7 +126,8 @@ Note: The first rule to match in a message is the only rule that will be applied
             return False
 
         if not os.path.isdir(archivedir):
-            print("Archivedir '%s' does not exist or is not a directory" % (archivedir))
+            print("Archivedir '%s' does not exist or is not a directory" %
+                  (archivedir))
             return False
 
         return True

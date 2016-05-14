@@ -117,10 +117,10 @@ class MilterSession(PpyMilter):
         self.rdns = None
 
     def OnConnect(self, cmd, hostname, family, port, address):
-        if family not in ('4','6'): #we don't handle unix socket
+        if family not in ('4', '6'):  # we don't handle unix socket
             return self.Continue()
-        if hostname is None or hostname =='[%s]'%address:
-            hostname='unknown'
+        if hostname is None or hostname == '[%s]' % address:
+            hostname = 'unknown'
 
         self.rdns = hostname
         self.addr = address

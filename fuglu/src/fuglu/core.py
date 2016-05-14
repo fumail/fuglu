@@ -19,9 +19,9 @@ import re
 import os
 import sys
 try:
-	import configparser
+    import configparser
 except ImportError:
-	import ConfigParser as configparser
+    import ConfigParser as configparser
 import datetime
 import logging
 import threading

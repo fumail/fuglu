@@ -66,7 +66,8 @@ This plugin enables the fuglu_debug functionality. Make sure fuglu listens on th
         allok = self.checkConfig()
 
         if debugport not in incomingport.split(','):
-            print("Debug port %s not specified in [main]::incomingport - messages can't be debugged" % debugport)
+            print(
+                "Debug port %s not specified in [main]::incomingport - messages can't be debugged" % debugport)
             allok = False
 
         return allok

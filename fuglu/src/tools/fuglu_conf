@@ -43,7 +43,7 @@ def print_config(config):
 
 
 def cloneConfig(config):
-    if sys.version_info>(3,):
+    if sys.version_info > (3,):
         tmpfile = io.StringIO()
     else:
         tmpfile = io.BytesIO()

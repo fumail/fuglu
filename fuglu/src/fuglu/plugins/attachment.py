@@ -416,14 +416,13 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
-
-        #key: file ending, value: archive type
+        # key: file ending, value: archive type
         self.supported_archive_extensions = {
-            'zip':'zip',
-            'z':'zip',
+            'zip': 'zip',
+            'z': 'zip',
         }
         if RARFILE_AVAILABLE:
-            self.supported_archive_extensions['rar']='rar'
+            self.supported_archive_extensions['rar'] = 'rar'
 
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
@@ -463,14 +462,13 @@ The other common template variables are available as well.
 
     def asciionly(self, stri):
         """return stri with all non-ascii chars removed"""
-        if sys.version_info>(3,):
+        if sys.version_info > (3,):
             if isinstance(stri, str):
                 return stri.encode('ascii', 'ignore').decode()
-            elif isinstance(stri, bytes): #python3
+            elif isinstance(stri, bytes):  # python3
                 # A bytes object therefore already ascii, but not a string yet
                 return stri.decode('ascii', 'ignore')
         return "".join([x for x in stri if ord(x) < 128])
-
 
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
         if attachmentname == None:
@@ -499,7 +497,7 @@ The other common template variables are available as well.
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
                 self.logger.debug('Attachment %s Rule %s' % (obj, regex))
-            if isinstance(obj, bytes) and sys.version_info>(3,):
+            if isinstance(obj, bytes) and sys.version_info > (3,):
                 obj = obj.decode('UTF-8', 'ignore')
             if prog.search(obj):
                 self.logger.debug('Rulematch: Attachment=%s Rule=%s Description=%s Action=%s' % (
@@ -671,7 +669,8 @@ The other common template variables are available as well.
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
                 archive_type = None
-                for arext in sorted(self.supported_archive_extensions.keys(),key=lambda x:len(x), reverse=True): #sort by length, so tar.gz is checked before .gz
+                # sort by length, so tar.gz is checked before .gz
+                for arext in sorted(self.supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
                     if att_name.lower().endswith('.%s' % arext):
                         archive_type = self.supported_archive_extensions[arext]
                         break
@@ -815,7 +814,8 @@ The other common template variables are available as well.
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print("rarfile library not found, RAR support disabled")
-        print("Archive scan, available file extensions: %s" % (self.supported_archive_extensions.keys()))
+        print("Archive scan, available file extensions: %s" %
+              (self.supported_archive_extensions.keys()))
         return True
 
     def lint_sql(self):
@@ -825,7 +825,8 @@ The other common template variables are available as well.
         if dbconn.strip() != '':
             print("Reading per user/domain attachment rules from database")
             if not fuglu.extensions.sql.ENABLED:
-                print("Fuglu SQL Extension not available, cannot load attachment rules from database")
+                print(
+                    "Fuglu SQL Extension not available, cannot load attachment rules from database")
                 return False
             query = self.config.get(self.section, 'query')
             dbfile = DBFile(dbconn, query)
@@ -834,9 +835,11 @@ The other common template variables are available as well.
                     {'scope': 'lint', 'checktype': FUATT_CHECKTYPE_FN})
             except Exception as e:
                 import traceback
-                print("Could not get attachment rules from database. Exception: %s" % str(e))
+                print(
+                    "Could not get attachment rules from database. Exception: %s" % str(e))
                 print(traceback.format_exc())
                 return False
         else:
-            print("No database configured. Using per user/domain file configuration from %s" % self.config.get(self.section, 'rulesdir'))
+            print("No database configured. Using per user/domain file configuration from %s" %
+                  self.config.get(self.section, 'rulesdir'))
         return True
