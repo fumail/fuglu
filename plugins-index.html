@@ -140,13 +140,13 @@ named like the plugin itself.</p>
 </dd>
 </dl>
 <p><code class="docutils literal"><span class="pre">&lt;regex&gt;</span></code> is a standard python regular expression applied to <code class="docutils literal"><span class="pre">&lt;property&gt;</span></code>. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use <code class="docutils literal"><span class="pre">\s</span></code>. all regexes that are not enclosed in forward slashes are automatically <code class="docutils literal"><span class="pre">case</span> <span class="pre">insensitive</span></code> and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>Subject /hello world/i match hello world, case insensitive
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Subject</span> <span class="o">/</span><span class="n">hello</span> <span class="n">world</span><span class="o">/</span><span class="n">i</span> <span class="n">match</span> <span class="n">hello</span> <span class="n">world</span><span class="p">,</span> <span class="n">case</span> <span class="n">insensitive</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">&lt;optional</span> <span class="pre">argument&gt;</span></code> depends on the plugin that reads this header filter file, some don&#8217;t need arguments at all. Please refer to the plugin documentation.</p>
 <p>Filter files are automatically reloaded if you change anything, you don&#8217;t need to restart fuglu.</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>#normal header test
+<div class="highlight-default"><div class="highlight"><pre><span></span>#normal header test
 Subject hello   Hello in the subject!
 MIME-Version ^1\.0$ Mime Version is 1.0
 
@@ -170,7 +170,7 @@ body:full ^--SPAMMY-MIME-BOUNDARY
 mime:Content-Type ^application\/x-msdos-program$
 </pre></div>
 </div>
-<p>see <a class="reference internal" href="operation-index.html#debug-suspect-filter"><span>Debug a suspect filter</span></a> for info on how to debug suspect filter files on specific messages.</p>
+<p>see <a class="reference internal" href="operation-index.html#debug-suspect-filter"><span class="std std-ref">Debug a suspect filter</span></a> for info on how to debug suspect filter files on specific messages.</p>
 </div>
 <div class="section" id="template-variables">
 <h3>Template Variables<a class="headerlink" href="#template-variables" title="Permalink to this headline">¶</a></h3>
@@ -198,7 +198,7 @@ mime:Content-Type ^application\/x-msdos-program$
 <p>This plugin passes suspects to a spamassassin daemon.</p>
 <p>Prerequisites: SPAMD must be installed and running (not necessarily on the same box as fuglu)</p>
 <p>Notes for developers:</p>
-<p>If you have forwardoriginal=False set the message source will be completely replaced with the answer from spamd.</p>
+<p>if forwardoriginal=False, the message source will be completely replaced with the answer from spamd.</p>
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
@@ -211,7 +211,7 @@ mime:Content-Type ^application\/x-msdos-program$
 </div></blockquote>
 <div class="section" id="configuration">
 <h4>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[SAPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[SAPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -293,7 +293,7 @@ lowspamaction=DEFAULTLOWSPAMACTION
 </div></blockquote>
 <div class="section" id="id1">
 <h4>Configuration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[ClamavPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ClamavPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -309,6 +309,7 @@ timeout=30
 #action if there is a problem (DUNNO, DEFER)
 problemaction=DEFER
 
+#*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.
 pipelining=0
 
 #maximum message size, larger messages will not be scanned.
@@ -349,7 +350,7 @@ virusaction=DEFAULTVIRUSACTION
 </dl>
 <p><code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code> is a standard python regex. in <code class="docutils literal"><span class="pre">x-filenames.conf</span></code> this will be applied to the attachment name . in <code class="docutils literal"><span class="pre">x-filetypes.conf</span></code> this will be applied to the mime type of the file as well as the file type returned by the <code class="docutils literal"><span class="pre">file</span></code> command.</p>
 <p>Example of <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> :</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>allow    text        -
+<div class="highlight-default"><div class="highlight"><pre><span></span>allow    text        -
 allow    script    -
 allow    archive        -
 allow    postscript    -
@@ -360,7 +361,7 @@ deny    Registry    No Windows Registry files allowed
 </pre></div>
 </div>
 <p>A small extract from <code class="docutils literal"><span class="pre">default-filenames.conf</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>deny    \.ico$            Windows icon file security vulnerability
+<div class="highlight-default"><div class="highlight"><pre><span></span>deny    \.ico$            Windows icon file security vulnerability
 deny    \.ani$            Windows animated cursor file security vulnerability
 deny    \.cur$            Windows cursor file security vulnerability
 deny    \.hlp$            Windows help file security vulnerability
@@ -373,7 +374,7 @@ allow    \.gif$            -
 <p>Per domain/user overrides can also be fetched from a database instead of files (see dbconnectstring / query options).
 The query must return the same rule format as a file would. Multiple columns in the resultset will be concatenated.</p>
 <p>The default query assumes the following schema:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>CREATE TABLE `attachmentrules` (
+<div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `attachmentrules` (
   `rule_id` int(11) NOT NULL AUTO_INCREMENT,
   `action` varchar(10) NOT NULL,
   `regex` varchar(255) NOT NULL,
@@ -393,7 +394,7 @@ The query must return the same rule format as a file would. Multiple columns in 
 <p><em>prio</em>: order in which the rules are run</p>
 <p>The bounce template (eg <code class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></code> ) should
 start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>To: ${from_address}
+<div class="highlight-default"><div class="highlight"><pre><span></span>To: ${from_address}
 Subject: Blocked attachment
 
 Your message to ${to_address} contains a blocked attachment and has not been delivered.
@@ -405,40 +406,40 @@ ${blockinfo}
 <p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
 <h4>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[FiletypePlugin]
-#inform the sender about blocked attachments.
-#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
-sendbounce=1
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">FiletypePlugin</span><span class="p">]</span>
+<span class="c1">#inform the sender about blocked attachments.</span>
+<span class="c1">#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter</span>
+<span class="n">sendbounce</span><span class="o">=</span><span class="mi">1</span>
 
-#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
-dbconnectstring=
+<span class="c1">#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled</span>
+<span class="n">dbconnectstring</span><span class="o">=</span>
 
-#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain
-#:check will be replaced &#39;filename&#39;,&#39;contenttype&#39;,&#39;archive-filename&#39; or &#39;archive-contenttype&#39;
-query=SELECT action,regex,description FROM attachmentrules WHERE scope=:scope AND checktype=:checktype ORDER BY prio
+<span class="c1">#sql query to load rules from a db. #:scope will be replaced by the recipient address first, then by the recipient domain</span>
+<span class="c1">#:check will be replaced &#39;filename&#39;,&#39;contenttype&#39;,&#39;archive-filename&#39; or &#39;archive-contenttype&#39;</span>
+<span class="n">query</span><span class="o">=</span><span class="n">SELECT</span> <span class="n">action</span><span class="p">,</span><span class="n">regex</span><span class="p">,</span><span class="n">description</span> <span class="n">FROM</span> <span class="n">attachmentrules</span> <span class="n">WHERE</span> <span class="n">scope</span><span class="o">=</span><span class="p">:</span><span class="n">scope</span> <span class="n">AND</span> <span class="n">checktype</span><span class="o">=</span><span class="p">:</span><span class="n">checktype</span> <span class="n">ORDER</span> <span class="n">BY</span> <span class="n">prio</span>
 
-#Mail template for the bounce to inform sender about blocked attachment
-template_blockedfile=/etc/fuglu/templates/blockedfile.tmpl
+<span class="c1">#Mail template for the bounce to inform sender about blocked attachment</span>
+<span class="n">template_blockedfile</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">templates</span><span class="o">/</span><span class="n">blockedfile</span><span class="o">.</span><span class="n">tmpl</span>
 
-#directory that contains attachment rules
-rulesdir=/etc/fuglu/rules
+<span class="c1">#directory that contains attachment rules</span>
+<span class="n">rulesdir</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">rules</span>
 
-#enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive.
-checkarchivenames=0
+<span class="c1">#enable scanning of filenames within archives (zip,rar). This does not actually extract the files, it just looks at the filenames found in the archive.</span>
+<span class="n">checkarchivenames</span><span class="o">=</span><span class="mi">0</span>
 
-#what should the plugin do when a blocked attachment is detected
-#REJECT : reject the message (recommended in pre-queue mode)
-#DELETE : discard messages
-#DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)
-blockaction=DELETE
+<span class="c1">#what should the plugin do when a blocked attachment is detected</span>
+<span class="c1">#REJECT : reject the message (recommended in pre-queue mode)</span>
+<span class="c1">#DELETE : discard messages</span>
+<span class="c1">#DUNNO  : mark as blocked but continue anyway (eg. if you have a later quarantine plugin)</span>
+<span class="n">blockaction</span><span class="o">=</span><span class="n">DELETE</span>
 
-#extract compressed archives(zip,rar) and check file content type with libmagics
-#note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
-#fuglu does not extract archives within the archive(recursion)
-checkarchivecontent=0
+<span class="c1">#extract compressed archives(zip,rar) and check file content type with libmagics</span>
+<span class="c1">#note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.</span>
+<span class="c1">#fuglu does not extract archives within the archive(recursion)</span>
+<span class="n">checkarchivecontent</span><span class="o">=</span><span class="mi">0</span>
 
-#only extract and examine files up to this amount of (uncompressed) bytes
-archivecontentmaxsize=5000000
+<span class="c1">#only extract and examine files up to this amount of (uncompressed) bytes</span>
+<span class="n">archivecontentmaxsize</span><span class="o">=</span><span class="mi">5000000</span>
 </pre></div>
 </div>
 </div>
@@ -461,7 +462,7 @@ You can use this if you want message archives for your domains or to debug probl
 <p>Note: The first rule to match in a message is the only rule that will be applied. Exclusion rules should therefore be put above generic/catch-all rules.</p>
 <div class="section" id="id3">
 <h4>Configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[ArchivePlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ArchivePlugin]
 #change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
 chown=
 
@@ -521,7 +522,7 @@ chgrp=
 </dd>
 </dl>
 <p>SQL Example for mysql:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>CREATE TABLE `vacation` (
+<div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `vacation` (
   `id` int(11) NOT NULL auto_increment,
   `created` timestamp NOT NULL default now(),
   `start` timestamp NOT NULL,
@@ -549,9 +550,9 @@ CREATE  TABLE `vacationreply` (
 </div>
 <div class="section" id="id4">
 <h4>Configuration<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[VacationPlugin]
-#sqlalchemy connectstring to load vacations
-dbconnectstring=
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">VacationPlugin</span><span class="p">]</span>
+<span class="c1">#sqlalchemy connectstring to load vacations</span>
+<span class="n">dbconnectstring</span><span class="o">=</span>
 </pre></div>
 </div>
 </div>
@@ -564,7 +565,7 @@ dbconnectstring=
 <p>Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)</p>
 <div class="section" id="id5">
 <h4>Configuration<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[SSSPPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[SSSPPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -608,7 +609,7 @@ virusaction=DEFAULTVIRUSACTION
 </div></blockquote>
 <div class="section" id="id6">
 <h4>Configuration<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[FprotPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[FprotPlugin]
 #additional scan options  (see `man fpscand` -&gt; SCANNING OPTIONS for possible values)
 scanoptions=
 
@@ -651,7 +652,7 @@ supported by some AV Scanners like Symantec and Sophos. For sophos, however, it 
 <p>Prerequisites: requires an ICAP capable antivirus engine somewhere in your network</p>
 <div class="section" id="id7">
 <h4>Configuration<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[ICAPPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ICAPPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -702,7 +703,7 @@ virusaction=DEFAULTVIRUSACTION
 </div></blockquote>
 <div class="section" id="id8">
 <h4>Configuration<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[DrWebPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[DrWebPlugin]
 #maximum retries on failed connections
 retries=3
 
@@ -737,9 +738,9 @@ virusaction=DEFAULTVIRUSACTION
 <div>Averride actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
 <div class="section" id="id9">
 <h4>Configuration<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[ActionOverridePlugin]
-#Rules file
-actionrules=/etc/fuglu/actionrules.regex
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ActionOverridePlugin</span><span class="p">]</span>
+<span class="c1">#Rules file</span>
+<span class="n">actionrules</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">actionrules</span><span class="o">.</span><span class="n">regex</span>
 </pre></div>
 </div>
 </div>
@@ -761,12 +762,12 @@ This can be used to quickly add a custom filter script without changing the fugl
 </div></blockquote>
 <p>the script should not return anything, but change the available variables <code class="docutils literal"><span class="pre">action</span></code> and <code class="docutils literal"><span class="pre">message</span></code> instead
 (<code class="docutils literal"><span class="pre">DUNNO</span></code>, <code class="docutils literal"><span class="pre">REJECT</span></code>, <code class="docutils literal"><span class="pre">DEFER</span></code>, <code class="docutils literal"><span class="pre">ACCEPT</span></code>, <code class="docutils literal"><span class="pre">DELETE</span></code> are already imported)</p>
-<p>use <code class="docutils literal"><span class="pre">stop()</span></code> to exit the script</p>
+<p>use <code class="docutils literal"><span class="pre">stop(action=DUNNO,</span> <span class="pre">message='')</span></code> to exit the script early</p>
 <p>Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1">#block all messages from evilsender.example.com</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#block all messages from evilsender.example.com</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="o">==</span><span class="s1">&#39;evilsender.example.com&#39;</span><span class="p">:</span>
-    <span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s2">&quot;x-fuglu-SenderDomain&quot;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="p">,</span><span class="n">immediate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s2">&quot;x-fuglu-SenderDomain&quot;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="p">,</span><span class="n">immediate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">stop</span><span class="p">()</span>
 <span class="n">debug</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">)</span>
 <span class="n">action</span><span class="o">=</span><span class="n">REJECT</span>
@@ -775,9 +776,9 @@ This can be used to quickly add a custom filter script without changing the fugl
 </div>
 <div class="section" id="id10">
 <h4>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[ScriptFilter]
-#Dir that contains the scripts (*.fgf files)
-scriptdir=/etc/fuglu/scriptfilter
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ScriptFilter</span><span class="p">]</span>
+<span class="c1">#Dir that contains the scripts (*.fgf files)</span>
+<span class="n">scriptdir</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">scriptfilter</span>
 </pre></div>
 </div>
 </div>
@@ -788,7 +789,7 @@ scriptdir=/etc/fuglu/scriptfilter
 <p><strong>EXPERIMENTAL</strong>
 Add DKIM Signature to outgoing mails</p>
 <p>Setting up your keys:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>mkdir -p /etc/fuglu/dkim
+<div class="highlight-default"><div class="highlight"><pre><span></span>mkdir -p /etc/fuglu/dkim
 domain=example.com
 openssl genrsa -out /etc/fuglu/dkim/${domain}.key 1024
 openssl rsa -in /etc/fuglu/dkim/${domain}.key -out /etc/fuglu/dkim/${domain}.pub -pubout -outform PEM
@@ -797,11 +798,18 @@ echo -n &quot;default._domainkey TXT  \&quot;v=DKIM1; k=rsa; p=&quot; ; cat /etc
 </pre></div>
 </div>
 <p>If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails</p>
+<p>known issues:</p>
+<blockquote>
+<div><ul class="simple">
+<li>setting canonicalizeheaders = simple will cause invalid signature.</li>
+<li>signbodylength causes a crash in dkimlib &#8220;TypeError: sequence item 1: expected string, int found&#8221;</li>
+</ul>
+</div></blockquote>
 <div class="section" id="id11">
 <h4>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[DKIMSignPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[DKIMSignPlugin]
 #comma separated list of headers to sign. empty string=sign all headers
-signheaders=
+signheaders=From,Reply-To,Subject,Date,To,CC,Resent-Date,Resent-From,Resent-To,Resent-CC,In-Reply-To,References,List-Id,List-Help,List-Unsubscribe,List-Subscribe,List-Post,List-Owner,List-Archive
 
 #include l= tag in dkim header
 signbodylength=False
@@ -835,7 +843,7 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 <p>It is currently recommended to leave both header and body canonicalization as &#8216;relaxed&#8217;. Using &#8216;simple&#8217; can cause the signature to fail.</p>
 <div class="section" id="id12">
 <h4>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -851,7 +859,29 @@ Tag &#8216;SPF.explanation&#8217; contains a human readable explanation of the r
 in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
 <div class="section" id="id13">
 <h4>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="domainauth">
+<h3>DomainAuth<a class="headerlink" href="#domainauth" title="Permalink to this headline">¶</a></h3>
+<p>Plugin: fuglu.plugins.domainauth.DomainAuthPlugin</p>
+<p><strong>EXPERIMENTAL</strong>
+This plugin checks the header from domain against a list of domains which must be authenticated by DKIM and/or SPF.
+This is somewhat similar to DMARC but instead of asking the sender domain for a DMARC policy record this plugin allows you to force authentication on the recipient side.</p>
+<p>This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they must run beforehand.</p>
+<div class="section" id="id14">
+<h4>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[DomainAuthPlugin]
+#action if the message doesn&#39;t pass authentication (DUNNO, REJECT)
+failaction=DUNNO
+
+#File containing a list of domains (one per line) which must be DKIM and/or SPF authenticated
+domainsfile=/etc/fuglu/auth_required_domains.txt
+
+#reject message template if running in pre-queue mode
+rejectmessage=sender domain ${header_from_domain} must pass DKIM and/or SPF authentication
 </pre></div>
 </div>
 </div>
@@ -863,10 +893,10 @@ in combination with other factors to take action (for example a &#8220;DMARC&#82
 This can be used for example to skip spam filters on outgoing messages.
 e.g. put this in /etc/fuglu/skipplugins.regex:</p>
 <p>&#64;incomingport    1099    SAPlugin</p>
-<div class="section" id="id14">
-<h4>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[PluginSkipper]
-filterfile=/etc/fuglu/skipplugins.regex
+<div class="section" id="id15">
+<h4>Configuration<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginSkipper</span><span class="p">]</span>
+<span class="n">filterfile</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">skipplugins</span><span class="o">.</span><span class="n">regex</span>
 </pre></div>
 </div>
 </div>
@@ -878,10 +908,10 @@ filterfile=/etc/fuglu/skipplugins.regex
 Use this if you only want to run a fraction of the standard plugins on a specific port for example
 eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 <p>&#64;incomingport    1100    SAPlugin,AttachmentPlugin</p>
-<div class="section" id="id15">
-<h4>Configuration<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[PluginFraction]
-filterfile=/etc/fuglu/pluginfraction.regex
+<div class="section" id="id16">
+<h4>Configuration<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginFraction</span><span class="p">]</span>
+<span class="n">filterfile</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">pluginfraction</span><span class="o">.</span><span class="n">regex</span>
 </pre></div>
 </div>
 </div>
@@ -891,24 +921,24 @@ filterfile=/etc/fuglu/pluginfraction.regex
 <p>Plugin: fuglu.plugins.p_debug.MessageDebugger</p>
 <p>Message Debugger Plugin (Prepender).</p>
 <p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
-<div class="section" id="id16">
-<h4>Configuration<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[MessageDebugger]
-#messages incoming on this port will be debugged to a logfile
-#Make sure the debugport is also set in the incomingport configuration option in the main section
-debugport=10888
+<div class="section" id="id17">
+<h4>Configuration<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageDebugger</span><span class="p">]</span>
+<span class="c1">#messages incoming on this port will be debugged to a logfile</span>
+<span class="c1">#Make sure the debugport is also set in the incomingport configuration option in the main section</span>
+<span class="n">debugport</span><span class="o">=</span><span class="mi">10888</span>
 
-#debug log output
-debugfile=/tmp/fuglu_debug.log
+<span class="c1">#debug log output</span>
+<span class="n">debugfile</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">fuglu_debug</span><span class="o">.</span><span class="n">log</span>
 
-#don&#39;t re-inject debugged messages back to postfix
-noreinject=1
+<span class="c1">#don&#39;t re-inject debugged messages back to postfix</span>
+<span class="n">noreinject</span><span class="o">=</span><span class="mi">1</span>
 
-#debugged message can not be bounced
-nobounce=1
+<span class="c1">#debugged message can not be bounced</span>
+<span class="n">nobounce</span><span class="o">=</span><span class="mi">1</span>
 
-#don&#39;t run appender plugins for debugged messages
-noappender=1
+<span class="c1">#don&#39;t run appender plugins for debugged messages</span>
+<span class="n">noappender</span><span class="o">=</span><span class="mi">1</span>
 </pre></div>
 </div>
 </div>
@@ -917,14 +947,14 @@ noappender=1
 <h3>Statsd Sender: Plugin Time<a class="headerlink" href="#statsd-sender-plugin-time" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.a_statsd.PluginTime</p>
 <p>EXPERIMENTAL: Send Plugin execution time to a statsd server</p>
-<div class="section" id="id17">
-<h4>Configuration<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[PluginTime]
-#statsd host
-host=127.0.0.1
+<div class="section" id="id18">
+<h4>Configuration<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginTime</span><span class="p">]</span>
+<span class="c1">#statsd host</span>
+<span class="n">host</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
 
-#statsd port
-port=8125
+<span class="c1">#statsd port</span>
+<span class="n">port</span><span class="o">=</span><span class="mi">8125</span>
 </pre></div>
 </div>
 </div>
@@ -933,14 +963,14 @@ port=8125
 <h3>Statsd Sender: Global Message Status<a class="headerlink" href="#statsd-sender-global-message-status" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.a_statsd.MessageStatus</p>
 <p>EXPERIMENTAL: Send message status to a statsd server</p>
-<div class="section" id="id18">
-<h4>Configuration<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[MessageStatus]
-#statsd host
-host=127.0.0.1
+<div class="section" id="id19">
+<h4>Configuration<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageStatus</span><span class="p">]</span>
+<span class="c1">#statsd host</span>
+<span class="n">host</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
 
-#statsd port
-port=8125
+<span class="c1">#statsd port</span>
+<span class="n">port</span><span class="o">=</span><span class="mi">8125</span>
 </pre></div>
 </div>
 </div>
@@ -949,17 +979,17 @@ port=8125
 <h3>Statsd Sender: Per Recipient Message Status<a class="headerlink" href="#statsd-sender-per-recipient-message-status" title="Permalink to this headline">¶</a></h3>
 <p>Plugin: fuglu.plugins.a_statsd.MessageStatusPerRecipient</p>
 <p>EXPERIMENTAL: Send per recipient stats to a statsd server</p>
-<div class="section" id="id19">
-<h4>Configuration<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[MessageStatusPerRecipient]
-#statsd host
-host=127.0.0.1
+<div class="section" id="id20">
+<h4>Configuration<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageStatusPerRecipient</span><span class="p">]</span>
+<span class="c1">#statsd host</span>
+<span class="n">host</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
 
-#statsd port
-port=8125
+<span class="c1">#statsd port</span>
+<span class="n">port</span><span class="o">=</span><span class="mi">8125</span>
 
-#domain: send stats per recipient domain. email: send stats per recipient email address
-level=domain
+<span class="c1">#domain: send stats per recipient domain. email: send stats per recipient email address</span>
+<span class="n">level</span><span class="o">=</span><span class="n">domain</span>
 </pre></div>
 </div>
 </div>
@@ -968,13 +998,13 @@ level=domain
 <div class="section" id="writing-your-own-plugins">
 <h2>Writing your own plugins<a class="headerlink" href="#writing-your-own-plugins" title="Permalink to this headline">¶</a></h2>
 <p>Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from <code class="docutils literal"><span class="pre">ScannerPlugin</span></code>, override <code class="docutils literal"><span class="pre">__str__</span></code> to provide a nice human readable name and override <code class="docutils literal"><span class="pre">examine</span></code> to do the actual work of your plugins. <code class="docutils literal"><span class="pre">examine</span></code> should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. <code class="docutils literal"><span class="pre">return</span> <span class="pre">DEFER,</span> <span class="pre">'please</span> <span class="pre">try</span> <span class="pre">again</span> <span class="pre">later'</span></code>
-In plugin you usually only have to import things from <a class="reference internal" href="api.html#api-shared"><span>fuglu.shared</span></a> , so it&#8217;s probably a good idea to get familiar with  that module.</p>
+In plugin you usually only have to import things from <a class="reference internal" href="api.html#api-shared"><span class="std std-ref">fuglu.shared</span></a> , so it&#8217;s probably a good idea to get familiar with  that module.</p>
 <p>This is a quick example of how your plugin code skeleton would look like:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="k">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
 
 <span class="k">class</span> <span class="nc">DemoPlugin</span><span class="p">(</span><span class="n">ScannerPlugin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy this to make a new plugin&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
         <span class="c1">#config example</span>
         <span class="c1">#self.requiredvars={</span>
@@ -997,15 +1027,15 @@ In plugin you usually only have to import things from <a class="reference intern
 </pre></div>
 </div>
 <p>First of all, you need a few imports. ScannerPlugin (so you can extend from it), and possible return values for your Plugin, <code class="docutils literal"><span class="pre">DUNNO</span></code> might be enough depending on what your plugin does.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="kn">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="k">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DUNNO</span>
 </pre></div>
 </div>
 <p>in <code class="docutils literal"><span class="pre">__init__</span></code> you only call BasicPlugin&#8217;s <code class="docutils literal"><span class="pre">__init__</span></code>  for now. This sets <code class="docutils literal"><span class="pre">self.config</span></code> and <code class="docutils literal"><span class="pre">self.section</span></code> on the object where you later can read config options (eg. <code class="docutils literal"><span class="pre">self.config.get(self.section,'somevalue')</span></code>.  Do <strong>NOT</strong> load the plugin configuration here. <code class="docutils literal"><span class="pre">__init__</span></code> is only called once when fuglu starts up. Always load plugin config in <code class="docutils literal"><span class="pre">examine</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>then code your <code class="docutils literal"><span class="pre">examine</span></code> method. You will have to work with <a class="reference internal" href="api.html#api-suspect"><span>The Suspect class</span></a>, which is a representation of the message being analyzed. The suspect has <code class="docutils literal"><span class="pre">tags</span></code> that are read and written by plugins.
+<p>then code your <code class="docutils literal"><span class="pre">examine</span></code> method. You will have to work with <a class="reference internal" href="api.html#api-suspect"><span class="std std-ref">The Suspect class</span></a>, which is a representation of the message being analyzed. The suspect has <code class="docutils literal"><span class="pre">tags</span></code> that are read and written by plugins.
 You can tag a message as virus, as spam, define your own tags, read tags from previous plugins... it&#8217;s probably a good idea to look at the Suspect class in <code class="docutils literal"><span class="pre">fuglu.shared</span></code> to get a list of things you can do with the suspect.</p>
 <div class="section" id="common-tasks-api-faq">
 <h3>Common Tasks (&#8220;API&#8221; FAQ)<a class="headerlink" href="#common-tasks-api-faq" title="Permalink to this headline">¶</a></h3>
@@ -1013,7 +1043,7 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 <h4>Define configuration options for your plugin<a class="headerlink" href="#define-configuration-options-for-your-plugin" title="Permalink to this headline">¶</a></h4>
 <p>In order to make &#8216;lint&#8217; and &#8216;fuglu_conf&#8217; work with your plugin it should tell the core what config options it expects. this is done by creating a dictionary named &#8216;requiredvars&#8217; in the plugins init:</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>def __init__(self,config,section=None):
+<div class="highlight-default"><div class="highlight"><pre><span></span>def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.requiredvars={
             &#39;host&#39;:{
@@ -1049,12 +1079,12 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 <h4>Read the config<a class="headerlink" href="#read-the-config" title="Permalink to this headline">¶</a></h4>
 <p>Configs in fuglu are stored in <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></code> (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own section named like the plugin class.</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DemoPlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DemoPlugin</span><span class="p">]</span>
 <span class="n">maxsize</span><span class="o">=</span><span class="mi">10382</span>
 </pre></div>
 </div>
 <p>You can then read the config in your plugin with the usual methods from a python ConfigParser object ( <a class="reference external" href="http://docs.python.org/library/configparser.html">http://docs.python.org/library/configparser.html</a> )</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;maxsize&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;maxsize&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Important: always load the configs in <code class="docutils literal"><span class="pre">examine</span></code> (and not in <code class="docutils literal"><span class="pre">init</span></code> !). Reading the config in init breaks loading default values and prevents on-the-fly config reload</p>
@@ -1065,7 +1095,7 @@ You can tag a message as virus, as spam, define your own tags, read tags from pr
 </div>
 <div class="section" id="add-headers">
 <h4>Add headers<a class="headerlink" href="#add-headers" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="n">headername</span><span class="p">,</span><span class="n">headervalue</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="n">headername</span><span class="p">,</span><span class="n">headervalue</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, headers are added to the message shortly before it is re-injected into postfix.
@@ -1075,7 +1105,7 @@ add <code class="docutils literal"><span class="pre">immediate=True</span></code
 <h4>Replace headers<a class="headerlink" href="#replace-headers" title="Permalink to this headline">¶</a></h4>
 <p>Here&#8217;s an example on how to change the subject of a message.
 Note: It&#8217;s generally not recommended to change existing headers, this breaks DKIM.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">msgrep</span> <span class="o">=</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_message_rep</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">msgrep</span> <span class="o">=</span> <span class="n">suspect</span><span class="o">.</span><span class="n">get_message_rep</span><span class="p">()</span>
 <span class="n">msgrep</span><span class="o">.</span><span class="n">replace_header</span><span class="p">(</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="s1">&#39;Scanned: &#39;</span><span class="o">+</span><span class="n">msgrep</span><span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">])</span>
 <span class="n">suspect</span><span class="o">.</span><span class="n">set_message_rep</span><span class="p">(</span><span class="n">msgrep</span><span class="p">)</span>
 </pre></div>
@@ -1085,14 +1115,14 @@ Note: It&#8217;s generally not recommended to change existing headers, this brea
 <h4>Write to the log<a class="headerlink" href="#write-to-the-log" title="Permalink to this headline">¶</a></h4>
 <p>Your plugin has a _logger method that returns a standard python logger object, so you can use the info / debug / error / fatal methods.</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;hello world from DemoPlugin&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;hello world from DemoPlugin&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="write-debug-info">
 <h4>Write debug info<a class="headerlink" href="#write-debug-info" title="Permalink to this headline">¶</a></h4>
 <p>To make the plugin write special debug info when <code class="docutils literal"><span class="pre">fuglu_debug</span></code> is used, use:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">suspect</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;debug info from DemoPlugin!&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">suspect</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;debug info from DemoPlugin!&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1107,7 +1137,7 @@ Note: It&#8217;s generally not recommended to change existing headers, this brea
 </ul>
 </div></blockquote>
 <p>Example of a plugin that would check if an imap account is available:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">lint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">lint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">allok</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkConfig</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">lint_imap</span><span class="p">())</span>
     <span class="k">return</span> <span class="n">allok</span>
 
@@ -1116,12 +1146,12 @@ Note: It&#8217;s generally not recommended to change existing headers, this brea
         <span class="n">M</span><span class="o">=</span><span class="n">imaplib</span><span class="o">.</span><span class="n">IMAP4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">))</span>
         <span class="p">(</span><span class="nb">type</span><span class="p">,</span><span class="n">data</span><span class="p">)</span><span class="o">=</span><span class="n">M</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">type</span><span class="o">!=</span><span class="s1">&#39;OK&#39;</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Could not login to imap review account: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">False</span>
-        <span class="k">return</span> <span class="bp">True</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not login to imap review account: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s2">&quot;Could not login to imap host:</span><span class="si">%s</span><span class="s2"> - Error </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">),</span><span class="n">e</span><span class="p">)</span>
-    <span class="k">return</span> <span class="bp">False</span>
+        <span class="nb">print</span> <span class="s2">&quot;Could not login to imap host:</span><span class="si">%s</span><span class="s2"> - Error </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">),</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span>
 </pre></div>
 </div>
 </div>
@@ -1135,35 +1165,35 @@ Note: It&#8217;s generally not recommended to change existing headers, this brea
 <li>create a plugin property for the filter</li>
 </ul>
 </div></blockquote>
-<div class="highlight-python"><div class="highlight"><pre><span></span>from fuglu.shared import ScannerPlugin,SuspectFilter
-[...]
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="k">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">SuspectFilter</span>
+<span class="p">[</span><span class="o">...</span><span class="p">]</span>
 
-class MyPlugin(ScannerPlugin):
-    def __init__(self,config,section=None):
-        ScannerPlugin.__init__(self,config,section)
+<span class="k">class</span> <span class="nc">MyPlugin</span><span class="p">(</span><span class="n">ScannerPlugin</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
 
-        self.requiredvars={
-            &#39;myrulesfile&#39;:{
-                &#39;default&#39;:&#39;/etc/fuglu/mypluginrules.regex&#39;,
-                &#39;description&#39;:&#39;Filter file for my plugin&#39;,
-            },
+        <span class="bp">self</span><span class="o">.</span><span class="n">requiredvars</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">&#39;myrulesfile&#39;</span><span class="p">:{</span>
+                <span class="s1">&#39;default&#39;</span><span class="p">:</span><span class="s1">&#39;/etc/fuglu/mypluginrules.regex&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;description&#39;</span><span class="p">:</span><span class="s1">&#39;Filter file for my plugin&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
 
-           [...]
-        }
-        self.filter=None
+           <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">=</span><span class="kc">None</span>
 </pre></div>
 </div>
 <p>In <code class="docutils literal"><span class="pre">examine</span></code> create the filter if necessary</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">=</span><span class="n">SuspectFilter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span> <span class="s1">&#39;myrulesfile&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Run the filter in examine: <code class="docutils literal"><span class="pre">(match,arg)=self.filter.matches(suspect)</span></code>
 <code class="docutils literal"><span class="pre">match</span></code> is a boolean, telling you if one of the rules matched
 <cite>arg`</cite> is an additional argument which have been appended to the filter rule in the config. lets say, the filter rule reads <code class="docutils literal"><span class="pre">to_address</span> <span class="pre">example&#64;fuglu.org</span> <span class="pre">hello</span> <span class="pre">world!</span></code>, you would get match=True and arg=&#8217;Hello world!&#8217; if the message is sent to <a class="reference external" href="mailto:example&#37;&#52;&#48;fuglu&#46;org">example<span>&#64;</span>fuglu<span>&#46;</span>org</a></p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">match</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">match</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">suspect</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">arg</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">arg</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;we got a match with arg </span><span class="si">%s</span><span class="s2">&quot;&quot;&quot;</span><span class="o">%</span><span class="n">arg</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;We got a match without an arg&quot;&quot;&quot;</span><span class="p">)</span>
@@ -1183,7 +1213,7 @@ class MyPlugin(ScannerPlugin):
 <h4>Get a stacktrace<a class="headerlink" href="#get-a-stacktrace" title="Permalink to this headline">¶</a></h4>
 <p>if something went wrong you should see a stacktrace in the fuglu log (/var/log/fuglu/fuglu.log)
 with fuglu &gt;=0.6.0 you can also get the most recent exceptions with the following command:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>fuglu_control exceptionlist
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu_control</span> <span class="n">exceptionlist</span>
 </pre></div>
 </div>
 </div>
@@ -1199,7 +1229,7 @@ with fuglu &gt;=0.6.0 you can also get the most recent exceptions with the follo
 <p><code class="docutils literal"><span class="pre">plugdummy.py</span></code> is located in the <code class="docutils literal"><span class="pre">develop/scripts</span></code> directory.</p>
 <p>simple usage:</p>
 <p>assuming your plugin file (&#8216;myplugin.py&#8217;) is in <code class="docutils literal"><span class="pre">/usr/local/fuglu/plugins</span></code> you can run <code class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">&lt;pluginname&gt;</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>#./plugdummy.py myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span>#./plugdummy.py myplugin.ExamplePlugin
 
 INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
@@ -1212,12 +1242,12 @@ INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=r
 <p>run <code class="docutils literal"><span class="pre">plugdummy.py</span> <span class="pre">--help</span></code> to get a list of all options</p>
 <p>Examples:</p>
 <p>Running plugins from a different directory</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>./plugdummy.py -p /tmp/ myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">plugdummy</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span> <span class="n">myplugin</span><span class="o">.</span><span class="n">ExamplePlugin</span>
 </pre></div>
 </div>
 <p>Change sender / recipient
 the &#8216;-s&#8217; and &#8216;-f&#8217; options change the envelope sender/recipient. -r can be specified multiple times to simulate a multi-recipient message</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>./plugdummy.py -s me@example.org -r you@example.net  myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span>./plugdummy.py -s me@example.org -r you@example.net  myplugin.ExamplePlugin
 INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!
@@ -1226,7 +1256,7 @@ INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@e
 </pre></div>
 </div>
 <p>Adding headers to the input message</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>./plugdummy.py -h &#39;subject:yo! whassup&#39; myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span>./plugdummy.py -h &#39;subject:yo! whassup&#39; myplugin.ExamplePlugin
 [...]
 cat /tmp/fuglu_dummy_message_in.eml
 Content-Type: text/plain; charset=&quot;us-ascii&quot;
@@ -1241,7 +1271,7 @@ hello, world!
 </pre></div>
 </div>
 <p>Adding tags:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>./plugdummy.py -t &#39;mytag:myvalue&#39; myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span>./plugdummy.py -t &#39;mytag:myvalue&#39; myplugin.ExamplePlugin
 INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
@@ -1250,7 +1280,7 @@ INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=r
 </pre></div>
 </div>
 <p>Setting a config option:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>./plugdummy.py -o &#39;greeting:go away!&#39;  myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span>./plugdummy.py -o &#39;greeting:go away!&#39;  myplugin.ExamplePlugin
 INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: go away!
@@ -1258,18 +1288,18 @@ INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local:
 </pre></div>
 </div>
 <p>Setting the message body:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>#set body
-./plugdummy.py -b &#39;hi there, whassup!&#39; myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#set body</span>
+<span class="o">./</span><span class="n">plugdummy</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">b</span> <span class="s1">&#39;hi there, whassup!&#39;</span> <span class="n">myplugin</span><span class="o">.</span><span class="n">ExamplePlugin</span>
 
-#read body from file
-./plugdummy.py -b bla.txt myplugin.ExamplePlugin
+<span class="c1">#read body from file</span>
+<span class="o">./</span><span class="n">plugdummy</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">b</span> <span class="n">bla</span><span class="o">.</span><span class="n">txt</span> <span class="n">myplugin</span><span class="o">.</span><span class="n">ExamplePlugin</span>
 
-#read headers &amp; body from eml file
-./plugdummy.py -e /tmp/bla.eml myplugin.ExamplePlugin
+<span class="c1">#read headers &amp; body from eml file</span>
+<span class="o">./</span><span class="n">plugdummy</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">e</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">bla</span><span class="o">.</span><span class="n">eml</span> <span class="n">myplugin</span><span class="o">.</span><span class="n">ExamplePlugin</span>
 </pre></div>
 </div>
 <p>Running a interactive console in the dummy enrivonment:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>./plugdummy.py -c  myplugin.ExamplePlugin
+<div class="highlight-default"><div class="highlight"><pre><span></span>./plugdummy.py -c  myplugin.ExamplePlugin
 INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 INFO:root:Running plugin: ExamplePlugin
 INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
@@ -1389,28 +1419,32 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
 <li><a class="reference internal" href="#id13">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
+<li><a class="reference internal" href="#domainauth">DomainAuth</a><ul>
 <li><a class="reference internal" href="#id14">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#plugin-fraction">Plugin Fraction</a><ul>
+<li><a class="reference internal" href="#plugin-skipper">Plugin Skipper</a><ul>
 <li><a class="reference internal" href="#id15">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#debugger">Debugger</a><ul>
+<li><a class="reference internal" href="#plugin-fraction">Plugin Fraction</a><ul>
 <li><a class="reference internal" href="#id16">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#statsd-sender-plugin-time">Statsd Sender: Plugin Time</a><ul>
+<li><a class="reference internal" href="#debugger">Debugger</a><ul>
 <li><a class="reference internal" href="#id17">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#statsd-sender-global-message-status">Statsd Sender: Global Message Status</a><ul>
+<li><a class="reference internal" href="#statsd-sender-plugin-time">Statsd Sender: Plugin Time</a><ul>
 <li><a class="reference internal" href="#id18">Configuration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#statsd-sender-per-recipient-message-status">Statsd Sender: Per Recipient Message Status</a><ul>
+<li><a class="reference internal" href="#statsd-sender-global-message-status">Statsd Sender: Global Message Status</a><ul>
 <li><a class="reference internal" href="#id19">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#statsd-sender-per-recipient-message-status">Statsd Sender: Per Recipient Message Status</a><ul>
+<li><a class="reference internal" href="#id20">Configuration</a></li>
 </ul>
 </li>
 </ul>
@@ -1468,9 +1502,6 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -1502,7 +1533,7 @@ INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Gre
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

@@ -10,7 +10,7 @@ Prerequisites: SPAMD must be installed and running (not necessarily on the same 
 
 Notes for developers:
 
-If you have forwardoriginal=False set the message source will be completely replaced with the answer from spamd.
+if forwardoriginal=False, the message source will be completely replaced with the answer from spamd.
 
 Tags:
 
@@ -132,6 +132,7 @@ Configuration
     #action if there is a problem (DUNNO, DEFER)
     problemaction=DEFER
 
+    #*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.
     pipelining=0
 
     #maximum message size, larger messages will not be scanned.  
@@ -685,7 +686,7 @@ there is no 'self' which means:
 the script should not return anything, but change the available variables ``action`` and ``message`` instead
 (``DUNNO``, ``REJECT``, ``DEFER``, ``ACCEPT``, ``DELETE`` are already imported)
 
-use ``stop()`` to exit the script
+use ``stop(action=DUNNO, message='')`` to exit the script early
 
 
 Example script:
@@ -736,6 +737,13 @@ Setting up your keys:
 
 
 If fuglu handles both incoming and outgoing mails you should make sure that this plugin is skipped for incoming mails
+
+
+known issues:
+
+ - setting canonicalizeheaders = simple will cause invalid signature.
+ - signbodylength causes a crash in dkimlib "TypeError: sequence item 1: expected string, int found"
+
     
 
 Configuration
@@ -745,7 +753,7 @@ Configuration
 
     [DKIMSignPlugin]
     #comma separated list of headers to sign. empty string=sign all headers
-    signheaders=
+    signheaders=From,Reply-To,Subject,Date,To,CC,Resent-Date,Resent-From,Resent-To,Resent-CC,In-Reply-To,References,List-Id,List-Help,List-Unsubscribe,List-Subscribe,List-Post,List-Owner,List-Archive
 
     #include l= tag in dkim header
     signbodylength=False
@@ -811,6 +819,35 @@ Configuration
 ::
 
     [SPFPlugin]
+
+
+DomainAuth
+..........
+
+Plugin: fuglu.plugins.domainauth.DomainAuthPlugin
+
+**EXPERIMENTAL**
+This plugin checks the header from domain against a list of domains which must be authenticated by DKIM and/or SPF.
+This is somewhat similar to DMARC but instead of asking the sender domain for a DMARC policy record this plugin allows you to force authentication on the recipient side.
+
+This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they must run beforehand.
+    
+
+Configuration
+-------------
+
+::
+
+    [DomainAuthPlugin]
+    #action if the message doesn't pass authentication (DUNNO, REJECT)
+    failaction=DUNNO
+
+    #File containing a list of domains (one per line) which must be DKIM and/or SPF authenticated
+    domainsfile=/etc/fuglu/auth_required_domains.txt
+
+    #reject message template if running in pre-queue mode
+    rejectmessage=sender domain ${header_from_domain} must pass DKIM and/or SPF authentication
+
 
 
 Plugin Skipper
