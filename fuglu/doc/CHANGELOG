@@ -1,4 +1,4 @@
--- Fuglu 0.6.6, not released
+-- Fuglu 0.6.6, 2016-05-17
  * Minimum python version 2.6
  * Many changes to start making fuglu python3 compatible
  * core: Keep additional groups when dropping privileges
@@ -10,6 +10,8 @@
  * fix crash when reading null values from db config overrides
  * support float values for highspamlevel
  * start the fuglu-extra-plugins repository to reduce the amount of mostly unused plugins in the core distro
+ * new log handlers: Group(Readable|Writable)(Timed)?RotatingFilehandler
+ * Extracting the client ip address from received headers now supports IPv6
 
 Developers:
  * new helper class fuglu.shared.FileList : maps lines in a file to a list which refreshes automatically
