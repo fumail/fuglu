@@ -27,22 +27,15 @@ class SPFTestCase(unittest.TestCase):
 
         # google fail test
 
-        # disabled for now, until we figure out the ipaddr / ipaddress / pyspf unicode mess
-        # ValueError: '64.18.0.0' does not appear to be an IPv4 or IPv6 network
+        suspect = self._make_dummy_suspect('gmail.com', '1.2.3.4')
+        self.candidate.examine(suspect)
+        self.assertEquals(suspect.get_tag('SPF.status'), 'softfail')
 
-        #suspect = self._make_dummy_suspect('gmail.com', '1.2.3.4')
-        # self.candidate.examine(suspect)
-        #self.assertEquals(suspect.get_tag('SPF.status'), 'softfail')
-
-        # google accept test
-        # disabled for now, until we figure out the ipaddr / ipaddress / pyspf
-        # unicode mess
-
-        #suspect = self._make_dummy_suspect('gmail.com', '216.239.32.22')
-        # self.candidate.examine(suspect)
-        #self.assertEquals(suspect.get_tag('SPF.status'), 'pass')
+        suspect = self._make_dummy_suspect('gmail.com', '216.239.32.22')
+        self.candidate.examine(suspect)
+        self.assertEquals(suspect.get_tag('SPF.status'), 'pass')
 
         # no spf record
-        suspect = self._make_dummy_suspect('fuglu.org', u'1.2.3.4')
+        suspect = self._make_dummy_suspect('unittests.fuglu.org', '1.2.3.4')
         self.candidate.examine(suspect)
         self.assertEqual(suspect.get_tag('SPF.status'), 'none')
