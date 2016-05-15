@@ -35,8 +35,9 @@ DKIMPY_AVAILABLE = False
 PYSPF_AVAILABLE = False
 PYDNS_AVAILABLE = False
 DNSPYTHON_AVAILABLE = False
+IPADDRESS_AVAILABLE = False
+IPADDR_AVAILABLE = False
 
-# check dns libraries
 try:
     import dns
     DNSPYTHON_AVAILABLE = True
@@ -49,6 +50,17 @@ try:
 except ImportError:
     pass
 
+try:
+    import ipaddress
+    IPADDRESS_AVAILABLE = True
+except:
+    pass
+
+try:
+    import ipaddr
+    IPADDR_AVAILABLE = True
+except:
+    pass
 
 try:
     pkg_resources.get_distribution("dkimpy")
@@ -65,6 +77,8 @@ except:
 try:
     if not PYDNS_AVAILABLE:
         raise Exception("pydns not available")
+    if not (IPADDR_AVAILABLE or IPADDRESS_AVAILABLE):
+        raise Exception("ipaddress/ipaddr not available")
     import spf
     PYSPF_AVAILABLE = True
 except:
@@ -328,7 +342,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
     def lint(self):
         if not PYSPF_AVAILABLE:
             print("Missing dependency: pyspf")
-            print("(also requires pydns)")
+            print("(also requires pydns and ipaddress or ipaddr)")
             return False
 
         return self.checkConfig()
