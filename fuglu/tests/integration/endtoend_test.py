@@ -98,12 +98,12 @@ class EndtoEndTestTestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
             self.config, EndtoEndTestTestCase.DUMMY_PORT, EndtoEndTestTestCase.FUGLU_HOST)
-        e2edss = threading.Thread(self.smtp.serve, ())
+        e2edss = threading.Thread(target = self.smtp.serve, args = ())
         e2edss.daemon = True
         e2edss.start()
 
         # start fuglu's listening server
-        fls = threading.Thread(self.mc.startup, ())
+        fls = threading.Thread(target = self.mc.startup, args = ())
         fls.daemon = True
         fls.start()
 
@@ -184,12 +184,12 @@ class DKIMTestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(self.config, self.config.getint(
             'main', 'outgoingport'), DKIMTestCase.FUGLU_HOST)
-        dkdss = threading.Thread(self.smtp.serve, ())
+        dkdss = threading.Thread(target = self.smtp.serve, args = ())
         dkdss.daemon = True
         dkdss.start()
 
         # start fuglu's listening server
-        fls = threading.Thread(self.mc.startup, ())
+        fls = threading.Thread(target = self.mc.startup, args = ())
         fls.daemon = True
         fls.start()
 
@@ -261,12 +261,12 @@ class SMIMETestCase(unittest.TestCase):
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
             self.config, SMIMETestCase.DUMMY_PORT, SMIMETestCase.FUGLU_HOST)
-        smdss = threading.Thread(self.smtp.serve, ())
+        smdss = threading.Thread(target = self.smtp.serve, args=())
         smdss.daemon = True
         smdss.start()
 
         # start fuglu's listening server
-        fls = threading.Thread(self.mc.startup, ())
+        fls = threading.Thread(target = self.mc.startup, args = ())
         fls.daemon = True
         fls.start()
 
