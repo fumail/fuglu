@@ -255,6 +255,7 @@ if __name__ == '__main__':
             result = DUNNO
 
         logging.info("Result: %s %s", actioncode_to_string(result), message)
+        suspect.tags['decisions'].append((pluginstance.section, result))
         logging.info(suspect)
 
     for pluginstance in mc.appenders:
