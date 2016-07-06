@@ -410,8 +410,8 @@ The other common template variables are available as well.
             },
 
             'enabledarchivetypes': {
-                'default': 'zip, z, tar',
-                'description': 'do only process archives of this type',
+                'default': '',
+                'description': 'comma separated list of archive extensions. do only process archives of given types.',
             }
 
         }
