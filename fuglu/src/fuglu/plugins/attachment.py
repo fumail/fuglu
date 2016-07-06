@@ -13,10 +13,9 @@
 # limitations under the License.
 #
 #
-from fuglu.shared import ScannerPlugin, Suspect, DELETE, DUNNO, string_to_actioncode, actioncode_to_string
+from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 import fuglu.extensions.sql
-import time
 import re
 import mimetypes
 import os
@@ -25,12 +24,12 @@ import logging
 from fuglu.extensions.sql import DBFile
 import threading
 import sys
-import email
 from email.header import decode_header
 
 from threading import Lock
 from io import BytesIO
 import zipfile
+import tarfile
 
 MAGIC_AVAILABLE = 0
 MAGIC_PYTHON_FILE = 1
@@ -410,6 +409,11 @@ The other common template variables are available as well.
                 'description': 'only extract and examine files up to this amount of (uncompressed) bytes',
             },
 
+            'enabledarchivetypes': {
+                'default': '',
+                'description': 'comma separated list of archive extensions. do only process archives of given types.',
+            }
+
         }
 
         self.logger = self._logger()
@@ -420,6 +424,10 @@ The other common template variables are available as well.
         self.supported_archive_extensions = {
             'zip': 'zip',
             'z': 'zip',
+            'tar': 'tar',
+            'tar.gz': 'tar',
+            'tgz': 'tar',
+            'tar.bz2': 'tar',
         }
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions['rar'] = 'rar'
@@ -440,6 +448,13 @@ The other common template variables are available as well.
 
         self.blockedfiletemplate = self.config.get(
             self.section, 'template_blockedfile')
+
+        enabledarchivetypes = self.config.get(self.section, 'enabledarchivetypes')
+        if enabledarchivetypes:
+            enabled = [t.strip() for t in enabledarchivetypes.split(',')]
+            for archtype in self.supported_archive_extensions.keys():
+                if archtype not in enabled:
+                    del self.supported_archive_extensions[archtype]
 
         returnaction = self.walk(suspect)
         return returnaction
@@ -758,18 +773,27 @@ The other common template variables are available as well.
 
     def _archive_handle(self, archive_type, payload):
         """get a handle for this archive type"""
+        archive = None
         if archive_type == 'zip':
             if sys.version_info < (2, 7):
                 payload = self._fix_python26_zipfile_bug(payload)
-            return zipfile.ZipFile(payload)
-        if archive_type == 'rar':
-            return rarfile.RarFile(payload)
+            archive = zipfile.ZipFile(payload)
+        elif archive_type == 'rar':
+            archive = rarfile.RarFile(payload)
+        elif archive_type == 'tar':
+            archive = tarfile.open(fileobj=payload)
+        return archive
 
     def _archive_namelist(self, archive_type, handle):
         """returns a list of file paths within the archive"""
         # this works for zip and rar. if a future archive uses a different api,
         # add above
-        return handle.namelist()
+        names = []
+        if archive_type in ['zip', 'rar']:
+            names = handle.namelist()
+        elif archive_type in ['tar']:
+            names = handle.getnames()
+        return names
 
     def _archive_extract(self, archive_type, handle, path):
         """extract a file from the archive into memory
@@ -777,10 +801,21 @@ The other common template variables are available as well.
         """
         # this works for zip and rar. if a future archive uses a different api,
         # add above
-        arinfo = handle.getinfo(path)
-        if arinfo.file_size > self.config.getint(self.section, 'archivecontentmaxsize'):
-            return None
-        extracted = handle.read(path)
+        archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
+
+        extracted = None
+        if archive_type in ['zip', 'rar']:
+            arinfo = handle.getinfo(path)
+            if arinfo.file_size > archivecontentmaxsize:
+                return None
+            extracted = handle.read(path)
+        elif archive_type in ['tar']:
+            arinfo = handle.getmember(path)
+            if arinfo.size > archivecontentmaxsize or not arinfo.isfile():
+                return None
+            x = handle.extractfile(path)
+            extracted = x.read()
+            x.close()
         return extracted
 
     def _debuginfo(self, suspect, message):

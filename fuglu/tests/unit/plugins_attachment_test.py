@@ -66,6 +66,7 @@ class DatabaseConfigTestCase(unittest.TestCase):
         config.set('FiletypePlugin', 'checkarchivenames', 'False')
         config.set('FiletypePlugin', 'checkarchivecontent', 'False')
         config.set('FiletypePlugin', 'archivecontentmaxsize', '500000')
+        config.set('FiletypePlugin', 'enabledarchivetypes', '')
         self.candidate = FiletypePlugin(config)
 
     def test_dbrules(self):
@@ -121,6 +122,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         config.set('FiletypePlugin', 'checkarchivenames', 'True')
         config.set('FiletypePlugin', 'checkarchivecontent', 'True')
         config.set('FiletypePlugin', 'archivecontentmaxsize', '5000000')
+        config.set('FiletypePlugin', 'enabledarchivetypes', '')
 
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
