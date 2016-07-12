@@ -137,9 +137,7 @@ Example script:
                 execfile(filename, scriptenv)
             else:
                 scriptenv = runpy.run_path(filename, scriptenv)
-                print("script ran through!")
-            import pprint
-            pprint.pprint(scriptenv)
+
             action = scriptenv['action']
             message = scriptenv['message']
         except Stopped as stp:
