@@ -92,9 +92,10 @@ if __name__ == '__main__':
         sys.exit(1)
     pluginlist = args
 
-    for plugindir in opts.plugindirs:
-        if plugindir not in sys.path:
-            sys.path.insert(0, plugindir)
+    if opts.plugindirs!=None:
+        for plugindir in opts.plugindirs:
+            if plugindir not in sys.path:
+                sys.path.insert(0, plugindir)
 
     # prepare config
     config = ConfigParser()
