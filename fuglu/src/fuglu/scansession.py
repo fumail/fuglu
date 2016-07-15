@@ -169,7 +169,13 @@ class SessionHandler(object):
         except Exception as e:
             exc = traceback.format_exc()
             self.logger.error('Exception %s: %s' % (e, exc))
-            self.protohandler.defer("internal problem - message deferred")
+            #try to end the session gracefully, but this might cause the same exception again,
+            #in case of a broken pipe for example
+            try:
+                self.protohandler.defer("internal problem - message deferred")
+            except:
+                pass
+
         self.logger.debug('Session finished')
 
     def trash(self, suspect, killerplugin=None):
