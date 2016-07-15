@@ -795,6 +795,9 @@ class SuspectFilter(object):
         for part in messagerep.walk():
             if part.get_content_maintype() == 'text' and (not part.is_multipart()):
                 textparts.append(part.get_payload(None, True))
+            #multipart/mixed are text by default as well
+            if part.get_content_maintype() == 'multipart' and part.get_content_subtype() == 'mixed':
+                textparts.append(part.get_payload(None, True))
         return textparts
 
     def get_field(self, suspect, headername):
