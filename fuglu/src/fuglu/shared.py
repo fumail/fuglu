@@ -793,11 +793,17 @@ class SuspectFilter(object):
         """Returns a list of all text contents"""
         textparts = []
         for part in messagerep.walk():
+            payload = None
             if part.get_content_maintype() == 'text' and (not part.is_multipart()):
-                textparts.append(part.get_payload(None, True))
+                payload = part.get_payload(None, True)
+
             #multipart/mixed are text by default as well
             if part.get_content_maintype() == 'multipart' and part.get_content_subtype() == 'mixed':
-                textparts.append(part.get_payload(None, True))
+                payload = part.get_payload(None, True)
+
+            # payload can be None even if it was returned from part.get_payload()
+            if payload != None:
+                textparts.append(payload)
         return textparts
 
     def get_field(self, suspect, headername):
