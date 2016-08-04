@@ -83,7 +83,7 @@ The format is : ``<property> <regex> <optional argument>``
  * ``body:stripped`` or just ``body`` to match the the  message body (only applies to text/* parts), with stripped tags and newlines replaced with space (similar to SpamAssassin body rules)
  * ``body:full`` to match the full body
 
-``<regex>`` is a standard python regular expression applied to <header>. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use ``\s``. all regexes that are not enclosed in forward slashes are automatically ``case insensitive`` and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.
+``<regex>`` is a standard python regular expression applied to ``<property>``. if the regex is not enclosed by forward slashes, be sure not to include any whitespace in the regex, it must be one continous string. To match whitespace, use ``\s``. all regexes that are not enclosed in forward slashes are automatically ``case insensitive`` and support multiple lines (re.DOTALL is enabled, so the newline character is matched by a dot). with slashes, the regex flags can be defined manually, eg.
 
 ::
 

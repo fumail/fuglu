@@ -78,81 +78,81 @@
 <p>edit <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></code> and change parameters if you like</p>
 <p>Note: If you don&#8217;t have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.</p>
 <p>eg, change</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">attachment</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">attachment</span>
 </pre></div>
 </div>
 <p>to</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">attachment</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">attachment</span>
 </pre></div>
 </div>
 <p>to disable both Antispam and Antivirus.</p>
 <p>Make sure the logging directory exists:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>mkdir -p /var/log/fuglu
-chown nobody /var/log/fuglu
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">log</span><span class="o">/</span><span class="n">fuglu</span>
+<span class="n">chown</span> <span class="n">nobody</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">log</span><span class="o">/</span><span class="n">fuglu</span>
 </pre></div>
 </div>
 <p>Then check if fuglu is happy with your configuration:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">fuglu</span> <span class="o">--</span><span class="n">lint</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu</span> <span class="o">--</span><span class="n">lint</span>
 </pre></div>
 </div>
 <p>example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>fuglu --lint
-Fuglu 0.6.1
----------- LINT MODE ----------
-Checking dependencies...
-sqlalchemy: installed
-BeautifulSoup: installed
-magic: installed
-Loading extensions...
-fuglu.extensions.sql: enabled (available)
-Loading plugins...
-Plugin loading complete
-Linting  main configuration
-OK
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu</span> <span class="o">--</span><span class="n">lint</span>
+<span class="n">Fuglu</span> <span class="mf">0.6</span><span class="o">.</span><span class="mi">1</span>
+<span class="o">----------</span> <span class="n">LINT</span> <span class="n">MODE</span> <span class="o">----------</span>
+<span class="n">Checking</span> <span class="n">dependencies</span><span class="o">...</span>
+<span class="n">sqlalchemy</span><span class="p">:</span> <span class="n">installed</span>
+<span class="n">BeautifulSoup</span><span class="p">:</span> <span class="n">installed</span>
+<span class="n">magic</span><span class="p">:</span> <span class="n">installed</span>
+<span class="n">Loading</span> <span class="n">extensions</span><span class="o">...</span>
+<span class="n">fuglu</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">sql</span><span class="p">:</span> <span class="n">enabled</span> <span class="p">(</span><span class="n">available</span><span class="p">)</span>
+<span class="n">Loading</span> <span class="n">plugins</span><span class="o">...</span>
+<span class="n">Plugin</span> <span class="n">loading</span> <span class="n">complete</span>
+<span class="n">Linting</span>  <span class="n">main</span> <span class="n">configuration</span>
+<span class="n">OK</span>
 
-Linting Plugin  Archive Config section: ArchivePlugin
-OK
+<span class="n">Linting</span> <span class="n">Plugin</span>  <span class="n">Archive</span> <span class="n">Config</span> <span class="n">section</span><span class="p">:</span> <span class="n">ArchivePlugin</span>
+<span class="n">OK</span>
 
-Linting Plugin  Attachment Blocker Config section: FiletypePlugin
-Found python-file magic library
-No database configured. Using per user/domain file configuration from /etc/fuglu/rules
-OK
+<span class="n">Linting</span> <span class="n">Plugin</span>  <span class="n">Attachment</span> <span class="n">Blocker</span> <span class="n">Config</span> <span class="n">section</span><span class="p">:</span> <span class="n">FiletypePlugin</span>
+<span class="n">Found</span> <span class="n">python</span><span class="o">-</span><span class="n">file</span> <span class="n">magic</span> <span class="n">library</span>
+<span class="n">No</span> <span class="n">database</span> <span class="n">configured</span><span class="o">.</span> <span class="n">Using</span> <span class="n">per</span> <span class="n">user</span><span class="o">/</span><span class="n">domain</span> <span class="n">file</span> <span class="n">configuration</span> <span class="kn">from</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">rules</span>
+<span class="n">OK</span>
 
-Linting Plugin  Clam AV Config section: ClamavPlugin
-Virusaction: DELETE
-Got Pong: PONG
+<span class="n">Linting</span> <span class="n">Plugin</span>  <span class="n">Clam</span> <span class="n">AV</span> <span class="n">Config</span> <span class="n">section</span><span class="p">:</span> <span class="n">ClamavPlugin</span>
+<span class="n">Virusaction</span><span class="p">:</span> <span class="n">DELETE</span>
+<span class="n">Got</span> <span class="n">Pong</span><span class="p">:</span> <span class="n">PONG</span>
 
-Clamav found virus {&#39;stream&#39;: &#39;Eicar-Test-Signature&#39;}
-OK
+<span class="n">Clamav</span> <span class="n">found</span> <span class="n">virus</span> <span class="p">{</span><span class="s1">&#39;stream&#39;</span><span class="p">:</span> <span class="s1">&#39;Eicar-Test-Signature&#39;</span><span class="p">}</span>
+<span class="n">OK</span>
 
-Linting Plugin  SpamAssassin Config section: SAPlugin
-Got: SPAMD/1.5 0 PONG
+<span class="n">Linting</span> <span class="n">Plugin</span>  <span class="n">SpamAssassin</span> <span class="n">Config</span> <span class="n">section</span><span class="p">:</span> <span class="n">SAPlugin</span>
+<span class="n">Got</span><span class="p">:</span> <span class="n">SPAMD</span><span class="o">/</span><span class="mf">1.5</span> <span class="mi">0</span> <span class="n">PONG</span>
 
-GTUBE Has been detected correctly
-OK
+<span class="n">GTUBE</span> <span class="n">Has</span> <span class="n">been</span> <span class="n">detected</span> <span class="n">correctly</span>
+<span class="n">OK</span>
 
-Linting Plugin  Debugger Config section: debug
-OK
+<span class="n">Linting</span> <span class="n">Plugin</span>  <span class="n">Debugger</span> <span class="n">Config</span> <span class="n">section</span><span class="p">:</span> <span class="n">debug</span>
+<span class="n">OK</span>
 
-Linting Plugin  Plugin Skipper Config section: PluginSkipper
-OK
-0 plugins reported errors.
+<span class="n">Linting</span> <span class="n">Plugin</span>  <span class="n">Plugin</span> <span class="n">Skipper</span> <span class="n">Config</span> <span class="n">section</span><span class="p">:</span> <span class="n">PluginSkipper</span>
+<span class="n">OK</span>
+<span class="mi">0</span> <span class="n">plugins</span> <span class="n">reported</span> <span class="n">errors</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>If all went fine, run <code class="docutils literal"><span class="pre">fuglu</span></code> without parameters to start the daemon.
 In <code class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</span></code> you should then see output similar to this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>2014-08-13 15:25:46,093 root        : INFO FuGLU Version 0.6.1 starting up
-2014-08-13 15:25:46,094 fuglu.MainController: INFO Init Stat Engine
-2014-08-13 15:25:46,094 fuglu.MainController: INFO Init Threadpool
-2014-08-13 15:25:46,095 fuglu.MainController: INFO Starting interface sockets...
-2014-08-13 15:25:46,095 fuglu.MainController: INFO starting connector smtp/10025
-2014-08-13 15:25:46,096 fuglu.MainController: INFO starting connector smtp/10099
-2014-08-13 15:25:46,096 fuglu.incoming.10025: INFO SMTP (After Queue) Server running on port 10025
-2014-08-13 15:25:46,096 fuglu.MainController: INFO starting connector smtp/10888
-2014-08-13 15:25:46,096 fuglu.incoming.10099: INFO SMTP (After Queue) Server running on port 10099
-2014-08-13 15:25:46,097 fuglu.incoming.10888: INFO SMTP (After Queue) Server running on port 10888
-2014-08-13 15:25:46,097 fuglu.MainController: INFO Startup complete
-2014-08-13 15:25:46,097 fuglu.control.fuglu_control.sock: INFO Control/Info Server running on port /tmp/fuglu_control.sock
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">093</span> <span class="n">root</span>        <span class="p">:</span> <span class="n">INFO</span> <span class="n">FuGLU</span> <span class="n">Version</span> <span class="mf">0.6</span><span class="o">.</span><span class="mi">1</span> <span class="n">starting</span> <span class="n">up</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">094</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">Init</span> <span class="n">Stat</span> <span class="n">Engine</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">094</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">Init</span> <span class="n">Threadpool</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">095</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">Starting</span> <span class="n">interface</span> <span class="n">sockets</span><span class="o">...</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">095</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">starting</span> <span class="n">connector</span> <span class="n">smtp</span><span class="o">/</span><span class="mi">10025</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">096</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">starting</span> <span class="n">connector</span> <span class="n">smtp</span><span class="o">/</span><span class="mi">10099</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">096</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">incoming</span><span class="o">.</span><span class="mi">10025</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">SMTP</span> <span class="p">(</span><span class="n">After</span> <span class="n">Queue</span><span class="p">)</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">port</span> <span class="mi">10025</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">096</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">starting</span> <span class="n">connector</span> <span class="n">smtp</span><span class="o">/</span><span class="mi">10888</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">096</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">incoming</span><span class="o">.</span><span class="mi">10099</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">SMTP</span> <span class="p">(</span><span class="n">After</span> <span class="n">Queue</span><span class="p">)</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">port</span> <span class="mi">10099</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">097</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">incoming</span><span class="o">.</span><span class="mi">10888</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">SMTP</span> <span class="p">(</span><span class="n">After</span> <span class="n">Queue</span><span class="p">)</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">port</span> <span class="mi">10888</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">097</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">MainController</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">Startup</span> <span class="n">complete</span>
+<span class="mi">2014</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">13</span> <span class="mi">15</span><span class="p">:</span><span class="mi">25</span><span class="p">:</span><span class="mi">46</span><span class="p">,</span><span class="mi">097</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">fuglu_control</span><span class="o">.</span><span class="n">sock</span><span class="p">:</span> <span class="n">INFO</span> <span class="n">Control</span><span class="o">/</span><span class="n">Info</span> <span class="n">Server</span> <span class="n">running</span> <span class="n">on</span> <span class="n">port</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">fuglu_control</span><span class="o">.</span><span class="n">sock</span>
 </pre></div>
 </div>
 <p>fuglu comes with init scripts/systemd service files if you want to start fuglu like other system daemons</p>
@@ -162,49 +162,49 @@ In <code class="docutils literal"><span class="pre">/var/log/fuglu/fuglu.log</sp
 <p>Once fuglu is up and running, we need to tell Postfix to use it as an after queue filter.</p>
 <p>Detailed documentation is available on the <a class="reference external" href="http://www.postfix.org/FILTER_README.html">postfix</a> website, but here is a quick example.</p>
 <p>Add to <code class="docutils literal"><span class="pre">master.cf</span></code> :</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>#fuglu
-fuglu_default   unix  -       -       n       -       10      smtp
-        -o smtp_send_xforward_command=yes
-        -o disable_mime_output_conversion=yes
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#fuglu</span>
+<span class="n">fuglu_default</span>   <span class="n">unix</span>  <span class="o">-</span>       <span class="o">-</span>       <span class="n">n</span>       <span class="o">-</span>       <span class="mi">10</span>      <span class="n">smtp</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtp_send_xforward_command</span><span class="o">=</span><span class="n">yes</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">disable_mime_output_conversion</span><span class="o">=</span><span class="n">yes</span>
 
-fuglu_trusted   unix  -       -       n       -       10      smtp
-        -o smtp_send_xforward_command=yes
-        -o disable_mime_output_conversion=yes
+<span class="n">fuglu_trusted</span>   <span class="n">unix</span>  <span class="o">-</span>       <span class="o">-</span>       <span class="n">n</span>       <span class="o">-</span>       <span class="mi">10</span>      <span class="n">smtp</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtp_send_xforward_command</span><span class="o">=</span><span class="n">yes</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">disable_mime_output_conversion</span><span class="o">=</span><span class="n">yes</span>
 
-#
-localhost:10026 inet  n       -       n       -       10      smtpd
-        -o content_filter=
-        -o receive_override_options=no_unknown_recipient_checks,no_header_body_checks,no_milters,no_address_mappings
-        -o smtpd_helo_restrictions=
-        -o smtpd_client_restrictions=
-        -o smtpd_sender_restrictions=
-        -o smtpd_recipient_restrictions=permit_mynetworks,reject
-        -o mynetworks=127.0.0.0/8
-        -o smtpd_authorized_xforward_hosts=127.0.0.0/8
+<span class="c1">#</span>
+<span class="n">localhost</span><span class="p">:</span><span class="mi">10026</span> <span class="n">inet</span>  <span class="n">n</span>       <span class="o">-</span>       <span class="n">n</span>       <span class="o">-</span>       <span class="mi">10</span>      <span class="n">smtpd</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">content_filter</span><span class="o">=</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">receive_override_options</span><span class="o">=</span><span class="n">no_unknown_recipient_checks</span><span class="p">,</span><span class="n">no_header_body_checks</span><span class="p">,</span><span class="n">no_milters</span><span class="p">,</span><span class="n">no_address_mappings</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_helo_restrictions</span><span class="o">=</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_client_restrictions</span><span class="o">=</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_sender_restrictions</span><span class="o">=</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_recipient_restrictions</span><span class="o">=</span><span class="n">permit_mynetworks</span><span class="p">,</span><span class="n">reject</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">mynetworks</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.0</span><span class="o">/</span><span class="mi">8</span>
+        <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_authorized_xforward_hosts</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.0</span><span class="o">/</span><span class="mi">8</span>
 </pre></div>
 </div>
 <p>This creates two filters <code class="docutils literal"><span class="pre">fuglu_trusted</span></code> for outgoing mail and <code class="docutils literal"><span class="pre">fuglu_default</span></code> for incoming mail. An additional postfix instance will listen on port <em>10026</em> where fuglu can re-inject filtered messages.</p>
 <p>Create a new file <code class="docutils literal"><span class="pre">/etc/postfix/filter_default</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span></span># filter for others
-/./ FILTER fuglu_default:[127.0.0.1]:10025
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># filter for others</span>
+<span class="o">/./</span> <span class="n">FILTER</span> <span class="n">fuglu_default</span><span class="p">:[</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">]:</span><span class="mi">10025</span>
 </pre></div>
 </div>
 <p>This tells postfix to send untrusted messages to fuglu on port 10025</p>
 <p>Create a new file <code class="docutils literal"><span class="pre">/etc/postfix/filter_trusted</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span></span># filter for authenticated users
-/./ FILTER fuglu_trusted:[127.0.0.1]:10099
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># filter for authenticated users</span>
+<span class="o">/./</span> <span class="n">FILTER</span> <span class="n">fuglu_trusted</span><span class="p">:[</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">]:</span><span class="mi">10099</span>
 </pre></div>
 </div>
 <p>This tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning</p>
 <p>In <code class="docutils literal"><span class="pre">main.cf</span></code> add</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>smtpd_recipient_restrictions =  check_client_access pcre:/etc/postfix/filter_trusted,
-                                                                permit_sasl_authenticated,
-                                                                permit_mynetworks,
-                                                                reject_unauth_destination,
-                                                                pcre:/etc/postfix/filter_default
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">smtpd_recipient_restrictions</span> <span class="o">=</span>  <span class="n">check_client_access</span> <span class="n">pcre</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">filter_trusted</span><span class="p">,</span>
+                                                                <span class="n">permit_sasl_authenticated</span><span class="p">,</span>
+                                                                <span class="n">permit_mynetworks</span><span class="p">,</span>
+                                                                <span class="n">reject_unauth_destination</span><span class="p">,</span>
+                                                                <span class="n">pcre</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">filter_default</span>
 
-fuglu_trusted_destination_recipient_limit=1
-fuglu_default_destination_recipient_limit=1
+<span class="n">fuglu_trusted_destination_recipient_limit</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">fuglu_default_destination_recipient_limit</span><span class="o">=</span><span class="mi">1</span>
 </pre></div>
 </div>
 <p>Run <code class="docutils literal"><span class="pre">postfix</span> <span class="pre">reload</span></code> and check your maillog for errors. from now on, messages should be filtered by fuglu!</p>
@@ -218,7 +218,7 @@ fuglu_default_destination_recipient_limit=1
 plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. You can pass the plugin definition an argument to override this with a section named to suit your needs.
 This can also allow running a plugin multiple times per scan with different config options:</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig1</span><span class="p">),</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig2</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig1</span><span class="p">),</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">archive</span><span class="p">(</span><span class="n">ArchiveConfig2</span><span class="p">)</span>
 
 <span class="p">[</span><span class="n">ArchiveConfig1</span><span class="p">]</span>
 <span class="o">....</span>
@@ -232,32 +232,32 @@ This can also allow running a plugin multiple times per scan with different conf
 <p>The fuglu ESMTP connector enables fuglu to run in before-queue mode, i.e. while the smtp session with the remote system is still active. This allows rejecting spam / infected mails.</p>
 <p><strong>Postfix config</strong>:
 edit <code class="docutils literal"><span class="pre">master.cf</span></code> as described in <a class="reference external" href="http://www.postfix.org/SMTPD_PROXY_README.html">http://www.postfix.org/SMTPD_PROXY_README.html</a></p>
-<div class="highlight-python"><div class="highlight"><pre><span></span># Before-filter SMTP server. Receive mail from the network and
-# pass it to the content filter on localhost port 10025.
-#
-smtp      inet  n       -       n       -       20      smtpd
-    -o smtpd_proxy_filter=127.0.0.1:10025
-    -o smtpd_client_connection_count_limit=10
-    # Postfix 2.7 and later performance feature.
-    # -o smtpd_proxy_options=speed_adjust
-#
-# After-filter SMTP server. Receive mail from the content filter
-# on localhost port 10026.
-#
-127.0.0.1:10026 inet n  -       n       -        -      smtpd
-    -o smtpd_authorized_xforward_hosts=127.0.0.0/8
-    -o smtpd_client_restrictions=
-    -o smtpd_helo_restrictions=
-    -o smtpd_sender_restrictions=
-    -o smtpd_recipient_restrictions=permit_mynetworks,reject
-    -o smtpd_data_restrictions=
-    -o mynetworks=127.0.0.0/8
-    -o receive_override_options=no_unknown_recipient_checks
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Before-filter SMTP server. Receive mail from the network and</span>
+<span class="c1"># pass it to the content filter on localhost port 10025.</span>
+<span class="c1">#</span>
+<span class="n">smtp</span>      <span class="n">inet</span>  <span class="n">n</span>       <span class="o">-</span>       <span class="n">n</span>       <span class="o">-</span>       <span class="mi">20</span>      <span class="n">smtpd</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_proxy_filter</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">:</span><span class="mi">10025</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_client_connection_count_limit</span><span class="o">=</span><span class="mi">10</span>
+    <span class="c1"># Postfix 2.7 and later performance feature.</span>
+    <span class="c1"># -o smtpd_proxy_options=speed_adjust</span>
+<span class="c1">#</span>
+<span class="c1"># After-filter SMTP server. Receive mail from the content filter</span>
+<span class="c1"># on localhost port 10026.</span>
+<span class="c1">#</span>
+<span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">:</span><span class="mi">10026</span> <span class="n">inet</span> <span class="n">n</span>  <span class="o">-</span>       <span class="n">n</span>       <span class="o">-</span>        <span class="o">-</span>      <span class="n">smtpd</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_authorized_xforward_hosts</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.0</span><span class="o">/</span><span class="mi">8</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_client_restrictions</span><span class="o">=</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_helo_restrictions</span><span class="o">=</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_sender_restrictions</span><span class="o">=</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_recipient_restrictions</span><span class="o">=</span><span class="n">permit_mynetworks</span><span class="p">,</span><span class="n">reject</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">smtpd_data_restrictions</span><span class="o">=</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">mynetworks</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.0</span><span class="o">/</span><span class="mi">8</span>
+    <span class="o">-</span><span class="n">o</span> <span class="n">receive_override_options</span><span class="o">=</span><span class="n">no_unknown_recipient_checks</span>
 </pre></div>
 </div>
 <p>fuglu config:</p>
 <p>Enable the esmtp connector on the incoming port (10025) in <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>incomingport=esmtp:10025,10099,10888
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">incomingport</span><span class="o">=</span><span class="n">esmtp</span><span class="p">:</span><span class="mi">10025</span><span class="p">,</span><span class="mi">10099</span><span class="p">,</span><span class="mi">10888</span>
 </pre></div>
 </div>
 <p><strong>rejecting spam</strong>:</p>
@@ -275,14 +275,14 @@ smtp      inet  n       -       n       -       20      smtpd
 </ul>
 </div></blockquote>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>rejectmessage=message from ${from_address} to ${to_domain} identified as spam (score=${spamscore})
+<div class="highlight-default"><div class="highlight"><pre><span></span>rejectmessage=message from ${from_address} to ${to_domain} identified as spam (score=${spamscore})
 </pre></div>
 </div>
 <p><strong>rejecting viruses</strong>:</p>
 <p>This works the same way as rejecting spam, by setting <code class="docutils literal"><span class="pre">DEFAULTVIRUSACTION=REJECT</span></code> and configuring the <code class="docutils literal"><span class="pre">rejectmessage</span></code> in the antivirus plugin section.</p>
 <p><strong>Example fuglu configuration</strong></p>
 <p>With this example pre-queue configuration fuglu will scan for spam, virus and blocked attachments. low spam will be tagged, high spam (level&gt;=10) will be rejected.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[main]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[main]
 plugins=clamav,spamassassin,attachment
 incomingport=esmtp:10025,10099,10888
 
@@ -308,32 +308,32 @@ highspamlevel=10
 <p>!! Warning, this is an EXPERIMENTAL feature - untested, may or may not work !!</p>
 <p>!! Note: fuglu milter does not currently support message header/body modification, just actions like REJECT/DEFER/DISCARD !!</p>
 <p>To run fuglu as a milter, add <code class="docutils literal"><span class="pre">milter:&lt;portnumber</span></code> to the <code class="docutils literal"><span class="pre">incomingport</span></code> configuration option in fuglu.conf.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>incomingport=10025,10099,10888,milter:10028
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">incomingport</span><span class="o">=</span><span class="mi">10025</span><span class="p">,</span><span class="mi">10099</span><span class="p">,</span><span class="mi">10888</span><span class="p">,</span><span class="n">milter</span><span class="p">:</span><span class="mi">10028</span>
 </pre></div>
 </div>
 <p>Then enable milters in your MTA. postfix example (main.cf) :</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>milter_protocol = 2
-milter_default_action = accept
-milter_content_timeout = 30s
-smtpd_milters=inet:127.0.0.1:10028
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">milter_protocol</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">milter_default_action</span> <span class="o">=</span> <span class="n">accept</span>
+<span class="n">milter_content_timeout</span> <span class="o">=</span> <span class="mi">30</span><span class="n">s</span>
+<span class="n">smtpd_milters</span><span class="o">=</span><span class="n">inet</span><span class="p">:</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">:</span><span class="mi">10028</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="running-fuglu-in-netcat-mode">
 <h3>Running fuglu in netcat-mode<a class="headerlink" href="#running-fuglu-in-netcat-mode" title="Permalink to this headline">¶</a></h3>
 <p>fuglu supports message processing by simply &#8220;piping&#8221; them into a socket. To enable this socket, add <code class="docutils literal"><span class="pre">netcat:&lt;portnumber&gt;</span></code> to the <code class="docutils literal"><span class="pre">incomingport</span></code> configuration option in fuglu.conf.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>incomingport=10025,10099,10888,netcat:20099
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">incomingport</span><span class="o">=</span><span class="mi">10025</span><span class="p">,</span><span class="mi">10099</span><span class="p">,</span><span class="mi">10888</span><span class="p">,</span><span class="n">netcat</span><span class="p">:</span><span class="mi">20099</span>
 </pre></div>
 </div>
 <p>When restarting fuglu, you should see something like <code class="docutils literal"><span class="pre">INFO</span> <span class="pre">NETCAT</span> <span class="pre">Server</span> <span class="pre">running</span> <span class="pre">on</span> <span class="pre">port</span> <span class="pre">20099</span></code> in the logs. you may then pipe an eml from the shell</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>(sleep 0.1; cat eicar.eml) | nc -c localhost 20099
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">sleep</span> <span class="mf">0.1</span><span class="p">;</span> <span class="n">cat</span> <span class="n">eicar</span><span class="o">.</span><span class="n">eml</span><span class="p">)</span> <span class="o">|</span> <span class="n">nc</span> <span class="o">-</span><span class="n">c</span> <span class="n">localhost</span> <span class="mi">20099</span>
 </pre></div>
 </div>
 <p>In some special setups, people use fuglu as an after-delivery filter with this method.</p>
 <p>Example procmail filter:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span># netcat send msg copy to fuglu
-:0c
-| nc localhost 20099
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># netcat send msg copy to fuglu</span>
+<span class="p">:</span><span class="mi">0</span><span class="n">c</span>
+<span class="o">|</span> <span class="n">nc</span> <span class="n">localhost</span> <span class="mi">20099</span>
 </pre></div>
 </div>
 <p>Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value <code class="docutils literal"><span class="pre">unknown&#64;example.org</span></code> for both envelope sender and recipient.</p>
@@ -343,7 +343,7 @@ smtpd_milters=inet:127.0.0.1:10028
 <p>(experimental feature) It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.</p>
 <p>For this to work you need to have sqlalchemy installed ( running <cite>fuglu &#8211;lint</cite> should show <cite>enabled</cite> for the sql extension)</p>
 <p>SQL script to create the the table:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>CREATE TABLE `fugluconfig` (
+<div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `fugluconfig` (
   `scope` varchar(255) NOT NULL,
   `section` varchar(255) NOT NULL,
   `option` varchar(255) NOT NULL,
@@ -361,8 +361,8 @@ smtpd_milters=inet:127.0.0.1:10028
 </ul>
 </div></blockquote>
 <p>Enable configuration lookups by providing a standard sql alchemy connectstring in your configuration (section <cite>databaseconfig</cite> option <cite>dbconnectstring</cite>)</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>[databaseconfig]
-dbconnectstring=mysql://root@localhost/fuglu
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">databaseconfig</span><span class="p">]</span>
+<span class="n">dbconnectstring</span><span class="o">=</span><span class="n">mysql</span><span class="p">:</span><span class="o">//</span><span class="n">root</span><span class="nd">@localhost</span><span class="o">/</span><span class="n">fuglu</span>
 </pre></div>
 </div>
 <p>If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (<cite>sql=SELECT ....</cite> in the same section.  ) use <cite>:section</cite>, <cite>:option</cite> and the usual suspect variables like <cite>:to_domain</cite> and <cite>:to_address</cite> as placeholders.</p>
@@ -423,9 +423,6 @@ dbconnectstring=mysql://root@localhost/fuglu
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -457,7 +454,7 @@ dbconnectstring=mysql://root@localhost/fuglu
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

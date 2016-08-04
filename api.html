@@ -123,7 +123,6 @@ all information is returned as-is, this means for example, that non-fcrdns clien
 <p>By default, this method starts searching at the top Received Header. Set a higher skip value to start searching further down.</p>
 <p>both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA</p>
 <p>returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex</p>
-<p>Note: this does not currently handle IPv6 received headers</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -338,9 +337,6 @@ True, (fieldname, matchedvalue, arg, regex)</p>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -369,7 +365,7 @@ True, (fieldname, matchedvalue, arg, regex)</p>
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
