@@ -56,3 +56,4 @@ latest released package from pypi
 Install on FreeBSD
 ------------------
 
+FuGlu can be found in the FreeBSD ports repository as ``mail/py-fuglu``.
