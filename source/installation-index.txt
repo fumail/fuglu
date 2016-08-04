@@ -53,4 +53,6 @@ latest released package from pypi
 
 	pip install fuglu
 
+Install on FreeBSD
+------------------
 
