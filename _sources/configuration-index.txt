@@ -400,7 +400,7 @@ Enable configuration lookups by providing a standard sql alchemy connectstring i
 ::
 
 	[databaseconfig]
-	dbconnectstring=mysql://username:password@hostname/database
+	dbconnectstring=mysql://root@localhost/fuglu
 
 If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (`sql=SELECT ....` in the same section.  ) use `:section`, `:option` and the usual suspect variables like `:to_domain` and `:to_address` as placeholders.
 
