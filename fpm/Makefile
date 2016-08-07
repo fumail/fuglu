@@ -43,7 +43,7 @@ rpm: clean fpm
 
 # rom package from current checkout
 rpm-checkout: PACKAGE = ../fuglu/setup.py
-rpm-checkout: clean git deb
+rpm-checkout: clean git rpm
 
 # aliases to helper tools
 fpm: $(FPM_BIN)
