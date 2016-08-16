@@ -666,7 +666,7 @@ class MainController(object):
         print(fc.strcolor('Checking dependencies...', 'magenta'))
         try:
             import sqlalchemy
-            print(fc.strcolor('sqlalchemy: installed', 'green'))
+            print(fc.strcolor('sqlalchemy: Version %s installed' % sqlalchemy.__version__, 'green'))
         except:
             print(fc.strcolor('sqlalchemy: not installed', 'yellow') +
                   " Optional dependency, required if you want to enable any database lookups")
