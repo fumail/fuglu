@@ -85,6 +85,40 @@ except:
     pass
 
 
+def extract_from_domain(suspect, headername='From'):
+    """
+    Try to extract domain of from header
+    """
+    try:
+        msgrep = suspect.get_message_rep()
+        address = msgrep.get(headername)
+        if address is None:
+            return None
+
+        start = address.find('<') + 1
+        if start < 1:  # malformed header does not contain <> brackets
+            start = address.find(':') + 1  # start >= 0
+
+        if start >= 0:
+            end = string.find(address, '>')
+            if end < 0:
+                end = len(address)
+        else:
+            return None
+
+        retaddr = address[start:end]
+        retaddr = retaddr.strip()
+
+        if '@' not in retaddr:
+            return None
+
+        domain = retaddr.split('@', 1)[-1]
+
+        return domain.lower()
+    except Exception:
+        return None
+
+
 class DKIMVerifyPlugin(ScannerPlugin):
 
     """**EXPERIMENTAL**
@@ -383,7 +417,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
         checkdomains = self.filelist.get_list()
 
         envelope_sender_domain = suspect.from_domain.lower()
-        header_from_domain = self.extract_from_domain(suspect)
+        header_from_domain = extract_from_domain(suspect)
         if header_from_domain == None:
             return
 
@@ -414,36 +448,6 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
     def flag_as_spam(self, suspect):
         suspect.tags['spam']['domainauth'] = True
 
-    def extract_from_domain(self, suspect):
-        """
-        Try to extract from header domain
-        """
-        try:
-            msgrep = suspect.get_message_rep()
-            address = msgrep.get('From')
-            if address == None:
-                return None
-
-            start = address.find('<') + 1
-            if start < 1:
-                start = address.find(':') + 1
-
-            if start >= 0:
-                end = string.find(address, '>')
-                if end < 0:
-                    end = len(address)
-            retaddr = address[start:end]
-            retaddr = retaddr.strip()
-
-            if '@' not in retaddr:
-                return None
-
-            domain = retaddr.split('@', 1)[1]
-
-            return domain.lower()
-        except:
-            return None
-
     def __str__(self):
         return "DomainAuth"
 
@@ -455,5 +459,106 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
         filename = self.config.get(self.section, 'domainsfile')
         if not os.path.exists(filename):
             print("domains file %s not found" % (filename))
+            return False
+        return True
+
+
+class SpearPhishPlugin(ScannerPlugin):
+    """Mark spear phishing mails as virus
+
+    The spearphish plugin checks if the sender domain in the "From"-Header matches the envelope recipient Domain ("Mail
+from my own domain") but the message usesa different envelope sender domain. This blocks many spearphish attempts.
+
+    Note that this plugin can cause blocks of legitimate mail , for example if the recipient domain is using a third party service
+    to send newsletters in their name. Such services often set the customers domain in the from headers but use their own domains in the envelope for
+     bounce processing. Use the 'Plugin Skipper' or any other form of whitelisting in such cases.
+    """
+
+    def __init__(self, section=None):
+        ScannerPlugin.__init__(self, section)
+        self.filelist = FileList(strip=True, skip_empty=True, skip_comments=True, lowercase=True,
+                                 additional_filters=None, minimum_time_between_reloads=30)
+
+        self.requiredvars = {
+            'domainsfile': {
+                'default': '/etc/fuglu/spearphish-domains',
+                'description': 'Filename where we load spearphish domains from. One domain per line. If this setting is empty, the check will be applied to all domains.',
+            },
+            'virusenginename': {
+                'default': 'Fuglu SpearPhishing Protection',
+                'description': 'Name of this plugins av engine',
+            },
+            'virusname': {
+                'default': 'TRAIT.SPEARPHISH',
+                'description': 'Name to use as virus signature',
+            },
+            'virusaction': {
+                'default': 'DEFAULTVIRUSACTION',
+                'description': "action if spear phishing attempt is detected (DUNNO, REJECT, DELETE)",
+            },
+            'rejectmessage': {
+                'default': 'threat detected: ${virusname}',
+                'description': "reject message template if running in pre-queue mode and virusaction=REJECT",
+            },
+        }
+
+    def should_we_check_this_domain(self,suspect):
+        domainsfile = self.config.get(self.section, 'domainsfile')
+        if domainsfile.strip()=='': # empty config -> check all domains
+            return True
+
+        if not os.path.exists(domainsfile):
+            return False
+
+        self.filelist.filename = domainsfile
+        envelope_recipient_domain = suspect.to_domain.lower()
+        checkdomains = self.filelist.get_list()
+        return envelope_recipient_domain in checkdomains
+
+
+    def examine(self, suspect):
+        if not self.should_we_check_this_domain(suspect):
+            return DUNNO
+        envelope_recipient_domain = suspect.to_domain.lower()
+        envelope_sender_domain = suspect.from_domain.lower()
+        if envelope_sender_domain == envelope_recipient_domain:
+            return DUNNO  # we only check the message if the env_sender_domain differs. If it's the same it will be caught by other means (like SPF)
+
+        header_from_domain = extract_from_domain(suspect)
+        if header_from_domain is None:
+            self._logger().warn("%s: Could not extract header from domain for spearphish check" % suspect.id)
+            return DUNNO
+
+        if header_from_domain == envelope_recipient_domain:
+            virusname = self.config.get(self.section, 'virusname')
+            virusaction = self.config.get(self.section, 'virusaction')
+            actioncode = string_to_actioncode(virusaction, self.config)
+
+            logmsg = '%s: spear phish pattern detected, recipient=%s env_sender_domain=%s header_from_domain=%s' % (
+            suspect.id, suspect.to_address, envelope_sender_domain, header_from_domain)
+            self._logger().info(logmsg)
+            self.flag_as_phish(suspect, virusname)
+
+            message = apply_template(
+                self.config.get(self.section, 'rejectmessage'), suspect, {'virusname': virusname})
+            return actioncode, message
+
+        return DUNNO
+
+    def flag_as_phish(self, suspect, virusname):
+        suspect.tags['%s.virus' % self.config.get(self.section, 'virusenginename')] = {'message content': virusname}
+        suspect.tags['virus'][self.config.get(self.section, 'virusenginename')] = True
+
+    def __str__(self):
+        return "Spearphish Check"
+
+    def lint(self):
+        allok = (self.checkConfig() and self.lint_file())
+        return allok
+
+    def lint_file(self):
+        filename = self.config.get(self.section, 'domainsfile')
+        if not os.path.exists(filename):
+            print("Spearphish domains file %s not found" % (filename))
             return False
         return True
