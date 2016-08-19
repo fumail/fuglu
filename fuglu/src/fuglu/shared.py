@@ -879,8 +879,7 @@ class SuspectFilter(object):
             realheadername = headername[5:]
             for part in messagerep.walk():
                 hdrslist = self._get_headers(realheadername, part)
-                if hdrslist != None:
-                    allvalues.extend(hdrslist)
+                allvalues.extend(hdrslist)
             return allvalues
 
         # standard header
@@ -895,9 +894,9 @@ class SuspectFilter(object):
 
             for h in list(payload.keys()):
                 if re.match(patt, h) != None:
-                    valuelist.extend(payload.get_all(h))
+                    valuelist.extend(payload.get_all(h,[]))
         else:
-            valuelist = payload.get_all(headername)
+            valuelist = payload.get_all(headername,[])
 
         return valuelist
 
