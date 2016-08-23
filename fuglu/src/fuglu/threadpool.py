@@ -34,7 +34,7 @@ class ThreadPool(threading.Thread):
         assert self.minthreads > 0
         assert self.maxthreads > self.minthreads
 
-        self.logger = logging.getLogger('fuglu.threadpool')
+        self.logger = logging.getLogger('%s.threadpool' % __package__)
         self.threadlistlock = threading.Lock()
         self.checkinterval = 10
         self.threadcounter = 0
@@ -150,7 +150,7 @@ class Worker(threading.Thread):
         self.birth = time.time()
         self.pool = pool
         self.stayalive = True
-        self.logger = logging.getLogger('fuglu.threads.worker.%s' % workerid)
+        self.logger = logging.getLogger('%s.threads.worker.%s' % (__package__, workerid))
         self.logger.debug('thread init')
         self.noisy = False
         self.setDaemon(False)
