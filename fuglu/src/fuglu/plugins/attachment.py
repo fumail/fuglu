@@ -25,6 +25,7 @@ from fuglu.extensions.sql import DBFile
 import threading
 import sys
 from email.header import decode_header
+import email
 
 from threading import Lock
 from io import BytesIO
@@ -594,7 +595,7 @@ The other common template variables are available as well.
             self.logger.debug('Found %s filename rules, %s content-type rules, %s archive filename rules, %s archive content rules for domain %s' %
                               (len(domain_names), len(domain_ctypes), len(domain_archive_names), len(domain_archive_ctypes), suspect.to_domain))
         else:
-            self.logger.debug('Loading attachment rules from filesystem')
+            self.logger.debug('Loading attachment rules from filesystem dir %s'%(self.config.get(self.section,'rulesdir')))
             user_names = self.rulescache.getNAMERules(suspect.to_address)
             user_ctypes = self.rulescache.getCTYPERules(suspect.to_address)
             user_archive_names = self.rulescache.getARCHIVENAMERules(
@@ -618,7 +619,7 @@ The other common template variables are available as well.
             FUATT_DEFAULT)
 
         m = suspect.get_message_rep()
-        for i in m.walk():
+        for i in self.walk_all_parts(m):
             if i.is_multipart():
                 continue
             contenttype_mime = i.get_content_type()
@@ -743,6 +744,29 @@ The other common template variables are available as well.
                         self.logger.warning(
                             "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
         return DUNNO
+
+    def walk_all_parts(self, message):
+        """Like email.message.Message's .walk() but also tries to find parts in the message's epilogue"""
+        for part in message.walk():
+            yield part
+
+        boundary = message.get_boundary()
+        epilogue = message.epilogue
+        if boundary not in epilogue:
+            return
+
+        candidate_parts = epilogue.split(boundary)
+        for candidate in candidate_parts:
+            try:
+                part_content = candidate.strip()
+                if part_content.lower().startswith('content'):
+                    message = email.message_from_string(part_content)
+                    yield message
+
+            except Exception as e:
+                self.logger.info("hidden part extraction failed: %s"%str(e))
+
+
 
     def _fix_python26_zipfile_bug(self, zipFileContainer):
         "http://stackoverflow.com/questions/3083235/unzipping-file-results-in-badzipfile-file-is-not-a-zip-file/21996397#21996397"

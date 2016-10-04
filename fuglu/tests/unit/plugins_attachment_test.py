@@ -12,7 +12,7 @@ except ImportError:
     from ConfigParser import RawConfigParser
 
 import fuglu
-from fuglu.plugins.attachment import FiletypePlugin
+from fuglu.plugins.attachment import FiletypePlugin, RulesCache
 from fuglu.shared import actioncode_to_string, Suspect, DELETE, DUNNO
 
 # we import it here to make sure the test system has the library installed
@@ -127,6 +127,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
         self.candidate = FiletypePlugin(config)
+        self.rulescache = RulesCache(self.tempdir)
+        self.candidate.rulescache = self.rulescache
 
     def tearDown(self):
         os.remove('%s/default-filenames.conf' % self.tempdir)
@@ -181,7 +183,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 # the largefile in the test message is just a bunch of zeroes
                 open(conffile, 'w').write(
                     "deny application\/octet\-stream no data allowed")
-
+                self.rulescache._loadrules()
                 suspect = Suspect(
                     'sender@unittests.fuglu.org', user, tmpfile.name)
 
@@ -225,7 +227,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 conffile = self.tempdir + "/%s-archivenames.conf" % user
                 open(conffile, 'w').write(
                     "deny largefile user does not like the largefile within a zip\ndeny 6mbfile user does not like the largefile within a zip")
-
+                self.rulescache._loadrules()
                 suspect = Suspect(
                     'sender@unittests.fuglu.org', user, tmpfile.name)
 
@@ -237,3 +239,31 @@ class AttachmentPluginTestCase(unittest.TestCase):
             finally:
                 tmpfile.close()
                 os.remove(conffile)
+
+
+    def test_hiddenpart(self):
+        """Test for hidden part in message epilogue"""
+        testfile='hiddenpart.eml'
+        try:
+            tmpfile = tempfile.NamedTemporaryFile(
+                suffix='hidden', prefix='fuglu-unittest', dir='/tmp')
+            shutil.copy("%s/%s" % (TESTDATADIR, testfile), tmpfile.name)
+
+            user = 'recipient-hiddenpart@unittests.fuglu.org'
+            conffile = self.tempdir + "/%s-filetypes.conf" % user
+            # the largefile in the test message is just a bunch of zeroes
+            open(conffile, 'w').write(
+                "deny application\/zip no zips allowed")
+            self.rulescache._loadrules()
+            suspect = Suspect(
+                'sender@unittests.fuglu.org', user, tmpfile.name)
+
+            result = self.candidate.examine(suspect)
+            if type(result) is tuple:
+                result, message = result
+            self.assertEqual(
+                result, DELETE, 'hidden message part was not detected')
+
+        finally:
+            tmpfile.close()
+            os.remove(conffile)
