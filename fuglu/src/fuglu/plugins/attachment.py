@@ -752,7 +752,7 @@ The other common template variables are available as well.
 
         boundary = message.get_boundary()
         epilogue = message.epilogue
-        if boundary not in epilogue:
+        if epilogue is None or boundary not in epilogue:
             return
 
         candidate_parts = epilogue.split(boundary)
