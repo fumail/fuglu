@@ -1,0 +1,29 @@
+Return-Path: <sender@unittests.fuglu.org>
+To: recipient@unittests.fuglu.org
+From: sender@unittests.fuglu.org
+Subject: see attached wrong extension
+Message-ID: <1337-2-8218016f2fb7@fuglu.org>
+Date: Thu, 10 Nov 2016 19:27:13 +0100
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------80DA625E956C25D5AD972EA1"
+
+This is a multi-part message in MIME format.
+--------------80DA625E956C25D5AD972EA1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+see attached
+
+--------------80DA625E956C25D5AD972EA1
+Content-Type: application/x-gzip;
+ name="wrongextension.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="wrongextension.gz"
+
+UEsDBAoAAAAAAAObakl6em/tAwAAAAMAAAAJABwAZnVnbHUuZXhlVVQJAANFuyRYRrskWHV4
+CwABBPUBAAAEFAAAAGhpClBLAQIeAwoAAAAAAAObakl6em/tAwAAAAMAAAAJABgAAAAAAAEA
+AACkgQAAAABmdWdsdS5leGVVVAUAA0W7JFh1eAsAAQT1AQAABBQAAABQSwUGAAAAAAEAAQBP
+AAAARgAAAAAA
+--------------80DA625E956C25D5AD972EA1--

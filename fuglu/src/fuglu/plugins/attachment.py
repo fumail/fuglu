@@ -421,6 +421,13 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
+        # key: content type as returned by file magic, value: archive type
+        self.supported_archvie_ctypes = {
+            'application/zip': 'zip',
+            'application/x-gzip': 'tar',
+            'application/x-bzip2': 'tar',
+
+        }
         # key: file ending, value: archive type
         self.supported_archive_extensions = {
             'zip': 'zip',
@@ -430,8 +437,11 @@ The other common template variables are available as well.
             'tgz': 'tar',
             'tar.bz2': 'tar',
         }
+
+
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions['rar'] = 'rar'
+            self.supported_archvie_ctypes['application/x-rar'] =  'rar'
 
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
@@ -667,6 +677,7 @@ The other common template variables are available as well.
                 message = suspect.tags['FiletypePlugin.errormessage']
                 return blockactioncode, message
 
+            contenttype_magic = None
             if MAGIC_AVAILABLE:
                 pl = i.get_payload(decode=True)
                 contenttype_magic = self.getBuffertype(pl)
@@ -685,11 +696,16 @@ The other common template variables are available as well.
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
                 archive_type = None
-                # sort by length, so tar.gz is checked before .gz
-                for arext in sorted(self.supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
-                    if att_name.lower().endswith('.%s' % arext):
-                        archive_type = self.supported_archive_extensions[arext]
-                        break
+                # try guessing the archive type based on magic content type first
+                # we don't need to check for MAGIC_AVAILABLE here, if it is available the contenttype_magic is not None
+                if contenttype_magic in self.supported_archvie_ctypes:
+                    archive_type = self.supported_archvie_ctypes[contenttype_magic]
+                else:
+                    # sort by length, so tar.gz is checked before .gz
+                    for arext in sorted(self.supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
+                        if att_name.lower().endswith('.%s' % arext):
+                            archive_type = self.supported_archive_extensions[arext]
+                            break
 
                 if archive_type != None:
                     try:

@@ -267,3 +267,31 @@ class AttachmentPluginTestCase(unittest.TestCase):
         finally:
             tmpfile.close()
             os.remove(conffile)
+
+
+    def test_archive_wrong_extension(self):
+        """Test if archives don't fool us with forged file extensions"""
+        testfile = 'wrongextension.eml'
+        try:
+            tmpfile = tempfile.NamedTemporaryFile(
+                suffix='hidden', prefix='fuglu-unittest', dir='/tmp')
+            shutil.copy("%s/%s" % (TESTDATADIR, testfile), tmpfile.name)
+
+            user = 'recipient-wrongarchextension@unittests.fuglu.org'
+            conffile = self.tempdir + "/%s-archivenames.conf" % user
+            # the largefile in the test message is just a bunch of zeroes
+            open(conffile, 'w').write(
+                "deny \.exe$ exe detected in zip with wrong extension")
+            self.rulescache._loadrules()
+            suspect = Suspect(
+                'sender@unittests.fuglu.org', user, tmpfile.name)
+
+            result = self.candidate.examine(suspect)
+            if type(result) is tuple:
+                result, message = result
+            self.assertEqual(
+                result, DELETE, 'exe in zip with .gz extension was not detected')
+
+        finally:
+            tmpfile.close()
+            os.remove(conffile)
