@@ -46,7 +46,7 @@ Below is a stripped down example of such a plugin. In a real setup you'd probabl
 	import os
 	import fuglu.extensions.sql
 	import re
-    from email.header import decode_header
+        from email.header import decode_header
 
 	from sqlalchemy import *
 	from sqlalchemy.ext.declarative import declarative_base
