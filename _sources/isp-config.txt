@@ -153,15 +153,15 @@ Below is a stripped down example of such a plugin. In a real setup you'd probabl
 		
 		return False
         
-        def subject_decode(self, encoded_subject):
-        """Try to decode subject. Some ugly shaped subjects will remain."""
-        decoded_subject = u''
-        for part, encoding in decode_header(encoded_subject):
-            if encoding is None:
-                decoded_subject += part.decode(errors='ignore')
-            else:
-                decoded_subject += part.decode(encoding,'ignore')
-        return decoded_subject
+            def subject_decode(self, encoded_subject):
+                """Try to decode subject. Some ugly shaped subjects will remain."""
+                decoded_subject = u''
+                for part, encoding in decode_header(encoded_subject):
+                    if encoding is None:
+                        decoded_subject += part.decode(errors='ignore')
+                    else:
+                        decoded_subject += part.decode(encoding,'ignore')
+                return decoded_subject
 	    
 	    def examine(self,suspect):
 		starttime=time.time()

@@ -210,15 +210,15 @@ In fuglu you&#8217;d write a plugin which fills this table.</p>
 
             <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">subject_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoded_subject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Try to decode subject. Some ugly shaped subjects will remain.&quot;&quot;&quot;</span>
-    <span class="n">decoded_subject</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
-    <span class="k">for</span> <span class="n">part</span><span class="p">,</span> <span class="n">encoding</span> <span class="ow">in</span> <span class="n">decode_header</span><span class="p">(</span><span class="n">encoded_subject</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">encoding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">decoded_subject</span> <span class="o">+=</span> <span class="n">part</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">decoded_subject</span> <span class="o">+=</span> <span class="n">part</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">decoded_subject</span>
+        <span class="k">def</span> <span class="nf">subject_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoded_subject</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Try to decode subject. Some ugly shaped subjects will remain.&quot;&quot;&quot;</span>
+            <span class="n">decoded_subject</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+            <span class="k">for</span> <span class="n">part</span><span class="p">,</span> <span class="n">encoding</span> <span class="ow">in</span> <span class="n">decode_header</span><span class="p">(</span><span class="n">encoded_subject</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">encoding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">decoded_subject</span> <span class="o">+=</span> <span class="n">part</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">decoded_subject</span> <span class="o">+=</span> <span class="n">part</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">decoded_subject</span>
 
         <span class="k">def</span> <span class="nf">examine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">suspect</span><span class="p">):</span>
             <span class="n">starttime</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
