@@ -484,6 +484,8 @@ The other common template variables are available as well.
             btype = ms.buffer(buffercontent)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             btype = magic.from_buffer(buffercontent, mime=True)
+            if isinstance(btype, bytes) and sys.version_info > (3,):
+                btype = btype.decode('UTF-8', 'ignore')
         return btype
 
     def asciionly(self, stri):
