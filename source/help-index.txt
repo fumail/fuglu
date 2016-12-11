@@ -1,5 +1,5 @@
-Support
-=======
+Support & FAQ
+=============
 
 Contents:
 
@@ -10,7 +10,15 @@ Contents:
 FAQ
 ---
 
- * no questions asked frequently yet ;-)
+Does Fuglu run with python3?
+............................
+
+(Last updated dec '16): Fuglu is mostly python3 syntax compatible, but it'll require more internal work to correctly handle bytes/strings internally.  
+
+How can I submit changes to the documentation?
+..............................................
+
+The fuglu documentation is  in the branch ``gh-pages``, please edit the text files in the ``source`` folder and submit a pull request. 
 
 ------------
 Mailing list
