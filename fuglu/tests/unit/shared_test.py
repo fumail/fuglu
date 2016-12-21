@@ -33,6 +33,17 @@ class SuspectTestCase(unittest.TestCase):
             for c in suspect_id:
                 self.assertTrue(c in string.hexdigits)
 
+    def test_from_to_parsing(self):
+        s = Suspect('sender@example.com', 'recipient@example.com', '/dev/null')
+
+        self.assertEqual("sender@example.com", s.from_address)
+        self.assertEqual("sender", s.from_localpart)
+        self.assertEqual("example.com", s.from_domain)
+
+        self.assertEqual("recipient@example.com", s.to_address)
+        self.assertEqual("recipient", s.to_localpart)
+        self.assertEqual("example.com", s.to_domain)
+
 
 class SuspectFilterTestCase(unittest.TestCase):
 

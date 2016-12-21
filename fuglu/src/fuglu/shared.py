@@ -205,15 +205,16 @@ class Suspect(object):
             self.from_address = ''
 
         try:
-            (user, self.to_domain) = self.to_address.rsplit('@', 1)
+            (self.to_localpart, self.to_domain) = self.to_address.rsplit('@', 1)
         except:
             raise ValueError("invalid to email address: %s" % self.to_address)
 
         if self.from_address == '':
             self.from_domain = ''
+            self.from_localpart = ''
         else:
             try:
-                (user, self.from_domain) = self.from_address.rsplit('@', 1)
+                (self.from_localpart, self.from_domain) = self.from_address.rsplit('@', 1)
             except Exception as e:
                 raise ValueError(
                     "invalid from email address: '%s'" % self.from_address)
