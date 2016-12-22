@@ -44,6 +44,21 @@ class SuspectTestCase(unittest.TestCase):
         self.assertEqual("recipient", s.to_localpart)
         self.assertEqual("example.com", s.to_domain)
 
+        for sender in (None, ''):
+            s = Suspect(sender, 'recipient@example.com', '/dev/null')
+            self.assertEqual("", s.from_address)
+            self.assertEqual("", s.from_localpart)
+            self.assertEqual("", s.from_domain)
+
+            self.assertEqual("recipient@example.com", s.to_address)
+            self.assertEqual("recipient", s.to_localpart)
+            self.assertEqual("example.com", s.to_domain)
+
+    def test_from_illegal(self):
+        self.assertRaises(ValueError, Suspect, "sender@example.com", None, '/dev/null')
+        self.assertRaises(ValueError, Suspect, "sender@example.com", "recipient", '/dev/null')
+        self.assertRaises(ValueError, Suspect, "sender", "recipient@example.com", '/dev/null')
+
 
 class SuspectFilterTestCase(unittest.TestCase):
 
