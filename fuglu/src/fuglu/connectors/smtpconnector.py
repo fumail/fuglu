@@ -54,14 +54,6 @@ class SMTPHandler(ProtocolHandler):
         ProtocolHandler.__init__(self, socket, config)
         self.sess = SMTPSession(socket, config)
 
-    def is_signed(self, suspect):
-        msgrep = suspect.get_message_rep()
-        if 'Content-Type' in msgrep:
-            ctype = msgrep['Content-Type'].lower()
-            if 'multipart/signed' in ctype or 'application/pkcs7-mime' in ctype:
-                return True
-        return False
-
     def re_inject(self, suspect):
         """Send message back to postfix"""
         if suspect.get_tag('noreinject'):
@@ -70,10 +62,6 @@ class SMTPHandler(ProtocolHandler):
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info(
                 '%s: Injecting original message source without modifications' % suspect.id)
-            msgcontent = suspect.get_original_source()
-        elif self.is_signed(suspect):
-            self.logger.info(
-                '%s: S/MIME signed message detected - sending original source without modifications' % suspect.id)
             msgcontent = suspect.get_original_source()
         else:
             msgcontent = buildmsgsource(suspect)
