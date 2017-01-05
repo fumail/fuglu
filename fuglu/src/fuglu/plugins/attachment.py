@@ -535,8 +535,7 @@ The other common template variables are available as well.
                 if action == 'deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s' % (
                         suspect.id, displayname, asciirep))
-                    blockinfo = "%s %s: %s" % (
-                        displayname, asciirep, description)
+                    blockinfo = ("%s %s: %s" % (displayname, asciirep, description)).strip()
                     suspect.tags['FiletypePlugin.errormessage'] = blockinfo
                     if self.config.getboolean(self.section, 'sendbounce'):
                         if suspect.is_spam() or suspect.is_virus():
