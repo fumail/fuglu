@@ -10,36 +10,11 @@
 allow   \.jpg$                -
 allow   \.gif$                -
 allow   \.png$                -
-allow   \.docx?$              -
-allow   \.xlsx?$              -
-allow   \.ppsx?$              -
-allow   \.pdf$                -
-allow   \.xml$                -
-allow   \.rtf$                -
 allow   \.url$                - override microsoft deny list
 allow   \.cer$                - override microsoft deny list
 allow   \.crt$                - override microsoft deny list
 allow   \.vcf$                -
 allow   \.txt$                -
-allow   \.zip$                -
-allow   \.t?gz$               -
-allow   \.bz2$                -
-allow   \.Z$                  -
-allow   \.7z$                 -
-allow   \.rpm$                -
-
-# digital signatures, certificates, encrypted files
-allow   \.gpg$                -
-allow   \.pgp$                -
-allow   \.sig$                -
-allow   \.asc$                -
-allow   \.p7[sm]$             -
-allow   \.pk7$                -
-
-# Macintosh archives
-allow   \.hqx$                -
-allow   \.sit.bin$            -
-allow   \.sea$                -
 
 # consider enabling this
 # deny \.jar$   executable java program
