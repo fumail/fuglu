@@ -122,7 +122,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         config.set('FiletypePlugin', 'checkarchivenames', 'True')
         config.set('FiletypePlugin', 'checkarchivecontent', 'True')
         config.set('FiletypePlugin', 'archivecontentmaxsize', '5000000')
-        config.set('FiletypePlugin', 'enabledarchivetypes', 'zip, tar.gz, rar')
+        config.set('FiletypePlugin', 'enabledarchivetypes', '')
 
         config.add_section('main')
         config.set('main', 'disablebounces', '1')
