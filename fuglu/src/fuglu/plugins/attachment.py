@@ -710,6 +710,7 @@ The other common template variables are available as well.
                             break
 
                 if archive_type != None:
+                    self.logger.debug("Extracting {attname} as {artype}".format(attname=safename,artype=archive_type))
                     try:
                         pl = BytesIO(i.get_payload(decode=True))
                         archive_handle = self._archive_handle(archive_type, pl)
@@ -760,7 +761,7 @@ The other common template variables are available as well.
 
                     except Exception as e:
                         self.logger.warning(
-                            "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
+                            "archive scanning failed in attachment %s: %s" % (safename, str(e)))
         return DUNNO
 
     def walk_all_parts(self, message):
