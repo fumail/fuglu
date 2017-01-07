@@ -768,7 +768,7 @@ The other common template variables are available as well.
         """Return the corresponding archive type if the content type matches a regex in self.supported_archvie_ctypes, None otherwise"""
         if content_type is None:
             return None
-        for regex,atype in self.supported_archvie_ctypes.iteritems():
+        for regex,atype in self.supported_archvie_ctypes.items():
             if re.match(regex, content_type, re.I):
                 return atype
         return None
