@@ -31,6 +31,7 @@ from threading import Lock
 from io import BytesIO
 import zipfile
 import tarfile
+import traceback
 
 MAGIC_AVAILABLE = 0
 MAGIC_PYTHON_FILE = 1
@@ -421,11 +422,11 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
 
-        # key: content type as returned by file magic, value: archive type
+        # key: regex matching content type as returned by file magic, value: archive type
         self.supported_archvie_ctypes = {
-            'application/zip': 'zip',
-            'application/x-gzip': 'tar',
-            'application/x-bzip2': 'tar',
+            '^application\/zip': 'zip',
+            '^application\/x-gzip': 'tar',
+            '^application\/x-bzip2': 'tar',
 
         }
         # key: file ending, value: archive type
@@ -441,7 +442,7 @@ The other common template variables are available as well.
 
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions['rar'] = 'rar'
-            self.supported_archvie_ctypes['application/x-rar'] =  'rar'
+            self.supported_archvie_ctypes['^application\/x\-rar'] =  'rar'
 
     def _get_file_magic(self):
         # initialize one magic instance per thread for the libmagic bindings
@@ -697,19 +698,20 @@ The other common template variables are available as well.
 
             # archives
             if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
-                archive_type = None
+
                 # try guessing the archive type based on magic content type first
                 # we don't need to check for MAGIC_AVAILABLE here, if it is available the contenttype_magic is not None
-                if contenttype_magic in self.supported_archvie_ctypes:
-                    archive_type = self.supported_archvie_ctypes[contenttype_magic]
-                else:
+                archive_type = self.archive_type_from_content_type(contenttype_magic)
+
+                # if it didn't work, try to guess by the filename extension, if it is enabled
+                if archive_type is None:
                     # sort by length, so tar.gz is checked before .gz
                     for arext in sorted(self.supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
                         if att_name.lower().endswith('.%s' % arext):
                             archive_type = self.supported_archive_extensions[arext]
                             break
-
                 if archive_type != None:
+                    self.logger.debug("Extracting {attname} as {artype}".format(attname=att_name,artype=archive_type))
                     try:
                         pl = BytesIO(i.get_payload(decode=True))
                         archive_handle = self._archive_handle(archive_type, pl)
@@ -758,10 +760,19 @@ The other common template variables are available as well.
                                         'FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                    except Exception as e:
+                    except Exception:
                         self.logger.warning(
-                            "archive scanning failed in attachment %s: %s" % (att_name, str(e)))
+                            "archive scanning failed in attachment {attname}: {error}".format(attname=att_name, error=traceback.format_exc() ))
         return DUNNO
+
+    def archive_type_from_content_type(self, content_type):
+        """Return the corresponding archive type if the content type matches a regex in self.supported_archvie_ctypes, None otherwise"""
+        if content_type is None:
+            return None
+        for regex,atype in self.supported_archvie_ctypes.iteritems():
+            if re.match(regex, content_type, re.I):
+                return atype
+        return None
 
     def walk_all_parts(self, message):
         """Like email.message.Message's .walk() but also tries to find parts in the message's epilogue"""

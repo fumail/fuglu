@@ -134,7 +134,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         os.remove('%s/default-filenames.conf' % self.tempdir)
         os.remove('%s/default-filetypes.conf' % self.tempdir)
         os.remove(self.template)
-        os.rmdir(self.tempdir)
+        shutil.rmtree(self.tempdir)
 
     def test_hiddenbinary(self):
         """Test if hidden binaries get detected correctly"""
@@ -274,7 +274,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
         testfile = 'wrongextension.eml'
         try:
             tmpfile = tempfile.NamedTemporaryFile(
-                suffix='hidden', prefix='fuglu-unittest', dir='/tmp')
+                suffix='wrongext', prefix='fuglu-unittest', dir='/tmp')
             shutil.copy("%s/%s" % (TESTDATADIR, testfile), tmpfile.name)
 
             user = 'recipient-wrongarchextension@unittests.fuglu.org'

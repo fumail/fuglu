@@ -2,12 +2,16 @@ FROM centos:centos7
 
 MAINTAINER O. Schacher <oli@fuglu.org>
 
-RUN yum -y install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-1.noarch.rpm
-RUN yum -y install clamav clamav-scanner clamav-update clamav-freshclam clamav-data spamassassin python-magic git python-beautifulsoup python-setuptools
-RUN easy_install sqlalchemy
+RUN yum  -y install epel-release
+RUN yum  -y install clamav clamav-scanner clamav-update clamav-data spamassassin python-magic git python-beautifulsoup python-setuptools python-nose unar python-sqlalchemy python-pip
+#unfortunately, unrar is no longer available in EPEL https://github.com/gryphius/fuglu/issues/87
+RUN yum -y install ftp://ftp.pbone.net/mirror/ftp5.gwdg.de/pub/opensuse/repositories/home:/Kenzy:/modified:/C7/CentOS_7/x86_64/unrar-5.0.12-2.1.x86_64.rpm
+RUN pip install rarfile mock dkimpy dnspython pydns pyspf ipaddr
 ADD freshclam.conf /etc/freshclam.conf
-ADD checkout-and-run-fuglu-tests.sh /usr/local/bin/checkout-and-run-fuglu-tests.sh
 ADD clamd.conf /etc/clamd.conf
-
 RUN adduser clamav && freshclam
-CMD sh /usr/local/bin/checkout-and-run-fuglu-tests.sh
+ADD start-services.sh /usr/local/bin/start-services.sh
+CMD /bin/bash
+VOLUME /fuglu-src
+
+
