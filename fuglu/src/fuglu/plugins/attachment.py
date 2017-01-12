@@ -654,6 +654,8 @@ The other common template variables are available as well.
                     ext = ''
                 att_name = 'unnamed%s' % ext
 
+            att_name = self.asciionly(att_name)
+
             res = self.matchMultipleSets(
                 [user_names, domain_names, default_names], att_name, suspect, att_name)
             if res == ATTACHMENT_SILENTDELETE:
@@ -722,7 +724,7 @@ The other common template variables are available as well.
                                 # generated bounces
                                 if sys.version_info[0] == 2:
                                     # Py3 defaults to unicode
-                                    name = name.encode("utf-8", "ignore")
+                                    name = self.asciionly(name)
                                 res = self.matchMultipleSets(
                                     [user_archive_names, domain_archive_names, default_archive_names], name, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
