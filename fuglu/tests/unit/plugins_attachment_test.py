@@ -154,7 +154,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
     def test_umlaut_in_zip(self):
         """Issue 69: Test if zip with files that contain umlauts are extracted ok"""
         tmpfile = tempfile.NamedTemporaryFile(
-            suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+            suffix='badattach', prefix='fuglu-unittest', dir='/tmp')
         shutil.copy(TESTDATADIR + '/umlaut-in-attachment.eml', tmpfile.name)
         suspect = Suspect(
             'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', tmpfile.name)
@@ -163,7 +163,6 @@ class AttachmentPluginTestCase(unittest.TestCase):
         if type(result) is tuple:
             result, message = result
         tmpfile.close()
-        os.remove(tmpfile.name)
         self.assertEqual(result, DUNNO)
 
 
