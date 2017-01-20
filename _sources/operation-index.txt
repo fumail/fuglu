@@ -281,7 +281,7 @@ Fuglu runs but you want to know what exactly would happen to a single email mess
 Make sure message debugging is enabled (it is by default, but if you screwed up your config...) :
 
  * ``prependers=`` should start with ``debug`` to make sure the debugger plugin is loaded
- * ``incomingport`` option should contian port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port 
+ * ``incomingport`` option should contain port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port 
  * in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information 
  * ``nobounce`` should be set to True, so debugged messages can not be bounced 
  * ``noreinject`` shoud be set to True, so debugged messages are not re-injected to postfix for further processing 

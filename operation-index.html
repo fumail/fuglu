@@ -292,7 +292,7 @@ AbsMax[virus]: 600000
 <blockquote>
 <div><ul class="simple">
 <li><code class="docutils literal"><span class="pre">prependers=</span></code> should start with <code class="docutils literal"><span class="pre">debug</span></code> to make sure the debugger plugin is loaded</li>
-<li><code class="docutils literal"><span class="pre">incomingport</span></code> option should contian port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port</li>
+<li><code class="docutils literal"><span class="pre">incomingport</span></code> option should contain port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port</li>
 <li>in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information</li>
 <li><code class="docutils literal"><span class="pre">nobounce</span></code> should be set to True, so debugged messages can not be bounced</li>
 <li><code class="docutils literal"><span class="pre">noreinject</span></code> shoud be set to True, so debugged messages are not re-injected to postfix for further processing</li>
