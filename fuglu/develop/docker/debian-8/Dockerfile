@@ -11,3 +11,6 @@ ADD start-services.sh /usr/local/bin/start-services.sh
 CMD /bin/bash
 VOLUME /fuglu-src
 ADD clamd.conf /etc/clamd.conf
+
+EXPOSE 25 10025 10026 10888
+

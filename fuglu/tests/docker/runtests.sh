@@ -14,14 +14,14 @@ echo "***************************************************************"
 echo "* Running tests in docker instance for $folder"
 echo "***************************************************************"
 image=fuglu-test-$folder
-docker build -t=$image $folder
+docker build -t=$image $srcdir/develop/docker/$folder
 if [ $? -gt 0 ]; then
  echo "Image build failed"
  exit 1
 fi
 
 did=$(docker create -w /fuglu-src -v $srcdir:/fuglu-src:ro -t -i $image /bin/bash)
-echo "Startomg docker instance ID: $did"
+echo "Starting docker instance ID: $did"
 docker start $did
 echo "Starting services (clamav, SA)..."
 docker exec -d $did sh /usr/local/bin/start-services.sh
