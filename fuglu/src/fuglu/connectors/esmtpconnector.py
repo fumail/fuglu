@@ -324,7 +324,7 @@ class ESMTPPassthroughSession(object):
 
         elif cmd == "MAIL":
             if self.state != ESMTPPassthroughSession.ST_HELO:
-                return("503 Bad command sequence", 1
+                return "503 Bad command sequence", 1
             try:
                 self.from_address = self.stripAddress(data)
             except:
