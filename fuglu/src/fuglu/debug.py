@@ -35,7 +35,6 @@ class ControlServer(object):
                 porttype = "inet4"
             except:
                 porttype = "unix"
-                pass
 
         if type(port) == int:
             porttype = "inet4"

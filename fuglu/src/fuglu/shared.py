@@ -929,14 +929,14 @@ class SuspectFilter(object):
                     if extended:
                         return True, (fieldname, strval, arg, pattern.pattern)
                     else:
-                        return (True, arg)
+                        return True, arg
                 else:
                     self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
                         fieldname, arg, pattern.pattern, val))
 
         self.logger.debug('No match found')
         suspect.debug("message does not match any rule in %s" % self.filename)
-        return (False, None)
+        return False, None
 
     def get_args(self, suspect, extended=False):
         """returns all args of matched regexes in a list

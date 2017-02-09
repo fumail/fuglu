@@ -48,8 +48,6 @@ try:
         MAGIC_AVAILABLE = MAGIC_PYTHON_MAGIC
     # unsupported version, for example 'filemagic'
     # https://github.com/aliles/filemagic
-    else:
-        pass
 except ImportError:
     pass
 
@@ -176,7 +174,7 @@ class RulesCache(object):
 
         for filename in filelist:
             endingok = False
-            for ending in (FUATT_NAMESCONFENDING, FUATT_CTYPESCONFENDING, FUATT_ARCHIVENAMESCONFENDING, FUATT_ARCHIVECTYPESCONFENDING):
+            for ending in FUATT_NAMESCONFENDING, FUATT_CTYPESCONFENDING, FUATT_ARCHIVENAMESCONFENDING, FUATT_ARCHIVECTYPESCONFENDING:
                 if filename.endswith(ending):
                     endingok = True
                     break
@@ -196,13 +194,13 @@ class RulesCache(object):
                               (rulesloaded, filename))
             ruletype = KEY_NAME
             key = filename[0:-len(FUATT_NAMESCONFENDING)]
-            if(filename.endswith(FUATT_CTYPESCONFENDING)):
+            if filename.endswith(FUATT_CTYPESCONFENDING):
                 ruletype = KEY_CTYPE
                 key = filename[0:-len(FUATT_CTYPESCONFENDING)]
-            elif(filename.endswith(FUATT_ARCHIVENAMESCONFENDING)):
+            elif filename.endswith(FUATT_ARCHIVENAMESCONFENDING):
                 ruletype = KEY_ARCHIVENAME
                 key = filename[0:-len(FUATT_ARCHIVENAMESCONFENDING)]
-            elif(filename.endswith(FUATT_ARCHIVECTYPESCONFENDING)):
+            elif filename.endswith(FUATT_ARCHIVECTYPESCONFENDING):
                 ruletype = KEY_ARCHIVECTYPE
                 key = filename[0:-len(FUATT_ARCHIVECTYPESCONFENDING)]
 
@@ -234,7 +232,7 @@ class RulesCache(object):
             if line.startswith('#') or line == '':
                 continue
             tpl = line.split(None, 2)
-            if (len(tpl) != 3):
+            if len(tpl) != 3:
                 self.logger.debug(
                     'Ignoring invalid line  (length %s): %s' % (len(tpl), line))
                 continue

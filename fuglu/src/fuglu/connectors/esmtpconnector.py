@@ -60,7 +60,7 @@ class ESMTPHandler(ProtocolHandler):
         if suspect.get_tag('noreinject'):
             # in esmtp sessions we don't want to provide info to the connecting
             # client
-            return (250, 'OK')
+            return 250, 'OK'
         if suspect.get_tag('reinjectoriginal'):
             self.logger.info(
                 'Injecting original message source without modifications')
@@ -69,7 +69,7 @@ class ESMTPHandler(ProtocolHandler):
             msgcontent = buildmsgsource(suspect)
 
         (code, answer) = self.sess.forwardconn.data(msgcontent)
-        return (code, answer)
+        return code, answer
 
     def get_suspect(self):
         success = self.sess.getincomingmail()
@@ -111,7 +111,6 @@ class ESMTPHandler(ProtocolHandler):
     def discard(self, reason):
         self.sess.endsession(250, reason)
         self.sess.finish_outgoing_connection()
-        # self.sess=None
 
     def reject(self, reason):
         self.sess.endsession(550, reason)
@@ -325,27 +324,27 @@ class ESMTPPassthroughSession(object):
 
         elif cmd == "MAIL":
             if self.state != ESMTPPassthroughSession.ST_HELO:
-                return ("503 Bad command sequence", 1)
+                return("503 Bad command sequence", 1
             try:
                 self.from_address = self.stripAddress(data)
             except:
-                return ("501 invalid address syntax", 1)
+                return "501 invalid address syntax", 1
             self.state = ESMTPPassthroughSession.ST_MAIL
 
         elif cmd == "RCPT":
             if (self.state != ESMTPPassthroughSession.ST_MAIL) and (self.state != ESMTPPassthroughSession.ST_RCPT):
-                return ("503 Bad command sequence", 1)
+                return "503 Bad command sequence", 1
             try:
                 rec = self.stripAddress(data)
                 self.to_address = rec
                 self.recipients.append(rec)
             except:
-                return ("501 invalid address syntax", 1)
+                return "501 invalid address syntax", 1
             self.state = ESMTPPassthroughSession.ST_RCPT
 
         elif cmd == "DATA":
             if self.state != ESMTPPassthroughSession.ST_RCPT:
-                return ("503 Bad command sequence", 1)
+                return "503 Bad command sequence", 1
             self.state = ESMTPPassthroughSession.ST_DATA
             self.dataAccum = ""
             try:
@@ -356,7 +355,7 @@ class ESMTPPassthroughSession(object):
             except Exception as e:
                 self.endsession(421, "could not create file: %s" % str(e))
 
-            return ("354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1)
+            return "354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1
 
         if data[0:8].upper() == 'XFORWARD':
             self.store_xforward(data)

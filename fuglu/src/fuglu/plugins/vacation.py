@@ -463,7 +463,7 @@ SQL Example for mysql:
         dbsession.expunge_all()
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_sql())
+        allok = self.checkConfig() and self.lint_sql()
         return allok
 
     def lint_sql(self):

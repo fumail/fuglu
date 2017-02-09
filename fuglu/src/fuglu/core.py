@@ -722,10 +722,9 @@ class MainController(object):
             print(fc.strcolor("OK", "green"))
 
         trashdir = self.config.get('main', 'trashdir').strip()
-        if trashdir != "":
-            if not os.path.isdir(trashdir):
-                print(
-                    fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
+        if trashdir != "" and not os.path.isdir(trashdir):
+            print(
+                fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
 
         # sql config override
         sqlconfigdbconnectstring = self.config.get(
@@ -813,11 +812,10 @@ class MainController(object):
             try:
                 var = self.config.get(section, config)
 
-                if 'validator' in infodic:
-                    if not infodic["validator"](var):
-                        print(
-                            "Validation failed for [%s] :: %s" % (section, config))
-                        allOK = False
+                if 'validator' in infodic and not infodic["validator"](var):
+                    print(
+                        "Validation failed for [%s] :: %s" % (section, config))
+                    allOK = False
 
             except configparser.NoSectionError:
                 print(

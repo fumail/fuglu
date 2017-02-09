@@ -37,7 +37,7 @@ class ActionOverridePlugin(ScannerPlugin):
         return "Action Override"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_filter())
+        allok = self.checkConfig() and self.lint_filter()
         return allok
 
     def lint_filter(self):

@@ -47,12 +47,12 @@ eventsyntax = re.compile("^([A-Z]+)\s+(\w+)")
 def receiveline(s):
     line = ''
     done = 0
-    while (not done):
+    while not done:
         c = s.recv(1)
-        if (c == ''):
+        if c == '':
             return ''
         done = (c == '\n')
-        if (not done and c != '\r'):
+        if not done and c != '\r':
             line = line + c
 
     return line
@@ -107,7 +107,7 @@ def exchangeGreetings(s):
 
     line = receiveline(s)
 
-    if (not line.startswith('OK SSSP/1.0')):
+    if not line.startswith('OK SSSP/1.0'):
         return 0
 
     s.send('SSSP/1.0\n')
@@ -360,7 +360,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
-        allok = (self.checkConfig() and self.lint_eicar())
+        allok = self.checkConfig() and self.lint_eicar()
         return allok
 
     def lint_eicar(self):

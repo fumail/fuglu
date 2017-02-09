@@ -121,7 +121,6 @@ class SMTPHandler(ProtocolHandler):
 
     def discard(self, reason):
         self.sess.endsession(250, reason)
-        # self.sess=None
 
     def reject(self, reason):
         self.sess.endsession(550, reason)
@@ -135,10 +134,10 @@ class FUSMTPClient(smtplib.SMTP):
     """
 
     def getreply(self):
-        (code, response) = smtplib.SMTP.getreply(self)
+        code, response = smtplib.SMTP.getreply(self)
         self.lastserveranswer = response
         self.lastservercode = code
-        return (code, response)
+        return code, response
 
 
 class SMTPServer(BasicTCPServer):
@@ -256,19 +255,19 @@ class SMTPSession(object):
             keep = 0
         elif cmd == "MAIL":
             if self.state != SMTPSession.ST_HELO:
-                return ("503 Bad command sequence", 1)
+                return "503 Bad command sequence", 1
             self.state = SMTPSession.ST_MAIL
             self.from_address = self.stripAddress(data)
         elif cmd == "RCPT":
             if (self.state != SMTPSession.ST_MAIL) and (self.state != SMTPSession.ST_RCPT):
-                return ("503 Bad command sequence", 1)
+                return "503 Bad command sequence", 1
             self.state = SMTPSession.ST_RCPT
             rec = self.stripAddress(data)
             self.to_address = rec
             self.recipients.append(rec)
         elif cmd == "DATA":
             if self.state != SMTPSession.ST_RCPT:
-                return ("503 Bad command sequence", 1)
+                return "503 Bad command sequence", 1
             self.state = SMTPSession.ST_DATA
             self.dataAccum = ""
             try:
@@ -279,14 +278,14 @@ class SMTPSession(object):
             except Exception as e:
                 self.endsession(421, "could not create file: %s" % str(e))
 
-            return ("354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1)
+            return "354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1
         else:
-            return ("505 Eh? WTF was that?", 1)
+            return "505 Eh? WTF was that?", 1
 
         if rv:
-            return (rv, keep)
+            return rv, keep
         else:
-            return("250 OK", keep)
+            return "250 OK", keep
 
     def doData(self, data):
         data = self.unquoteData(data)

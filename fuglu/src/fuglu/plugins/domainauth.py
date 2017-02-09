@@ -452,7 +452,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
         return "DomainAuth"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_file())
+        allok = self.checkConfig() and self.lint_file()
         return allok
 
     def lint_file(self):
@@ -553,7 +553,7 @@ from my own domain") but the message usesa different envelope sender domain. Thi
         return "Spearphish Check"
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_file())
+        allok = self.checkConfig() and self.lint_file()
         return allok
 
     def lint_file(self):

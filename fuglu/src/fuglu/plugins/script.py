@@ -83,7 +83,7 @@ Example script:
         return retaction, retmessage
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_code())
+        allok = self.checkConfig() and self.lint_code()
         return allok
 
     def lint_code(self):
