@@ -124,7 +124,7 @@ timeout=30
 #spamscore threshold to mark a message as high spam
 highspamlevel=15
 
-#enable SA user configuration
+#enable user_prefs in SA. This hands the recipient address over the spamd connection which allows SA to search for configuration overrides
 peruserconfig=1
 
 #tcp port number or path to spamd unix socket
@@ -275,6 +275,9 @@ ${blockinfo}
 <span class="c1">#inform the sender about blocked attachments.</span>
 <span class="c1">#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter</span>
 <span class="n">sendbounce</span><span class="o">=</span><span class="mi">1</span>
+
+<span class="c1">#comma separated list of archive extensions. do only process archives of given types.</span>
+<span class="n">enabledarchivetypes</span><span class="o">=</span>
 
 <span class="c1">#sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled</span>
 <span class="n">dbconnectstring</span><span class="o">=</span>
@@ -600,7 +603,7 @@ virusaction=DEFAULTVIRUSACTION
 <h1>Action Override<a class="headerlink" href="#action-override" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin</p>
 <blockquote>
-<div>Averride actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
+<div>Override actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
 <div class="section" id="id9">
 <h2>Configuration<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ActionOverridePlugin</span><span class="p">]</span>

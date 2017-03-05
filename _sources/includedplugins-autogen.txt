@@ -74,7 +74,7 @@ Configuration
     #spamscore threshold to mark a message as high spam
     highspamlevel=15
 
-    #enable SA user configuration 
+    #enable user_prefs in SA. This hands the recipient address over the spamd connection which allows SA to search for configuration overrides
     peruserconfig=1
 
     #tcp port number or path to spamd unix socket
@@ -273,6 +273,9 @@ Configuration
     #inform the sender about blocked attachments.
     #If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter
     sendbounce=1
+
+    #comma separated list of archive extensions. do only process archives of given types.
+    enabledarchivetypes=
 
     #sqlalchemy connectstring to load rules from a database and use files only as fallback. requires SQL extension to be enabled
     dbconnectstring=
@@ -651,7 +654,7 @@ Action Override
 
 Plugin: fuglu.plugins.actionoverride.ActionOverridePlugin
 
- Averride actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. 
+ Override actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain. 
 
 Configuration
 -------------
