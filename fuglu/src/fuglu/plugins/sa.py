@@ -86,7 +86,7 @@ Tags:
 
             'peruserconfig': {
                 'default': '1',
-                'description': 'enable SA user configuration ',
+                'description': 'enable user_prefs in SA. This hands the recipient address over the spamd connection which allows SA to search for configuration overrides',
             },
 
             'highspamlevel': {
