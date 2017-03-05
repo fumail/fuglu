@@ -11,7 +11,7 @@ sphinx setup: pip2.7 install sphinx cloud_sptheme
  * Update plugin doc, make sure new plugins are added in make_sphinx_plugin_doc.py
 
 cd fuglu/develop/doc
-./make_sphinx_plugin_doc.py > /home/gryphius/gitspace/fuglu.gh-pages/source/includedplugins-autogen.txt
+./make_sphinx_plugin_doc.py > ~/gitspace/fuglu.gh-pages/source/includedplugins-autogen.txt
 cd /home/gryphius/gitspace/fuglu.gh-pages/
 make html
 
