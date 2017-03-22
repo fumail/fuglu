@@ -184,7 +184,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
-        if retcode != None:
+        if retcode is not None:
             return retcode
         else:
             # in case of invalid problem action
@@ -202,7 +202,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
                 viruses = self.scan_stream(content)
-                if viruses != None:
+                if viruses is not None:
                     self.logger.info(
                         "Virus found in message from %s : %s" % (suspect.from_address, viruses))
                     suspect.tags['virus'][enginename] = True
@@ -211,7 +211,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                 else:
                     suspect.tags['virus'][enginename] = False
 
-                if viruses != None:
+                if viruses is not None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
                     firstinfected, firstvirusname = list(viruses.items())[0]
@@ -226,7 +226,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("SSSP scan failed after %s retries" %
                           self.config.getint(self.section, 'retries'))
-        content = None
+        
         return self._problemcode()
 
     def scan_stream(self, buf):
@@ -317,7 +317,12 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                 filename = parts[0][1]
                 dr[filename] = virus
 
-        sayGoodbye(s)
+        try:
+            sayGoodbye(s)
+        except socket.error as e:
+            self.logger.warning('Error terminating connection: %s', str(e))
+        s.shutdown(socket.SHUT_RDWR)
+        s.close()
 
         if dr == {}:
             return None
@@ -327,6 +332,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
     def __init_socket__(self):
         sssp_HOST = self.config.get(self.section, 'host')
         unixsocket = False
+        iport = None
 
         try:
             iport = int(self.config.get(self.section, 'port'))
@@ -345,7 +351,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                 raise Exception(
                     'Could not reach SSSP server using unix socket %s' % sock)
         else:
-            sssp_PORT = int(self.config.get(self.section, 'port'))
+            sssp_PORT = iport
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(self.config.getint(self.section, 'timeout'))
             try:
@@ -389,7 +395,7 @@ AAEAAQA3AAAAbQAAAAAA
 ------=_MIME_BOUNDARY_000_12140--"""
 
         result = self.scan_stream(stream)
-        if result == None:
+        if result is None:
             print("EICAR Test virus not found!")
             return False
         print("SSSP server found virus", result)
