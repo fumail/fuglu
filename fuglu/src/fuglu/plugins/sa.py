@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 #
-from fuglu.shared import ScannerPlugin, DELETE, DUNNO, DEFER, REJECT, Suspect, string_to_actioncode, apply_template
+from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
 from fuglu.extensions.sql import DBConfig
 import time
 import socket
@@ -173,7 +173,7 @@ Tags:
                 s = self.__init_socket()
                 s.sendall('PING SPAMC/1.2')
                 s.sendall("\r\n")
-                s.shutdown(1)
+                s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
                 line = socketfile.readline()
                 answer = line.strip().split()
@@ -278,9 +278,9 @@ Subject: test scanner
 
                 if pattern.search(suspect.from_address):
                     self.logger.debug(
-                        'Blacklist match : %s for sa pref %s' % (suspect.from_address, blvalue))
+                        '%s Blacklist match : %s for sa pref %s' % (suspect.id, suspect.from_address, blvalue))
                     confcheck = self.config
-                    if runtimeconfig != None:
+                    if runtimeconfig is not None:
                         confcheck = runtimeconfig
                     configaction = string_to_actioncode(
                         confcheck.get(self.section, 'highspamaction'), self.config)
@@ -289,7 +289,7 @@ Subject: test scanner
                         'main', 'prependaddedheaders')
                     suspect.addheader("%sBlacklisted" % prependheader, blvalue)
                     suspect.debug('Sender is Blacklisted: %s' % blvalue)
-                    if configaction == None:
+                    if configaction is None:
                         return DUNNO
                     return configaction
 
@@ -298,7 +298,7 @@ Subject: test scanner
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
-        if retcode != None:
+        if retcode is not None:
             return retcode
         else:
             # in case of invalid problem action
@@ -320,23 +320,23 @@ Subject: test scanner
         spamheader = msgrep[spamheadername]
 
         spamscore = None
-        if spamheader == None:
+        if spamheader is None:
             self.logger.warning(
-                'Did not find Header %s in returned message from SA' % spamheadername)
+                '%s Did not find Header %s in returned message from SA' % (suspect.id, spamheadername))
         else:
-            if re.match(r"""^YES""", spamheader.strip(), re.IGNORECASE) != None:
+            if re.match(r"""^YES""", spamheader.strip(), re.IGNORECASE) is not None:
                 isspam = True
 
             patt = re.compile('Score=([\-\d\.]+)', re.IGNORECASE)
             m = patt.search(spamheader)
 
-            if m != None:
+            if m is not None:
                 spamscore = float(m.group(1))
-                self.logger.debug('Spamscore: %s' % spamscore)
+                self.logger.debug('%s Spamscore: %s' % (suspect.id, spamscore))
                 suspect.debug('Spamscore: %s' % spamscore)
             else:
                 self.logger.warning(
-                    'Could not extract spam score from header: %s' % spamheader)
+                    '%s Could not extract spam score from header: %s' % (suspect.id, spamheader))
                 suspect.debug(
                     'Could not read spam score from header %s' % spamheader)
         return isspam, spamscore
@@ -345,7 +345,7 @@ Subject: test scanner
         # check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip') == True:
             self.logger.debug(
-                'Skipping SA Plugin (requested by previous plugin)')
+                '%s Skipping SA Plugin (requested by previous plugin)' % suspect.id)
             suspect.set_tag(
                 'SAPlugin.skipreason', 'requested by previous plugin')
             return
@@ -377,7 +377,7 @@ Subject: test scanner
 
         # prepend temporary headers set by other plugins
         tempheader = suspect.get_tag('SAPlugin.tempheader')
-        if tempheader != None:
+        if tempheader is not None:
             if type(tempheader) == list:
                 tempheader = "\r\n".join(tempheader)
             tempheader = tempheader.strip()
@@ -386,7 +386,7 @@ Subject: test scanner
 
         if forwardoriginal:
             ret = self.safilter_report(spam, suspect.to_address)
-            if ret == None:
+            if ret is None:
                 suspect.debug('SA report Scan failed - please check error log')
                 self.logger.error('%s SA report scan FAILED' % suspect.id)
                 suspect.addheader(
@@ -398,8 +398,7 @@ Subject: test scanner
 
         else:
             filtered = self.safilter(spam, suspect.to_address)
-            content = None
-            if filtered == None:
+            if filtered is None:
                 suspect.debug('SA Scan failed - please check error log')
                 self.logger.error('%s SA scan FAILED' % suspect.id)
                 suspect.addheader(
@@ -418,23 +417,23 @@ Subject: test scanner
         message = None
 
         if isspam:
-            self.logger.debug('Message is spam')
+            self.logger.debug('%s Message is spam' % suspect.id)
             suspect.debug('Message is spam')
 
             configaction = string_to_actioncode(
                 runtimeconfig.get(self.section, 'lowspamaction'), self.config)
-            if configaction != None:
+            if configaction is not None:
                 action = configaction
             values = dict(spamscore=spamscore)
             message = apply_template(
                 self.config.get(self.section, 'rejectmessage'), suspect, values)
         else:
-            self.logger.debug('Message is not spam')
+            self.logger.debug('%s Message is not spam' % suspect.id)
             suspect.debug('Message is not spam')
 
         suspect.tags['spam']['SpamAssassin'] = isspam
         suspect.tags['highspam']['SpamAssassin'] = False
-        if spamscore != None:
+        if spamscore is not None:
             suspect.tags['SAPlugin.spamscore'] = spamscore
             highspamlevel = runtimeconfig.getfloat(
                 self.section, 'highspamlevel')
@@ -442,7 +441,7 @@ Subject: test scanner
                 suspect.tags['highspam']['SpamAssassin'] = True
                 configaction = string_to_actioncode(
                     runtimeconfig.get(self.section, 'highspamaction'), self.config)
-                if configaction != None:
+                if configaction is not None:
                     action = configaction
         return action, message
 
@@ -498,7 +497,7 @@ Subject: test scanner
                 s.sendall("\r\n")
                 s.sendall(messagecontent)
                 self.logger.debug('Sent %s bytes to spamd' % spamsize)
-                s.shutdown(1)
+                s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
                 line1_info = socketfile.readline()
                 self.logger.debug(line1_info)
@@ -534,7 +533,7 @@ Subject: test scanner
     def safilter_symbols(self, messagecontent, user):
         """Pass content to sa, return spamflag, score, rules"""
         ret = self._safilter_content(messagecontent, user, 'SYMBOLS')
-        if ret == None:
+        if ret is None:
             return None
 
         status, score, content = ret
@@ -566,7 +565,7 @@ Subject: test scanner
                 s.sendall("\r\n")
                 s.sendall(messagecontent)
                 self.logger.debug('Sent %s bytes to spamd' % spamsize)
-                s.shutdown(1)
+                s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
                 line1_info = socketfile.readline()
                 self.logger.debug(line1_info)
@@ -596,7 +595,7 @@ Subject: test scanner
                 if spamstatusword == 'True':
                     spstatus = True
 
-                return (spstatus, float(score), content)
+                return spstatus, float(score), content
             except socket.timeout:
                 self.logger.error('SPAMD Socket timed out.')
             except socket.herror as h:
@@ -620,7 +619,7 @@ Subject: test scanner
         timeout = 20
 
         spamsize = len(messagecontent)
-        s = socket(AF_INET, SOCK_STREAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         s.settimeout(timeout)
         s.connect((serverHost, serverPort))
@@ -630,7 +629,7 @@ Subject: test scanner
         s.sendall("\r\n")
         s.sendall("\r\n")
         s.sendall(messagecontent)
-        s.shutdown(1)
+        s.shutdown(socket.SHUT_WR)
         socketfile = s.makefile("rb")
         gotback = socketfile.read()
         print(gotback)
