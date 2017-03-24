@@ -14,7 +14,7 @@
 #
 #
 
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, Suspect, apply_template
+from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
 import socket
 import os
 
@@ -319,10 +319,11 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 
         try:
             sayGoodbye(s)
+            s.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
             self.logger.warning('Error terminating connection: %s', str(e))
-        s.shutdown(socket.SHUT_RDWR)
-        s.close()
+        finally:
+            s.close()
 
         if dr == {}:
             return None
