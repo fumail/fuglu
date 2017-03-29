@@ -303,6 +303,11 @@ class MainController(object):
                 'section': 'esmtpconnector',
                 'description': """confirmation template sent back to the connecting client for accepted messages""",
             },
+            'ignore_multiple_recipients': {
+                'default': "0",
+                'section': 'esmtpconnector',
+                'description': """only deliver the message to the first recipient, ignore the others. This is useful in spamtrap setups where we don't want to create duplicate deliveries.""",
+            },
 
             # databaseconfig
             'dbconnectstring': {

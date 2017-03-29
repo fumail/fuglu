@@ -340,6 +340,12 @@ class ESMTPPassthroughSession(object):
                 self.recipients.append(rec)
             except:
                 return "501 invalid address syntax", 1
+
+            # feature for spam trap setups: only deliver the message for the first recipient to the MTA
+            # so we only get one copy of the mail in the catch all box
+            if len(self.recipients) > 1 and self.config.getboolean('esmtpconnector', 'ignore_multiple_recipients'):
+                return "250 OK #%s" % (len(self.recipients)), 1
+
             self.state = ESMTPPassthroughSession.ST_RCPT
 
         elif cmd == "DATA":
