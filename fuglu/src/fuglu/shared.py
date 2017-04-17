@@ -73,7 +73,7 @@ def actioncode_to_string(actioncode):
     for key, val in list(ALLCODES.items()):
         if val == actioncode:
             return key
-    if actioncode == None:
+    if actioncode is None:
         return "NULL ACTION CODE"
     return 'INVALID ACTION CODE %s' % actioncode
 
@@ -86,7 +86,7 @@ def string_to_actioncode(actionstring, config=None):
     if upper == 'DISCARD':
         upper = 'DELETE'
 
-    if config != None:
+    if config is not None:
         if upper == 'DEFAULTHIGHSPAMACTION':
             confval = config.get('spam', 'defaulthighspamaction').upper()
             if confval not in ALLCODES:
@@ -118,12 +118,12 @@ def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
     if valuesfunction is not none, it is called with the final dict with all built-in and passed values
     and allows further modifications, like SQL escaping etc
     """
-    if values == None:
+    if values is None:
         values = {}
 
     default_template_values(suspect, values)
 
-    if valuesfunction != None:
+    if valuesfunction is not None:
         values = valuesfunction(values)
 
     template = Template(templatecontent)
@@ -136,7 +136,7 @@ def default_template_values(suspect, values=None):
     """Return a dict with default template variables applicable for this suspect
     if values is not none, fill the values dict instead of returning a new one"""
 
-    if values == None:
+    if values is None:
         values = {}
 
     values['id'] = suspect.id
@@ -201,11 +201,11 @@ class Suspect(object):
         self.addheaders = {}
 
         # helper attributes
-        if self.from_address == None:
+        if self.from_address is None:
             self.from_address = ''
 
         try:
-            (self.to_localpart, self.to_domain) = self.to_address.rsplit('@', 1)
+            self.to_localpart, self.to_domain = self.to_address.rsplit('@', 1)
         except:
             raise ValueError("invalid to email address: %s" % self.to_address)
 
@@ -215,7 +215,7 @@ class Suspect(object):
         else:
             try:
                 (self.from_localpart, self.from_domain) = self.from_address.rsplit('@', 1)
-            except Exception as e:
+            except Exception:
                 raise ValueError(
                     "invalid from email address: '%s'" % self.from_address)
 
@@ -296,7 +296,7 @@ class Suspect(object):
 
     def get_current_decision_code(self):
         dectag = self.get_tag('decisions')
-        if dectag == None:
+        if dectag is None:
             return DUNNO
         try:
             pluginname, code = dectag[-1]
@@ -325,7 +325,7 @@ class Suspect(object):
                 therep = strrep[:maxtaglen] + "..."
 
             # specialfixes
-            if k == 'SAPlugin.spamscore' and type(v) != str:
+            if k == 'SAPlugin.spamscore' and not isinstance(v, str):
                 therep = "%.2f" % v
 
             tagscopy[k] = therep
@@ -351,17 +351,16 @@ class Suspect(object):
     def get_message_rep(self):
         """returns the python email api representation of this suspect"""
         # do we have a cached instance already?
-        if self._msgrep != None:
+        if self._msgrep is not None:
             return self._msgrep
 
-        if self.source != None:
+        if self.source is not None:
             msgrep = email.message_from_string(self.source)
             self._msgrep = msgrep
             return msgrep
         else:
-            fh = open(self.tempfile, 'r')
-            msgrep = email.message_from_file(fh)
-            fh.close()
+            with open(self.tempfile, 'r') as fh:
+                msgrep = email.message_from_file(fh)
             self._msgrep = msgrep
             return msgrep
 
@@ -383,11 +382,11 @@ class Suspect(object):
 
     def is_modified(self):
         """returns true if the message source has been modified"""
-        return self.source != None
+        return self.source is not None
 
     def get_source(self, maxbytes=None):
         """returns the current message source, possibly changed by plugins"""
-        if self.source != None:
+        if self.source is not None:
             return self.source[:maxbytes]
         else:
             return self.get_original_source(maxbytes)
@@ -407,10 +406,11 @@ class Suspect(object):
     def get_original_source(self, maxbytes=None):
         """returns the original, unmodified message source"""
         readbytes = -1
-        if maxbytes != None:
+        if maxbytes is not None:
             readbytes = maxbytes
         try:
-            source = open(self.tempfile).read(readbytes)
+            with open(self.tempfile) as fh:
+                source = fh.read(readbytes)
         except Exception as e:
             logging.getLogger('fuglu.suspect').error(
                 'Cannot retrieve original source from tempfile %s : %s' % (self.tempfile, str(e)))
@@ -438,10 +438,10 @@ class Suspect(object):
 
         if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA (trustedhostregex / boundarydistance)
         """
-        if self.clientinfo != None:
+        if self.clientinfo is not None:
             return self.clientinfo
 
-        if config == None:
+        if config is None:
             clientinfo = self.client_info_from_rcvd()
 
         else:
@@ -466,13 +466,13 @@ class Suspect(object):
         returns None if the client info can not be found or if all applicable values are filtered by skip/ignoreregex
         """
         ignorere = None
-        if ignoreregex != None and ignoreregex != '':
+        if ignoreregex is not None and ignoreregex != '':
             ignorere = re.compile(ignoreregex)
 
         unknown = None
 
         receivedheaders = self.get_message_rep().get_all('Received')
-        if receivedheaders == None:
+        if receivedheaders is None:
             return unknown
 
         for rcvdline in receivedheaders[skip:]:
@@ -484,17 +484,17 @@ class Suspect(object):
 
             # check if hostname or ip matches the ignore re, try next header if
             # it does
-            if ignorere != None:
+            if ignorere is not None:
                 excludematch = ignorere.search(ip)
-                if excludematch != None:
+                if excludematch is not None:
                     continue
 
                 excludematch = ignorere.search(revdns)
-                if excludematch != None:
+                if excludematch is not None:
                     continue
 
                 excludematch = ignorere.search(helo)
-                if excludematch != None:
+                if excludematch is not None:
                     continue
 
             clientinfo = helo, ip, revdns
@@ -506,9 +506,9 @@ class Suspect(object):
     def _parse_rcvd_header(self, rcvdline):
         """return tuple HELO,REVERSEDNS,IP from received Header line, or None, if extraction fails"""
         receivedpattern = re.compile(
-            '^from\s(?P<helo>[^\s]+)\s\((?P<revdns>[^\s]+)\s\[(?:IPv6\:)?(?P<ip>(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:[0-9a-f:]{3,40}))\]\)')
+            "^from\s(?P<helo>[^\s]+)\s\((?P<revdns>[^\s]+)\s\[(?:IPv6:)?(?P<ip>(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:[0-9a-f:]{3,40}))\]\)")
         match = receivedpattern.search(rcvdline)
-        if match == None:
+        if match is None:
             return None
         return match.groups()
 
@@ -522,7 +522,7 @@ class BasicPlugin(object):
     """Base class for all plugins"""
 
     def __init__(self, config, section=None):
-        if section == None:
+        if section is None:
             self.section = self.__class__.__name__
         else:
             self.section = section
@@ -533,7 +533,7 @@ class BasicPlugin(object):
     def _logger(self):
         """returns the logger for this plugin"""
         myclass = self.__class__.__name__
-        loggername = "fuglu.plugin.%s" % (myclass)
+        loggername = "fuglu.plugin.%s" % myclass
         return logging.getLogger(loggername)
 
     def lint(self):
@@ -548,25 +548,25 @@ class BasicPlugin(object):
         allOK = True
 
         # old config style
-        if type(self.requiredvars) == tuple or type(self.requiredvars) == list:
+        if isinstance(self.requiredvars, (tuple, list)):
             for configvar in self.requiredvars:
-                if type(self.requiredvars) == tuple:
+                if isinstance(self.requiredvars, tuple):
                     (section, config) = configvar
                 else:
                     config = configvar
                     section = self.section
                 try:
-                    var = self.config.get(section, config)
+                    self.config.get(section, config)
                 except configparser.NoOptionError:
                     print("Missing configuration value [%s] :: %s" % (
                         section, config))
                     allOK = False
                 except configparser.NoSectionError:
-                    print("Missing configuration section %s" % (section))
+                    print("Missing configuration section %s" % section)
                     allOK = False
 
         # new config style
-        if type(self.requiredvars) == dict:
+        if isinstance(self.requiredvars, dict):
             for config, infodic in self.requiredvars.items():
                 section = self.section
                 if 'section' in infodic:
@@ -638,7 +638,7 @@ class SuspectFilter(object):
         self.lastreload = 0
         self.logger = logging.getLogger('fuglu.suspectfilter')
 
-        if filename != None:
+        if filename is not None:
             self._reloadifnecessary()
         self.stripre = re.compile(r'<[^>]*?>')
 
@@ -677,16 +677,16 @@ class SuspectFilter(object):
     def _load_perlstyle_line(self, line):
         patt = r"""(?P<fieldname>[a-zA-Z0-9\-\.\_\:]+)[:]?\s+\/(?P<regex>(?:\\.|[^/\\])*)/(?P<flags>[IiMm]+)?((?:\s*$)|(?:\s+(?P<args>.*)))$"""
         m = re.match(patt, line)
-        if m == None:
+        if m is None:
             return None
 
         groups = m.groupdict()
         regex = groups['regex']
         flags = groups['flags']
-        if flags == None:
+        if flags is None:
             flags = []
         args = groups['args']
-        if args != None and args.strip() == '':
+        if args is not None and args.strip() == '':
             args = None
         fieldname = groups['fieldname']
         if fieldname.endswith(':'):
@@ -714,9 +714,8 @@ class SuspectFilter(object):
         statinfo = os.stat(self.filename)
         ctime = statinfo.st_ctime
         self.lastreload = ctime
-        fp = open(self.filename, 'r')
-        lines = fp.readlines()
-        fp.close()
+        with open(self.filename, 'r') as fp:
+            lines = fp.readlines()
         newpatterns = []
 
         for line in lines:
@@ -730,7 +729,7 @@ class SuspectFilter(object):
             #<headername> /regex/<flags> <arguments>
             try:
                 tup = self._load_perlstyle_line(line)
-                if tup != None:
+                if tup is not None:
                     newpatterns.append(tup)
                     continue
             except Exception as e:
@@ -752,13 +751,13 @@ class SuspectFilter(object):
     def strip_text(self, content, remove_tags=None, use_bfs=True):
         """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
 
-        if remove_tags == None:
+        if remove_tags is None:
             remove_tags = ['script', 'style']
 
         # content may land as a bytes object in py3, so we have to convert to a string so we can
         # replace newline with space
         # if it's unicode, we don't convert
-        if type(content) == bytes:  # in py2 bytes is an alias for str, no change
+        if isinstance(content, bytes):  # in py2 bytes is an alias for str, no change
             content = str(content)
         content = content.replace("\n", " ")
 
@@ -803,7 +802,7 @@ class SuspectFilter(object):
                 payload = part.get_payload(None, True)
 
             # payload can be None even if it was returned from part.get_payload()
-            if payload != None:
+            if payload is not None:
                 textparts.append(payload)
         return textparts
 
@@ -847,7 +846,7 @@ class SuspectFilter(object):
 
         if headername in ['clientip', 'clienthostname', 'clienthelo']:
             clinfo = suspect.get_client_info()
-            if clinfo == None:
+            if clinfo is None:
                 return []
             if headername == 'clienthelo':
                 return [clinfo[0], ]
@@ -860,9 +859,9 @@ class SuspectFilter(object):
         if headername[0:1] == '@':
             tagname = headername[1:]
             tagval = suspect.get_tag(tagname)
-            if tagval == None:
+            if tagval is None:
                 return []
-            if type(tagval) == list:
+            if isinstance(tagval, list):
                 return tagval
             return [tagval]
 
@@ -894,7 +893,7 @@ class SuspectFilter(object):
             patt = re.compile(regex, re.IGNORECASE)
 
             for h in list(payload.keys()):
-                if re.match(patt, h) != None:
+                if re.match(patt, h) is not None:
                     valuelist.extend(payload.get_all(h,[]))
         else:
             valuelist = payload.get_all(headername,[])
@@ -912,12 +911,12 @@ class SuspectFilter(object):
         for tup in self.patterns:
             (fieldname, pattern, arg) = tup
             vals = self.get_field(suspect, fieldname)
-            if vals == None or len(vals) == 0:
+            if vals is None or len(vals) == 0:
                 self.logger.debug('No field %s found' % fieldname)
                 continue
 
             for val in vals:
-                if val == None:
+                if val is None:
                     continue
 
                 strval = str(val)
@@ -948,14 +947,14 @@ class SuspectFilter(object):
         for tup in self.patterns:
             (fieldname, pattern, arg) = tup
             vals = self.get_field(suspect, fieldname)
-            if vals == None or len(vals) == 0:
+            if vals is None or len(vals) == 0:
                 self.logger.debug('No field %s found' % fieldname)
                 continue
             for val in vals:
-                if val == None:
+                if val is None:
                     continue
                 strval = str(val)
-                if pattern.search(strval) != None:
+                if pattern.search(strval) is not None:
                     self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
                         fieldname, arg, pattern.pattern, val))
                     suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s" % (
@@ -989,7 +988,8 @@ class SuspectFilter(object):
         if not os.path.isfile(self.filename):
             print("SuspectFilter file not found: %s" % self.filename)
             return False
-        lines = open(self.filename, 'r').readlines()
+        with open(self.filename, 'r') as fp:
+            lines = fp.readlines()
         lineno = 0
         for line in lines:
             lineno += 1
@@ -1000,9 +1000,9 @@ class SuspectFilter(object):
                 continue
             try:
                 tup = self._load_perlstyle_line(line)
-                if tup != None:
+                if tup is not None:
                     continue
-                tup = self._load_simplestyle_line(line)
+                self._load_simplestyle_line(line)
             except Exception as e:
                 print("Error in SuspectFilter file '%s', lineno %s , line '%s' : %s" % (
                     self.filename, lineno, line, str(e)))
@@ -1076,13 +1076,13 @@ class FileList(object):
         if lowercase:
             self.linefilters.append(lambda x: x.lower())
 
-        if additional_filters != None:
-            if type(additional_filters) == list:
+        if additional_filters is not None:
+            if isinstance(additional_filters, list):
                 self.linefilters.extend(additional_filters)
             else:
                 self.linefilters.append(additional_filters)
 
-        if filename != None:
+        if filename is not None:
             self._reload_if_necessary()
 
     def _reload_if_necessary(self):
@@ -1100,18 +1100,17 @@ class FileList(object):
         statinfo = os.stat(self.filename)
         ctime = statinfo.st_ctime
         self._lastreload = ctime
-        fp = open(self.filename, 'r')
-        lines = fp.readlines()
-        fp.close()
+        with open(self.filename, 'r') as fp:
+            lines = fp.readlines()
         newcontent = []
 
         for line in lines:
             for func in self.linefilters:
                 line = func(line)
-                if line == None:
+                if line is None:
                     break
 
-            if line != None:
+            if line is not None:
                 newcontent.append(line)
 
         self.content = newcontent
