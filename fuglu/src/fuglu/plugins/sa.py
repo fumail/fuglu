@@ -22,6 +22,17 @@ import re
 import os
 
 
+
+GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
+To: oli@unittests.fuglu.org
+From: oli@unittests.fuglu.org
+Subject: test scanner
+
+  XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
+"""
+
+
+
 class SAPlugin(ScannerPlugin):
 
     """This plugin passes suspects to a spamassassin daemon.
@@ -199,14 +210,7 @@ Tags:
         return False
 
     def lint_spam(self):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test scanner
-
-  XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
-"""
-        spamflag, score, rules = self.safilter_symbols(stream, 'test')
+        spamflag, score, rules = self.safilter_symbols(GTUBE, 'test')
         if 'GTUBE' in rules:
             print("GTUBE Has been detected correctly")
             return True
@@ -327,7 +331,7 @@ Subject: test scanner
             if re.match(r"""^YES""", spamheader.strip(), re.IGNORECASE) is not None:
                 isspam = True
 
-            patt = re.compile('Score=([\-\d\.]+)', re.IGNORECASE)
+            patt = re.compile('Score=([\-\d.]{1,10})', re.IGNORECASE)
             m = patt.search(spamheader)
 
             if m is not None:
@@ -343,12 +347,12 @@ Subject: test scanner
 
     def examine(self, suspect):
         # check if someone wants to skip sa checks
-        if suspect.get_tag('SAPlugin.skip') == True:
+        if suspect.get_tag('SAPlugin.skip') is True:
             self.logger.debug(
                 '%s Skipping SA Plugin (requested by previous plugin)' % suspect.id)
             suspect.set_tag(
                 'SAPlugin.skipreason', 'requested by previous plugin')
-            return
+            return DUNNO
 
         runtimeconfig = DBConfig(self.config, suspect)
 
@@ -450,8 +454,9 @@ Subject: test scanner
         unixsocket = False
 
         try:
-            iport = int(self.config.get(self.section, 'port'))
+            port = int(self.config.get(self.section, 'port'))
         except ValueError:
+            port = None
             unixsocket = True
 
         if unixsocket:
@@ -466,7 +471,6 @@ Subject: test scanner
                 raise Exception(
                     'Could not reach spamd using unix socket %s' % sock)
         else:
-            port = int(self.config.get(self.section, 'port'))
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(self.config.getint(self.section, 'timeout'))
             try:
@@ -637,16 +641,10 @@ Subject: test scanner
 
 if __name__ == '__main__':
     import sys
-    command = sys.argv[1]
+    if len(sys.argv) <= 1:
+        print 'need command argument'
     plugin = SAPlugin(None)
-    stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test scanner
-
-  XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
-"""
     print("sending...")
     print("--------------")
-    plugin.debug_proto(stream, command)
+    plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
