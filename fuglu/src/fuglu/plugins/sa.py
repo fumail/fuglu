@@ -20,7 +20,7 @@ import socket
 import email
 import re
 import os
-
+import sys
 
 
 GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
@@ -640,9 +640,9 @@ Tags:
 
 
 if __name__ == '__main__':
-    import sys
     if len(sys.argv) <= 1:
-        print 'need command argument'
+        print('need command argument')
+        sys.exit(1)
     plugin = SAPlugin(None)
     print("sending...")
     print("--------------")
