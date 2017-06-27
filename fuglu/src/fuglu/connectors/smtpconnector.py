@@ -19,7 +19,6 @@ import socket
 import string
 import tempfile
 import os
-import unittest
 import re
 
 from fuglu.shared import Suspect, apply_template
@@ -86,7 +85,7 @@ class SMTPHandler(ProtocolHandler):
             self.logger.warning(
                 'Exception while quitting re-inject session: %s' % str(e))
 
-        if serveranswer == None:
+        if serveranswer is None:
             self.logger.warning('Re-inject: could not get server answer.')
             serveranswer = ''
         return serveranswer
@@ -160,10 +159,12 @@ class SMTPSession(object):
         self.to_address = None  # single address
         self.recipients = []  # multiple recipients
         self.helo = None
+        self.dataAccum = None
 
         self.socket = socket
         self.state = SMTPSession.ST_INIT
         self.logger = logging.getLogger("fuglu.smtpsession")
+        self.tempfilename = None
         self.tempfile = None
 
     def endsession(self, code, message):
@@ -196,10 +197,14 @@ class SMTPSession(object):
     def closeconn(self):
         self.socket.close()
 
+    def _close_tempfile(self):
+        if self.tempfile and not self.tempfile.closed:
+            self.tempfile.close()
+
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
         self.socket.send("220 fuglu scanner ready \r\n")
-        while 1:
+        while True:
             data = ''
             completeLine = 0
             while not completeLine:
@@ -216,9 +221,10 @@ class SMTPSession(object):
                             except IOError:
                                 self.endsession(
                                     421, "Could not write to temp file")
+                                self._close_tempfile()
                                 return False
 
-                            if rsp == None:
+                            if rsp is None:
                                 continue
                             else:
                                 # data finished.. keep connection open though
@@ -277,6 +283,7 @@ class SMTPSession(object):
                 self.tempfile = os.fdopen(handle, 'w+b')
             except Exception as e:
                 self.endsession(421, "could not create file: %s" % str(e))
+                self._close_tempfile()
 
             return "354 OK, Enter data, terminated with a \\r\\n.\\r\\n", 1
         else:
@@ -301,7 +308,7 @@ class SMTPSession(object):
             if len(data) > 4:
                 self.tempfile.write(data[0:-5])
 
-            self.tempfile.close()
+            self._close_tempfile()
 
             self.state = SMTPSession.ST_HELO
             return "250 OK - Data and terminator. found"

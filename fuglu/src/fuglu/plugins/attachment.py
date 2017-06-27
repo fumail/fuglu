@@ -87,7 +87,20 @@ try:
 except (ImportError, OSError):
     pass
 
-threadLocal = threading.local()
+
+
+class ThreadLocalMagic(threading.local):
+    magic = None
+    def __init__(self, **kw):
+        ms = magic.open(magic.MAGIC_MIME)
+        ms.load()
+        self.magic = ms
+        
+    def __del__(self):
+        self.magic.close()
+
+
+threadLocalMagic = ThreadLocalMagic()
 
 
 class RulesCache(object):
@@ -187,7 +200,7 @@ class RulesCache(object):
                 continue
 
             ruleset = self._loadonefile("%s/%s" % (self.rulesdir, filename))
-            if ruleset == None:
+            if ruleset is None:
                 continue
             rulesloaded = len(ruleset)
             self.logger.debug('%s rules loaded from file %s' %
@@ -220,9 +233,8 @@ class RulesCache(object):
         if not os.path.isfile(filename):
             self.logger.warning('Ignoring file %s - not a file' % filename)
             return None
-        handle = open(filename)
-        rules = self.get_rules_from_config_lines(handle.readlines())
-        handle.close()
+        with open(filename) as handle:
+            rules = self.get_rules_from_config_lines(handle.readlines())
         return rules
 
     def get_rules_from_config_lines(self, lineslist):
@@ -442,17 +454,8 @@ The other common template variables are available as well.
             self.supported_archive_extensions['rar'] = 'rar'
             self.supported_archvie_ctypes['^application\/x\-rar'] =  'rar'
 
-    def _get_file_magic(self):
-        # initialize one magic instance per thread for the libmagic bindings
-        # (ahupps file magic seems to do that by itself)
-        if not hasattr(threadLocal, 'magic'):
-            ms = magic.open(magic.MAGIC_MIME)
-            ms.load()
-            threadLocal.magic = ms
-        return threadLocal.magic
-
     def examine(self, suspect):
-        if self.rulescache == None:
+        if self.rulescache is None:
             self.rulescache = RulesCache(
                 self.config.get(self.section, 'rulesdir'))
 
@@ -471,7 +474,7 @@ The other common template variables are available as well.
 
     def getFiletype(self, path):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = self._get_file_magic()
+            ms = threadLocalMagic.magic
             ftype = ms.file(path)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             ftype = magic.from_file(path, mime=True)
@@ -479,7 +482,7 @@ The other common template variables are available as well.
 
     def getBuffertype(self, buffercontent):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = self._get_file_magic()
+            ms = threadLocalMagic.magic
             btype = ms.buffer(buffercontent)
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             btype = magic.from_buffer(buffercontent, mime=True)
@@ -629,11 +632,11 @@ The other common template variables are available as well.
             FUATT_DEFAULT)
 
         m = suspect.get_message_rep()
-        for i in self.walk_all_parts(m):
-            if i.is_multipart():
+        for part in self.walk_all_parts(m):
+            if part.is_multipart():
                 continue
-            contenttype_mime = i.get_content_type()
-            att_name = i.get_filename(None)
+            contenttype_mime = part.get_content_type()
+            att_name = part.get_filename(None)
 
             if att_name:
                 # some filenames are encoded, try to decode
@@ -643,12 +646,12 @@ The other common template variables are available as well.
                     pass
             else:
                 # workaround for mimetypes, it always takes .ksh for text/plain
-                if i.get_content_type() == 'text/plain':
+                if part.get_content_type() == 'text/plain':
                     ext = '.txt'
                 else:
-                    ext = mimetypes.guess_extension(i.get_content_type())
+                    ext = mimetypes.guess_extension(part.get_content_type())
 
-                if ext == None:
+                if ext is None:
                     ext = ''
                 att_name = 'unnamed%s' % ext
 
@@ -681,7 +684,7 @@ The other common template variables are available as well.
 
             contenttype_magic = None
             if MAGIC_AVAILABLE:
-                pl = i.get_payload(decode=True)
+                pl = part.get_payload(decode=True)
                 contenttype_magic = self.getBuffertype(pl)
                 res = self.matchMultipleSets(
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
@@ -709,10 +712,10 @@ The other common template variables are available as well.
                         if att_name.lower().endswith('.%s' % arext):
                             archive_type = self.supported_archive_extensions[arext]
                             break
-                if archive_type != None:
+                if archive_type is not None:
                     self.logger.debug("Extracting {attname} as {artype}".format(attname=att_name,artype=archive_type))
                     try:
-                        pl = BytesIO(i.get_payload(decode=True))
+                        pl = BytesIO(part.get_payload(decode=True))
                         archive_handle = self._archive_handle(archive_type, pl)
                         namelist = self._archive_namelist(
                             archive_type, archive_handle)
@@ -741,7 +744,7 @@ The other common template variables are available as well.
                                 safename = self.asciionly(name)
                                 extracted = self._archive_extract(
                                     archive_type, archive_handle, name)
-                                if extracted == None:
+                                if extracted is None:
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
                                 contenttype_magic = self.getBuffertype(
@@ -758,7 +761,11 @@ The other common template variables are available as well.
                                     message = suspect.tags[
                                         'FiletypePlugin.errormessage']
                                     return blockactioncode, message
-
+                        
+                        if hasattr(archive_handle, 'close'):
+                            archive_handle.close()
+                        pl.close()
+                        
                     except Exception:
                         self.logger.warning(
                             "archive scanning failed in attachment {attname}: {error}".format(attname=att_name, error=traceback.format_exc() ))

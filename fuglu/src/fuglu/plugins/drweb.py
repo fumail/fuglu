@@ -325,9 +325,10 @@ if __name__ == '__main__':
         infected = 0
         for file in sys.argv[1:]:
             counter += 1
-            buf = open(file, 'rb').read()
+            with open(file, 'rb') as fp:
+                buf = fp.read()
             res = plugin.scan_stream(buf)
-            if res == None:
+            if res is None:
                 print("%s: clean" % file)
             else:
                 infected += 1

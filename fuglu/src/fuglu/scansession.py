@@ -44,20 +44,19 @@ class SessionHandler(object):
         self.protohandler = protohandler
 
     def set_threadinfo(self, status):
-        if self.workerthread != None:
+        if self.workerthread is not None:
             self.workerthread.threadinfo = status
 
     def handlesession(self, workerthread=None):
         self.workerthread = workerthread
 
-        starttime = time.time()
         prependheader = self.config.get('main', 'prependaddedheaders')
         try:
             self.set_threadinfo('receiving message')
 
             self.stats.incount += 1
             suspect = self.protohandler.get_suspect()
-            if suspect == None:
+            if suspect is None:
                 self.logger.error('No Suspect retrieved, ending session')
                 return
 
@@ -130,18 +129,18 @@ class SessionHandler(object):
             elif result == DELETE:
                 self.logger.info("MESSAGE DELETED: %s" % suspect.id)
                 retmesg = 'OK: (%s)' % suspect.id
-                if self.message != None:
+                if self.message is not None:
                     retmesg = self.message
                 self.protohandler.discard(retmesg)
             elif result == REJECT:
                 retmesg = "Rejected by content scanner"
-                if self.message != None:
+                if self.message is not None:
                     retmesg = self.message
                 self.protohandler.reject(retmesg)
             elif result == DEFER:
                 message_is_deferred = True
                 retmesg = 'Internal problem - message deferred'
-                if self.message != None:
+                if self.message is not None:
                     retmesg = self.message
                 self.protohandler.defer(retmesg)
             else:
@@ -192,13 +191,13 @@ class SessionHandler(object):
                     "Trashdir %s does not exist and could not be created" % trashdir)
                 return
             self.logger.info('Created trashdir %s' % trashdir)
-
+        
+        trashfilename = ''
         try:
-            (handle, trashfilename) = tempfile.mkstemp(
+            handle, trashfilename = tempfile.mkstemp(
                 prefix=suspect.id, dir=self.config.get('main', 'trashdir'))
-            trashfile = os.fdopen(handle, 'w+b')
-            trashfile.write(suspect.get_source())
-            trashfile.close()
+            with os.fdopen(handle, 'w+b') as trashfile:
+                trashfile.write(suspect.get_source())
             self.logger.debug('Message stored to trash: %s' % trashfilename)
         except Exception as e:
             self.logger.error(
@@ -207,14 +206,12 @@ class SessionHandler(object):
         # TODO: document main.trashlog
         if self.config.has_option('main', 'trashlog') and self.config.getboolean('main', 'trashlog'):
             try:
-                handle = open('%s/00-fuglutrash.log' %
-                              self.config.get('main', 'trashdir'), 'a')
-                # <date> <time> <from address> <to address> <plugin that said "DELETE"> <filename>
-                time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                handle.write("%s %s %s %s %s" % (
-                    time, suspect.from_address, suspect.to_address, killerplugin, trashfilename))
-                handle.write("\n")
-                handle.close()
+                with open('%s/00-fuglutrash.log' % self.config.get('main', 'trashdir'), 'a') as handle:
+                    # <date> <time> <from address> <to address> <plugin that said "DELETE"> <filename>
+                    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    handle.write("%s %s %s %s %s" % (
+                        now, suspect.from_address, suspect.to_address, killerplugin, trashfilename))
+                    handle.write("\n")
             except Exception as e:
                 self.logger.error("Could not update trash log: %s" % e)
 
@@ -237,7 +234,7 @@ class SessionHandler(object):
                 else:
                     result = ans
 
-                if result == None:
+                if result is None:
                     result = DUNNO
 
                 suspect.tags['decisions'].append((plugin.section, result))
@@ -299,7 +296,7 @@ class SessionHandler(object):
                 result = plugin.pluginlist(suspect, plugcopy)
                 plugintime = time.time() - starttime
                 suspect.tags['scantimes'].append((plugin.section, plugintime))
-                if result != None:
+                if result is not None:
                     plugcopyset = set(plugcopy)
                     resultset = set(result)
                     removed = list(plugcopyset - resultset)

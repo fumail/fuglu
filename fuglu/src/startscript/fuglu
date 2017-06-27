@@ -53,7 +53,8 @@ def reloadconfig():
     logger = logging.getLogger('fuglu')
     logger.info('Reloading configuration')
     newconfig = configparser.RawConfigParser()
-    newconfig.readfp(open(theconfigfile))
+    with open(theconfigfile) as fp:
+        newconfig.readfp(fp)
 
     identifier = "no identifier given"
     if newconfig.has_option('main', 'identifier'):
@@ -129,7 +130,8 @@ config = configparser.RawConfigParser()
 if not os.path.exists(theconfigfile):
     print("""Configfile (%s) not found. Please create it by renaming the .dist file and modifying it to your needs""" % theconfigfile)
     sys.exit(1)
-readconfig = config.readfp(open(theconfigfile))
+with open(theconfigfile) as fp:
+    readconfig = config.readfp(fp)
 # load conf.d
 if dconfdir and os.path.isdir(dconfdir):
     filelist = os.listdir(dconfdir)

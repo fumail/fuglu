@@ -96,9 +96,10 @@ Example script:
         for script in scripts:
             counter += 1
             try:
-                source = open(script, 'r').read()
+                with open(script, 'r') as fp:
+                    source = fp.read()
                 compile(source, script, 'exec')
-            except:
+            except Exception:
                 trb = traceback.format_exc()
                 print("Script %s failed to compile: %s" % (script, trb))
                 return False
@@ -143,7 +144,7 @@ Example script:
         except Stopped as stp:
             action = stp.action
             message = stp.message
-        except:
+        except Exception:
             trb = traceback.format_exc()
             self.logger.error("Script %s failed: %s" % (filename, trb))
 
@@ -154,7 +155,7 @@ Example script:
         if os.path.isdir(scriptdir):
             filelist = os.listdir(scriptdir)
             scripts = [os.path.join(scriptdir, f)
-                       for f in filelist if f.endswith('.fgf')]
+                for f in filelist if f.endswith('.fgf')]
             scripts = sorted(scripts)
             return scripts
         else:

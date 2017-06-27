@@ -71,9 +71,8 @@ class Bounce(object):
                 'Template file does not exist: %s' % templatefile)
             return
 
-        fp = open(templatefile)
-        filecontent = fp.read()
-        fp.close()
+        with open(templatefile) as fp:
+            filecontent = fp.read()
         self.send_template_string(recipient, filecontent, suspect, values)
 
     def send_template_string(self, recipient, templatecontent, suspect, values):

@@ -185,10 +185,12 @@ class ESMTPPassthroughSession(object):
         self.to_address = None  # single address
         self.recipients = []  # multiple recipients
         self.helo = None
+        self.dataAccum = None
 
         self.socket = socket
         self.state = ESMTPPassthroughSession.ST_INIT
         self.logger = logging.getLogger("fuglu.smtpsession")
+        self.tempfilename = None
         self.tempfile = None
         self.forwardconn = None
 
@@ -227,11 +229,15 @@ class ESMTPPassthroughSession(object):
     def closeconn(self):
         """clocke socket to incoming postfix"""
         self.socket.close()
+        
+    def _close_tempfile(self):
+        if self.tempfile and not self.tempfile.closed:
+            self.tempfile.close()
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
         self.socket.send("220 fuglu scanner ready \r\n")
-        while 1:
+        while True:
             data = ''
             completeLine = 0
             while not completeLine:
@@ -248,9 +254,10 @@ class ESMTPPassthroughSession(object):
                             except IOError:
                                 self.endsession(
                                     421, "Could not write to temp file")
+                                self._close_tempfile()
                                 return False
 
-                            if rsp == None:
+                            if rsp is None:
                                 continue
                             else:
                                 # data finished.. keep connection open though
@@ -269,7 +276,7 @@ class ESMTPPassthroughSession(object):
     def forwardCommand(self, command):
         """forward a esmtp command to outgoing postfix instance"""
         command = command.strip()
-        if self.forwardconn == None:
+        if self.forwardconn is None:
             targethost = self.config.get('main', 'outgoinghost')
             if targethost == '${injecthost}':
                 targethost = self.socket.getpeername()[0]
@@ -283,6 +290,7 @@ class ESMTPPassthroughSession(object):
             parts = ret.split('\n')
             code = ret[:3]
             parts[0] = parts[0][3:]
+            line = ''
             for line in parts:
                 line = line.strip()
                 temprv.append('%s-%s' % (code, line))
@@ -327,7 +335,7 @@ class ESMTPPassthroughSession(object):
                 return "503 Bad command sequence", 1
             try:
                 self.from_address = self.stripAddress(data)
-            except:
+            except Exception:
                 return "501 invalid address syntax", 1
             self.state = ESMTPPassthroughSession.ST_MAIL
 
@@ -338,7 +346,7 @@ class ESMTPPassthroughSession(object):
                 rec = self.stripAddress(data)
                 self.to_address = rec
                 self.recipients.append(rec)
-            except:
+            except Exception:
                 return "501 invalid address syntax", 1
 
             # feature for spam trap setups: only deliver the message for the first recipient to the MTA
@@ -411,7 +419,7 @@ class ESMTPPassthroughSession(object):
             if len(data) > 4:
                 self.tempfile.write(data[0:-5])
 
-            self.tempfile.close()
+            self._close_tempfile()
 
             self.state = ESMTPPassthroughSession.ST_HELO
             return "250 OK - Data and terminator. found"
@@ -438,6 +446,6 @@ class ESMTPPassthroughSession(object):
             end = len(address)
         retaddr = address[start:end]
         retaddr = retaddr.strip()
-        if retaddr != '' and re.match("^[^@]+@[^@]+\.[^@]+$", retaddr) == None:
+        if retaddr != '' and re.match("^[^@]+@[^@]+\.[^@]+$", retaddr) is None:
             raise ValueError("Could not parse address %s" % address)
         return retaddr

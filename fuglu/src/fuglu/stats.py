@@ -170,14 +170,13 @@ class StatsThread(object):
 
     def write_mrtg(self, filename, value1, value2, uptime, identifier):
         try:
-            fp = open(filename, 'w')
-            fp.write("%s\n" % value1)
-            if value2:
-                fp.write("%s\n" % value2)
-            else:
-                fp.write("0\n")
-            fp.write("%s\n%s\n" % (uptime, identifier))
-            fp.close()
+            with open(filename, 'w') as fp:
+                fp.write("%s\n" % value1)
+                if value2:
+                    fp.write("%s\n" % value2)
+                else:
+                    fp.write("0\n")
+                fp.write("%s\n%s\n" % (uptime, identifier))
         except Exception as e:
             self.logger.error(
                 'Could not write mrtg stats file %s : %s)' % (filename, e))
