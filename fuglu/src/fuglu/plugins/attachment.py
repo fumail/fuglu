@@ -97,7 +97,11 @@ class ThreadLocalMagic(threading.local):
         self.magic = ms
         
     def __del__(self):
-        self.magic.close()
+        if self.magic is not None:
+            try:
+                self.magic.close()
+            except TypeError:
+                pass
 
 
 threadLocalMagic = ThreadLocalMagic()
