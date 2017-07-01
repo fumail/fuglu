@@ -19,6 +19,7 @@ import os
 import time
 import socket
 import uuid
+import threading
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -30,7 +31,7 @@ try:
     import bs4 as BeautifulSoup
     HAVE_BEAUTIFULSOUP = True
     BS_VERSION = 4
-except:
+except ImportError:
     pass
 
 if not HAVE_BEAUTIFULSOUP:
@@ -38,7 +39,7 @@ if not HAVE_BEAUTIFULSOUP:
         import BeautifulSoup
         HAVE_BEAUTIFULSOUP = True
         BS_VERSION = 3
-    except:
+    except ImportError:
         pass
 
 import email
@@ -1058,7 +1059,8 @@ class FileList(object):
         self._lastreload = 0
         self.linefilters = []
         self.content = []
-        self.logger = logging.getLogger('filelist')
+        self.logger = logging.getLogger('%s.filelist' % __package__)
+        self.lock = threading.Lock()
 
         # we always strip newline
         self.linefilters.append(lambda x: x.rstrip('\r\n'))
@@ -1091,8 +1093,14 @@ class FileList(object):
         # check if reloadinterval has passed
         if now - self._lastreload < self.minium_time_between_reloads:
             return
-        if self.file_changed():
+        if not self.file_changed():
+            return
+        if not self.lock.acquire():
+            return
+        try:
             self._reload()
+        finally:
+            self.lock.release()
 
     def _reload(self):
         """Reload the file and build the list"""
