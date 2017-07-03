@@ -91,17 +91,18 @@ except (ImportError, OSError):
 
 class ThreadLocalMagic(threading.local):
     magic = None
+
     def __init__(self, **kw):
-        ms = magic.open(magic.MAGIC_MIME)
-        ms.load()
-        self.magic = ms
+        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
+            ms = magic.open(magic.MAGIC_MIME)
+            ms.load()
+            self.magic = ms
+        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
+            self.magic = magic
         
     def __del__(self):
-        if self.magic is not None:
-            try:
-                self.magic.close()
-            except TypeError:
-                pass
+        if self.magic is not None and MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
+            self.magic.close()
 
 
 threadLocalMagic = ThreadLocalMagic()
