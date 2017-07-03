@@ -85,38 +85,18 @@ except:
     pass
 
 
-def extract_from_domain(suspect, headername='From'):
-    """
-    Try to extract domain of from header
-    """
-    try:
-        msgrep = suspect.get_message_rep()
-        address = msgrep.get(headername)
-        if address is None:
-            return None
-
-        start = address.find('<') + 1
-        if start < 1:  # malformed header does not contain <> brackets
-            start = address.find(':') + 1  # start >= 0
-
-        if start >= 0:
-            end = string.find(address, '>')
-            if end < 0:
-                end = len(address)
-        else:
-            return None
-
-        retaddr = address[start:end]
-        retaddr = retaddr.strip()
-
-        if '@' not in retaddr:
-            return None
-
-        domain = retaddr.split('@', 1)[-1]
-
-        return domain.lower()
-    except Exception:
+def extract_from_domain(suspect):
+    msgrep = suspect.get_message_rep()
+    from_headers = msgrep.get_all("From", [])
+    if len(from_headers) != 1:
         return None
+
+    from_header = from_headers[0]
+    domain_match = re.search("(?<=@)[\w.-]+", from_header)
+    if domain_match is None:
+        return None
+    domain = domain_match.group()
+    return domain
 
 
 class DKIMVerifyPlugin(ScannerPlugin):
@@ -248,20 +228,6 @@ known issues:
     def __str__(self):
         return "DKIM Sign"
 
-    def get_header_from_domain(self, suspect):
-        """extract the header from domain. Returns None if extraction fails or if there are multiple from headers"""
-        msgrep = suspect.get_message_rep()
-        from_headers = msgrep.get_all("From")
-        if len(from_headers) != 1:
-            return None
-
-        from_header = from_headers[0]
-        domain_match = re.search("(?<=@)[\w.-]+", from_header)
-        if domain_match == None:
-            return None
-        domain = domain_match.group()
-        return domain
-
     def examine(self, suspect):
         if not DKIMPY_AVAILABLE:
             suspect.debug("dkimpy not available, can not check")
@@ -270,7 +236,7 @@ known issues:
             return DUNNO
 
         message = suspect.get_source()
-        domain = self.get_header_from_domain(suspect)
+        domain = extract_from_domain(suspect)
         addvalues = dict(header_from_domain=domain)
         selector = apply_template(
             self.config.get(self.section, 'selector'), suspect, addvalues)
@@ -467,11 +433,11 @@ class SpearPhishPlugin(ScannerPlugin):
     """Mark spear phishing mails as virus
 
     The spearphish plugin checks if the sender domain in the "From"-Header matches the envelope recipient Domain ("Mail
-from my own domain") but the message usesa different envelope sender domain. This blocks many spearphish attempts.
+    from my own domain") but the message uses a different envelope sender domain. This blocks many spearphish attempts.
 
     Note that this plugin can cause blocks of legitimate mail , for example if the recipient domain is using a third party service
     to send newsletters in their name. Such services often set the customers domain in the from headers but use their own domains in the envelope for
-     bounce processing. Use the 'Plugin Skipper' or any other form of whitelisting in such cases.
+    bounce processing. Use the 'Plugin Skipper' or any other form of whitelisting in such cases.
     """
 
     def __init__(self, section=None):
@@ -514,7 +480,6 @@ from my own domain") but the message usesa different envelope sender domain. Thi
         envelope_recipient_domain = suspect.to_domain.lower()
         checkdomains = self.filelist.get_list()
         return envelope_recipient_domain in checkdomains
-
 
     def examine(self, suspect):
         if not self.should_we_check_this_domain(suspect):
