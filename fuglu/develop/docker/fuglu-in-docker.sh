@@ -27,7 +27,7 @@ echo "Starting services (clamav, SA)..."
 docker exec -d $did sh /usr/local/bin/start-services.sh
 
 echo "Installing current fuglu source"
-docker exec -i $did python setup.py build_py -d /tmp/build install
+docker exec -i $did python setup.py build -b /tmp/build install
 
 echo "Writing default config"
 docker exec -i $did rename '.dist' '' /etc/fuglu/*.dist
