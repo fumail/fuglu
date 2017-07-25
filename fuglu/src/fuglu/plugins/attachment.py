@@ -99,11 +99,6 @@ class ThreadLocalMagic(threading.local):
             self.magic = ms
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             self.magic = magic
-        
-    def __del__(self):
-        if self.magic is not None and MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            self.magic.close()
-
 
 threadLocalMagic = ThreadLocalMagic()
 
