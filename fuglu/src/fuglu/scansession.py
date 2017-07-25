@@ -119,11 +119,11 @@ class SessionHandler(object):
 
                 except KeyboardInterrupt:
                     sys.exit()
-                except Exception as e:
+                except Exception:
                     message_is_deferred = True
+                    trb = traceback.format_exc()
                     self.logger.error(
-                        "Could not commit message. Error: %s" % e)
-                    traceback.print_exc(file=sys.stdout)
+                        "Could not commit message. Error: %s" % trb)
                     self.protohandler.defer('Internal error trying to commit.')
 
             elif result == DELETE:
