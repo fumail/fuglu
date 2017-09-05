@@ -48,6 +48,7 @@ class ConsoleConnector(ProtocolHandler):
     def __init__(self, options):
         self.options = options
         self.socket = DummySocket()
+        self.exitcode = 1
 
     def get_suspect(self):
         (handle, tempfilename) = tempfile.mkstemp(
@@ -64,7 +65,11 @@ class ConsoleConnector(ProtocolHandler):
 
         fd.close()
         fromaddr = "unknown@example.org"
+        if self.options.sender:
+            fromaddr = self.options.sender
         toaddr = "unknown@example.org"
+        if self.options.recipient:
+            toaddr = self.options.recipient
         suspect = Suspect(fromaddr, toaddr, tempfilename)
         suspect.recipients = [toaddr, ]
         return suspect
@@ -72,15 +77,19 @@ class ConsoleConnector(ProtocolHandler):
     def commitback(self, suspect):
         msgcontent = buildmsgsource(suspect)
         print(msgcontent)
+        self.exitcode = 0
         sys.stderr.write('DUNNO\n')
 
     def defer(self, reason):
+        self.exitcode = 4
         sys.stderr.write("DEFER\n")
 
     def discard(self, reason):
+        self.exitcode = 2
         sys.stderr.write("DISCARD\n")
 
     def reject(self, reason):
+        self.exitcode = 3
         sys.stderr.write("REJECT\n")
 
 
@@ -91,7 +100,8 @@ class ConsoleInterface(object):
 
 
     def direct(self):
-
+        theconfigfile = self.options.config
+        dconfdir = '/etc/fuglu/conf.d'
         config = configparser.RawConfigParser()
         if not os.path.exists(theconfigfile):
             print(
@@ -100,7 +110,7 @@ class ConsoleInterface(object):
         with open(theconfigfile) as fp:
             config.readfp(fp)
         # load conf.d
-        if dconfdir and os.path.isdir(dconfdir):
+        if theconfigfile=='/etc/fuglu/fuglu.conf' and dconfdir and os.path.isdir(dconfdir):
             filelist = os.listdir(dconfdir)
             configfiles = [dconfdir + '/' + c for c in filelist if c.endswith('.conf')]
             config.read(configfiles)
@@ -109,8 +119,6 @@ class ConsoleInterface(object):
         controller.propagate_core_defaults()
         controller.load_extensions()
         controller.load_plugins()
-
-
         connector = ConsoleConnector(options)
 
         appenders = []
@@ -118,14 +126,12 @@ class ConsoleInterface(object):
             appenders = controller.appenders
         session = SessionHandler(connector, config, controller.prependers, controller.plugins, appenders)
         session.handlesession()
+        if self.options.exitcodes:
+            sys.exit(session.exitcode)
 
     def netcat(self):
         pass
 
-
-
-theconfigfile = '/etc/fuglu/fuglu.conf'
-dconfdir = '/etc/fuglu/conf.d'
 
 
 def doit(options):
@@ -140,8 +146,8 @@ if __name__=='__main__':
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", default="-", help="message input file. - for stdin")
-    parser.add_argument("-s", "--sender", default="-", help="envelope sender, leave empty to auto detect")
-    parser.add_argument("-r", "--recipient", default="-", help="envelope recipient, leave empty to auto detect")
+    parser.add_argument("-s", "--sender", help="envelope sender")
+    parser.add_argument("-r", "--recipient", help="envelope recipient")
     parser.add_argument("--host", default="localhost", help="host where fuglu daemon is running")
     parser.add_argument("-p", "--port", default="port", help="port on which the netcat connector is listening")
     parser.add_argument("-d", "--direct", action="store_true",
@@ -149,7 +155,8 @@ if __name__=='__main__':
     parser.add_argument("-a", "--appenders", action="store_true",
                         help="run appenders in direct mode as well. Only used when -d is used")
     parser.add_argument("-e", "--exitcodes", action="store_true",
-                        help="exit >0 to indicate a message was DEFERRED or REJECTED")
+                        help="exit >1 to indicate a message was DEFERRED or REJECTED")
+    parser.add_argument("-c", "--config", default="/etc/fuglu/fuglu.conf", help="use a different config file in direct mode")
 
     options = parser.parse_args()
 
