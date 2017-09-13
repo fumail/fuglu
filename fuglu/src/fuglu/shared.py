@@ -1140,7 +1140,11 @@ class FileList(object):
 
 
 
-class SettingsCache(object):
+class Cache(object):
+    """
+    Simple local cache object.
+    cached data will expire after a defined interval
+    """
     
     def __init__(self, cachetime=30, cleanupinterval=300):
         self.cache={}
@@ -1199,3 +1203,10 @@ class SettingsCache(object):
             self.logger.debug("Cleaned %s expired entries."%cleancount)
 
 
+
+DEFAULTCACHE=None
+def get_default_cache():
+    global DEFAULTCACHE
+    if DEFAULTCACHE is None:
+        DEFAULTCACHE=Cache()
+    return DEFAULTCACHE
