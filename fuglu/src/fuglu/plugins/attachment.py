@@ -433,7 +433,7 @@ The other common template variables are available as well.
         self.extremeverbosity = False
 
         # key: regex matching content type as returned by file magic, value: archive type
-        self.supported_archvie_ctypes = {
+        self.supported_archive_ctypes = {
             '^application\/zip': 'zip',
             '^application\/x-gzip': 'tar',
             '^application\/x-bzip2': 'tar',
@@ -452,7 +452,7 @@ The other common template variables are available as well.
 
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions['rar'] = 'rar'
-            self.supported_archvie_ctypes['^application\/x\-rar'] =  'rar'
+            self.supported_archive_ctypes['^application\/x\-rar'] = 'rar'
 
     def examine(self, suspect):
         if self.rulescache is None:
@@ -775,7 +775,7 @@ The other common template variables are available as well.
         """Return the corresponding archive type if the content type matches a regex in self.supported_archvie_ctypes, None otherwise"""
         if content_type is None:
             return None
-        for regex,atype in self.supported_archvie_ctypes.items():
+        for regex,atype in self.supported_archive_ctypes.items():
             if re.match(regex, content_type, re.I):
                 return atype
         return None
