@@ -1137,3 +1137,65 @@ class FileList(object):
         """Returns the current list. If the file has been changed since the last call, it will rebuild the list automatically."""
         self._reload_if_necessary()
         return self.content
+
+
+
+class SettingsCache(object):
+    
+    def __init__(self, cachetime=30, cleanupinterval=300):
+        self.cache={}
+        self.cachetime=cachetime
+        self.cleanupinterval=cleanupinterval
+        self.lock=threading.Lock()
+        self.logger=logging.getLogger("%s.settingscache" % __package__)
+        
+        t = threading.Thread(target=self.clear_cache_thread)
+        t.daemon = True
+        t.start()
+    
+    
+    def put_cache(self,key,obj):
+        gotlock=self.lock.acquire(True)
+        if gotlock:
+            self.cache[key]=(obj,time.time())
+            self.lock.release()
+    
+    
+    def get_cache(self,key):
+        gotlock=self.lock.acquire(True)
+        if not gotlock:
+            return None
+        
+        ret=None
+        
+        if key in self.cache:
+            obj,instime=self.cache[key]
+            now=time.time()
+            if now-instime<self.cachetime:
+                ret=obj
+            else:
+                del self.cache[key]
+                
+        self.lock.release()
+        return ret
+    
+    
+    def clear_cache_thread(self):
+        while True:
+            time.sleep(self.cleanupinterval)
+            now=time.time()
+            gotlock=self.lock.acquire(True)
+            if not gotlock:
+                continue
+            
+            cleancount=0
+            
+            for key in self.cache.keys()[:]:
+                obj,instime=self.cache[key]
+                if now-instime>self.cachetime:
+                    del self.cache[key]
+                    cleancount+=1
+            self.lock.release()
+            self.logger.debug("Cleaned %s expired entries."%cleancount)
+
+
