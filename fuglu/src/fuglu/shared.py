@@ -179,6 +179,7 @@ class Suspect(object):
         # tags set by plugins
         self.tags = {}
         self.tags['virus'] = {}
+        self.tags['blocked'] = {}
         self.tags['spam'] = {}
         self.tags['highspam'] = {}
         self.tags['decisions'] = []
@@ -267,6 +268,14 @@ class Suspect(object):
             if val:
                 return True
         return False
+    
+    def is_blocked(self):
+        """Returns True if ANY of the spam/virus engines tagged this suspect as blocked"""
+        for key in list(self.tags['blocked'].keys()):
+            val = self.tags['blocked'][key]
+            if val:
+                return True
+        return False
 
     def add_header(self, key, value, immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
@@ -337,6 +346,7 @@ class Suspect(object):
             'size': self.size,
             'spam': yesno(self.is_spam()),
             'highspam': yesno(self.is_highspam()),
+            'blocked': yesno(self.is_blocked()),
             'virus': yesno(self.is_virus()),
             'modified': yesno(self.is_modified()),
             'decision': actioncode_to_string(self.get_current_decision_code()),
@@ -347,7 +357,7 @@ class Suspect(object):
 
     def __str__(self):
         """representation good for logging"""
-        return self.log_format("Suspect ${id}: from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision} tags=${tags}")
+        return self.log_format("Suspect ${id}: from=${from_address} to=${to_address} size=${size} spam=${spam} blocked=${blocked} virus=${virus} modified=${modified} decision=${decision} tags=${tags}")
 
     def get_message_rep(self):
         """returns the python email api representation of this suspect"""
