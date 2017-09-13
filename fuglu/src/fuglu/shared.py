@@ -270,7 +270,7 @@ class Suspect(object):
         return False
     
     def is_blocked(self):
-        """Returns True if ANY of the spam/virus plugins tagged this suspect as blocked"""
+        """Returns True if ANY plugin tagged this suspect as blocked"""
         for key in list(self.tags['blocked'].keys()):
             val = self.tags['blocked'][key]
             if val:
