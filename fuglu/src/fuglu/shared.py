@@ -179,6 +179,7 @@ class Suspect(object):
         # tags set by plugins
         self.tags = {}
         self.tags['virus'] = {}
+        self.tags['blocked'] = {}
         self.tags['spam'] = {}
         self.tags['highspam'] = {}
         self.tags['decisions'] = []
@@ -267,6 +268,14 @@ class Suspect(object):
             if val:
                 return True
         return False
+    
+    def is_blocked(self):
+        """Returns True if ANY plugin tagged this suspect as blocked"""
+        for key in list(self.tags['blocked'].keys()):
+            val = self.tags['blocked'][key]
+            if val:
+                return True
+        return False
 
     def add_header(self, key, value, immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
@@ -337,6 +346,7 @@ class Suspect(object):
             'size': self.size,
             'spam': yesno(self.is_spam()),
             'highspam': yesno(self.is_highspam()),
+            'blocked': yesno(self.is_blocked()),
             'virus': yesno(self.is_virus()),
             'modified': yesno(self.is_modified()),
             'decision': actioncode_to_string(self.get_current_decision_code()),
@@ -347,7 +357,7 @@ class Suspect(object):
 
     def __str__(self):
         """representation good for logging"""
-        return self.log_format("Suspect ${id}: from=${from_address} to=${to_address} size=${size} spam=${spam} virus=${virus} modified=${modified} decision=${decision} tags=${tags}")
+        return self.log_format("Suspect ${id}: from=${from_address} to=${to_address} size=${size} spam=${spam} blocked=${blocked} virus=${virus} modified=${modified} decision=${decision} tags=${tags}")
 
     def get_message_rep(self):
         """returns the python email api representation of this suspect"""
@@ -1137,3 +1147,76 @@ class FileList(object):
         """Returns the current list. If the file has been changed since the last call, it will rebuild the list automatically."""
         self._reload_if_necessary()
         return self.content
+
+
+
+class Cache(object):
+    """
+    Simple local cache object.
+    cached data will expire after a defined interval
+    """
+    
+    def __init__(self, cachetime=30, cleanupinterval=300):
+        self.cache={}
+        self.cachetime=cachetime
+        self.cleanupinterval=cleanupinterval
+        self.lock=threading.Lock()
+        self.logger=logging.getLogger("%s.settingscache" % __package__)
+        
+        t = threading.Thread(target=self.clear_cache_thread)
+        t.daemon = True
+        t.start()
+    
+    
+    def put_cache(self,key,obj):
+        gotlock=self.lock.acquire(True)
+        if gotlock:
+            self.cache[key]=(obj,time.time())
+            self.lock.release()
+    
+    
+    def get_cache(self,key):
+        gotlock=self.lock.acquire(True)
+        if not gotlock:
+            return None
+        
+        ret=None
+        
+        if key in self.cache:
+            obj,instime=self.cache[key]
+            now=time.time()
+            if now-instime<self.cachetime:
+                ret=obj
+            else:
+                del self.cache[key]
+                
+        self.lock.release()
+        return ret
+    
+    
+    def clear_cache_thread(self):
+        while True:
+            time.sleep(self.cleanupinterval)
+            now=time.time()
+            gotlock=self.lock.acquire(True)
+            if not gotlock:
+                continue
+            
+            cleancount=0
+            
+            for key in self.cache.keys()[:]:
+                obj,instime=self.cache[key]
+                if now-instime>self.cachetime:
+                    del self.cache[key]
+                    cleancount+=1
+            self.lock.release()
+            self.logger.debug("Cleaned %s expired entries."%cleancount)
+
+
+
+DEFAULTCACHE=None
+def get_default_cache():
+    global DEFAULTCACHE
+    if DEFAULTCACHE is None:
+        DEFAULTCACHE=Cache()
+    return DEFAULTCACHE
