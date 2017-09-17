@@ -182,8 +182,8 @@ if __name__=='__main__':
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", default="-", help="message input file. - for stdin")
-    parser.add_argument("-s", "--sender", help="envelope sender")
-    parser.add_argument("-r", "--recipient", help="envelope recipient")
+    parser.add_argument("-s", "--sender", help="envelope sender (only used in direct mode)")
+    parser.add_argument("-r", "--recipient", help="envelope recipient (only used in direct mode)")
     parser.add_argument("--host", default="localhost", help="host where fuglu daemon is running")
     parser.add_argument("-p", "--port", type=int, default=20099, help="port on which the netcat connector is listening")
     parser.add_argument("-d", "--direct", action="store_true",
