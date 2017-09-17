@@ -1,2 +1,2 @@
 __all__ = ['smtpconnector', 'esmtpconnector',
-           'milterconnector', 'ncblackholeconnector', ]
+           'milterconnector', 'ncconnector', ]

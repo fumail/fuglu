@@ -29,6 +29,7 @@ import sys
 import os
 import tempfile
 import logging
+import socket
 
 try:
     import configparser
@@ -41,6 +42,16 @@ class DummySocket(object):
 
     def getsockname(self):
         return '',0
+
+
+def load_message(filename):
+    if filename == '-':
+        stream = sys.stdin
+    else:
+        stream = open(filename, 'r')
+    content = stream.read()
+    return content
+
 
 class ConsoleConnector(ProtocolHandler):
     protoname = 'CONSOLE'
@@ -55,12 +66,7 @@ class ConsoleConnector(ProtocolHandler):
             prefix='fuglu')
 
         fd = os.fdopen(handle, 'w+b')
-        input = self.options.input
-        if input=='-':
-            stream = sys.stdin
-        else:
-            stream = open(input,'r')
-        content = stream.read()
+        content=load_message(self.options.input)
         fd.write(content)
 
         fd.close()
@@ -98,8 +104,7 @@ class ConsoleInterface(object):
     def __init__(self, options):
         self.options = options
 
-
-    def direct(self):
+    def _load_config(self):
         theconfigfile = self.options.config
         dconfdir = '/etc/fuglu/conf.d'
         config = configparser.RawConfigParser()
@@ -110,36 +115,67 @@ class ConsoleInterface(object):
         with open(theconfigfile) as fp:
             config.readfp(fp)
         # load conf.d
-        if theconfigfile=='/etc/fuglu/fuglu.conf' and dconfdir and os.path.isdir(dconfdir):
+        if theconfigfile == '/etc/fuglu/fuglu.conf' and dconfdir and os.path.isdir(dconfdir):
             filelist = os.listdir(dconfdir)
             configfiles = [dconfdir + '/' + c for c in filelist if c.endswith('.conf')]
             config.read(configfiles)
+        return config
 
+    def _boot_controller(self, config):
         controller = MainController(config)
         controller.propagate_core_defaults()
         controller.load_extensions()
         controller.load_plugins()
-        connector = ConsoleConnector(options)
+        return controller
 
+    def direct(self):
+        config = self._load_config()
+        controller = self._boot_controller(config)
+        connector = ConsoleConnector(options)
         appenders = []
         if self.options.appenders:
             appenders = controller.appenders
         session = SessionHandler(connector, config, controller.prependers, controller.plugins, appenders)
         session.handlesession()
-        if self.options.exitcodes:
-            sys.exit(session.exitcode)
+        return session.exitcode
 
     def netcat(self):
-        pass
-
-
+        content = load_message(self.options.input)
+        ipvers=socket.AF_INET
+        host=self.options.host
+        if ':' in host:
+            ipvers=socket.AF_INET6
+        s = socket.socket(ipvers, socket.SOCK_STREAM)
+        s.settimeout(20)
+        port = self.options.port
+        s.connect((host,port),)
+        sockfile=s.makefile('rw')
+        banner=sockfile.readline()
+        sockfile.write(content)
+        s.shutdown(socket.SHUT_WR)
+        reply=sockfile.read()
+        retcode,message=reply.split(':',1)
+        print(message)
+        sys.stderr.write("%s\n"%retcode)
+        excode=1
+        if retcode=='DUNNO':
+            excode=0
+        elif retcode=='DEFER':
+            excode=4
+        elif retcode=='DISCARD':
+            excode=2
+        elif retcode=='REJECT':
+            excode=3
+        return excode
 
 def doit(options):
     interface = ConsoleInterface(options)
     if options.direct:
-        interface.direct()
+        retcode=interface.direct()
     else:
-        interface.netcat()
+        retcode=interface.netcat()
+    if options.exitcodes:
+        sys.exit(retcode)
 
 
 if __name__=='__main__':
@@ -149,7 +185,7 @@ if __name__=='__main__':
     parser.add_argument("-s", "--sender", help="envelope sender")
     parser.add_argument("-r", "--recipient", help="envelope recipient")
     parser.add_argument("--host", default="localhost", help="host where fuglu daemon is running")
-    parser.add_argument("-p", "--port", default="port", help="port on which the netcat connector is listening")
+    parser.add_argument("-p", "--port", type=int, default=20099, help="port on which the netcat connector is listening")
     parser.add_argument("-d", "--direct", action="store_true",
                         help="don't connect to a running fuglu, start your own scanning process")
     parser.add_argument("-a", "--appenders", action="store_true",

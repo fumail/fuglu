@@ -17,8 +17,9 @@ import logging
 import tempfile
 from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
+from fuglu.connectors.smtpconnector import buildmsgsource
 import os
-
+import socket
 
 class NCHandler(ProtocolHandler):
     protoname = 'NETCAT'
@@ -44,18 +45,19 @@ class NCHandler(ProtocolHandler):
         return suspect
 
     def commitback(self, suspect):
-        """Blackhole"""
-        self.sess.endsession('OK message accepted')
+        self.sess.send("DUNNO:")
+        self.sess.endsession(buildmsgsource(suspect))
 
     def defer(self, reason):
-        self.sess.endsession('DEFER %s' % reason)
+        self.sess.endsession('DEFER:%s' % reason)
 
     def discard(self, reason):
-        self.sess.endsession('OK discard:%s' % reason)
+        self.sess.endsession('DISCARD:%s' % reason)
 
+    def reject(self, reason):
+        self.sess.endsession('REJECT:%s')
 
 class NCServer(BasicTCPServer):
-
     def __init__(self, controller, port=10125, address="127.0.0.1"):
         BasicTCPServer.__init__(self, controller, port, address, NCHandler)
 
@@ -73,14 +75,18 @@ class NCSession(object):
         self.logger = logging.getLogger("fuglu.ncsession")
         self.tempfile = None
 
+    def send(self, message):
+        self.socket.sendall(message)
+
     def endsession(self, message):
         try:
-            self.socket.send(message)
+            self.send(message)
             self.closeconn()
-        except:
-            self.logger.debug('Session already closed')
+        except Exception as e:
+            self.logger.error(str(e))
 
     def closeconn(self):
+        self.socket.shutdown(socket.SHUT_WR)
         self.socket.close()
 
     def getincomingmail(self):
