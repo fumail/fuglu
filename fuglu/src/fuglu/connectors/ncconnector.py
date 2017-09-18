@@ -55,7 +55,7 @@ class NCHandler(ProtocolHandler):
         self.sess.endsession('DISCARD:%s' % reason)
 
     def reject(self, reason):
-        self.sess.endsession('REJECT:%s')
+        self.sess.endsession('REJECT:%s' % reason)
 
 class NCServer(BasicTCPServer):
     def __init__(self, controller, port=10125, address="127.0.0.1"):
