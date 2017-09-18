@@ -137,7 +137,7 @@ class ConsoleInterface(object):
             appenders = controller.appenders
         session = SessionHandler(connector, config, controller.prependers, controller.plugins, appenders)
         session.handlesession()
-        return session.exitcode
+        return connector.exitcode
 
     def netcat(self):
         content = load_message(self.options.input)
