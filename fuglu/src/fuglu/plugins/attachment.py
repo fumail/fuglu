@@ -90,7 +90,7 @@ except (ImportError, OSError):
 
 SEVENZIP_AVAILABLE = 0
 try:
-    import py7zlib
+    import py7zlib # installed via pylzma library
     SEVENZIP_AVAILABLE = 1
 except (ImportError, OSError):
     pass
