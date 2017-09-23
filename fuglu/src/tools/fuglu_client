@@ -152,6 +152,7 @@ class ConsoleInterface(object):
         sockfile=s.makefile('rw')
         banner=sockfile.readline()
         sockfile.write(content)
+        sockfile.flush()
         s.shutdown(socket.SHUT_WR)
         reply=sockfile.read()
         retcode,message=reply.split(':',1)
