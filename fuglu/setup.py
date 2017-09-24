@@ -45,7 +45,8 @@ setup(name="fuglu",
       packages=['fuglu', 'fuglu.plugins', 'fuglu.extensions',
                 'fuglu.lib', 'fuglu.connectors'],
       scripts=["src/startscript/fuglu", "src/tools/fuglu_debug",
-               "src/tools/fuglu_control", "src/tools/fuglu_conf", "src/tools/fuglu_suspectfilter"],
+               "src/tools/fuglu_control", "src/tools/fuglu_conf",
+               "src/tools/fuglu_suspectfilter", "src/tools/fuglu_client"],
       long_description="""Fuglu is  a modular pre/after queue content filter written in python. It can be used to filter spam, viruses, unwanted attachments etc..
 
 see http://gryphius.github.com/fuglu/ for more details.""",

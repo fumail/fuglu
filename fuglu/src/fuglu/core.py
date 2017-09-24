@@ -35,7 +35,7 @@ import socket
 from fuglu.shared import default_template_values, Suspect, HAVE_BEAUTIFULSOUP, BS_VERSION
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
-from fuglu.connectors.ncblackholeconnector import NCServer
+from fuglu.connectors.ncconnector import NCServer
 from fuglu.connectors.esmtpconnector import ESMTPServer
 
 from fuglu.stats import StatsThread
