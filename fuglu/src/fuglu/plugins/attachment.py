@@ -88,6 +88,14 @@ except (ImportError, OSError):
     pass
 
 
+SEVENZIP_AVAILABLE = 0
+try:
+    import py7zlib # installed via pylzma library
+    SEVENZIP_AVAILABLE = 1
+except (ImportError, OSError):
+    pass
+
+
 
 class ThreadLocalMagic(threading.local):
     magic = None
@@ -448,12 +456,16 @@ The other common template variables are available as well.
             'tgz': 'tar',
             'tar.bz2': 'tar',
         }
-
-
+        
         if RARFILE_AVAILABLE:
             self.supported_archive_extensions['rar'] = 'rar'
-            self.supported_archive_ctypes['^application\/x\-rar'] = 'rar'
-
+            self.supported_archive_ctypes['^application\/x-rar'] = 'rar'
+        
+        if SEVENZIP_AVAILABLE:
+            self.supported_archive_extensions['7z'] = '7z'
+            self.supported_archive_ctypes['^application\/x-7z-compressed'] = '7z'
+    
+    
     def examine(self, suspect):
         if self.rulescache is None:
             self.rulescache = RulesCache(
@@ -471,7 +483,8 @@ The other common template variables are available as well.
 
         returnaction = self.walk(suspect)
         return returnaction
-
+    
+    
     def getFiletype(self, path):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
             ms = threadLocalMagic.magic
@@ -479,7 +492,8 @@ The other common template variables are available as well.
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             ftype = magic.from_file(path, mime=True)
         return ftype
-
+    
+    
     def getBuffertype(self, buffercontent):
         if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
             ms = threadLocalMagic.magic
@@ -489,7 +503,8 @@ The other common template variables are available as well.
             if isinstance(btype, bytes) and sys.version_info > (3,):
                 btype = btype.decode('UTF-8', 'ignore')
         return btype
-
+    
+    
     def asciionly(self, stri):
         """return stri with all non-ascii chars removed"""
         if sys.version_info > (3,):
@@ -499,7 +514,8 @@ The other common template variables are available as well.
                 # A bytes object therefore already ascii, but not a string yet
                 return stri.decode('ascii', 'ignore')
         return "".join([x for x in stri if ord(x) < 128])
-
+    
+    
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
         if attachmentname == None:
             attachmentname = ""
@@ -559,7 +575,8 @@ The other common template variables are available as well.
                 if action == 'allow':
                     return ATTACHMENT_OK
         return ATTACHMENT_DUNNO
-
+    
+    
     def matchMultipleSets(self, setlist, obj, suspect, attachmentname=None):
         """run through multiple sets and return the first action which matches obj"""
         self.logger.debug(
@@ -569,7 +586,8 @@ The other common template variables are available as well.
             if res != ATTACHMENT_DUNNO:
                 return res
         return ATTACHMENT_DUNNO
-
+    
+    
     def walk(self, suspect):
         """walks through a message and checks each attachment according to the rulefile specified in the config"""
 
@@ -717,8 +735,7 @@ The other common template variables are available as well.
                     try:
                         pl = BytesIO(part.get_payload(decode=True))
                         archive_handle = self._archive_handle(archive_type, pl)
-                        namelist = self._archive_namelist(
-                            archive_type, archive_handle)
+                        namelist = self._archive_namelist(archive_type, archive_handle)
                         if self.config.getboolean(self.section, 'checkarchivenames'):
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
@@ -742,8 +759,7 @@ The other common template variables are available as well.
                         if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
                             for name in namelist:
                                 safename = self.asciionly(name)
-                                extracted = self._archive_extract(
-                                    archive_type, archive_handle, name)
+                                extracted = self._archive_extract(archive_type, archive_handle, name)
                                 if extracted is None:
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
@@ -770,7 +786,8 @@ The other common template variables are available as well.
                         self.logger.warning(
                             "archive scanning failed in attachment {attname}: {error}".format(attname=att_name, error=traceback.format_exc() ))
         return DUNNO
-
+    
+    
     def archive_type_from_content_type(self, content_type):
         """Return the corresponding archive type if the content type matches a regex in self.supported_archvie_ctypes, None otherwise"""
         if content_type is None:
@@ -779,7 +796,8 @@ The other common template variables are available as well.
             if re.match(regex, content_type, re.I):
                 return atype
         return None
-
+    
+    
     def walk_all_parts(self, message):
         """Like email.message.Message's .walk() but also tries to find parts in the message's epilogue"""
         for part in message.walk():
@@ -829,7 +847,8 @@ The other common template variables are available as well.
             zipFileContainer.write('\x00\x00')
             zipFileContainer.seek(0)
         return zipFileContainer
-
+    
+    
     def _archive_handle(self, archive_type, payload):
         """get a handle for this archive type"""
         archive = None
@@ -841,8 +860,11 @@ The other common template variables are available as well.
             archive = rarfile.RarFile(payload)
         elif archive_type == 'tar':
             archive = tarfile.open(fileobj=payload)
+        elif archive_type == '7z':
+            archive = py7zlib.Archive7z(payload)
         return archive
-
+    
+    
     def _archive_namelist(self, archive_type, handle):
         """returns a list of file paths within the archive"""
         # this works for zip and rar. if a future archive uses a different api,
@@ -850,10 +872,11 @@ The other common template variables are available as well.
         names = []
         if archive_type in ['zip', 'rar']:
             names = handle.namelist()
-        elif archive_type in ['tar']:
+        elif archive_type in ['tar', '7z']:
             names = handle.getnames()
         return names
-
+    
+    
     def _archive_extract(self, archive_type, handle, path):
         """extract a file from the archive into memory
         returns the file content or None if the file would be larger than the setting archivecontentmaxsize
@@ -875,21 +898,30 @@ The other common template variables are available as well.
             x = handle.extractfile(path)
             extracted = x.read()
             x.close()
+        elif archive_type in ['7z']:
+            arinfo = handle.getmember(path)
+            if arinfo.size > archivecontentmaxsize:
+                return None
+            extracted = arinfo.read()
         return extracted
-
+    
+    
     def _debuginfo(self, suspect, message):
         """Debug to log and suspect"""
         suspect.debug(message)
         self.logger.debug(message)
-
+    
+    
     def __str__(self):
         return "Attachment Blocker"
-
+    
+    
     def lint(self):
         allok = (self.checkConfig() and self.lint_magic()
                  and self.lint_sql() and self.lint_archivetypes())
         return allok
-
+    
+    
     def lint_magic(self):
         if not MAGIC_AVAILABLE:
             if 'magic' in sys.modules:  # unsupported version
@@ -904,14 +936,18 @@ The other common template variables are available as well.
         if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             print("Found python-magic (https://github.com/ahupp/python-magic)")
         return True
-
+    
+    
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print("rarfile library not found, RAR support disabled")
+        if not SEVENZIP_AVAILABLE:
+            print("pylzma/py7zlip library not found, 7z support disabled")
         print("Archive scan, available file extensions: %s" %
               (self.supported_archive_extensions.keys()))
         return True
-
+    
+    
     def lint_sql(self):
         dbconn = ''
         if self.config.has_option(self.section, 'dbconnectstring'):
