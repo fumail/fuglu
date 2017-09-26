@@ -24,12 +24,12 @@ requires: pyspf
 requires: pydns (or alternatively dnspython if only dkim is used) 
 """
 
-from fuglu.shared import ScannerPlugin, apply_template, DUNNO, Suspect, FileList, string_to_actioncode
-import time
+from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_to_actioncode, get_default_cache
+from fuglu.extensions.sql import get_session, ENABLED
+import logging
 import os
 import pkg_resources
 import re
-import string
 
 DKIMPY_AVAILABLE = False
 PYSPF_AVAILABLE = False
@@ -53,13 +53,13 @@ except ImportError:
 try:
     import ipaddress
     IPADDRESS_AVAILABLE = True
-except:
+except ImportError:
     pass
 
 try:
     import ipaddr
     IPADDR_AVAILABLE = True
-except:
+except ImportError:
     pass
 
 try:
@@ -97,6 +97,7 @@ def extract_from_domain(suspect):
         return None
     domain = domain_match.group()
     return domain
+
 
 
 class DKIMVerifyPlugin(ScannerPlugin):
@@ -241,7 +242,7 @@ known issues:
         selector = apply_template(
             self.config.get(self.section, 'selector'), suspect, addvalues)
 
-        if domain == None:
+        if domain is None:
             self._logger().error(
                 "%s: Failed to extract From-header domain for DKIM signing" % suspect.id)
             return DUNNO
@@ -263,7 +264,7 @@ known issues:
             canB = Relaxed
         canon = (canH, canB)
         headerconfig = self.config.get(self.section, 'signheaders')
-        if headerconfig == None or headerconfig.strip() == '':
+        if headerconfig is None or headerconfig.strip() == '':
             inc_headers = None
         else:
             inc_headers = headerconfig.strip().split(',')
@@ -323,7 +324,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
             return DUNNO
 
         clientinfo = suspect.get_client_info(self.config)
-        if clientinfo == None:
+        if clientinfo is None:
             suspect.debug("client info not available for SPF check")
             self._logger().warning(
                 "%s: SPF Check skipped, could not get client info" % (suspect.id))
@@ -384,7 +385,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
 
         envelope_sender_domain = suspect.from_domain.lower()
         header_from_domain = extract_from_domain(suspect)
-        if header_from_domain == None:
+        if header_from_domain is None:
             return
 
         if header_from_domain not in checkdomains:
@@ -442,6 +443,7 @@ class SpearPhishPlugin(ScannerPlugin):
 
     def __init__(self, section=None):
         ScannerPlugin.__init__(self, section)
+        self.logger = self._logger()
         self.filelist = FileList(strip=True, skip_empty=True, skip_comments=True, lowercase=True,
                                  additional_filters=None, minimum_time_between_reloads=30)
 
@@ -466,8 +468,51 @@ class SpearPhishPlugin(ScannerPlugin):
                 'default': 'threat detected: ${virusname}',
                 'description': "reject message template if running in pre-queue mode and virusaction=REJECT",
             },
+            'dbconnection':{
+                'default':"mysql://root@localhost/spfcheck?charset=utf8",
+                'description':'SQLAlchemy Connection string. Leave empty to disable SQL lookups',
+            },
+            'domain_sql_query':{
+                'default':"SELECT check_spearphish from domain where domain_name=:domain",
+                'description':'get from sql database :domain will be replaced with the actual domain name. must return boolean field check_spearphish',
+            },
         }
 
+
+    def get_domain_setting(self, domain, dbconnection, sqlquery, cache, cachename, default_value=None, logger=None):
+        if logger is None:
+            logger = logging.getLogger()
+        
+        cachekey = '%s-%s' % (cachename, domain)
+        cached = cache.get_cache(cachekey)
+        if cached is not None:
+            logger.debug("got cached setting for %s" % domain)
+            return cached
+    
+        settings = default_value
+    
+        try:
+            session = get_session(dbconnection)
+    
+            # get domain settings
+            dom = session.execute(sqlquery, {'domain': domain}).fetchall()
+    
+            if not dom and not dom[0] and len(dom[0]) == 0:
+                logger.warning(
+                    "Can not load domain setting - domain %s not found. Using default settings." % domain)
+            else:
+                settings = dom[0][0]
+    
+            session.close()
+    
+        except Exception as e:
+            logger.error("Exception while loading setting for %s : %s" % (domain, str(e)))
+    
+        cache.put_cache(cachekey, settings)
+        logger.debug("refreshed setting for %s" % domain)
+        return settings
+    
+    
     def should_we_check_this_domain(self,suspect):
         domainsfile = self.config.get(self.section, 'domainsfile')
         if domainsfile.strip()=='': # empty config -> check all domains
@@ -479,8 +524,19 @@ class SpearPhishPlugin(ScannerPlugin):
         self.filelist.filename = domainsfile
         envelope_recipient_domain = suspect.to_domain.lower()
         checkdomains = self.filelist.get_list()
-        return envelope_recipient_domain in checkdomains
-
+        if envelope_recipient_domain in checkdomains:
+            return True
+        
+        dbconnection = self.config.get(self.section,'dbconnection', '').strip()
+        sqlquery = self.config.get(self.section,'domain_sql_query')
+        do_check = False
+        if dbconnection != '':
+            cache = get_default_cache()
+            cachename = self.section
+            do_check = self.get_domain_setting(suspect.to_domain, dbconnection, sqlquery, cache, cachename, False, self.logger)
+        return do_check
+    
+    
     def examine(self, suspect):
         if not self.should_we_check_this_domain(suspect):
             return DUNNO
@@ -509,21 +565,48 @@ class SpearPhishPlugin(ScannerPlugin):
             return actioncode, message
 
         return DUNNO
-
+    
+    
     def flag_as_phish(self, suspect, virusname):
         suspect.tags['%s.virus' % self.config.get(self.section, 'virusenginename')] = {'message content': virusname}
         suspect.tags['virus'][self.config.get(self.section, 'virusenginename')] = True
-
+    
+    
     def __str__(self):
         return "Spearphish Check"
-
+    
+    
     def lint(self):
-        allok = self.checkConfig() and self.lint_file()
+        allok = self.checkConfig() and self._lint_file() and self._lint_sql()
         return allok
-
-    def lint_file(self):
+    
+    
+    def _lint_file(self):
         filename = self.config.get(self.section, 'domainsfile')
         if not os.path.exists(filename):
             print("Spearphish domains file %s not found" % (filename))
             return False
         return True
+    
+    
+    def _lint_sql(self):
+        lint_ok = True
+        sqlquery = self.config.get(self.section, 'domain_sql_query')
+        dbconnection = self.config.get(self.section, 'dbconnection', '').strip()
+        if not ENABLED and dbconnection != '':
+            print 'SQLAlchemy not available, cannot use SQL backend'
+            lint_ok = False
+        elif dbconnection == '':
+            print 'No DB connection defined. Disabling SQL backend'
+        else:
+            if not sqlquery.lower().startswith('select '):
+                lint_ok = False
+                print 'SQL statement must be a SELECT query'
+            if lint_ok:
+                try:
+                    conn = get_session(dbconnection)
+                    conn.execute(sqlquery, {'domain': 'example.com'})
+                except Exception as e:
+                    lint_ok = False
+                    print str(e)
+        return lint_ok
