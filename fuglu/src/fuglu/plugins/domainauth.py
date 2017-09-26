@@ -70,7 +70,7 @@ try:
         raise Exception("no supported dns library available")
 
     DKIMPY_AVAILABLE = True
-except:
+except Exception:
     pass
 
 
@@ -81,23 +81,29 @@ try:
         raise Exception("ipaddress/ipaddr not available")
     import spf
     PYSPF_AVAILABLE = True
-except:
+except Exception:
     pass
 
 
-def extract_from_domain(suspect):
+def extract_from_domain(suspect, get_address_part=True):
     msgrep = suspect.get_message_rep()
     from_headers = msgrep.get_all("From", [])
     if len(from_headers) != 1:
         return None
 
     from_header = from_headers[0]
-    domain_match = re.search("(?<=@)[\w.-]+", from_header)
+    parts = from_header.rsplit(None, 1)
+    check_part = parts[-1]
+    if len(parts) == 2 and not get_address_part:
+        check_part = parts[0]
+    elif not get_address_part:
+        return None # no display part found
+    
+    domain_match = re.search("(?<=@)[\w.-]+", check_part)
     if domain_match is None:
         return None
     domain = domain_match.group()
     return domain
-
 
 
 class DKIMVerifyPlugin(ScannerPlugin):
@@ -476,6 +482,10 @@ class SpearPhishPlugin(ScannerPlugin):
                 'default':"SELECT check_spearphish from domain where domain_name=:domain",
                 'description':'get from sql database :domain will be replaced with the actual domain name. must return boolean field check_spearphish',
             },
+            'check_display_part': {
+                'default': False,
+                'description': "set to True to also check display part of From header (else email part only)",
+            },
         }
 
 
@@ -544,27 +554,38 @@ class SpearPhishPlugin(ScannerPlugin):
         envelope_sender_domain = suspect.from_domain.lower()
         if envelope_sender_domain == envelope_recipient_domain:
             return DUNNO  # we only check the message if the env_sender_domain differs. If it's the same it will be caught by other means (like SPF)
-
+        
+        header_from_domains = []
         header_from_domain = extract_from_domain(suspect)
         if header_from_domain is None:
             self._logger().warn("%s: Could not extract header from domain for spearphish check" % suspect.id)
             return DUNNO
-
-        if header_from_domain == envelope_recipient_domain:
-            virusname = self.config.get(self.section, 'virusname')
-            virusaction = self.config.get(self.section, 'virusaction')
-            actioncode = string_to_actioncode(virusaction, self.config)
-
-            logmsg = '%s: spear phish pattern detected, recipient=%s env_sender_domain=%s header_from_domain=%s' % (
-            suspect.id, suspect.to_address, envelope_sender_domain, header_from_domain)
-            self._logger().info(logmsg)
-            self.flag_as_phish(suspect, virusname)
-
-            message = apply_template(
-                self.config.get(self.section, 'rejectmessage'), suspect, {'virusname': virusname})
-            return actioncode, message
-
-        return DUNNO
+        else:
+            header_from_domains.append(header_from_domain)
+        
+        if self.config.getboolean(self.section, 'check_display_part'):
+            display_from_domain = extract_from_domain(suspect, False)
+            if display_from_domain is not None:
+                header_from_domains.append(display_from_domain)
+        
+        actioncode = DUNNO
+        message = None
+        
+        for header_from_domain in header_from_domains:
+            if header_from_domain == envelope_recipient_domain:
+                virusname = self.config.get(self.section, 'virusname')
+                virusaction = self.config.get(self.section, 'virusaction')
+                actioncode = string_to_actioncode(virusaction, self.config)
+                
+                logmsg = '%s: spear phish pattern detected, recipient=%s env_sender_domain=%s header_from_domain=%s' % (
+                suspect.id, suspect.to_address, envelope_sender_domain, header_from_domain)
+                self._logger().info(logmsg)
+                self.flag_as_phish(suspect, virusname)
+                
+                message = apply_template(self.config.get(self.section, 'rejectmessage'), suspect, {'virusname': virusname})
+                break
+        
+        return actioncode, message
     
     
     def flag_as_phish(self, suspect, virusname):
