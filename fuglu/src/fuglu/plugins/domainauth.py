@@ -605,7 +605,7 @@ class SpearPhishPlugin(ScannerPlugin):
     def _lint_file(self):
         filename = self.config.get(self.section, 'domainsfile')
         if not os.path.exists(filename):
-            print("Spearphish domains file %s not found" % (filename))
+            print("Spearphish domains file %s not found" % filename)
             return False
         return True
     
@@ -615,21 +615,21 @@ class SpearPhishPlugin(ScannerPlugin):
         sqlquery = self.config.get(self.section, 'domain_sql_query')
         dbconnection = self.config.get(self.section, 'dbconnection', '').strip()
         if not ENABLED and dbconnection != '':
-            print 'SQLAlchemy not available, cannot use SQL backend'
+            print('SQLAlchemy not available, cannot use SQL backend')
             lint_ok = False
         elif dbconnection == '':
-            print 'No DB connection defined. Disabling SQL backend'
+            print('No DB connection defined. Disabling SQL backend')
         else:
             if not sqlquery.lower().startswith('select '):
                 lint_ok = False
-                print 'SQL statement must be a SELECT query'
+                print('SQL statement must be a SELECT query')
             if lint_ok:
                 try:
                     conn = get_session(dbconnection)
                     conn.execute(sqlquery, {'domain': 'example.com'})
                 except Exception as e:
                     lint_ok = False
-                    print str(e)
+                    print(str(e))
         return lint_ok
     
     
