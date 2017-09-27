@@ -537,7 +537,7 @@ class SpearPhishPlugin(ScannerPlugin):
         if envelope_recipient_domain in checkdomains:
             return True
         
-        dbconnection = self.config.get(self.section,'dbconnection', '').strip()
+        dbconnection = self.config.get(self.section, 'dbconnection').strip()
         sqlquery = self.config.get(self.section,'domain_sql_query')
         do_check = False
         if dbconnection != '':
@@ -558,7 +558,7 @@ class SpearPhishPlugin(ScannerPlugin):
         header_from_domains = []
         header_from_domain = extract_from_domain(suspect)
         if header_from_domain is None:
-            self._logger().warn("%s: Could not extract header from domain for spearphish check" % suspect.id)
+            self.logger.warn("%s: Could not extract header from domain for spearphish check" % suspect.id)
             return DUNNO
         else:
             header_from_domains.append(header_from_domain)
@@ -577,9 +577,9 @@ class SpearPhishPlugin(ScannerPlugin):
                 virusaction = self.config.get(self.section, 'virusaction')
                 actioncode = string_to_actioncode(virusaction, self.config)
                 
-                logmsg = '%s: spear phish pattern detected, recipient=%s env_sender_domain=%s header_from_domain=%s' % (
-                suspect.id, suspect.to_address, envelope_sender_domain, header_from_domain)
-                self._logger().info(logmsg)
+                logmsg = '%s: spear phish pattern detected, env_rcpt_domain=%s env_sender_domain=%s header_from_domain=%s' % \
+                         (suspect.id, envelope_recipient_domain, envelope_sender_domain, header_from_domain)
+                self.logger.info(logmsg)
                 self.flag_as_phish(suspect, virusname)
                 
                 message = apply_template(self.config.get(self.section, 'rejectmessage'), suspect, {'virusname': virusname})
