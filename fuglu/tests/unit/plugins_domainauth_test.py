@@ -70,7 +70,7 @@ some <tagged>text</tagged>
         s.set_source(template)
         return s
 
-    def _make_config(self, checkdomains=None, virusname='UNITTEST-SPEARPHISH', virusaction='REJECT', virusenginename='UNIITEST Spearphishing protection', rejectmessage='threat detected: ${virusname}', check_display_part=True ):
+    def _make_config(self, checkdomains=None, virusname='UNITTEST-SPEARPHISH', virusaction='REJECT', virusenginename='UNIITEST Spearphishing protection', rejectmessage='threat detected: ${virusname}', check_display_part='True' ):
         config = RawConfigParser()
         config.add_section('SpearPhishPlugin')
 
