@@ -70,7 +70,7 @@ some <tagged>text</tagged>
         s.set_source(template)
         return s
 
-    def _make_config(self, checkdomains=None, virusname='UNITTEST-SPEARPHISH', virusaction='REJECT', virusenginename='UNIITEST Spearphishing protection', rejectmessage='threat detected: ${virusname}', check_display_part='True' ):
+    def _make_config(self, checkdomains=None, virusname='UNITTEST-SPEARPHISH', virusaction='REJECT', virusenginename='UNIITEST Spearphishing protection', rejectmessage='threat detected: ${virusname}', dbconnection='', check_display_part='True' ):
         config = RawConfigParser()
         config.add_section('SpearPhishPlugin')
 
@@ -87,6 +87,7 @@ some <tagged>text</tagged>
         config.set('SpearPhishPlugin', 'virusaction', virusaction)
         config.set('SpearPhishPlugin', 'virusenginename', virusenginename)
         config.set('SpearPhishPlugin', 'rejectmessage', rejectmessage)
+        config.set('SpearPhishPlugin', 'dbconnection', dbconnection)
         config.set('SpearPhishPlugin', 'check_display_part', check_display_part)
         return config
 
@@ -141,17 +142,28 @@ some <tagged>text</tagged>
         candidate.config = config
 
         # the spearphish case, header from = recipient, but different env sender
-        self.assertEqual(candidate.examine(self._make_dummy_suspect(envelope_sender_domain='a.example.com', recipient_domain='b.example.com',
-                                           header_from_domain='b.example.com')), (REJECT, 'spearphish'), 'spearphish should have been detected')
+        self.assertEqual(candidate.examine(
+            self._make_dummy_suspect(
+                envelope_sender_domain='a.example.com',
+                recipient_domain='b.example.com',
+                header_from_domain='b.example.com')),
+            (REJECT, 'spearphish'),
+            'spearphish should have been detected')
 
         # don't hit if env sender matches as well
         self.assertEqual(candidate.examine(
-            self._make_dummy_suspect(envelope_sender_domain='b.example.com', recipient_domain='b.example.com',
-                                     header_from_domain='b.example.com')), DUNNO,
-                         'env sender domain = recipient domain should NOT be flagged as spearphish')
+            self._make_dummy_suspect(
+                envelope_sender_domain='b.example.com',
+                recipient_domain='b.example.com',
+                header_from_domain='b.example.com')),
+            DUNNO,
+            'env sender domain = recipient domain should NOT be flagged as spearphish (1)')
 
         # don't hit if all different
         self.assertEqual(candidate.examine(
-            self._make_dummy_suspect(envelope_sender_domain='a.example.com', recipient_domain='b.example.com',
-                                     header_from_domain='c.example.com')), DUNNO,
-                         'env sender domain = recipient domain should NOT be flagged as spearphish')
+            self._make_dummy_suspect(
+                envelope_sender_domain='a.example.com',
+                recipient_domain='b.example.com',
+                header_from_domain='c.example.com')),
+            DUNNO,
+            'env sender domain = recipient domain should NOT be flagged as spearphish (2)')
