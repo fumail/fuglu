@@ -166,5 +166,5 @@ some <tagged>text</tagged>
                 envelope_sender_domain='d.example.com',
                 recipient_domain='e.example.com',
                 header_from_domain='f.example.com')),
-            DUNNO,
+            (DUNNO, None),
             'env sender domain = recipient domain should NOT be flagged as spearphish (2)')
