@@ -154,17 +154,17 @@ some <tagged>text</tagged>
         # don't hit if env sender matches as well
         self.assertEqual(candidate.examine(
             self._make_dummy_suspect(
-                envelope_sender_domain='b.example.com',
-                recipient_domain='b.example.com',
-                header_from_domain='b.example.com')),
+                envelope_sender_domain='c.example.com',
+                recipient_domain='c.example.com',
+                header_from_domain='c.example.com')),
             DUNNO,
             'env sender domain = recipient domain should NOT be flagged as spearphish (1)')
 
         # don't hit if all different
         self.assertEqual(candidate.examine(
             self._make_dummy_suspect(
-                envelope_sender_domain='a.example.com',
-                recipient_domain='b.example.com',
-                header_from_domain='c.example.com')),
+                envelope_sender_domain='d.example.com',
+                recipient_domain='e.example.com',
+                header_from_domain='f.example.com')),
             DUNNO,
             'env sender domain = recipient domain should NOT be flagged as spearphish (2)')

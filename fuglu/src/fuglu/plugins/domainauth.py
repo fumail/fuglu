@@ -562,11 +562,13 @@ class SpearPhishPlugin(ScannerPlugin):
             return DUNNO
         else:
             header_from_domains.append(header_from_domain)
+            self.logger.debug('%s: checking domain %s (source: From header address part)')
         
         if self.config.getboolean(self.section, 'check_display_part'):
             display_from_domain = extract_from_domain(suspect, False)
-            if display_from_domain is not None:
+            if display_from_domain is not None and display_from_domain not in header_from_domains:
                 header_from_domains.append(display_from_domain)
+                self.logger.debug('%s: checking domain %s (source: From header display part)')
         
         actioncode = DUNNO
         message = None
