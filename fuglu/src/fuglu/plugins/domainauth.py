@@ -483,7 +483,7 @@ class SpearPhishPlugin(ScannerPlugin):
                 'description':'get from sql database :domain will be replaced with the actual domain name. must return boolean field check_spearphish',
             },
             'check_display_part': {
-                'default': False,
+                'default': 'False',
                 'description': "set to True to also check display part of From header (else email part only)",
             },
         }
@@ -631,3 +631,6 @@ class SpearPhishPlugin(ScannerPlugin):
                     lint_ok = False
                     print str(e)
         return lint_ok
+    
+    
+    
