@@ -555,6 +555,7 @@ The other common template variables are available as well.
                 if action == 'deny':
                     self.logger.info('suspect %s contains blocked attachment %s %s' % (
                         suspect.id, displayname, asciirep))
+                    suspect.tags['blocked']['FiletypePlugin'] = True
                     blockinfo = ("%s %s: %s" % (displayname, asciirep, description)).strip()
                     suspect.tags['FiletypePlugin.errormessage'] = blockinfo
                     if self.config.getboolean(self.section, 'sendbounce'):
@@ -754,8 +755,7 @@ The other common template variables are available as well.
                                 if res == ATTACHMENT_BLOCK:
                                     self._debuginfo(
                                         suspect, "Blocked filename in archive %s" % att_name)
-                                    message = suspect.tags[
-                                        'FiletypePlugin.errormessage']
+                                    message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
                         if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
@@ -776,8 +776,7 @@ The other common template variables are available as well.
                                 if res == ATTACHMENT_BLOCK:
                                     self._debuginfo(
                                         suspect, "Extracted file %s from archive %s content-type=%s : blocked by mime content type (magic)" % (safename, att_name, contenttype_magic))
-                                    message = suspect.tags[
-                                        'FiletypePlugin.errormessage']
+                                    message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
                         
                         if hasattr(archive_handle, 'close'):
