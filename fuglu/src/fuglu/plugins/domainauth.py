@@ -615,7 +615,7 @@ class SpearPhishPlugin(ScannerPlugin):
     def _lint_sql(self):
         lint_ok = True
         sqlquery = self.config.get(self.section, 'domain_sql_query')
-        dbconnection = self.config.get(self.section, 'dbconnection', '').strip()
+        dbconnection = self.config.get(self.section, 'dbconnection').strip()
         if not ENABLED and dbconnection != '':
             print('SQLAlchemy not available, cannot use SQL backend')
             lint_ok = False
