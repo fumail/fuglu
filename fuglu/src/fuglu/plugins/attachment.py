@@ -439,10 +439,12 @@ The other common template variables are available as well.
         self.logger = self._logger()
         self.rulescache = None
         self.extremeverbosity = False
+        self.blockedfiletemplate = ''
 
         # key: regex matching content type as returned by file magic, value: archive type
         self.supported_archive_ctypes = {
             '^application\/zip': 'zip',
+            '^application\/x-tar': 'tar',
             '^application\/x-gzip': 'tar',
             '^application\/x-bzip2': 'tar',
 
@@ -517,11 +519,11 @@ The other common template variables are available as well.
     
     
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
-        if attachmentname == None:
+        if attachmentname is None:
             attachmentname = ""
         attachmentname = self.asciionly(attachmentname)
 
-        if obj == None:
+        if obj is None:
             self.logger.warning(
                 "%s: message has unknown name or content-type attachment %s" % (suspect.id, attachmentname))
             return ATTACHMENT_DUNNO
@@ -533,7 +535,7 @@ The other common template variables are available as well.
         if asciirep == attachmentname:
             displayname = ''
 
-        if ruleset == None:
+        if ruleset is None:
             return ATTACHMENT_DUNNO
 
         for action, regex, description in ruleset:
@@ -660,7 +662,7 @@ The other common template variables are available as well.
                 # some filenames are encoded, try to decode
                 try:
                     att_name = ''.join([x[0] for x in decode_header(att_name)])
-                except:
+                except Exception:
                     pass
             else:
                 # workaround for mimetypes, it always takes .ksh for text/plain
