@@ -24,12 +24,12 @@ requires: pyspf
 requires: pydns (or alternatively dnspython if only dkim is used) 
 """
 
-from fuglu.shared import ScannerPlugin, apply_template, DUNNO, Suspect, FileList, string_to_actioncode
-import time
+from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_to_actioncode, get_default_cache
+from fuglu.extensions.sql import get_session, ENABLED
+import logging
 import os
 import pkg_resources
 import re
-import string
 
 DKIMPY_AVAILABLE = False
 PYSPF_AVAILABLE = False
@@ -53,13 +53,13 @@ except ImportError:
 try:
     import ipaddress
     IPADDRESS_AVAILABLE = True
-except:
+except ImportError:
     pass
 
 try:
     import ipaddr
     IPADDR_AVAILABLE = True
-except:
+except ImportError:
     pass
 
 try:
@@ -70,7 +70,7 @@ try:
         raise Exception("no supported dns library available")
 
     DKIMPY_AVAILABLE = True
-except:
+except Exception:
     pass
 
 
@@ -81,18 +81,25 @@ try:
         raise Exception("ipaddress/ipaddr not available")
     import spf
     PYSPF_AVAILABLE = True
-except:
+except Exception:
     pass
 
 
-def extract_from_domain(suspect):
+def extract_from_domain(suspect, get_address_part=True):
     msgrep = suspect.get_message_rep()
     from_headers = msgrep.get_all("From", [])
     if len(from_headers) != 1:
         return None
 
     from_header = from_headers[0]
-    domain_match = re.search("(?<=@)[\w.-]+", from_header)
+    parts = from_header.rsplit(None, 1)
+    check_part = parts[-1]
+    if len(parts) == 2 and not get_address_part:
+        check_part = parts[0]
+    elif not get_address_part:
+        return None # no display part found
+    
+    domain_match = re.search("(?<=@)[\w.-]+", check_part)
     if domain_match is None:
         return None
     domain = domain_match.group()
@@ -241,7 +248,7 @@ known issues:
         selector = apply_template(
             self.config.get(self.section, 'selector'), suspect, addvalues)
 
-        if domain == None:
+        if domain is None:
             self._logger().error(
                 "%s: Failed to extract From-header domain for DKIM signing" % suspect.id)
             return DUNNO
@@ -263,7 +270,7 @@ known issues:
             canB = Relaxed
         canon = (canH, canB)
         headerconfig = self.config.get(self.section, 'signheaders')
-        if headerconfig == None or headerconfig.strip() == '':
+        if headerconfig is None or headerconfig.strip() == '':
             inc_headers = None
         else:
             inc_headers = headerconfig.strip().split(',')
@@ -323,7 +330,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
             return DUNNO
 
         clientinfo = suspect.get_client_info(self.config)
-        if clientinfo == None:
+        if clientinfo is None:
             suspect.debug("client info not available for SPF check")
             self._logger().warning(
                 "%s: SPF Check skipped, could not get client info" % (suspect.id))
@@ -384,7 +391,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
 
         envelope_sender_domain = suspect.from_domain.lower()
         header_from_domain = extract_from_domain(suspect)
-        if header_from_domain == None:
+        if header_from_domain is None:
             return
 
         if header_from_domain not in checkdomains:
@@ -442,6 +449,7 @@ class SpearPhishPlugin(ScannerPlugin):
 
     def __init__(self, section=None):
         ScannerPlugin.__init__(self, section)
+        self.logger = self._logger()
         self.filelist = FileList(strip=True, skip_empty=True, skip_comments=True, lowercase=True,
                                  additional_filters=None, minimum_time_between_reloads=30)
 
@@ -466,8 +474,55 @@ class SpearPhishPlugin(ScannerPlugin):
                 'default': 'threat detected: ${virusname}',
                 'description': "reject message template if running in pre-queue mode and virusaction=REJECT",
             },
+            'dbconnection':{
+                'default':"mysql://root@localhost/spfcheck?charset=utf8",
+                'description':'SQLAlchemy Connection string. Leave empty to disable SQL lookups',
+            },
+            'domain_sql_query':{
+                'default':"SELECT check_spearphish from domain where domain_name=:domain",
+                'description':'get from sql database :domain will be replaced with the actual domain name. must return boolean field check_spearphish',
+            },
+            'check_display_part': {
+                'default': 'False',
+                'description': "set to True to also check display part of From header (else email part only)",
+            },
         }
 
+
+    def get_domain_setting(self, domain, dbconnection, sqlquery, cache, cachename, default_value=None, logger=None):
+        if logger is None:
+            logger = logging.getLogger()
+        
+        cachekey = '%s-%s' % (cachename, domain)
+        cached = cache.get_cache(cachekey)
+        if cached is not None:
+            logger.debug("got cached setting for %s" % domain)
+            return cached
+    
+        settings = default_value
+    
+        try:
+            session = get_session(dbconnection)
+    
+            # get domain settings
+            dom = session.execute(sqlquery, {'domain': domain}).fetchall()
+    
+            if not dom and not dom[0] and len(dom[0]) == 0:
+                logger.warning(
+                    "Can not load domain setting - domain %s not found. Using default settings." % domain)
+            else:
+                settings = dom[0][0]
+    
+            session.close()
+    
+        except Exception as e:
+            logger.error("Exception while loading setting for %s : %s" % (domain, str(e)))
+    
+        cache.put_cache(cachekey, settings)
+        logger.debug("refreshed setting for %s" % domain)
+        return settings
+    
+    
     def should_we_check_this_domain(self,suspect):
         domainsfile = self.config.get(self.section, 'domainsfile')
         if domainsfile.strip()=='': # empty config -> check all domains
@@ -479,8 +534,19 @@ class SpearPhishPlugin(ScannerPlugin):
         self.filelist.filename = domainsfile
         envelope_recipient_domain = suspect.to_domain.lower()
         checkdomains = self.filelist.get_list()
-        return envelope_recipient_domain in checkdomains
-
+        if envelope_recipient_domain in checkdomains:
+            return True
+        
+        dbconnection = self.config.get(self.section, 'dbconnection').strip()
+        sqlquery = self.config.get(self.section,'domain_sql_query')
+        do_check = False
+        if dbconnection != '':
+            cache = get_default_cache()
+            cachename = self.section
+            do_check = self.get_domain_setting(suspect.to_domain, dbconnection, sqlquery, cache, cachename, False, self.logger)
+        return do_check
+    
+    
     def examine(self, suspect):
         if not self.should_we_check_this_domain(suspect):
             return DUNNO
@@ -488,42 +554,85 @@ class SpearPhishPlugin(ScannerPlugin):
         envelope_sender_domain = suspect.from_domain.lower()
         if envelope_sender_domain == envelope_recipient_domain:
             return DUNNO  # we only check the message if the env_sender_domain differs. If it's the same it will be caught by other means (like SPF)
-
+        
+        header_from_domains = []
         header_from_domain = extract_from_domain(suspect)
         if header_from_domain is None:
-            self._logger().warn("%s: Could not extract header from domain for spearphish check" % suspect.id)
+            self.logger.warn("%s: Could not extract header from domain for spearphish check" % suspect.id)
             return DUNNO
-
-        if header_from_domain == envelope_recipient_domain:
-            virusname = self.config.get(self.section, 'virusname')
-            virusaction = self.config.get(self.section, 'virusaction')
-            actioncode = string_to_actioncode(virusaction, self.config)
-
-            logmsg = '%s: spear phish pattern detected, recipient=%s env_sender_domain=%s header_from_domain=%s' % (
-            suspect.id, suspect.to_address, envelope_sender_domain, header_from_domain)
-            self._logger().info(logmsg)
-            self.flag_as_phish(suspect, virusname)
-
-            message = apply_template(
-                self.config.get(self.section, 'rejectmessage'), suspect, {'virusname': virusname})
-            return actioncode, message
-
-        return DUNNO
-
+        else:
+            header_from_domains.append(header_from_domain)
+            self.logger.debug('%s: checking domain %s (source: From header address part)' % (suspect.id, header_from_domain))
+        
+        if self.config.getboolean(self.section, 'check_display_part'):
+            display_from_domain = extract_from_domain(suspect, False)
+            if display_from_domain is not None and display_from_domain not in header_from_domains:
+                header_from_domains.append(display_from_domain)
+                self.logger.debug('%s: checking domain %s (source: From header display part)' % (suspect.id, display_from_domain))
+        
+        actioncode = DUNNO
+        message = None
+        
+        for header_from_domain in header_from_domains:
+            if header_from_domain == envelope_recipient_domain:
+                virusname = self.config.get(self.section, 'virusname')
+                virusaction = self.config.get(self.section, 'virusaction')
+                actioncode = string_to_actioncode(virusaction, self.config)
+                
+                logmsg = '%s: spear phish pattern detected, env_rcpt_domain=%s env_sender_domain=%s header_from_domain=%s' % \
+                         (suspect.id, envelope_recipient_domain, envelope_sender_domain, header_from_domain)
+                self.logger.info(logmsg)
+                self.flag_as_phish(suspect, virusname)
+                
+                message = apply_template(self.config.get(self.section, 'rejectmessage'), suspect, {'virusname': virusname})
+                break
+        
+        return actioncode, message
+    
+    
     def flag_as_phish(self, suspect, virusname):
         suspect.tags['%s.virus' % self.config.get(self.section, 'virusenginename')] = {'message content': virusname}
         suspect.tags['virus'][self.config.get(self.section, 'virusenginename')] = True
-
+    
+    
     def __str__(self):
         return "Spearphish Check"
-
+    
+    
     def lint(self):
-        allok = self.checkConfig() and self.lint_file()
+        allok = self.checkConfig() and self._lint_file() and self._lint_sql()
         return allok
-
-    def lint_file(self):
+    
+    
+    def _lint_file(self):
         filename = self.config.get(self.section, 'domainsfile')
         if not os.path.exists(filename):
-            print("Spearphish domains file %s not found" % (filename))
+            print("Spearphish domains file %s not found" % filename)
             return False
         return True
+    
+    
+    def _lint_sql(self):
+        lint_ok = True
+        sqlquery = self.config.get(self.section, 'domain_sql_query')
+        dbconnection = self.config.get(self.section, 'dbconnection', '').strip()
+        if not ENABLED and dbconnection != '':
+            print('SQLAlchemy not available, cannot use SQL backend')
+            lint_ok = False
+        elif dbconnection == '':
+            print('No DB connection defined. Disabling SQL backend')
+        else:
+            if not sqlquery.lower().startswith('select '):
+                lint_ok = False
+                print('SQL statement must be a SELECT query')
+            if lint_ok:
+                try:
+                    conn = get_session(dbconnection)
+                    conn.execute(sqlquery, {'domain': 'example.com'})
+                except Exception as e:
+                    lint_ok = False
+                    print(str(e))
+        return lint_ok
+    
+    
+    
