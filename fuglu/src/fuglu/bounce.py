@@ -60,7 +60,7 @@ class Bounce(object):
         recipient     -- Message recipient (bla@bla.com)
         templatefile  -- Template to use
         suspect      -- suspect that caused the bounce
-        values       -- Values to apply to the template
+        values       -- Values to apply to the template. ensure all values are of type <str>
 
         If the suspect has the 'nobounce' tag set, the message will not be sent. The same happens
         if the global configuration 'disablebounces' is set.

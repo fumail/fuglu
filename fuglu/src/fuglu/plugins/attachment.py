@@ -518,6 +518,16 @@ The other common template variables are available as well.
         return "".join([x for x in stri if ord(x) < 128])
     
     
+    def _tostr(self, stri):
+        if sys.version_info < (3,):
+            if not isinstance(stri, str): # python 2 unicode object
+                stri = stri.encode('utf-8', 'ignore')
+        else:
+            if isinstance(stri, bytes): # python3 bytes object
+                stri = stri.decode('utf-8', 'ignore')
+        return stri
+    
+    
     def matchRules(self, ruleset, obj, suspect, attachmentname=None):
         if attachmentname is None:
             attachmentname = ""
@@ -539,8 +549,10 @@ The other common template variables are available as well.
             return ATTACHMENT_DUNNO
 
         for action, regex, description in ruleset:
-            # database description may be unicode
-            description = description.encode("utf-8", "ignore")
+            # database description, displayname and asciirep may be unicode
+            description = self._tostr(description)
+            displayname = self._tostr(displayname)
+            asciirep = self._tostr(asciirep)
 
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
