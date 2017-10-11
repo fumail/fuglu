@@ -539,8 +539,10 @@ The other common template variables are available as well.
             return ATTACHMENT_DUNNO
 
         for action, regex, description in ruleset:
-            # database description may be unicode
+            # database description, displayname and asciirep may be unicode
             description = description.encode("utf-8", "ignore")
+            displayname = displayname.encode("utf-8", "ignore")
+            asciirep = asciirep.encode("utf-8", "ignore")
 
             prog = re.compile(regex, re.I)
             if self.extremeverbosity:
