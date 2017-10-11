@@ -101,8 +101,12 @@ class SMTPHandler(ProtocolHandler):
         toaddr = sess.to_address
         tempfilename = sess.tempfilename
 
-        suspect = Suspect(fromaddr, toaddr, tempfilename)
-        suspect.recipients = set(sess.recipients)
+        try:
+            suspect = Suspect(fromaddr, toaddr, tempfilename)
+            suspect.recipients = set(sess.recipients)
+        except ValueError as e:
+            self.logger.error('failed to initialise suspect with from=<%s> to=<%s> : %s' % (fromaddr, toaddr, str(e)))
+            raise
         return suspect
 
     def commitback(self, suspect):

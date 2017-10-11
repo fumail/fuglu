@@ -81,9 +81,13 @@ class ESMTPHandler(ProtocolHandler):
         fromaddr = sess.from_address
         toaddr = sess.to_address
         tempfilename = sess.tempfilename
-
-        suspect = Suspect(fromaddr, toaddr, tempfilename)
-        suspect.recipients = set(sess.recipients)
+        
+        try:
+            suspect = Suspect(fromaddr, toaddr, tempfilename)
+            suspect.recipients = set(sess.recipients)
+        except ValueError as e:
+            self.logger.error('failed to initialise suspect with from=<%s> to=<%s> : %s' % (fromaddr, toaddr, str(e)))
+            raise
 
         if sess.xforward_helo is not None and sess.xforward_addr is not None and sess.xforward_rdns is not None:
             suspect.clientinfo = sess.xforward_helo, sess.xforward_addr, sess.xforward_rdns
