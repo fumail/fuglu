@@ -208,7 +208,7 @@ class Suspect(object):
 
         try:
             self.to_localpart, self.to_domain = self.to_address.rsplit('@', 1)
-        except:
+        except Exception:
             raise ValueError("invalid to email address: %s" % self.to_address)
 
         if self.from_address == '':
@@ -216,10 +216,9 @@ class Suspect(object):
             self.from_localpart = ''
         else:
             try:
-                (self.from_localpart, self.from_domain) = self.from_address.rsplit('@', 1)
+                self.from_localpart, self.from_domain = self.from_address.rsplit('@', 1)
             except Exception:
-                raise ValueError(
-                    "invalid from email address: '%s'" % self.from_address)
+                raise ValueError("invalid from email address: '%s'" % self.from_address)
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""

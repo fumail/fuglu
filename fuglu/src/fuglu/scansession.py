@@ -122,9 +122,8 @@ class SessionHandler(object):
                 except Exception:
                     message_is_deferred = True
                     trb = traceback.format_exc()
-                    self.logger.error(
-                        "Could not commit message. Error: %s" % trb)
-                    self.protohandler.defer('Internal error trying to commit.')
+                    self.logger.error("Could not commit message. Error: %s" % trb)
+                    self._defer()
 
             elif result == DELETE:
                 self.logger.info("MESSAGE DELETED: %s" % suspect.id)
@@ -139,15 +138,12 @@ class SessionHandler(object):
                 self.protohandler.reject(retmesg)
             elif result == DEFER:
                 message_is_deferred = True
-                retmesg = 'Internal problem - message deferred'
-                if self.message is not None:
-                    retmesg = self.message
-                self.protohandler.defer(retmesg)
+                self._defer(self.message)
             else:
                 self.logger.error(
                     'Invalid Message action Code: %s. Using DEFER' % result)
                 message_is_deferred = True
-                self.protohandler.defer('Internal problem - message deferred')
+                self._defer()
 
             # run appenders (stats plugin etc) unless msg is deferred
             if not message_is_deferred:
@@ -160,22 +156,31 @@ class SessionHandler(object):
             try:
                 os.remove(suspect.tempfile)
                 self.logger.debug('Removed tempfile %s' % suspect.tempfile)
-            except:
-                self.logger.warning(
-                    'Could not remove tempfile %s' % suspect.tempfile)
+            except OSError:
+                self.logger.warning('Could not remove tempfile %s' % suspect.tempfile)
         except KeyboardInterrupt:
             sys.exit(0)
+        except ValueError:
+            self._defer()
         except Exception as e:
             exc = traceback.format_exc()
             self.logger.error('Exception %s: %s' % (e, exc))
-            #try to end the session gracefully, but this might cause the same exception again,
-            #in case of a broken pipe for example
-            try:
-                self.protohandler.defer("internal problem - message deferred")
-            except:
-                pass
+            self._defer()
 
         self.logger.debug('Session finished')
+        
+        
+    def _defer(self, message=None):
+        if message is None:
+            message="internal problem - message deferred"
+        
+        # try to end the session gracefully, but this might cause the same exception again,
+        # in case of a broken pipe for example
+        try:
+            self.protohandler.defer(message)
+        except Exception:
+            pass
+        
 
     def trash(self, suspect, killerplugin=None):
         """copy suspect to trash if this is enabled"""
