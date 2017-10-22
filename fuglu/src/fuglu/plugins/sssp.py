@@ -353,7 +353,10 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                     'Could not reach SSSP server using unix socket %s' % sock)
         else:
             sssp_PORT = iport
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            proto = socket.AF_INET
+            if ':' in sssp_HOST:
+                proto = socket.AF_INET6
+            s = socket.socket(proto, socket.SOCK_STREAM)
             s.settimeout(self.config.getint(self.section, 'timeout'))
             try:
                 s.connect((sssp_HOST, sssp_PORT))
