@@ -471,7 +471,10 @@ Tags:
                 raise Exception(
                     'Could not reach spamd using unix socket %s' % sock)
         else:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            proto = socket.AF_INET
+            if ':' in host:
+                proto = socket.AF_INET6
+            s = socket.socket(proto, socket.SOCK_STREAM)
             s.settimeout(self.config.getint(self.section, 'timeout'))
             try:
                 s.connect((host, port))

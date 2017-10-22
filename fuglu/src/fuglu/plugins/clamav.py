@@ -276,7 +276,10 @@ Tags:
                     'Could not reach clamd using unix socket %s' % sock)
         else:
             clamd_PORT = int(self.config.get(self.section, 'port'))
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            proto = socket.AF_INET
+            if ':' in clamd_HOST:
+                proto = socket.AF_INET6
+            s = socket.socket(proto, socket.SOCK_STREAM)
             s.settimeout(socktimeout)
             try:
                 s.connect((clamd_HOST, clamd_PORT))
