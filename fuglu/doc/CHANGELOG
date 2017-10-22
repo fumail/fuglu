@@ -1,3 +1,15 @@
+-- Fuglu 0.6.7, unreleased
+ * Attachment Plugin:
+  * support more archive types ( tar.gz, tgz, tar.bz2, .7z)
+  * extract archives based on detected magic mime type if possible (instead of file ending)
+ * New Plugin: SpearPhish detection
+ * Improve body text extraction by also extracting multipart/mixed and the message's epilogue
+ * various refactorings / remove lots of code smell
+ * suspect: new "blocked" default tag to indicate a message contains unwanted content (blocked attachents etc), but is not strictly malicious like spam/virus
+ * new tool 'fuglu_client' allows scanning messages from the commandline by either injecting them into a running fuglu
+   with the Netcat plugin or by starting its own temporary fuglu instance. This is helpful for debugging or running fuglu
+   in fetchmail like environments
+
 -- Fuglu 0.6.6, 2016-05-17
  * Minimum python version 2.6
  * Many changes to start making fuglu python3 compatible
