@@ -242,7 +242,10 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                     'Could not reach ICAP server using unix socket %s' % sock)
         else:
             icap_PORT = int(self.config.get(self.section, 'port'))
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            proto = socket.AF_INET
+            if ':' in icap_HOST:
+                proto = socket.AF_INET6
+            s = socket.socket(proto, socket.SOCK_STREAM)
             s.settimeout(self.config.getint(self.section, 'timeout'))
             try:
                 s.connect((icap_HOST, icap_PORT))

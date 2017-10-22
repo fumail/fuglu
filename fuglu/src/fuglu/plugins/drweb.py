@@ -198,11 +198,15 @@ Tags:
             return None
 
     def __init_socket__(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        host = self.config.get(self.section, 'host')
+        port = self.config.getint(self.section, 'port')
+        proto = socket.AF_INET
+        if ':' in host:
+            proto = socket.AF_INET6
+        s = socket.socket(proto, socket.SOCK_STREAM)
         s.settimeout(self.config.getint(self.section, 'timeout'))
         try:
-            s.connect((self.config.get(self.section, 'host'),
-                       self.config.getint(self.section, 'port')))
+            s.connect((host,port))
         except socket.error:
             raise Exception('Could not reach drweb using network (%s, %s)' % (
                 self.config.get(self.section, 'host'), self.config.getint(self.section, 'port')))
