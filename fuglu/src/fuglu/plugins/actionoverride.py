@@ -79,9 +79,7 @@ class ActionOverridePlugin(ScannerPlugin):
 
             elif actionstring.upper() == 'REDIRECT':
                 suspect.to_address = message.strip()
-                suspect.recipients = [suspect.to_address, ]
-                # todo: should we override to_domain? probably not
-                # todo: check for invalid adress, multiple adressses
+                # todo: check for invalid adress, multiple adressses, set suspect.recipients instead of to_address
                 # todo: document redirect action
             else:
                 self.logger.error("Invalid action: %s" % arg)

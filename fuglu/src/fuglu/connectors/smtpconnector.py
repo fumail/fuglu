@@ -98,12 +98,10 @@ class SMTPHandler(ProtocolHandler):
 
         sess = self.sess
         fromaddr = sess.from_address
-        toaddr = sess.to_address
         tempfilename = sess.tempfilename
 
         try:
-            suspect = Suspect(fromaddr, toaddr, tempfilename)
-            suspect.recipients = set(sess.recipients)
+            suspect = Suspect(fromaddr, sess.recipients, tempfilename)
         except ValueError as e:
             self.logger.error('failed to initialise suspect with from=<%s> to=<%s> : %s' % (fromaddr, toaddr, str(e)))
             raise
@@ -160,8 +158,7 @@ class SMTPSession(object):
     def __init__(self, socket, config):
         self.config = config
         self.from_address = None
-        self.to_address = None  # single address
-        self.recipients = []  # multiple recipients
+        self.recipients = []
         self.helo = None
         self.dataAccum = None
 
@@ -255,7 +252,7 @@ class SMTPSession(object):
             self.helo = data
         elif cmd == "RSET":
             self.from_address = None
-            self.to_address = None
+            self.recipients = []
             self.helo = None
             self.dataAccum = ""
             self.state = SMTPSession.ST_INIT
@@ -273,7 +270,6 @@ class SMTPSession(object):
                 return "503 Bad command sequence", 1
             self.state = SMTPSession.ST_RCPT
             rec = self.stripAddress(data)
-            self.to_address = rec
             self.recipients.append(rec)
         elif cmd == "DATA":
             if self.state != SMTPSession.ST_RCPT:

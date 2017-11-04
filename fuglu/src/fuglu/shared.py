@@ -169,7 +169,7 @@ class Suspect(object):
     with a suspect and may modify the tags or even the message content itself.
     """
 
-    def __init__(self, from_address, to_address, tempfile):
+    def __init__(self, from_address, recipients, tempfile):
         self.source = None
         """holds the message source if set directly"""
 
@@ -191,9 +191,12 @@ class Suspect(object):
         # stuff set from smtp transaction
         self.size = os.path.getsize(tempfile)
         self.from_address = from_address
-        # for plugins supporting only one recipient
-        self.to_address = to_address
-        self.recipients = []  # for plugins supporting multiple recipients
+
+        # backwards compatibility, recipients can be a single address
+        if type(recipients) is list:
+            self.recipients = recipients
+        else:
+            self.recipients = [recipients, ]
 
         # additional basic information
         self.timestamp = time.time()
@@ -202,26 +205,64 @@ class Suspect(object):
         # headers which are prepended before re-injecting the message
         self.addheaders = {}
 
-        # helper attributes
         if self.from_address is None:
             self.from_address = ''
 
-        try:
-            self.to_localpart, self.to_domain = self.to_address.rsplit('@', 1)
-        except Exception:
-            raise ValueError("invalid to email address: %s" % self.to_address)
-
-        if self.from_address == '':
-            self.from_domain = ''
-            self.from_localpart = ''
-        else:
-            try:
-                self.from_localpart, self.from_domain = self.from_address.rsplit('@', 1)
-            except Exception:
-                raise ValueError("invalid from email address: '%s'" % self.from_address)
-
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
+
+    @property
+    def to_address(self):
+        """Returns the first recipient address"""
+        try:
+            return self.recipients[0]
+        except IndexError:
+            return None
+
+    @to_address.setter
+    def to_address(self, recipient):
+        """Sets a single recipient for this suspect, removing all others"""
+        self.recipients=[recipient,]
+
+    @property
+    def to_localpart(self):
+        """Returns the local part of the first recipient"""
+        try:
+            return self.to_address.rsplit('@', 1)[0]
+        except:
+            return None
+
+    @property
+    def to_domain(self):
+        """Returns the local part of the first recipient"""
+        try:
+            return self.to_address.rsplit('@', 1)[1]
+        except:
+            return None
+
+
+    @property
+    def from_localpart(self):
+        if self.from_address == '':
+            return ''
+
+        else:
+            try:
+                self.from_localpart, self.from_domain = self.from_address.rsplit('@', 1)[0]
+            except:
+                return None
+
+    @property
+    def from_domain(self):
+        if self.from_address == '':
+            return ''
+
+        else:
+            try:
+                self.from_localpart, self.from_domain = self.from_address.rsplit('@', 1)[1]
+            except:
+                return None
+
 
     def _generate_id(self):
         """

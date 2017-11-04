@@ -46,10 +46,8 @@ class MilterHandler(ProtocolHandler):
 
         sess = self.sess
         fromaddr = sess.from_address
-        toaddr = sess.to_address
         tempfilename = sess.tempfilename
-        suspect = Suspect(fromaddr, toaddr, tempfilename)
-        suspect.recipients = set(sess.recipients)
+        suspect = Suspect(fromaddr, sess.recipients, tempfilename)
 
         if sess.helo is not None and sess.addr is not None and sess.rdns is not None:
             suspect.clientinfo = sess.helo, sess.addr, sess.rdns
@@ -102,7 +100,6 @@ class MilterSession(PpyMilter):
         self.__milter_dispatcher = PpyMilterDispatcher(self)
         self.recipients = []
         self.from_address = None
-        self.to_address = None
 
         (handle, tempfilename) = tempfile.mkstemp(
             prefix='fuglu', dir=self.config.get('main', 'tempdir'))
@@ -133,7 +130,6 @@ class MilterSession(PpyMilter):
 
     def OnRcptTo(self, cmd, rcpt_to, esmtp_info):
         self.recipients.append(rcpt_to)
-        self.to_address = rcpt_to
         return self.Continue()
 
     def OnMailFrom(self, cmd, mail_from, args):
