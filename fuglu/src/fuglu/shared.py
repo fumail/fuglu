@@ -198,6 +198,14 @@ class Suspect(object):
         else:
             self.recipients = [recipients, ]
 
+        # basic email validitiy check - nothing more than necessary for our internal assumptions
+        for rec in self.recipients:
+            if rec is None:
+                raise ValueError("Recipient address can not be None")
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", rec):
+                raise ValueError("Invalid recipient address: %s"%rec)
+
+
         # additional basic information
         self.timestamp = time.time()
         self.id = self._generate_id()
@@ -207,6 +215,9 @@ class Suspect(object):
 
         if self.from_address is None:
             self.from_address = ''
+
+        if self.from_address!='' and  not re.match(r"[^@]+@[^@]+\.[^@]+", self.from_address):
+            raise ValueError("invalid sender address: %s"%self.from_address)
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
@@ -230,6 +241,7 @@ class Suspect(object):
         try:
             return self.to_address.rsplit('@', 1)[0]
         except:
+            logging.getLogger('suspect').error('could not extract localpart from recipient address %s' % self.to_address)
             return None
 
     @property
@@ -238,6 +250,7 @@ class Suspect(object):
         try:
             return self.to_address.rsplit('@', 1)[1]
         except:
+            logging.getLogger('suspect').error('could not extract domain from recipient address %s' % self.from_address)
             return None
 
 
@@ -248,8 +261,9 @@ class Suspect(object):
 
         else:
             try:
-                self.from_localpart, self.from_domain = self.from_address.rsplit('@', 1)[0]
+               return self.from_address.rsplit('@', 1)[0]
             except:
+                logging.getLogger('suspect').error('could not extract localpart from sender address %s'%self.from_address)
                 return None
 
     @property
@@ -259,8 +273,9 @@ class Suspect(object):
 
         else:
             try:
-                self.from_localpart, self.from_domain = self.from_address.rsplit('@', 1)[1]
+                return self.from_address.rsplit('@', 1)[1]
             except:
+                logging.getLogger('suspect').error('could not extract domain from sender address %s' % self.from_address)
                 return None
 
 
