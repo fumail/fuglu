@@ -79,12 +79,10 @@ class ESMTPHandler(ProtocolHandler):
 
         sess = self.sess
         fromaddr = sess.from_address
-        toaddr = sess.to_address
         tempfilename = sess.tempfilename
         
         try:
-            suspect = Suspect(fromaddr, toaddr, tempfilename)
-            suspect.recipients = set(sess.recipients)
+            suspect = Suspect(fromaddr, sess.recipients, tempfilename)
         except ValueError as e:
             self.logger.error('failed to initialise suspect with from=<%s> to=<%s> : %s' % (fromaddr, toaddr, str(e)))
             raise
@@ -186,8 +184,7 @@ class ESMTPPassthroughSession(object):
     def __init__(self, socket, config):
         self.config = config
         self.from_address = None
-        self.to_address = None  # single address
-        self.recipients = []  # multiple recipients
+        self.recipients = []
         self.helo = None
         self.dataAccum = None
 
@@ -324,7 +321,7 @@ class ESMTPPassthroughSession(object):
             self.state = ESMTPPassthroughSession.ST_HELO
         elif cmd == "RSET":
             self.from_address = None
-            self.to_address = None
+            self.recipients = []
             self.helo = None
             self.dataAccum = ""
             self.state = ESMTPPassthroughSession.ST_INIT
@@ -348,7 +345,6 @@ class ESMTPPassthroughSession(object):
                 return "503 Bad command sequence", 1
             try:
                 rec = self.stripAddress(data)
-                self.to_address = rec
                 self.recipients.append(rec)
             except Exception:
                 return "501 invalid address syntax", 1

@@ -59,12 +59,12 @@ class DummySMTPServer(object):
 
         fromaddr = sess.from_address
 
-        toaddr = sess.to_address
+        recipients = sess.recipients
         self.tempfilename = sess.tempfilename
         self.logger.debug("Message from %s to %s stored to %s" %
-                          (fromaddr, toaddr, self.tempfilename))
+                          (fromaddr, recipients, self.tempfilename))
 
-        self.suspect = Suspect(fromaddr, toaddr, self.tempfilename)
+        self.suspect = Suspect(fromaddr, recipients, self.tempfilename)
 
     def shutdown(self):
         try:

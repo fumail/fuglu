@@ -40,8 +40,7 @@ class NCHandler(ProtocolHandler):
 
         tempfilename = sess.tempfilename
 
-        suspect = Suspect(fromaddr, toaddr, tempfilename)
-        suspect.recipients = [toaddr, ]
+        suspect = Suspect(fromaddr, [toaddr, ], tempfilename)
         return suspect
 
     def commitback(self, suspect):
@@ -67,8 +66,7 @@ class NCSession(object):
     def __init__(self, socket, config):
         self.config = config
         self.from_address = None
-        self.to_address = None  # single address
-        self.recipients = []  # multiple recipients
+        self.recipients = []
         self.helo = None
 
         self.socket = socket
