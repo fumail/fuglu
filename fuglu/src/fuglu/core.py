@@ -477,21 +477,16 @@ class MainController(object):
             self.logger.error(
                 "could not start connector %s/%s : %s" % (protocol, port, str(e)))
 
-    def startup(self):
-        self.load_extensions()
-        ok = self.load_plugins()
-        if not ok:
-            sys.stderr.write(
-                "Some plugins failed to load, please check the logs. Aborting.\n")
-            self.logger.info('Fuglu shut down after fatal error condition')
-            sys.exit(1)
+    def _start_stats_thread(self):
         self.logger.info("Init Stat Engine")
-        self.statsthread = StatsThread(self.config)
+        statsthread = StatsThread(self.config)
         mrtg_stats_thread = threading.Thread(
-            name='MRTG-Statswriter', target=self.statsthread.writestats, args=())
+            name='MRTG-Statswriter', target=statsthread.writestats, args=())
         mrtg_stats_thread.daemon = True
         mrtg_stats_thread.start()
+        return statsthread
 
+    def _start_threadpool(self):
         self.logger.info("Init Threadpool")
         try:
             minthreads = self.config.getint('performance', 'minthreads')
@@ -503,24 +498,26 @@ class MainController(object):
             maxthreads = 3
 
         queuesize = maxthreads * 10
-        self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
+        return ThreadPool(minthreads, maxthreads, queuesize)
 
+
+    def _start_connectors(self):
         self.logger.info("Starting interface sockets...")
         ports = self.config.get('main', 'incomingport')
         for port in ports.split(','):
             self.start_connector(port)
 
-        # control socket
+
+    def _start_control_server(self):
         control = ControlServer(self, address=self.config.get(
             'main', 'bindaddress'), port=self.config.get('main', 'controlport'))
         ctrl_server_thread = threading.Thread(
             name='Control server', target=control.serve, args=())
         ctrl_server_thread.daemon = True
         ctrl_server_thread.start()
+        return control
 
-        self.controlserver = control
-
-        self.logger.info('Startup complete')
+    def _run_main_loop(self):
         if self.debugconsole:
             self.run_debugconsole()
         else:
@@ -534,6 +531,23 @@ class MainController(object):
                     time.sleep(1)
                 except KeyboardInterrupt:
                     self.stayalive = False
+
+    def startup(self):
+        self.load_extensions()
+        ok = self.load_plugins()
+        if not ok:
+            sys.stderr.write(
+                "Some plugins failed to load, please check the logs. Aborting.\n")
+            self.logger.info('Fuglu shut down after fatal error condition')
+            sys.exit(1)
+
+        self.statsthread = self._start_stats_thread()
+        self.threadpool = self._start_threadpool()
+        self._start_connectors()
+        self.controlserver = self._start_control_server()
+
+        self.logger.info('Startup complete')
+        self._run_main_loop()
         self.shutdown()
 
     def run_debugconsole(self):
