@@ -647,16 +647,17 @@ class MainController(object):
         self.logger.info('Applying configuration changes...')
 
         # threadpool changes?
-        minthreads = self.config.getint('performance', 'minthreads')
-        maxthreads = self.config.getint('performance', 'maxthreads')
+        if self.config.get('performance','backend') == 'thread' and self.threadpool is not None:
+            minthreads = self.config.getint('performance', 'minthreads')
+            maxthreads = self.config.getint('performance', 'maxthreads')
 
-        if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
-            self.logger.info(
-                'Threadpool config changed, initialising new threadpool')
-            queuesize = maxthreads * 10
-            currentthreadpool = self.threadpool
-            self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
-            currentthreadpool.stayalive = False
+            if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
+                self.logger.info(
+                    'Threadpool config changed, initialising new threadpool')
+                queuesize = maxthreads * 10
+                currentthreadpool = self.threadpool
+                self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
+                currentthreadpool.stayalive = False
 
         # smtp engine changes?
         ports = self.config.get('main', 'incomingport')
