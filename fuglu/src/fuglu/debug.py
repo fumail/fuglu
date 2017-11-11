@@ -151,8 +151,11 @@ class ControlSession(object):
     def workerlist(self, args):
         """list of mail scanning workers"""
         threadpool = self.controller.threadpool
-        workerlist = "\n%s" % '\n*******\n'.join(map(repr, threadpool.workers))
-        res = "Total %s Threads\n%s" % (len(threadpool.workers), workerlist)
+        if threadpool is not None:
+            workerlist = "\n%s" % '\n*******\n'.join(map(repr, threadpool.workers))
+            res = "Total %s Threads\n%s" % (len(threadpool.workers), workerlist)
+        else:
+            res = "Threadpool is disabled"
         return res
 
     def threadlist(self, args):
