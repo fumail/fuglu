@@ -46,6 +46,7 @@ def buildmsgsource(suspect):
 
 
 class ESMTPHandler(ProtocolHandler):
+    protoname = 'ESMTP (before queue)'
 
     def __init__(self, socket, config):
         ProtocolHandler.__init__(self, socket, config)

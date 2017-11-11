@@ -47,7 +47,7 @@ def buildmsgsource(suspect):
 
 
 class SMTPHandler(ProtocolHandler):
-    protoname = 'SMTP (After Queue)'
+    protoname = 'SMTP (after queue)'
 
     def __init__(self, socket, config):
         ProtocolHandler.__init__(self, socket, config)
