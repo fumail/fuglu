@@ -26,12 +26,13 @@ import datetime
 import logging
 import threading
 from fuglu.threadpool import ThreadPool
+import fuglu.procpool
 import inspect
 import traceback
 import time
 import code
 import socket
-
+import multiprocessing
 from fuglu.shared import default_template_values, Suspect, HAVE_BEAUTIFULSOUP, BS_VERSION
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
@@ -268,7 +269,16 @@ class MainController(object):
                 'section': 'performance',
                 'description': 'maximum scanner threads',
             },
-
+            'backend': {
+                'default': "thread",
+                'section': 'performance',
+                'description': "Method for parallelism, either 'thread' or 'process' ",
+            },
+            'initialprocs': {
+                'default': "0",
+                'section': 'performance',
+                'description': "Initial number of processes when backend='process'. If 0 (the default), automatically selects twice the number of available virtual cores. Despite its 'initial'-name, this number currently is not adapted automatically.",
+            },
 
             # spam section
             'defaultlowspamaction': {
@@ -422,6 +432,7 @@ class MainController(object):
         self.logger = self._logger()
         self.stayalive = True
         self.threadpool = None
+        self.procpool = None
         self.controlserver = None
         self.started = datetime.datetime.now()
         self.statsthread = None
@@ -500,13 +511,19 @@ class MainController(object):
         queuesize = maxthreads * 10
         return ThreadPool(minthreads, maxthreads, queuesize)
 
+    def _start_processpool(self):
+        numprocs = self.config.getint('performance','initialprocs')
+        if numprocs < 1:
+            numprocs = multiprocessing.cpu_count() *2
+        self.logger.info("Init process pool with %s worker processes"%(numprocs))
+        pool = fuglu.procpool.ProcManager(numprocs = numprocs, config = self.config)
+        return pool
 
     def _start_connectors(self):
         self.logger.info("Starting interface sockets...")
         ports = self.config.get('main', 'incomingport')
         for port in ports.split(','):
             self.start_connector(port)
-
 
     def _start_control_server(self):
         control = ControlServer(self, address=self.config.get(
@@ -542,7 +559,12 @@ class MainController(object):
             sys.exit(1)
 
         self.statsthread = self._start_stats_thread()
-        self.threadpool = self._start_threadpool()
+        backend = self.config.get('performance','backend')
+        if backend == 'process':
+            self.procpool = self._start_processpool()
+        else: # default backend is 'thread'
+            self.threadpool = self._start_threadpool()
+
         self._start_connectors()
         self.controlserver = self._start_control_server()
 
@@ -676,7 +698,11 @@ class MainController(object):
         if self.controlserver != None:
             self.controlserver.shutdown()
 
-        self.threadpool.stayalive = False
+        if self.threadpool:
+            self.threadpool.stayalive = False
+        if self.procpool:
+            self.procpool.stayalive = False
+
         self.stayalive = False
         self.logger.info('Shutdown complete')
         self.logger.info('Remaining threads: %s' % threading.enumerate())
