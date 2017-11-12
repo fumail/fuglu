@@ -39,20 +39,20 @@ class SessionHandler(object):
         self.plugins = plugins
         self.appenders = appenders
         self.stats = Statskeeper()
-        self.workerthread = None
+        self.worker = None
         self.message = None
         self.protohandler = protohandler
 
-    def set_threadinfo(self, status):
-        if self.workerthread is not None:
-            self.workerthread.threadinfo = status
+    def set_workerstate(self, status):
+        if self.worker is not None:
+            self.worker.workerstate = status
 
-    def handlesession(self, workerthread=None):
-        self.workerthread = workerthread
+    def handlesession(self, worker=None):
+        self.worker = worker
 
         prependheader = self.config.get('main', 'prependaddedheaders')
         try:
-            self.set_threadinfo('receiving message')
+            self.set_workerstate('receiving message')
 
             self.stats.incount += 1
             suspect = self.protohandler.get_suspect()
@@ -65,7 +65,7 @@ class SessionHandler(object):
                     suspect.from_address, len(suspect.recipients), suspect.to_address))
             self.logger.debug("Message from %s to %s: %s bytes stored to %s" % (
                 suspect.from_address, suspect.to_address, suspect.size, suspect.tempfile))
-            self.set_threadinfo("Handling message %s" % suspect)
+            self.set_workerstate("Handling message %s" % suspect)
             # store incoming port to tag, could be used to disable plugins
             # based on port
             try:
@@ -109,7 +109,7 @@ class SessionHandler(object):
             # check if one of the plugins made a decision
             result = self.action
 
-            self.set_threadinfo("Finishing message %s" % suspect)
+            self.set_workerstate("Finishing message %s" % suspect)
 
             message_is_deferred = False
             if result == ACCEPT or result == DUNNO:
@@ -168,19 +168,19 @@ class SessionHandler(object):
             self._defer()
 
         self.logger.debug('Session finished')
-        
-        
+
+
     def _defer(self, message=None):
         if message is None:
             message="internal problem - message deferred"
-        
+
         # try to end the session gracefully, but this might cause the same exception again,
         # in case of a broken pipe for example
         try:
             self.protohandler.defer(message)
         except Exception:
             pass
-        
+
 
     def trash(self, suspect, killerplugin=None):
         """copy suspect to trash if this is enabled"""
@@ -196,7 +196,7 @@ class SessionHandler(object):
                     "Trashdir %s does not exist and could not be created" % trashdir)
                 return
             self.logger.info('Created trashdir %s' % trashdir)
-        
+
         trashfilename = ''
         try:
             handle, trashfilename = tempfile.mkstemp(
@@ -226,7 +226,7 @@ class SessionHandler(object):
         for plugin in pluglist:
             try:
                 self.logger.debug('Running plugin %s' % plugin)
-                self.set_threadinfo(
+                self.set_workerstate(
                     "%s : Running Plugin %s" % (suspect, plugin))
                 suspect.debug('Running plugin %s' % str(plugin))
                 starttime = time.time()
@@ -295,7 +295,7 @@ class SessionHandler(object):
         for plugin in self.prependers:
             try:
                 self.logger.debug('Running prepender %s' % plugin)
-                self.set_threadinfo(
+                self.set_workerstate(
                     "%s : Running Prepender %s" % (suspect, plugin))
                 starttime = time.time()
                 result = plugin.pluginlist(suspect, plugcopy)
@@ -330,7 +330,7 @@ class SessionHandler(object):
             try:
                 self.logger.debug('Running appender %s' % plugin)
                 suspect.debug('Running appender %s' % plugin)
-                self.set_threadinfo(
+                self.set_workerstate(
                     "%s : Running appender %s" % (suspect, plugin))
                 starttime = time.time()
                 plugin.process(suspect, finaldecision)

@@ -14,6 +14,7 @@
 #
 #
 #
+from __future__ import print_function
 import multiprocessing
 import multiprocessing.queues
 
@@ -26,6 +27,9 @@ import pickle
 
 class ProcManager(object):
     def __init__(self, numprocs = None, queuesize=100, config = None):
+        self._child_id_counter=0
+        self.manager = multiprocessing.Manager()
+        self.shared_state = self._init_shared_state()
         self.config = config
         self.numprocs = numprocs
         self.workers = []
@@ -36,6 +40,10 @@ class ProcManager(object):
         self._stayalive = True
         self.name = 'ProcessPool'
         self.start()
+
+    def _init_shared_state(self):
+        shared_state = self.manager.dict()
+        return shared_state
 
     @property
     def stayalive(self):
@@ -58,9 +66,15 @@ class ProcManager(object):
         if self._stayalive:
             self.tasks.put(session)
 
+    def _create_worker(self):
+        self._child_id_counter +=1
+        worker_name = "Worker-%s"%self._child_id_counter
+        worker = multiprocessing.Process(target=fuglu_process_worker, name=worker_name, args=(self.tasks, self.config, self.shared_state))
+        return worker
+
     def start(self):
         for i in range(self.numprocs):
-            worker = multiprocessing.Process(target=fuglu_process_worker, args=(self.tasks,self.config))
+            worker = self._create_worker()
             worker.start()
             self.workers.append(worker)
 
@@ -68,11 +82,12 @@ class ProcManager(object):
         self. stayalive = False
 
 
-def fuglu_process_worker(queue, config):
-    logging.basicConfig(level=logging.DEBUG)
 
+
+def fuglu_process_worker(queue, config, shared_state):
+    logging.basicConfig(level=logging.DEBUG)
+    workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
-    logger.debug("Child ready")
 
     # load config and plugins
     controller = fuglu.core.MainController(config)
@@ -84,18 +99,46 @@ def fuglu_process_worker(queue, config):
 
     try:
         while True:
+            workerstate.workerstate = 'waiting for task'
             task = queue.get()
             if task is None: # poison pill
                 logger.debug("Child process received poison pill - shut down")
+                workerstate.workerstate = 'ended'
                 return
+            workerstate.workerstate = 'starting scan session'
             pickled_socket, handler_modulename, handler_classname = task
             sock = pickle.loads(pickled_socket)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
             handler_instance = handler_class(sock, config)
             handler = SessionHandler(handler_instance, config,prependers, plugins, appenders)
-            handler.handlesession()
+            handler.handlesession(workerstate)
+    except KeyboardInterrupt:
+        workerstate.workerstate = 'ended'
     except:
         trb = traceback.format_exc()
         logger.error("Exception in child process: %s"%trb)
+        print(trb)
+        workerstate.workerstate = 'crashed'
 
 
+class WorkerStateWrapper(object):
+    def __init__(self, shared_state_dict, initial_state='created', process=None):
+        self._state = initial_state
+        self.shared_state_dict = shared_state_dict
+        self.process = process
+        if not process:
+            self.process = multiprocessing.current_process()
+
+        self._publish_state()
+
+    def _publish_state(self):
+        self.shared_state_dict[self.process.name] = self._state
+
+    @property
+    def workerstate(self):
+        return self._state
+
+    @workerstate.setter
+    def workerstate(self, value):
+        self._state = value
+        self._publish_state()

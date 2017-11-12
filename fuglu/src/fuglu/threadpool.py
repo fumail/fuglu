@@ -154,16 +154,16 @@ class Worker(threading.Thread):
         self.logger.debug('thread init')
         self.noisy = False
         self.setDaemon(False)
-        self.threadinfo = 'created'
+        self.workerstate = 'created'
 
     def __repr__(self):
-        return "%s: %s" % (self.workerid, self.threadinfo)
+        return "%s: %s" % (self.workerid, self.workerstate)
 
     def run(self):
         self.logger.debug('thread start')
 
         while self.stayalive:
-            self.threadinfo = 'waiting for task'
+            self.workerstate = 'waiting for task'
             if self.noisy:
                 self.logger.debug('Getting new task...')
             sesshandler = self.pool.get_task()
@@ -179,7 +179,7 @@ class Worker(threading.Thread):
                 sesshandler.handlesession(self)
             except Exception as e:
                 self.logger.error('Unhandled Exception : %s' % e)
-            self.threadinfo = 'task completed'
+            self.workerstate = 'task completed'
 
-        self.threadinfo = 'ending'
+        self.workerstate = 'ending'
         self.logger.debug('thread end')

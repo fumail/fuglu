@@ -151,11 +151,17 @@ class ControlSession(object):
     def workerlist(self, args):
         """list of mail scanning workers"""
         threadpool = self.controller.threadpool
+        res=""
         if threadpool is not None:
             workerlist = "\n%s" % '\n*******\n'.join(map(repr, threadpool.workers))
-            res = "Total %s Threads\n%s" % (len(threadpool.workers), workerlist)
-        else:
-            res = "Threadpool is disabled"
+            res += "Total %s worker threads\n%s" % (len(threadpool.workers), workerlist)
+
+        procpool = self.controller.procpool
+        if procpool is not None:
+            childstate_dict = procpool.shared_state
+            workerlist = "\n%s" % '\n*******\n'.join(["%s: %s"%(procname,procstate) for procname,procstate in childstate_dict.items()])
+            res += "Total %s worker processes\n%s" % (len(procpool.workers), workerlist)
+
         return res
 
     def threadlist(self, args):
