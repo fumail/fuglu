@@ -20,6 +20,24 @@ import threading
 import logging
 import os
 
+class StatDelta(object):
+    """Represents the delta to be applied on the total statistics"""
+    def __init__(self, **kwargs):
+        self.total = 0
+        self.spam = 0
+        self.ham = 0
+        self.virus = 0
+        self.blocked = 0
+        self.in_ = 0
+        self.out = 0
+        self.scantime = 0
+
+        for k,v in kwargs.items():
+            setattr(self,k,v)
+
+    def as_message(self):
+        return dict(event_type='statsdelta', total=self.total , spam=self.spam, ham=self.ham, virus=self.virus, blocked=self.blocked, in_=self.in_ , out=self.out, scantime=self.scantime)
+
 
 class Statskeeper(object):
 
@@ -33,11 +51,14 @@ class Statskeeper(object):
             self.spamcount = 0
             self.hamcount = 0
             self.viruscount = 0
+            self.blockedcount = 0
             self.incount = 0
             self.outcount = 0
             self.scantimes = []
             self.starttime = time.time()
             self.lastscan = 0
+            self.stat_listener_callback = []
+
 
     def uptime(self):
         """uptime since we started fuglu"""
@@ -70,22 +91,45 @@ class Statskeeper(object):
 
     def increasecounters(self, suspect):
         """Update local counters after a suspect has passed the system"""
-        self.totalcount += 1
+
+        delta = StatDelta()
+        delta.total = 1
+
         isspam = suspect.is_spam()
         isvirus = suspect.is_virus()
+        isblocked = suspect.is_blocked()
 
         if isspam:
-            self.spamcount += 1
+            delta.spam = 1
 
         if isvirus:
-            self.viruscount += 1
+            delta.virus = 1
 
-        if not (isspam or isvirus):
-            self.hamcount += 1
+        if isblocked:
+            delta.blocked = 1
 
-        scantime = suspect.get_tag('fuglu.scantime')
-        self._appendscantime(scantime)
+        if not (isspam or isvirus): # blocked is currently still counted as ham.
+            delta.ham = 1
+
+        delta.scantime = suspect.get_tag('fuglu.scantime')
+        self.increase_counter_values(delta)
+
+    def increase_counter_values(self, statdelta):
+        self.totalcount += statdelta.total
+        self.spamcount += statdelta.spam
+        self.viruscount += statdelta.virus
+        self.hamcount += statdelta.ham
+        self.blockedcount += statdelta.blocked
+        if statdelta.scantime:
+            self._appendscantime(statdelta.scantime)
         self.lastscan = time.time()
+        self.incount += statdelta.in_
+        self.outcount += statdelta.out
+        self.fire_stats_changed_event(statdelta)
+
+    def fire_stats_changed_event(self,statdelta):
+        for callback in self.stat_listener_callback:
+            callback(statdelta)
 
     def scantime(self):
         """Get the average scantime of the last 100 messages.

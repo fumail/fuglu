@@ -198,10 +198,11 @@ class ControlSession(object):
 ---------------
 Uptime:\t\t${uptime}
 Avg scan time:\t${scantime}
-Total msgs:\t${totalcount}
+Total msgs:\t${totalcount} in:${incount} out:${outcount}
 Ham:\t\t${hamcount}
 Spam:\t\t${spamcount}
 Virus:\t\t${viruscount}
+Block:\t\t${blockedcount}
         """
         renderer = string.Template(template)
         vrs = dict(
@@ -210,7 +211,10 @@ Virus:\t\t${viruscount}
             totalcount=stats.totalcount,
             hamcount=stats.hamcount,
             viruscount=stats.viruscount,
-            spamcount=stats.spamcount
+            spamcount=stats.spamcount,
+            incount=stats.incount,
+            outcount=stats.outcount,
+            blockedcount=stats.blockedcount,
         )
         res = renderer.safe_substitute(vrs)
         return res

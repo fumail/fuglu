@@ -24,6 +24,8 @@ import logging
 import traceback
 import importlib
 import pickle
+from fuglu.stats import Statskeeper, StatDelta
+import threading
 
 class ProcManager(object):
     def __init__(self, numprocs = None, queuesize=100, config = None):
@@ -35,10 +37,12 @@ class ProcManager(object):
         self.workers = []
         self.queuesize = queuesize
         self.tasks = multiprocessing.queues.Queue(queuesize)
+        self.child_to_server_messages = multiprocessing.queues.Queue()
 
         self.logger = logging.getLogger('%s.procpool' % __package__)
         self._stayalive = True
         self.name = 'ProcessPool'
+        self.message_listener = MessageListener(self.child_to_server_messages)
         self.start()
 
     def _init_shared_state(self):
@@ -69,7 +73,7 @@ class ProcManager(object):
     def _create_worker(self):
         self._child_id_counter +=1
         worker_name = "Worker-%s"%self._child_id_counter
-        worker = multiprocessing.Process(target=fuglu_process_worker, name=worker_name, args=(self.tasks, self.config, self.shared_state))
+        worker = multiprocessing.Process(target=fuglu_process_worker, name=worker_name, args=(self.tasks, self.config, self.shared_state, self.child_to_server_messages))
         return worker
 
     def start(self):
@@ -78,13 +82,36 @@ class ProcManager(object):
             worker.start()
             self.workers.append(worker)
 
+        # Start the child-to-parent message listener
+        self.message_listener.start()
+
     def shutdown(self):
-        self. stayalive = False
+        self.stayalive = False
+        self.message_listener.stayalive = False
+
+class MessageListener(threading.Thread):
+    def __init__(self, message_queue):
+        threading.Thread.__init__(self)
+        self.name = "Process Message Listener"
+        self.message_queue = message_queue
+        self.stayalive = True
+        self.statskeeper = Statskeeper()
+        self.daemon = True
 
 
+    def run(self):
+        while self.stayalive:
+            message = self.message_queue.get()
+            event_type = message['event_type']
+            if event_type == 'statsdelta': # increase statistics counters
+                try:
+                    delta = StatDelta(**message)
+                    self.statskeeper.increase_counter_values(delta)
+                except:
+                    print(traceback.format_exc())
 
 
-def fuglu_process_worker(queue, config, shared_state):
+def fuglu_process_worker(queue, config, shared_state,child_to_server_messages):
     logging.basicConfig(level=logging.DEBUG)
     workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
@@ -93,9 +120,14 @@ def fuglu_process_worker(queue, config, shared_state):
     controller = fuglu.core.MainController(config)
     controller.load_extensions()
     controller.load_plugins()
+
     prependers = controller.prependers
     plugins = controller.plugins
     appenders = controller.appenders
+
+    # forward statistics counters to parent process
+    stats = Statskeeper()
+    stats.stat_listener_callback.append(lambda event: child_to_server_messages.put(event.as_message()))
 
     try:
         while True:
@@ -132,7 +164,10 @@ class WorkerStateWrapper(object):
         self._publish_state()
 
     def _publish_state(self):
-        self.shared_state_dict[self.process.name] = self._state
+        try:
+            self.shared_state_dict[self.process.name] = self._state
+        except EOFError:
+            pass
 
     @property
     def workerstate(self):

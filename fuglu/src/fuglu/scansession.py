@@ -18,7 +18,7 @@
 from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE
 from fuglu.debug import CrashStore
 import logging
-from fuglu.stats import Statskeeper
+from fuglu.stats import Statskeeper, StatDelta
 import sys
 import traceback
 import tempfile
@@ -53,12 +53,11 @@ class SessionHandler(object):
         prependheader = self.config.get('main', 'prependaddedheaders')
         try:
             self.set_workerstate('receiving message')
-
-            self.stats.incount += 1
             suspect = self.protohandler.get_suspect()
             if suspect is None:
                 self.logger.error('No Suspect retrieved, ending session')
                 return
+            self.stats.increase_counter_values(StatDelta(in_=1))
 
             if len(suspect.recipients) != 1:
                 self.logger.warning('Notice: Message from %s has %s recipients. Plugins supporting only one recipient will see: %s' % (
@@ -115,7 +114,7 @@ class SessionHandler(object):
             if result == ACCEPT or result == DUNNO:
                 try:
                     self.protohandler.commitback(suspect)
-                    self.stats.outcount += 1
+                    self.stats.increase_counter_values(StatDelta(out=1))
 
                 except KeyboardInterrupt:
                     sys.exit()
