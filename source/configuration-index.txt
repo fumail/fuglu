@@ -371,8 +371,7 @@ Note: in netcat mode fuglu only receives message headers and body, no envelope d
 
 Fetching scan-time configuration values from a database
 .......................................................
-
-(experimental feature) It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.
+It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.
 
 For this to work you need to have sqlalchemy installed ( running `fuglu --lint` should show `enabled` for the sql extension)
 
@@ -407,6 +406,23 @@ If you use the above table structure in MariaDB / MySQl, the built-in default sq
 
 Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: `lowspamaction`, `highspamaction`, `highspamlevel`
 
+multi-processing mode
+.....................
 
+by default, fuglu runs multi-threaded. This is usually a fine choice as many tasks are I/O-bound (waiting on sockets etc). However, for environments running CPU-bound tasks directly in fuglu plugins this can become a bottleneck. Due to the python global interpreter lock, only one operation can run at a time and fuglu does utilize only one CPU core.  
 
+For these setups, fuglu can be switched to multiprocessing mode:
+
+::
+
+	[performance]
+	backend=process
+	initialprocs=0
+
+`initialprocs` defines the number of worker processes that fuglu should start. If set to `0` , fuglu will use a value based on available virtual CPU cores.
+
+Most things will work similarly as in threaded mode, but there are a few differences:
+ * in threaded mode, there is only one instance per plugin. In multiprocessing there is one instance per worker. This means increased memory usage, as in-memory caches are built multiple times.
+ * dynamic config reloading is not currently supported in multiprocessing mode. Restart fuglu for config changes to take effect.
+ * the number of workers is not auto-adaped like in threading mode
 
