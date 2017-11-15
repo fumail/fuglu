@@ -340,7 +340,7 @@ highspamlevel=10
 </div>
 <div class="section" id="fetching-scan-time-configuration-values-from-a-database">
 <h3>Fetching scan-time configuration values from a database<a class="headerlink" href="#fetching-scan-time-configuration-values-from-a-database" title="Permalink to this headline">¶</a></h3>
-<p>(experimental feature) It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.</p>
+<p>It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.</p>
 <p>For this to work you need to have sqlalchemy installed ( running <cite>fuglu &#8211;lint</cite> should show <cite>enabled</cite> for the sql extension)</p>
 <p>SQL script to create the the table:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `fugluconfig` (
@@ -368,6 +368,26 @@ highspamlevel=10
 <p>If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (<cite>sql=SELECT ....</cite> in the same section.  ) use <cite>:section</cite>, <cite>:option</cite> and the usual suspect variables like <cite>:to_domain</cite> and <cite>:to_address</cite> as placeholders.</p>
 <p>Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: <cite>lowspamaction</cite>, <cite>highspamaction</cite>, <cite>highspamlevel</cite></p>
 </div>
+<div class="section" id="multi-processing-mode">
+<h3>multi-processing mode<a class="headerlink" href="#multi-processing-mode" title="Permalink to this headline">¶</a></h3>
+<p>by default, fuglu runs multi-threaded. This is usually a fine choice as many tasks are I/O-bound (waiting on sockets etc). However, for environments running CPU-bound tasks directly in fuglu plugins this can become a bottleneck. Due to the python global interpreter lock, only one operation can run at a time and fuglu does utilize only one CPU core.</p>
+<p>For these setups, fuglu can be switched to multiprocessing mode:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">performance</span><span class="p">]</span>
+<span class="n">backend</span><span class="o">=</span><span class="n">process</span>
+<span class="n">initialprocs</span><span class="o">=</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p><cite>initialprocs</cite> defines the number of worker processes that fuglu should start. If set to <cite>0</cite> , fuglu will use a value based on available virtual CPU cores.</p>
+<dl class="docutils">
+<dt>Most things will work similarly as in threaded mode, but there are a few differences:</dt>
+<dd><ul class="first last simple">
+<li>in threaded mode, there is only one instance per plugin. In multiprocessing there is one instance per worker. This means increased memory usage, as in-memory caches are built multiple times.</li>
+<li>dynamic config reloading is not currently supported in multiprocessing mode. Restart fuglu for config changes to take effect.</li>
+<li>the number of workers is not auto-adaped like in threading mode</li>
+</ul>
+</dd>
+</dl>
+</div>
 </div>
 </div>
 
@@ -391,6 +411,7 @@ highspamlevel=10
 <li><a class="reference internal" href="#running-fuglu-as-a-milter">Running fuglu as a milter</a></li>
 <li><a class="reference internal" href="#running-fuglu-in-netcat-mode">Running fuglu in netcat-mode</a></li>
 <li><a class="reference internal" href="#fetching-scan-time-configuration-values-from-a-database">Fetching scan-time configuration values from a database</a></li>
+<li><a class="reference internal" href="#multi-processing-mode">multi-processing mode</a></li>
 </ul>
 </li>
 </ul>
