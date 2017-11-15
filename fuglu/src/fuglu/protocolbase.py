@@ -19,7 +19,8 @@ import socket
 import threading
 from fuglu.scansession import SessionHandler
 import traceback
-
+from multiprocessing.reduction import ForkingPickler
+import StringIO
 
 class ProtocolHandler(object):
     protoname = 'UNDEFINED'
@@ -43,7 +44,6 @@ class ProtocolHandler(object):
 
     def reject(self, reason):
         pass
-
 
 class BasicTCPServer(object):
 
@@ -78,32 +78,48 @@ class BasicTCPServer(object):
             pass
 
     def serve(self):
-        # disable to debug...
-        use_multithreading = True
         controller = self.controller
+        threadpool = self.controller.threadpool
+        procpool = self.controller.procpool
+
         threading.currentThread().name = '%s Server on Port %s' % (
             self.protohandlerclass.protoname, self.port)
 
         self.logger.info('%s Server running on port %s' %
                          (self.protohandlerclass.protoname, self.port))
-        if use_multithreading:
-            threadpool = self.controller.threadpool
+
         while self.stayalive:
             try:
                 self.logger.debug('Waiting for connection...')
                 nsd = self._socket.accept()
+                sock,addr = nsd
                 if not self.stayalive:
                     break
-                ph = self.protohandlerclass(nsd[0], controller.config)
+                ph = self.protohandlerclass(sock, controller.config)
                 engine = SessionHandler(
                     ph, controller.config, controller.prependers, controller.plugins, controller.appenders)
-                self.logger.debug('Incoming connection from %s' % str(nsd[1]))
-                if use_multithreading:
+                self.logger.debug('Incoming connection from %s' % str(addr))
+                if threadpool:
                     # this will block if queue is full
                     threadpool.add_task(engine)
+                elif procpool:
+                    # in multi processing, the other process manages configs and plugins itself, we only pass the minimum required information:
+                    # a pickled version of the socket (this is no longer required in python 3.4, but in python 2 the multiprocessing queue can not handle sockets
+                    # see https://stackoverflow.com/questions/36370724/python-passing-a-tcp-socket-object-to-a-multiprocessing-queue
+                    handler_classname = self.protohandlerclass.__name__
+                    handler_modulename = self.protohandlerclass.__module__
+                    task = forking_dumps(sock),handler_modulename, handler_classname
+                    procpool.add_task(task)
                 else:
                     engine.handlesession()
             except Exception as e:
                 exc = traceback.format_exc()
                 self.logger.error(
                     'Exception in serve(): %s - %s' % (str(e), exc))
+
+
+def forking_dumps(obj):
+    """ Pickle a socket This is required to pass the socket in multiprocessing"""
+    buf = StringIO.StringIO()
+    ForkingPickler(buf).dump(obj)
+    return buf.getvalue()

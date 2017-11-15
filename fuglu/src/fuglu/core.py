@@ -26,12 +26,13 @@ import datetime
 import logging
 import threading
 from fuglu.threadpool import ThreadPool
+import fuglu.procpool
 import inspect
 import traceback
 import time
 import code
 import socket
-
+import multiprocessing
 from fuglu.shared import default_template_values, Suspect, HAVE_BEAUTIFULSOUP, BS_VERSION
 from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
@@ -268,7 +269,16 @@ class MainController(object):
                 'section': 'performance',
                 'description': 'maximum scanner threads',
             },
-
+            'backend': {
+                'default': "thread",
+                'section': 'performance',
+                'description': "Method for parallelism, either 'thread' or 'process' ",
+            },
+            'initialprocs': {
+                'default': "0",
+                'section': 'performance',
+                'description': "Initial number of processes when backend='process'. If 0 (the default), automatically selects twice the number of available virtual cores. Despite its 'initial'-name, this number currently is not adapted automatically.",
+            },
 
             # spam section
             'defaultlowspamaction': {
@@ -422,6 +432,7 @@ class MainController(object):
         self.logger = self._logger()
         self.stayalive = True
         self.threadpool = None
+        self.procpool = None
         self.controlserver = None
         self.started = datetime.datetime.now()
         self.statsthread = None
@@ -477,21 +488,16 @@ class MainController(object):
             self.logger.error(
                 "could not start connector %s/%s : %s" % (protocol, port, str(e)))
 
-    def startup(self):
-        self.load_extensions()
-        ok = self.load_plugins()
-        if not ok:
-            sys.stderr.write(
-                "Some plugins failed to load, please check the logs. Aborting.\n")
-            self.logger.info('Fuglu shut down after fatal error condition')
-            sys.exit(1)
+    def _start_stats_thread(self):
         self.logger.info("Init Stat Engine")
-        self.statsthread = StatsThread(self.config)
+        statsthread = StatsThread(self.config)
         mrtg_stats_thread = threading.Thread(
-            name='MRTG-Statswriter', target=self.statsthread.writestats, args=())
+            name='MRTG-Statswriter', target=statsthread.writestats, args=())
         mrtg_stats_thread.daemon = True
         mrtg_stats_thread.start()
+        return statsthread
 
+    def _start_threadpool(self):
         self.logger.info("Init Threadpool")
         try:
             minthreads = self.config.getint('performance', 'minthreads')
@@ -503,24 +509,32 @@ class MainController(object):
             maxthreads = 3
 
         queuesize = maxthreads * 10
-        self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
+        return ThreadPool(minthreads, maxthreads, queuesize)
 
+    def _start_processpool(self):
+        numprocs = self.config.getint('performance','initialprocs')
+        if numprocs < 1:
+            numprocs = multiprocessing.cpu_count() *2
+        self.logger.info("Init process pool with %s worker processes"%(numprocs))
+        pool = fuglu.procpool.ProcManager(numprocs = numprocs, config = self.config)
+        return pool
+
+    def _start_connectors(self):
         self.logger.info("Starting interface sockets...")
         ports = self.config.get('main', 'incomingport')
         for port in ports.split(','):
             self.start_connector(port)
 
-        # control socket
+    def _start_control_server(self):
         control = ControlServer(self, address=self.config.get(
             'main', 'bindaddress'), port=self.config.get('main', 'controlport'))
         ctrl_server_thread = threading.Thread(
             name='Control server', target=control.serve, args=())
         ctrl_server_thread.daemon = True
         ctrl_server_thread.start()
+        return control
 
-        self.controlserver = control
-
-        self.logger.info('Startup complete')
+    def _run_main_loop(self):
         if self.debugconsole:
             self.run_debugconsole()
         else:
@@ -534,6 +548,28 @@ class MainController(object):
                     time.sleep(1)
                 except KeyboardInterrupt:
                     self.stayalive = False
+
+    def startup(self):
+        self.load_extensions()
+        ok = self.load_plugins()
+        if not ok:
+            sys.stderr.write(
+                "Some plugins failed to load, please check the logs. Aborting.\n")
+            self.logger.info('Fuglu shut down after fatal error condition')
+            sys.exit(1)
+
+        self.statsthread = self._start_stats_thread()
+        backend = self.config.get('performance','backend')
+        if backend == 'process':
+            self.procpool = self._start_processpool()
+        else: # default backend is 'thread'
+            self.threadpool = self._start_threadpool()
+
+        self._start_connectors()
+        self.controlserver = self._start_control_server()
+
+        self.logger.info('Startup complete')
+        self._run_main_loop()
         self.shutdown()
 
     def run_debugconsole(self):
@@ -611,16 +647,17 @@ class MainController(object):
         self.logger.info('Applying configuration changes...')
 
         # threadpool changes?
-        minthreads = self.config.getint('performance', 'minthreads')
-        maxthreads = self.config.getint('performance', 'maxthreads')
+        if self.config.get('performance','backend') == 'thread' and self.threadpool is not None:
+            minthreads = self.config.getint('performance', 'minthreads')
+            maxthreads = self.config.getint('performance', 'maxthreads')
 
-        if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
-            self.logger.info(
-                'Threadpool config changed, initialising new threadpool')
-            queuesize = maxthreads * 10
-            currentthreadpool = self.threadpool
-            self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
-            currentthreadpool.stayalive = False
+            if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
+                self.logger.info(
+                    'Threadpool config changed, initialising new threadpool')
+                queuesize = maxthreads * 10
+                currentthreadpool = self.threadpool
+                self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
+                currentthreadpool.stayalive = False
 
         # smtp engine changes?
         ports = self.config.get('main', 'incomingport')
@@ -662,7 +699,11 @@ class MainController(object):
         if self.controlserver != None:
             self.controlserver.shutdown()
 
-        self.threadpool.stayalive = False
+        if self.threadpool:
+            self.threadpool.stayalive = False
+        if self.procpool:
+            self.procpool.stayalive = False
+
         self.stayalive = False
         self.logger.info('Shutdown complete')
         self.logger.info('Remaining threads: %s' % threading.enumerate())

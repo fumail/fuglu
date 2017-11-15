@@ -151,8 +151,17 @@ class ControlSession(object):
     def workerlist(self, args):
         """list of mail scanning workers"""
         threadpool = self.controller.threadpool
-        workerlist = "\n%s" % '\n*******\n'.join(map(repr, threadpool.workers))
-        res = "Total %s Threads\n%s" % (len(threadpool.workers), workerlist)
+        res=""
+        if threadpool is not None:
+            workerlist = "\n%s" % '\n*******\n'.join(map(repr, threadpool.workers))
+            res += "Total %s worker threads\n%s" % (len(threadpool.workers), workerlist)
+
+        procpool = self.controller.procpool
+        if procpool is not None:
+            childstate_dict = procpool.shared_state
+            workerlist = "\n%s" % '\n*******\n'.join(["%s: %s"%(procname,procstate) for procname,procstate in childstate_dict.items()])
+            res += "Total %s worker processes\n%s" % (len(procpool.workers), workerlist)
+
         return res
 
     def threadlist(self, args):
@@ -189,10 +198,11 @@ class ControlSession(object):
 ---------------
 Uptime:\t\t${uptime}
 Avg scan time:\t${scantime}
-Total msgs:\t${totalcount}
+Total msgs:\t${totalcount} in:${incount} out:${outcount}
 Ham:\t\t${hamcount}
 Spam:\t\t${spamcount}
 Virus:\t\t${viruscount}
+Block:\t\t${blockedcount}
         """
         renderer = string.Template(template)
         vrs = dict(
@@ -201,7 +211,10 @@ Virus:\t\t${viruscount}
             totalcount=stats.totalcount,
             hamcount=stats.hamcount,
             viruscount=stats.viruscount,
-            spamcount=stats.spamcount
+            spamcount=stats.spamcount,
+            incount=stats.incount,
+            outcount=stats.outcount,
+            blockedcount=stats.blockedcount,
         )
         res = renderer.safe_substitute(vrs)
         return res
