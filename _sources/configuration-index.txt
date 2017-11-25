@@ -419,10 +419,10 @@ For these setups, fuglu can be switched to multiprocessing mode:
 	backend=process
 	initialprocs=0
 
-`initialprocs` defines the number of worker processes that fuglu should start. If set to `0` , fuglu will use a value based on available virtual CPU cores.
+`initialprocs` defines the number of worker processes that fuglu should start. If set to `0` , fuglu will default to twice the number of available virtual CPU cores.
 
 Most things will work similarly as in threaded mode, but there are a few differences:
  * in threaded mode, there is only one instance per plugin. In multiprocessing there is one instance per worker. This means increased memory usage, as in-memory caches are built multiple times.
  * dynamic config reloading is not currently supported in multiprocessing mode. Restart fuglu for config changes to take effect.
- * the number of workers is not auto-adaped like in threading mode
+ * the number of workers is not auto-adapted like in threading mode
 
