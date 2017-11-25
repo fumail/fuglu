@@ -377,13 +377,13 @@ highspamlevel=10
 <span class="n">initialprocs</span><span class="o">=</span><span class="mi">0</span>
 </pre></div>
 </div>
-<p><cite>initialprocs</cite> defines the number of worker processes that fuglu should start. If set to <cite>0</cite> , fuglu will use a value based on available virtual CPU cores.</p>
+<p><cite>initialprocs</cite> defines the number of worker processes that fuglu should start. If set to <cite>0</cite> , fuglu will default to twice the available virtual CPU cores.</p>
 <dl class="docutils">
 <dt>Most things will work similarly as in threaded mode, but there are a few differences:</dt>
 <dd><ul class="first last simple">
 <li>in threaded mode, there is only one instance per plugin. In multiprocessing there is one instance per worker. This means increased memory usage, as in-memory caches are built multiple times.</li>
 <li>dynamic config reloading is not currently supported in multiprocessing mode. Restart fuglu for config changes to take effect.</li>
-<li>the number of workers is not auto-adaped like in threading mode</li>
+<li>the number of workers is not auto-adapted like in threading mode</li>
 </ul>
 </dd>
 </dl>
