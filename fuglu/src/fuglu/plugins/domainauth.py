@@ -28,7 +28,6 @@ from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_
 from fuglu.extensions.sql import get_session, ENABLED
 import logging
 import os
-import pkg_resources
 import re
 
 DKIMPY_AVAILABLE = False
@@ -63,6 +62,7 @@ except ImportError:
     pass
 
 try:
+    import pkg_resources
     pkg_resources.get_distribution("dkimpy")
     from dkim import DKIM, sign, Simple, Relaxed, DKIMException
 
