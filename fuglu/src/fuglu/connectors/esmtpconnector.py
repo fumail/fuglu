@@ -81,6 +81,10 @@ class ESMTPHandler(ProtocolHandler):
         try:
             suspect = Suspect(fromaddr, sess.recipients, tempfilename)
         except ValueError as e:
+            if len(sess.recipients)>0:
+                toaddr = sess.recipients[0]
+            else:
+                toaddr = ''
             self.logger.error('failed to initialise suspect with from=<%s> to=<%s> : %s' % (fromaddr, toaddr, str(e)))
             raise
 
