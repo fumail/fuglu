@@ -122,28 +122,19 @@ class DBConfig(RawConfigParser):
             self.read_file(stringin)
         del stringin
 
-    def get(self, section, option):
-        if not ENABLED:
-            #self.logger.debug('sqlalchemy extension not enabled')
-            return self.parentget(section, option)
-
-        if not self.has_section('databaseconfig'):
-            #self.logger.debug('no database configuration section')
-            return self.parentget(section, option)
-
-        if not self.has_option('databaseconfig', 'dbconnectstring'):
-            #self.logger.debug('no db connect string')
-            return self.parentget(section, option)
+    def get(self, section, option, **kwargs):
+        if not ENABLED or (not self.has_section('databaseconfig')) or (not self.has_option('databaseconfig', 'dbconnectstring')):
+            return self.parentget(section, option, **kwargs)
 
         connectstring = self.parentget('databaseconfig', 'dbconnectstring')
         if connectstring.strip() == '':
             #self.logger.debug('empty db connect string')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         session = get_session(connectstring)
         query = self.parentget('databaseconfig', 'sql')
         if query.strip() == '':
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         sqlvalues = {
             'section': section,
@@ -163,10 +154,13 @@ class DBConfig(RawConfigParser):
         session.remove()
         if result == None:
             #self.logger.debug('no result')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
         else:
             #self.logger.debug('result: '+result[0])
             return result[0]
 
-    def parentget(self, section, option):
-        return RawConfigParser.get(self, section, option)
+    def parentget(self, section, option, **kwargs):
+        if sys.version_info < (3, 2):
+            return RawConfigParser.get(self, section, option)
+        else:
+            return RawConfigParser.get(self, section, option, **kwargs)
