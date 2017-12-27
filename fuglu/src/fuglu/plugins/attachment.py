@@ -21,7 +21,7 @@ import mimetypes
 import os
 import os.path
 import logging
-from fuglu.extensions.sql import DBFile
+from fuglu.extensions.sql import DBFile, DBConfig
 import threading
 import sys
 from email.header import decode_header
@@ -440,6 +440,9 @@ The other common template variables are available as well.
         self.rulescache = None
         self.extremeverbosity = False
         self.blockedfiletemplate = ''
+        self.sendbounce = True
+        self.checkarchivenames = False
+        self.checkarchivecontent = False
 
         # key: regex matching content type as returned by file magic, value: archive type
         self.supported_archive_ctypes = {
@@ -475,8 +478,13 @@ The other common template variables are available as well.
 
         self.blockedfiletemplate = self.config.get(
             self.section, 'template_blockedfile')
+        
+        runtimeconfig = DBConfig(self.config, suspect)
+        self.checkarchivenames = runtimeconfig.getboolean(self.section, 'checkarchivenames')
+        self.checkarchivecontent = self.config.getboolean(self.section, 'checkarchivecontent')
+        self.sendbounce = runtimeconfig.getboolean(self.section, 'sendbounce')
 
-        enabledarchivetypes = self.config.get(self.section, 'enabledarchivetypes')
+        enabledarchivetypes = runtimeconfig.get(self.section, 'enabledarchivetypes')
         if enabledarchivetypes:
             enabled = [t.strip() for t in enabledarchivetypes.split(',')]
             for archtype in self.supported_archive_extensions.keys():
@@ -570,7 +578,7 @@ The other common template variables are available as well.
                     suspect.tags['blocked']['FiletypePlugin'] = True
                     blockinfo = ("%s %s: %s" % (displayname, asciirep, description)).strip()
                     suspect.tags['FiletypePlugin.errormessage'] = blockinfo
-                    if self.config.getboolean(self.section, 'sendbounce'):
+                    if self.sendbounce:
                         if suspect.is_spam() or suspect.is_virus():
                             self.logger.info(
                                 "backscatter prevention: not sending attachment block bounce to %s - the message is tagged spam or virus" % suspect.from_address)
@@ -732,7 +740,7 @@ The other common template variables are available as well.
                     return blockactioncode, message
 
             # archives
-            if self.config.getboolean(self.section, 'checkarchivenames') or self.config.getboolean(self.section, 'checkarchivecontent'):
+            if self.checkarchivenames or self.checkarchivecontent:
 
                 # try guessing the archive type based on magic content type first
                 # we don't need to check for MAGIC_AVAILABLE here, if it is available the contenttype_magic is not None
@@ -751,7 +759,7 @@ The other common template variables are available as well.
                         pl = BytesIO(part.get_payload(decode=True))
                         archive_handle = self._archive_handle(archive_type, pl)
                         namelist = self._archive_namelist(archive_type, archive_handle)
-                        if self.config.getboolean(self.section, 'checkarchivenames'):
+                        if self.checkarchivenames:
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
                                 # generated bounces
@@ -770,7 +778,7 @@ The other common template variables are available as well.
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                        if MAGIC_AVAILABLE and self.config.getboolean(self.section, 'checkarchivecontent'):
+                        if MAGIC_AVAILABLE and self.checkarchivecontent:
                             for name in namelist:
                                 safename = self.asciionly(name)
                                 extracted = self._archive_extract(archive_type, archive_handle, name)
