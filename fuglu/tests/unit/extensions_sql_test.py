@@ -8,7 +8,7 @@ except ImportError:
     from ConfigParser import RawConfigParser
 
 from fuglu.shared import Suspect
-from fuglu.extensions.sql import get_session, DBConfig, ENABLED
+from fuglu.extensions.sql import get_session, DBConfig
 
 
 class DBConfigTestCase(unittest.TestCase):
@@ -31,7 +31,6 @@ class DBConfigTestCase(unittest.TestCase):
         self.create_database()
 
     def create_database(self):
-        self.assertTrue(ENABLED)
         sql = """
         CREATE TABLE fugluconfig (
            scope varchar(255) NOT NULL,
@@ -77,8 +76,8 @@ class DBConfigTestCase(unittest.TestCase):
         self.insert_override(
             '%unittests.fuglu.org', 'testsection', 'override', '300')
         self.insert_override('$GLOBAL', 'testsection', 'override', '400')
-        self.assertEqual(candidate.getint('testsection', 'nooverride'), 100)
-        self.assertEqual(candidate.getint('testsection', 'override'), 200)
+        self.assertEqual(int(candidate.get('testsection', 'nooverride')), 100)
+        self.assertEqual(int(candidate.get('testsection', 'override')), 200)
 
     def test_domain_override(self):
         """Test basic config overrdide functionality"""
@@ -97,8 +96,8 @@ class DBConfigTestCase(unittest.TestCase):
         self.insert_override(
             '%unittests.fuglu.org', 'testsection', 'override', '300')
         self.insert_override('$GLOBAL', 'testsection', 'override', '400')
-        self.assertEqual(candidate.getint('testsection', 'nooverride'), 100)
-        self.assertEqual(candidate.getint('testsection', 'override'), 300)
+        self.assertEqual(int(candidate.get('testsection', 'nooverride')), 100)
+        self.assertEqual(int(candidate.get('testsection', 'override')), 300)
 
     def test_global_override(self):
         """Test basic config overrdide functionality"""
@@ -117,6 +116,5 @@ class DBConfigTestCase(unittest.TestCase):
         self.insert_override(
             '%unittests.fuglu.org', 'testsection', 'override', '300')
         self.insert_override('$GLOBAL', 'testsection', 'override', '400')
-        self.assertEqual(candidate.getint('testsection', 'nooverride'), 100)
-        self.assertEqual(candidate.getint('testsection', 'override'), 400)
-
+        self.assertEqual(int(candidate.get('testsection', 'nooverride')), 100)
+        self.assertEqual(int(candidate.get('testsection', 'override')), 400)
