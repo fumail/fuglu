@@ -404,7 +404,9 @@ Enable configuration lookups by providing a standard sql alchemy connectstring i
 If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (`sql=SELECT ....` in the same section.  ) use `:section`, `:option` and the usual suspect variables like `:to_domain` and `:to_address` as placeholders.
 
 
-Note: only the Spamassassin plugin currently supports reading database overrides, for the following options: `lowspamaction`, `highspamaction`, `highspamlevel`
+Note: only the following plugins currently supports reading database overrides for the listed options: 
+ * Spamassassin: `lowspamaction`, `highspamaction`, `highspamlevel`
+ * FiletypePlugin: `sendbounce`, `checkarchivenames`, `checkarchivecontent`, `enabledarchivetypes`
 
 multi-processing mode
 .....................

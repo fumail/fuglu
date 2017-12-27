@@ -1,19 +1,16 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Plugin API &#8212; fuglu  documentation</title>
-    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -28,13 +25,14 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="ISP Config" href="isp-config.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body role="document">
+  <body>
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -101,7 +99,7 @@ if values is not none, fill the values dict instead of returning a new one</p>
 <span id="api-suspect"></span><h2>The Suspect class<a class="headerlink" href="#the-suspect-class" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="fuglu.shared.Suspect">
-<em class="property">class </em><code class="descclassname">fuglu.shared.</code><code class="descname">Suspect</code><span class="sig-paren">(</span><em>from_address</em>, <em>to_address</em>, <em>tempfile</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">fuglu.shared.</code><code class="descname">Suspect</code><span class="sig-paren">(</span><em>from_address</em>, <em>recipients</em>, <em>tempfile</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect" title="Permalink to this definition">¶</a></dt>
 <dd><p>The suspect represents the message to be scanned. Each scannerplugin will be presented
 with a suspect and may modify the tags or even the message content itself.</p>
 <dl class="method">
@@ -118,7 +116,7 @@ visible to later plugins (eg. for spamassassin rules), otherwise, leave as False
 <dd><p>returns information about the client that submitted this message.
 (helo,ip,reversedns)</p>
 <p>This information is extracted from the message Received: headers and therefore probably not 100% reliable
-all information is returned as-is, this means for example, that non-fcrdns client will show &#8216;unknown&#8217; as reverse dns value.</p>
+all information is returned as-is, this means for example, that non-fcrdns client will show ‘unknown’ as reverse dns value.</p>
 <p>if ignoreregex is not None, all results which match this regex in either helo,ip or reversedns will be ignored</p>
 <p>By default, this method starts searching at the top Received Header. Set a higher skip value to start searching further down.</p>
 <p>both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA</p>
@@ -144,7 +142,7 @@ all information is returned as-is, this means for example, that non-fcrdns clien
 (helo,ip,reversedns)</p>
 <p>In before-queue mode this info is extracted using the XFORWARD SMTP protocol extension.</p>
 <p>In after-queue mode this information is extracted from the message Received: headers and therefore probably not 100% reliable
-all information is returned as-is, this means for example, that non-fcrdns client will show &#8216;unknown&#8217; as reverse dns value.</p>
+all information is returned as-is, this means for example, that non-fcrdns client will show ‘unknown’ as reverse dns value.</p>
 <p>if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA (trustedhostregex / boundarydistance)</p>
 </dd></dl>
 
@@ -176,6 +174,12 @@ all information is returned as-is, this means for example, that non-fcrdns clien
 <dt id="fuglu.shared.Suspect.get_tag">
 <code class="descname">get_tag</code><span class="sig-paren">(</span><em>key</em>, <em>defaultvalue=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.get_tag" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns the tag value. if the tag is not found, return defaultvalue instead (None if no defaultvalue passed)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fuglu.shared.Suspect.is_blocked">
+<code class="descname">is_blocked</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.is_blocked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if ANY plugin tagged this suspect as blocked</p>
 </dd></dl>
 
 <dl class="method">
@@ -221,6 +225,24 @@ Warning: setting the source via python email representation seems to break dkim 
 <dd><p>holds the message source if set directly</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="fuglu.shared.Suspect.to_address">
+<code class="descname">to_address</code><a class="headerlink" href="#fuglu.shared.Suspect.to_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first recipient address</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fuglu.shared.Suspect.to_domain">
+<code class="descname">to_domain</code><a class="headerlink" href="#fuglu.shared.Suspect.to_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the local part of the first recipient</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fuglu.shared.Suspect.to_localpart">
+<code class="descname">to_localpart</code><a class="headerlink" href="#fuglu.shared.Suspect.to_localpart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the local part of the first recipient</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -264,13 +286,13 @@ envelope_to (or to_address)
 from_domain
 to_domain
 clientip
-clienthostname (fcrdns or &#8216;unknown&#8217;)
+clienthostname (fcrdns or ‘unknown’)
 clienthelo</dd>
 <dt>tags</dt>
 <dd>&#64;tagname</dd>
 <dt>body source:</dt>
 <dd>body:full -&gt; (full source, encoded)
-body:stripped (or just &#8216;body&#8217;) : -&gt; returns text/* bodyparts with tags and newlines stripped
+body:stripped (or just ‘body’) : -&gt; returns text/* bodyparts with tags and newlines stripped
 body:raw -&gt; decoded raw message body parts</dd>
 </dl>
 </dd></dl>
@@ -382,7 +404,7 @@ True, (fieldname, matchedvalue, arg, regex)</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
