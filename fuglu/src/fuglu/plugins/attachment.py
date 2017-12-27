@@ -481,7 +481,7 @@ The other common template variables are available as well.
         
         runtimeconfig = DBConfig(self.config, suspect)
         self.checkarchivenames = runtimeconfig.getboolean(self.section, 'checkarchivenames')
-        self.checkarchivecontent = self.config.getboolean(self.section, 'checkarchivecontent')
+        self.checkarchivecontent = runtimeconfig.getboolean(self.section, 'checkarchivecontent')
         self.sendbounce = runtimeconfig.getboolean(self.section, 'sendbounce')
 
         enabledarchivetypes = runtimeconfig.get(self.section, 'enabledarchivetypes')
