@@ -122,28 +122,28 @@ class DBConfig(RawConfigParser):
             self.read_file(stringin)
         del stringin
 
-    def get(self, section, option):
+    def get(self, section, option, **kwargs):
         if not ENABLED:
             #self.logger.debug('sqlalchemy extension not enabled')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         if not self.has_section('databaseconfig'):
             #self.logger.debug('no database configuration section')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         if not self.has_option('databaseconfig', 'dbconnectstring'):
             #self.logger.debug('no db connect string')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         connectstring = self.parentget('databaseconfig', 'dbconnectstring')
         if connectstring.strip() == '':
             #self.logger.debug('empty db connect string')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         session = get_session(connectstring)
         query = self.parentget('databaseconfig', 'sql')
         if query.strip() == '':
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
 
         sqlvalues = {
             'section': section,
@@ -161,12 +161,12 @@ class DBConfig(RawConfigParser):
                 "Error getting database config override: %s" % trb)
 
         session.remove()
-        if result == None:
+        if result is None:
             #self.logger.debug('no result')
-            return self.parentget(section, option)
+            return self.parentget(section, option, **kwargs)
         else:
             #self.logger.debug('result: '+result[0])
             return result[0]
 
-    def parentget(self, section, option):
-        return RawConfigParser.get(self, section, option)
+    def parentget(self, section, option, **kwargs):
+        return RawConfigParser.get(self, section, option, **kwargs)
