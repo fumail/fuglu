@@ -76,7 +76,7 @@ class SuspectTestCase(unittest.TestCase):
 
 class SuspectFilterTestCase(unittest.TestCase):
 
-    """Test Header Filter"""
+    """Test Suspectfilter"""
 
     def setUp(self):
         self.candidate = SuspectFilter(TESTDATADIR + '/headertest.regex')
