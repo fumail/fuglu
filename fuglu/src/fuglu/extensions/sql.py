@@ -123,16 +123,7 @@ class DBConfig(RawConfigParser):
         del stringin
 
     def get(self, section, option, **kwargs):
-        if not ENABLED:
-            #self.logger.debug('sqlalchemy extension not enabled')
-            return self.parentget(section, option, **kwargs)
-
-        if not self.has_section('databaseconfig'):
-            #self.logger.debug('no database configuration section')
-            return self.parentget(section, option, **kwargs)
-
-        if not self.has_option('databaseconfig', 'dbconnectstring'):
-            #self.logger.debug('no db connect string')
+        if not ENABLED or (not self.has_section('databaseconfig')) or (not self.has_option('databaseconfig', 'dbconnectstring')):
             return self.parentget(section, option, **kwargs)
 
         connectstring = self.parentget('databaseconfig', 'dbconnectstring')
@@ -161,7 +152,7 @@ class DBConfig(RawConfigParser):
                 "Error getting database config override: %s" % trb)
 
         session.remove()
-        if result is None:
+        if result == None:
             #self.logger.debug('no result')
             return self.parentget(section, option, **kwargs)
         else:
@@ -169,4 +160,7 @@ class DBConfig(RawConfigParser):
             return result[0]
 
     def parentget(self, section, option, **kwargs):
-        return RawConfigParser.get(self, section, option, **kwargs)
+        if sys.version_info < (3, 2):
+            return RawConfigParser.get(self, section, option)
+        else:
+            return RawConfigParser.get(self, section, option, **kwargs)
