@@ -20,18 +20,10 @@ How can I submit changes to the documentation?
 
 The fuglu documentation is  in the branch ``gh-pages``, please edit the text files in the ``source`` folder and submit a pull request. 
 
-------------
-Mailing list
-------------
+---------------
+Asking for help
+---------------
 
-http://fuglu.org/mailman/listinfo/fuglu-users_fuglu.org
-
------------
-IRC Channel
------------
-
-discuss fuglu in #fuglu on Freenode
-
-
-
+ * The fuglu developers and users can be contacted through the fuglu mailing list. Subscribe here : http://fuglu.org/mailman/listinfo/fuglu-users_fuglu.org
+ * It's also ok to ask short questions in a github issue
 

@@ -1,16 +1,19 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>SpamAssassin &#8212; fuglu  documentation</title>
+    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,13 +28,12 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
-    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body>
+  <body role="document">
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -192,7 +194,7 @@ virusaction=DEFAULTVIRUSACTION
 <div class="section" id="attachment-blocker">
 <h1>Attachment Blocker<a class="headerlink" href="#attachment-blocker" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.attachment.FiletypePlugin</p>
-<p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the ‘’‘file’‘’ library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
+<p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
 <p>Attachment rules can be defined globally, per domain or per user.</p>
 <p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
 <p>Prerequisites: You must have the python <code class="docutils literal"><span class="pre">file</span></code> or <code class="docutils literal"><span class="pre">magic</span></code> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <code class="docutils literal"><span class="pre">rarfile</span></code> module.</p>
@@ -205,9 +207,9 @@ virusaction=DEFAULTVIRUSACTION
 <dl class="docutils">
 <dt><code class="docutils literal"><span class="pre">&lt;action&gt;</span></code> can be one of:</dt>
 <dd><ul class="first last simple">
-<li>allow : this file is ok, don’t do further checks (you might use it for safe content types like text). Do not blindly create ‘allow’ rules. It’s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
+<li>allow : this file is ok, don&#8217;t do further checks (you might use it for safe content types like text). Do not blindly create &#8216;allow&#8217; rules. It&#8217;s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
 <li>deny : delete this message and send the error message/description back to the sender</li>
-<li>delete : silently delete the message, no error is sent back, and ‘blockaction’ is ignored</li>
+<li>delete : silently delete the message, no error is sent back, and &#8216;blockaction&#8217; is ignored</li>
 </ul>
 </dd>
 </dl>
@@ -252,7 +254,7 @@ The query must return the same rule format as a file would. Multiple columns in 
 <p><em>action</em>: <code class="docutils literal"><span class="pre">allow</span></code>, <code class="docutils literal"><span class="pre">deny</span></code>, or <code class="docutils literal"><span class="pre">delete</span></code></p>
 <p><em>regex</em>: a regular expression</p>
 <p><em>description</em>: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled</p>
-<p><em>scope</em>: a domain name or a recipient’s email address</p>
+<p><em>scope</em>: a domain name or a recipient&#8217;s email address</p>
 <p><em>checktype</em>: one of <code class="docutils literal"><span class="pre">filename</span></code>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
 <p><em>prio</em>: order in which the rules are run</p>
 <p>The bounce template (eg <code class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></code> ) should
@@ -316,11 +318,11 @@ ${blockinfo}
 <p>This plugins stores a copy of the message if it matches certain criteria (Suspect Filter).
 You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
 <p>Examples for the archive.regex filter file:</p>
-<p>Archive messages to domain ‘’test.com’‘:</p>
+<p>Archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
 <p><code class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></code></p>
 <p>Archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
 <p><code class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></code></p>
-<p>you can also append “yes” and “no” to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
+<p>you can also append &#8220;yes&#8221; and &#8220;no&#8221; to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
 <p>envelope_from logwatch&#64;.*fuglu.org   no</p>
 <p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes</p>
 <p>from <a class="reference external" href="mailto:backups&#37;&#52;&#48;fuglu&#46;org">backups<span>&#64;</span>fuglu<span>&#46;</span>org</a> no</p>
@@ -360,7 +362,7 @@ chgrp=
 <div class="section" id="vacation">
 <h1>Vacation<a class="headerlink" href="#vacation" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.vacation.VacationPlugin</p>
-<p>Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any ‘automated’ messages (Mailingslists, Spams, Bounces etc)</p>
+<p>Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any &#8216;automated&#8217; messages (Mailingslists, Spams, Bounces etc)</p>
 <p>Requires: SQLAlechemy Extension</p>
 <dl class="docutils">
 <dt>Required DB Tables:</dt>
@@ -616,10 +618,10 @@ virusaction=DEFAULTVIRUSACTION
 <p>Plugin: fuglu.plugins.script.ScriptFilter</p>
 <p>This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
-<p>Filterscripts must be written in standard python but with the file ending <code class="docutils literal"><span class="pre">.fgf</span></code> (“fuglu filter”)</p>
+<p>Filterscripts must be written in standard python but with the file ending <code class="docutils literal"><span class="pre">.fgf</span></code> (&#8220;fuglu filter&#8221;)</p>
 <p>Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.</p>
 <p>The API is basically the same as for normal plugins within the <code class="docutils literal"><span class="pre">examine()</span></code> method, with a few special cases:</p>
-<p>there is no ‘self’ which means:</p>
+<p>there is no &#8216;self&#8217; which means:</p>
 <blockquote>
 <div><ul class="simple">
 <li>access the configuration by using <code class="docutils literal"><span class="pre">config</span></code> directly (instead of <code class="docutils literal"><span class="pre">self.config</span></code>)</li>
@@ -668,7 +670,7 @@ echo -n &quot;default._domainkey TXT  \&quot;v=DKIM1; k=rsa; p=&quot; ; cat /etc
 <blockquote>
 <div><ul class="simple">
 <li>setting canonicalizeheaders = simple will cause invalid signature.</li>
-<li>signbodylength causes a crash in dkimlib “TypeError: sequence item 1: expected string, int found”</li>
+<li>signbodylength causes a crash in dkimlib &#8220;TypeError: sequence item 1: expected string, int found&#8221;</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id11">
@@ -699,14 +701,14 @@ canonicalizeheaders=relaxed
 <h1>DKIM Verify<a class="headerlink" href="#dkim-verify" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.domainauth.DKIMVerifyPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
-This plugin checks the DKIM signature of the message and sets tags…
+This plugin checks the DKIM signature of the message and sets tags...
 DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
 the tag is not set if there was no dkim header at all</p>
 <p>DKIMVerify.skipreason: set if the verification has been skipped</p>
 <p>The plugin does not take any action based on the DKIM test result since a failed DKIM validation by itself
 should not cause a message to be treated any differently. Other plugins might use the DKIM result
-in combination with other factors to take action (for example a “DMARC” plugin could use this information)</p>
-<p>It is currently recommended to leave both header and body canonicalization as ‘relaxed’. Using ‘simple’ can cause the signature to fail.</p>
+in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
+<p>It is currently recommended to leave both header and body canonicalization as &#8216;relaxed&#8217;. Using &#8216;simple&#8217; can cause the signature to fail.</p>
 <div class="section" id="id12">
 <h2>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
@@ -718,11 +720,11 @@ in combination with other factors to take action (for example a “DMARC” plug
 <h1>SPF Check<a class="headerlink" href="#spf-check" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.domainauth.SPFPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
-This plugin checks the SPF status and sets tag ‘SPF.status’ to one of the official states ‘pass’, ‘fail’, ‘neutral’,
-‘softfail, ‘permerror’, ‘temperror’ or ‘skipped’ if the SPF check could not be peformed.
-Tag ‘SPF.explanation’ contains a human readable explanation of the result</p>
+This plugin checks the SPF status and sets tag &#8216;SPF.status&#8217; to one of the official states &#8216;pass&#8217;, &#8216;fail&#8217;, &#8216;neutral&#8217;,
+&#8216;softfail, &#8216;permerror&#8217;, &#8216;temperror&#8217; or &#8216;skipped&#8217; if the SPF check could not be peformed.
+Tag &#8216;SPF.explanation&#8217; contains a human readable explanation of the result</p>
 <p>The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
-in combination with other factors to take action (for example a “DMARC” plugin could use this information)</p>
+in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
 <div class="section" id="id13">
 <h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
@@ -1013,7 +1015,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

@@ -1,16 +1,19 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>ISP Config &#8212; fuglu  documentation</title>
+    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +28,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
-    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -33,7 +35,7 @@
     <link rel="prev" title="Support &amp; FAQ" href="help-index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body>
+  <body role="document">
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -65,16 +67,16 @@
             
   <div class="section" id="isp-config">
 <h1>ISP Config<a class="headerlink" href="#isp-config" title="Permalink to this headline">¶</a></h1>
-<p>So, you are a ISP and consider fuglu as your scan glue? Here’s what you need to know.</p>
+<p>So, you are a ISP and consider fuglu as your scan glue? Here&#8217;s what you need to know.</p>
 <div class="section" id="quarantine-gui">
 <h2>Quarantine GUI<a class="headerlink" href="#quarantine-gui" title="Permalink to this headline">¶</a></h2>
 <p>Fuglu itself does not ship any kind of quarantine web gui (like Mailwatch, Mailguard etc) for a simple reason: the requirements are too diverse. We are pretty sure you would spend the same amount of time adapting our gui to your needs as writing it from scratch.</p>
 <p>A few examples:</p>
 <blockquote>
 <div><ul class="simple">
-<li>programming language used in the web environment (python, php, perl, …)</li>
+<li>programming language used in the web environment (python, php, perl, ...)</li>
 <li>ACL concepts</li>
-<li>some have a concept of “alias domains”, some don’t</li>
+<li>some have a concept of &#8220;alias domains&#8221;, some don&#8217;t</li>
 <li>different antispam/antivirus backends</li>
 <li>different types of quarantine storage, such as<ul>
 <li>distributed on scanning machine like mailscanner</li>
@@ -86,13 +88,13 @@
 <li>CRM/ERP integration</li>
 </ul>
 </div></blockquote>
-<p>We recommend you write your user interface the way you like and then let fuglu’s plugin system interface to your gui, usually via a database.</p>
+<p>We recommend you write your user interface the way you like and then let fuglu&#8217;s plugin system interface to your gui, usually via a database.</p>
 </div>
 <div class="section" id="the-fuglu-isp-plugin">
 <h2>The fuglu ISP plugin<a class="headerlink" href="#the-fuglu-isp-plugin" title="Permalink to this headline">¶</a></h2>
 <p>Your quarantine gui probaly reads some sort of maillog table which contains a list of all received messages.
-In fuglu you’d write a plugin which fills this table.</p>
-<p>Below is a stripped down example of such a plugin. In a real setup you’d probably have more database fields, add blacklist/whitelist capabilities and support for per domain/per user configuration overrides.</p>
+In fuglu you&#8217;d write a plugin which fills this table.</p>
+<p>Below is a stripped down example of such a plugin. In a real setup you&#8217;d probably have more database fields, add blacklist/whitelist capabilities and support for per domain/per user configuration overrides.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># -*- coding: UTF-8 -*-</span>
 
 <span class="kn">from</span> <span class="nn">fuglu.shared</span> <span class="k">import</span> <span class="n">ScannerPlugin</span><span class="p">,</span><span class="n">DELETE</span><span class="p">,</span><span class="n">DUNNO</span><span class="p">,</span><span class="n">DEFER</span><span class="p">,</span><span class="n">Suspect</span><span class="p">,</span><span class="n">string_to_actioncode</span>
@@ -145,7 +147,7 @@ In fuglu you’d write a plugin which fills this table.</p>
     <span class="sd">&quot;&quot;&quot;ISP Demo Plugin&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">ScannerPlugin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
+        <span class="n">ScannerPlugin</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">section</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">requiredvars</span><span class="o">=</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">,</span><span class="s1">&#39;dbconnectstring&#39;</span><span class="p">),)</span>
 
@@ -210,7 +212,7 @@ In fuglu you’d write a plugin which fills this table.</p>
 
     <span class="k">def</span> <span class="nf">subject_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoded_subject</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Try to decode subject. Some ugly shaped subjects will remain.&quot;&quot;&quot;</span>
-        <span class="n">decoded_subject</span> <span class="o">=</span> <span class="sa">u</span><span class="s1">&#39;&#39;</span>
+        <span class="n">decoded_subject</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
         <span class="k">for</span> <span class="n">part</span><span class="p">,</span> <span class="n">encoding</span> <span class="ow">in</span> <span class="n">decode_header</span><span class="p">(</span><span class="n">encoded_subject</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">encoding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">decoded_subject</span> <span class="o">+=</span> <span class="n">part</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
@@ -402,14 +404,14 @@ In fuglu you’d write a plugin which fills this table.</p>
         <span class="k">return</span> <span class="p">(</span><span class="n">spam</span><span class="p">,</span><span class="n">highspam</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">u</span><span class="s1">&#39;ISP Quarantine/Maillog&#39;</span><span class="p">;</span>
+        <span class="k">return</span> <span class="s1">u&#39;ISP Quarantine/Maillog&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="configuration-of-other-plugins">
 <h2>Configuration of other plugins<a class="headerlink" href="#configuration-of-other-plugins" title="Permalink to this headline">¶</a></h2>
-<p>In a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete …) based on the results of other plugins.</p>
-<p>In your fuglu.conf you’d probably set:</p>
+<p>In a ISP setup, your ISP Plugin should be the only one making decisions ( forward / delete ...) based on the results of other plugins.</p>
+<p>In your fuglu.conf you&#8217;d probably set:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">spam</span><span class="p">]</span>
 <span class="n">defaultlowspamaction</span><span class="o">=</span><span class="n">DUNNO</span>
 <span class="n">defaulthighspamaction</span><span class="o">=</span><span class="n">DUNNO</span>
@@ -423,7 +425,7 @@ In fuglu you’d write a plugin which fills this table.</p>
 <span class="n">plugins</span><span class="o">=</span><span class="n">clamav</span><span class="p">,</span><span class="o">&lt;</span><span class="n">other</span> <span class="n">virus</span> <span class="n">scanners</span> <span class="n">here</span><span class="o">&gt;</span><span class="p">,</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">attachment</span><span class="p">,</span><span class="o">&lt;</span><span class="n">your</span> <span class="n">isp</span> <span class="n">plugin</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>So, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns “DELETE” after the infected message has been quarantined.</p>
+<p>So, in case of an infected message, the virus scanner plugins would tag the message as virus but hand it over to later plugins anyway. your isp plugin then reads the tag and returns &#8220;DELETE&#8221; after the infected message has been quarantined.</p>
 </div>
 </div>
 
@@ -517,7 +519,7 @@ In fuglu you’d write a plugin which fills this table.</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

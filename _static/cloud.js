@@ -17,22 +17,107 @@
 
 
 // begin encapsulation
-(function (window, $, _, CST) {
+(function (window, $, _) {
 
     /*==========================================================================
      * common helpers
      *==========================================================================*/
     var isUndef = _.isUndefined,
         TEXT_NODE = 3, // could use Node.TEXT_NODE, but IE doesn't define it :(
-        $window = $(window),
-        utils = CST.utils,
-        shorten_url = utils.shortenUrl,
-        baseUrl = utils.baseUrl;
+        $window = $(window);
+
+    // helper to generate an absolute url path from a relative one.
+    // absolute paths passed through unchanged.
+    // paths treated as relative to <base>,
+    // if base is omitted, uses directory of current document.
+    function abspath(path, base) {
+        var parts = path.split("/"),
+            stack = [];
+        if (parts[0]) {
+            // if path is relative, put base on stack
+            stack = (base || document.location.pathname).split("/");
+            // remove blank from leading '/'
+            if (!stack[0]) {
+                stack.shift();
+            }
+            // discard filename & blank from trailing '/'
+            if (stack.length && !(base && stack[stack.length - 1])) {
+                stack.pop();
+            }
+        }
+        for (var i = 0; i < parts.length; ++i) {
+            if (parts[i] && parts[i] != '.') {
+                if (parts[i] == '..') {
+                    stack.pop();
+                } else {
+                    stack.push(parts[i]);
+                }
+            }
+        }
+        return "/" + stack.join("/");
+    }
+
+    // helper to normalize urls for comparison
+    // * strips current document's scheme, host, & path from local document links (just fragment will be left)
+    // * strips current document's scheme & host from internal urls (just path + fragment will be left)
+    // * makes all internal url paths absolute
+    // * external urls returned unchanged.
+    var // hosturl is url to root of host, without trailing '/'
+        // allowing netloc segment to be empty to support 'file:///' urls
+        hosturl = document.location.href.match(/^[a-z0-9]+:(?:\/\/)?(?:[^@/]*@)?[^/]*/)[0],
+        docpath = document.location.pathname;
+
+    function shorten_url(url) {
+        if (!url){
+            return "";
+        } else if (url.indexOf(hosturl) == 0) {
+            // absolute path to same host
+            url = url.substr(hosturl.length) || '/';
+        } else if (url[0] == '.') {
+            // relative path
+            url = abspath(url);
+        } else if (!url.match(/^[/#?]|[a-z0-9]+:/)) {
+            // not abs path, or fragment, or query, or uri:// --
+            // another page in current dir
+            url = abspath('./' + url);
+        }
+
+        if (url.indexOf(docpath) == 0) {
+            // strip current doc's url; only thing left will be e.g. #anchor
+            url = url.substr(docpath.length);
+        }
+        if (url == "#" || url == "#top") {
+            // normalize to empty string
+            url = "";
+        }
+        return url;
+    }
+
+    // url w/ query params & hash stripped
+    function baseUrl(url){
+        return shorten_url(url).replace(/[#?].*$/, '');
+    }
 
     // helper that retrieves css property in pixels
     function csspx(elem, prop) {
         return parseInt($(elem).css(prop).replace("px", ""), 10);
     }
+
+    // custom helper to toggle visibility
+    $.fn.toggleVis = function (state){
+        if(state) { this.show(); } else { this.hide(); }
+        return this;
+    };
+
+    /*
+     * debugging
+     */
+    // 'CloudSphinxTheme'
+    window.CST = window.CloudSphinxTheme = {
+        hosturl: hosturl,
+        docpath: docpath,
+        shorten_url: shorten_url,
+    };
 
     // NOTE: would use $().offset(), but it's document-relative,
     //       and we need viewport-relative... which means getBoundingClientRect().
@@ -96,14 +181,11 @@
     var smallScreen;
 
     $(function (){
-        var $smallDiv = $('<div class="hide-for-small" />').appendTo("body"),
-            $html = $("html");
+        var $smallDiv = $('<div class="hide-for-small" />').appendTo("body");
         function update(){
             var test = $smallDiv.css("display") == "none";
             if(test !== smallScreen){
                 smallScreen = test;
-                $html.toggleClass("small-screen", test)
-                     .toggleClass("medium-up-screen", !test);
                 $window.trigger("cloud-breakpoint");
             }
         }
@@ -168,7 +250,6 @@
 
     // given "#hash-name-with.periods", escape so it's usable as CSS selector
     // (e.g. "#hash-name-with\\.periods")
-    // XXX: replace this with proper CSS.escape polyfill?
     function escapeHash(hash) {
         return hash.replace(/\./g, "\\.");
     }
@@ -240,7 +321,7 @@
             $show = $('button#sidebar-show'),
             copts = {
                 // expires: 7,
-                path: utils.rootpath
+                path: abspath(DOCUMENTATION_OPTIONS.URL_ROOT || "")
             };
 
         // set sidebar state for current media size
@@ -248,6 +329,8 @@
             smallState = false,
             largeState = false;
         function setState(visible){
+            console.debug("set menu state: visible=%o smallSreen=%o",
+                          visible, smallScreen);
             $doc.toggleClass("sidebar-hidden", !smallScreen && !visible)
                 .toggleClass("document-hidden", smallScreen && visible);
             $hide.toggleVis(visible);
@@ -421,7 +504,7 @@
             update_measurements();
 
             // hack to fix errant initial-layout issue
-            $window.on("load", update_sticky);
+            $window.load(update_sticky);
         });
     
 
@@ -843,6 +926,7 @@
             if(highlight) { $div.addClass("highlight-pages"); }
         });
 
+        
         var $toc = $("#table-of-contents div.toctree-wrapper.highlight-pages");
         if($toc.length){
             $('<label id="hide-page-sections"><input type="checkbox" /> Hide page sections</label>')
@@ -958,4 +1042,4 @@
 
 // end encapsulation
 // NOTE: sphinx provides underscore.js as $u
-}(window, jQuery, $u, CST));
+}(window, jQuery, $u));

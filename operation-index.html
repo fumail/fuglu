@@ -1,16 +1,19 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Operation &#8212; fuglu  documentation</title>
+    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +28,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
-    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -33,7 +35,7 @@
     <link rel="prev" title="Configuration" href="configuration-index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body>
+  <body role="document">
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -115,10 +117,10 @@
 <div class="section" id="logs">
 <h3>Logs<a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h3>
 <p>Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed..</p>
-<p>Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, …)</p>
+<p>Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, ...)</p>
 <p>Full documentation on the python logging configuration: <a class="reference external" href="http://docs.python.org/library/logging.html#configuring-logging">http://docs.python.org/library/logging.html#configuring-logging</a></p>
 <p>Logging is configured in <code class="docutils literal"><span class="pre">/etc/fuglu/logging.conf</span></code></p>
-<p>In standard configuration, fuglu logs only INFO messages. Let’s say you wanted to debug the spamassassin plugin. So you’d check if there is a section dealing with spamassassin and you’d find this:</p>
+<p>In standard configuration, fuglu logs only INFO messages. Let&#8217;s say you wanted to debug the spamassassin plugin. So you&#8217;d check if there is a section dealing with spamassassin and you&#8217;d find this:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">logger_saplugin</span><span class="p">]</span>
 <span class="n">level</span><span class="o">=</span><span class="n">INFO</span>
 <span class="n">handlers</span><span class="o">=</span><span class="n">logfile</span>
@@ -147,7 +149,7 @@
 <p>fuglu internal qualnames:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">fuglu.SessionHandler</span></code> - What plugins are being run, what are the results, …</li>
+<li><code class="docutils literal"><span class="pre">fuglu.SessionHandler</span></code> - What plugins are being run, what are the results, ...</li>
 <li><code class="docutils literal"><span class="pre">fuglu.smtp.incoming</span></code> - Incoming smtp connections</li>
 <li><code class="docutils literal"><span class="pre">fuglu.smtp.incoming.&lt;portnumber&gt;</span></code> - Incoming smtp sessions on port &lt;portnumber&gt;</li>
 <li><code class="docutils literal"><span class="pre">fuglu.smtpsession</span></code> - information on the incoming smtp transaction</li>
@@ -156,13 +158,13 @@
 </ul>
 </div></blockquote>
 <p><strong>Additional handlers</strong></p>
-<p>In addition to python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html">builtin handlers</a> , fuglu supports:</p>
+<p>In addition to python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html">builtin handlers</a> , fuglu supports:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupReadableRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable by fuglu’s group</li>
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupWritableRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable/writable by fuglu’s group</li>
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupReadableTimedRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a> , but the file is readable by fuglu’s group</li>
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupWritableTimedRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a>, but the file is readable/writable by fuglu’s group</li>
+<li><code class="docutils literal"><span class="pre">custom_handlers.GroupReadableRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable by fuglu&#8217;s group</li>
+<li><code class="docutils literal"><span class="pre">custom_handlers.GroupWritableRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable/writable by fuglu&#8217;s group</li>
+<li><code class="docutils literal"><span class="pre">custom_handlers.GroupReadableTimedRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a> , but the file is readable by fuglu&#8217;s group</li>
+<li><code class="docutils literal"><span class="pre">custom_handlers.GroupWritableTimedRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a>, but the file is readable/writable by fuglu&#8217;s group</li>
 </ul>
 </div></blockquote>
 </div>
@@ -173,7 +175,7 @@
 <span class="n">mrtgdir</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">mrtg</span>
 </pre></div>
 </div>
-<p>You’ll need <em>mrtg</em> and a <em>webserver</em> for this to work… create a file called <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu_mrtg.cfg</span></code>  like this:</p>
+<p>You&#8217;ll need <em>mrtg</em> and a <em>webserver</em> for this to work... create a file called <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu_mrtg.cfg</span></code>  like this:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>Interval: 5
 WorkDir: /usr/local/fuglu/mrtg/output
 WriteExpires: yes
@@ -272,7 +274,7 @@ AbsMax[virus]: 600000
 <div class="section" id="troubleshooting-debugging">
 <h2>Troubleshooting &amp; Debugging<a class="headerlink" href="#troubleshooting-debugging" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fuglu-doesn-t-even-start">
-<h3>Fuglu doesn’t even start<a class="headerlink" href="#fuglu-doesn-t-even-start" title="Permalink to this headline">¶</a></h3>
+<h3>Fuglu doesn&#8217;t even start<a class="headerlink" href="#fuglu-doesn-t-even-start" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
 <li>run <code class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--lint</span></code> as root. are there any errors?</li>
@@ -286,7 +288,7 @@ AbsMax[virus]: 600000
 <div class="section" id="debug-trace-a-single-message">
 <h3>Debug Trace a single message<a class="headerlink" href="#debug-trace-a-single-message" title="Permalink to this headline">¶</a></h3>
 <p>Fuglu runs but you want to know what exactly would happen to a single email message?</p>
-<p>Make sure message debugging is enabled (it is by default, but if you screwed up your config…) :</p>
+<p>Make sure message debugging is enabled (it is by default, but if you screwed up your config...) :</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="docutils literal"><span class="pre">prependers=</span></code> should start with <code class="docutils literal"><span class="pre">debug</span></code> to make sure the debugger plugin is loaded</li>
@@ -309,7 +311,7 @@ AbsMax[virus]: 600000
 </div>
 <div class="section" id="debug-a-suspect-filter">
 <span id="debug-suspect-filter"></span><h3>Debug a suspect filter<a class="headerlink" href="#debug-a-suspect-filter" title="Permalink to this headline">¶</a></h3>
-<p>So you have this filter in a plugin with hundreds of rules and you just don’t know which one matched a specific message?</p>
+<p>So you have this filter in a plugin with hundreds of rules and you just don&#8217;t know which one matched a specific message?</p>
 <p>fuglu_suspectfilter to the rescue! just pass a rule file and a message eml file as arguments and it will list all matches.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu_suspectfilter</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">myfilterfile</span><span class="o">.</span><span class="n">regex</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">testmessage</span><span class="o">.</span><span class="n">eml</span>
 <span class="n">INFO</span><span class="p">:</span><span class="n">fuglu</span><span class="o">.</span><span class="n">suspectfilter</span><span class="p">:</span><span class="n">Reloading</span> <span class="n">Rulefile</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gryphius</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">skipreviewfilter</span><span class="o">.</span><span class="n">regex</span>
@@ -328,7 +330,7 @@ AbsMax[virus]: 600000
 <div class="section" id="debug-the-fuglu-core">
 <h3>Debug the fuglu core<a class="headerlink" href="#debug-the-fuglu-core" title="Permalink to this headline">¶</a></h3>
 <p>If you are a python developer and would like to inspect fuglu at run-time, add the argument <code class="docutils literal"><span class="pre">--console</span></code> when starting fuglu.
-You will then get an interactive python console where all plugins etc are available from the ‘mc’ (MainController) object.</p>
+You will then get an interactive python console where all plugins etc are available from the &#8216;mc&#8217; (MainController) object.</p>
 <p>Starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command <code class="docutils literal"><span class="pre">fuglu_control</span> <span class="pre">netconsole</span> <span class="pre">[&lt;port&gt;</span> <span class="pre">[&lt;bindaddress&gt;]]</span></code></p>
 <p>Example:
 on the host running fuglu:</p>
@@ -362,7 +364,7 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
 </ul>
 </li>
 <li><a class="reference internal" href="#troubleshooting-debugging">Troubleshooting &amp; Debugging</a><ul>
-<li><a class="reference internal" href="#fuglu-doesn-t-even-start">Fuglu doesn’t even start</a></li>
+<li><a class="reference internal" href="#fuglu-doesn-t-even-start">Fuglu doesn&#8217;t even start</a></li>
 <li><a class="reference internal" href="#debug-trace-a-single-message">Debug Trace a single message</a></li>
 <li><a class="reference internal" href="#debug-a-suspect-filter">Debug a suspect filter</a></li>
 <li><a class="reference internal" href="#debug-the-fuglu-core">Debug the fuglu core</a></li>
@@ -446,7 +448,7 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

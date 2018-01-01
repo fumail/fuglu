@@ -1,16 +1,19 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Configuration &#8212; fuglu  documentation</title>
+    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +28,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
-    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -33,7 +35,7 @@
     <link rel="prev" title="Installation" href="installation-index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
-  <body>
+  <body role="document">
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -74,7 +76,7 @@
 <h3>Fuglu<a class="headerlink" href="#fuglu" title="Permalink to this headline">¶</a></h3>
 <p>First of all, remove the .dist ending from all files in <code class="docutils literal"><span class="pre">/etc/fuglu</span></code>, so you have a basic default configuration.</p>
 <p>edit <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu.conf</span></code> and change parameters if you like</p>
-<p>Note: If you don’t have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.</p>
+<p>Note: If you don&#8217;t have Clamav (clamd) or Spamassassin (spamd) , you need to remove those entries from the plugins option.</p>
 <p>eg, change</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">=</span><span class="n">archive</span><span class="p">,</span><span class="n">clamav</span><span class="p">,</span><span class="n">spamassassin</span><span class="p">,</span><span class="n">attachment</span>
 </pre></div>
@@ -319,7 +321,7 @@ highspamlevel=10
 </div>
 <div class="section" id="running-fuglu-in-netcat-mode">
 <h3>Running fuglu in netcat-mode<a class="headerlink" href="#running-fuglu-in-netcat-mode" title="Permalink to this headline">¶</a></h3>
-<p>fuglu supports message processing by simply “piping” them into a socket. To enable this socket, add <code class="docutils literal"><span class="pre">netcat:&lt;portnumber&gt;</span></code> to the <code class="docutils literal"><span class="pre">incomingport</span></code> configuration option in fuglu.conf.</p>
+<p>fuglu supports message processing by simply &#8220;piping&#8221; them into a socket. To enable this socket, add <code class="docutils literal"><span class="pre">netcat:&lt;portnumber&gt;</span></code> to the <code class="docutils literal"><span class="pre">incomingport</span></code> configuration option in fuglu.conf.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">incomingport</span><span class="o">=</span><span class="mi">10025</span><span class="p">,</span><span class="mi">10099</span><span class="p">,</span><span class="mi">10888</span><span class="p">,</span><span class="n">netcat</span><span class="p">:</span><span class="mi">20099</span>
 </pre></div>
 </div>
@@ -339,7 +341,7 @@ highspamlevel=10
 <div class="section" id="fetching-scan-time-configuration-values-from-a-database">
 <h3>Fetching scan-time configuration values from a database<a class="headerlink" href="#fetching-scan-time-configuration-values-from-a-database" title="Permalink to this headline">¶</a></h3>
 <p>It is now possible to fetch certain configuration options at runtime, based on the recipient email address or domain.</p>
-<p>For this to work you need to have sqlalchemy installed ( running <cite>fuglu –lint</cite> should show <cite>enabled</cite> for the sql extension)</p>
+<p>For this to work you need to have sqlalchemy installed ( running <cite>fuglu &#8211;lint</cite> should show <cite>enabled</cite> for the sql extension)</p>
 <p>SQL script to create the the table:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `fugluconfig` (
   `scope` varchar(255) NOT NULL,
@@ -350,7 +352,7 @@ highspamlevel=10
 )
 </pre></div>
 </div>
-<p>The process is very similar to spamassassin’s SQL configuration  (<a class="reference external" href="http://wiki.apache.org/spamassassin/UsingSQL">http://wiki.apache.org/spamassassin/UsingSQL</a> ), with a few minor differences:</p>
+<p>The process is very similar to spamassassin&#8217;s SQL configuration  (<a class="reference external" href="http://wiki.apache.org/spamassassin/UsingSQL">http://wiki.apache.org/spamassassin/UsingSQL</a> ), with a few minor differences:</p>
 <blockquote>
 <div><ul class="simple">
 <li>we require two columns to identify a preference: <cite>section</cite> and <cite>option</cite></li>
@@ -363,7 +365,7 @@ highspamlevel=10
 <span class="n">dbconnectstring</span><span class="o">=</span><span class="n">mysql</span><span class="p">:</span><span class="o">//</span><span class="n">root</span><span class="nd">@localhost</span><span class="o">/</span><span class="n">fuglu</span>
 </pre></div>
 </div>
-<p>If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (<cite>sql=SELECT ….</cite> in the same section.  ) use <cite>:section</cite>, <cite>:option</cite> and the usual suspect variables like <cite>:to_domain</cite> and <cite>:to_address</cite> as placeholders.</p>
+<p>If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (<cite>sql=SELECT ....</cite> in the same section.  ) use <cite>:section</cite>, <cite>:option</cite> and the usual suspect variables like <cite>:to_domain</cite> and <cite>:to_address</cite> as placeholders.</p>
 <dl class="docutils">
 <dt>Note: only the following plugins currently supports reading database overrides for the listed options:</dt>
 <dd><ul class="first last simple">
@@ -497,7 +499,7 @@ highspamlevel=10
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

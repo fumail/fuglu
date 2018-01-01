@@ -143,17 +143,6 @@
 
 
 
-    
-        
-    
-
-    
-        
-            
-            
-        
-        
-    
 
     
         
@@ -1330,17 +1319,11 @@ a.headerlink:hover:active
 
 
 
-.clear, .clear-both { clear: both; }
-
-.clear-left { clear: left; }
-
-.clear-right { clear: right; }
+.clear { clear: both; }
 
 .clear-none { clear: none; }
 
-    div.body .clear-none > h3 { clear: none; }
-
-.hidden { display: none; }div.body p
+    div.body .clear-none > h3 { clear: none; }div.body p
 {
     text-align: justify;
     
@@ -1369,11 +1352,6 @@ div.body hr {
     background: none;
     border: 1px dashed rgba(0,0,0,.15);
     border-width: 1px 0 0 0;
-}
-
-.strike
-{
-    text-decoration: line-through;
 }a.footnote-reference
 {
     font-size: 70%;
@@ -1652,6 +1630,12 @@ div.admonition.floater
     max-width: 65%;
     margin: 0 auto 1.5em;
 }
+
+
+
+.clear-left { clear: left; }
+.clear-right { clear: right; }
+.clear, .clear-both { clear: both; }
     
 
 
