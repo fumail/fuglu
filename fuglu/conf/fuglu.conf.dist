@@ -135,6 +135,20 @@ dbconnectstring=
 #if the statement returns more than one row/value only the first value in the first row is used
 sql=SELECT value FROM fugluconfig WHERE `section`=:section AND `option`=:option AND `scope` IN ('$GLOBAL',CONCAT('%',:to_domain),:to_address) ORDER BY `scope` DESC
 
+[performance]
+
+#minimum scanner threads
+minthreads=2
+
+#maximum scanner threads
+maxthreads=40
+
+#Method for parallelism, either 'thread' or 'process' 
+backend=thread
+
+#Initial number of processes when backend='process'. If 0 (the default), automatically selects twice the number of available virtual cores. Despite its 'initial'-name, this number currently is not adapted automatically.
+initialprocs=0
+
 [spam]
 
 #what to do with messages that plugins think are spam but  not so sure  ("low spam")
@@ -163,18 +177,13 @@ boundarydistance=0
 #Only required if plugins need to have information about the last untrusted host and the message doesn't pass a fixed amount of hops to reach this system in your network
 trustedhostsregex=
 
-[performance]
-
-#minimum scanner threads
-minthreads=2
-
-#maximum scanner threads
-maxthreads=40
-
 [esmtpconnector]
 
 #confirmation template sent back to the connecting client for accepted messages
 queuetemplate=${injectanswer}
+
+#only deliver the message to the first recipient, ignore the others. This is useful in spamtrap setups where we don't want to create duplicate deliveries.
+ignore_multiple_recipients=0
 
 [virus]
 
@@ -248,6 +257,9 @@ checkarchivecontent=0
 #only extract and examine files up to this amount of (uncompressed) bytes
 archivecontentmaxsize=5000000
 
+#comma separated list of archive extensions. do only process archives of given types.
+enabledarchivetypes=
+
 [ClamavPlugin]
 
 #hostname where clamd runs
@@ -314,7 +326,7 @@ forwardoriginal=0
 #eg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_
 spamheader=X-Spam-Status
 
-#enable SA user configuration 
+#enable user_prefs in SA. This hands the recipient address over the spamd connection which allows SA to search for configuration overrides
 peruserconfig=1
 
 #spamscore threshold to mark a message as high spam
