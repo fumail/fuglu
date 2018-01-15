@@ -1,4 +1,4 @@
-from fuglu.shared import Suspect, AppenderPlugin, actioncode_to_string
+from fuglu.shared import AppenderPlugin, actioncode_to_string
 import platform
 from socket import socket, AF_INET, SOCK_DGRAM
 

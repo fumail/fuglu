@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 #
-from fuglu.shared import ScannerPlugin, DELETE, DUNNO, DEFER, SuspectFilter,\
-    apply_template
+from fuglu.shared import ScannerPlugin, DUNNO, SuspectFilter, apply_template
 import os
 import shutil
 import pwd

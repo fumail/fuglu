@@ -1,4 +1,4 @@
-from fuglu.shared import ScannerPlugin, DUNNO
+from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 import socket
 import struct
 import re
