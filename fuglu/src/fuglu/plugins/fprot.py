@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from fuglu.shared import ScannerPlugin, DELETE, DUNNO, DEFER, string_to_actioncode, apply_template
+from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 import socket
 import time
 import re

@@ -16,7 +16,7 @@
 
 # http://vaibhavkulkarni.wordpress.com/2007/11/19/a-icap-client-code-in-c-to-virus-scan-a-file-using-symantec-scan-server/
 
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, Suspect, apply_template
+from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
 import socket
 import os
 
