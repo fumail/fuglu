@@ -1,7 +1,8 @@
--- Fuglu 0.6.7, unreleased
+-- Fuglu 0.7.0, 2018-01-14
  * Attachment Plugin:
   * support more archive types ( tar.gz, tgz, tar.bz2, .7z)
   * extract archives based on detected magic mime type if possible (instead of file ending)
+  * the plugin now supports scan-time configuration options
  * New Plugin: SpearPhish detection
  * Improve body text extraction by also extracting multipart/mixed and the message's epilogue
  * various refactorings / remove lots of code smell
@@ -9,6 +10,14 @@
  * new tool 'fuglu_client' allows scanning messages from the commandline by either injecting them into a running fuglu
    with the Netcat plugin or by starting its own temporary fuglu instance. This is helpful for debugging or running fuglu
    in fetchmail like environments
+ * multi processing mode: instead of running multithreaded the scanning tasks can now run in their own process
+ * prequeue mode can now be configured to only deliver to one recipient per message - useful in spamtrap setups
+ * Add IPv6 support in various plugins connecting to other daemons (clamav, spamasassin, drweb, fprot, icap, sssp)
+ * domainauth plugin: remove hard dependency of pkg_resources
+
+Developers:
+ * suspect.to_addr is no longer a writeable member, it has been converted to a property which always returns the first recipient of a message
+
 
 -- Fuglu 0.6.6, 2016-05-17
  * Minimum python version 2.6

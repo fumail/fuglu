@@ -1,4 +1,4 @@
-#   Copyright 2009-2017 Oli Schacher
+#   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,4 +16,4 @@
 __all__ = ['bounce', 'core', 'daemon', 'funkyconsole',
            'protocolbase', 'scansession', 'shared', 'stats', 'threadpool']
 
-FUGLU_VERSION = "0.6.6"
+FUGLU_VERSION = "0.7.0"
