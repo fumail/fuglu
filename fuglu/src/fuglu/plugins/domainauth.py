@@ -26,28 +26,15 @@ requires: pydns (or alternatively dnspython if only dkim is used)
 
 from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_to_actioncode, get_default_cache
 from fuglu.extensions.sql import get_session, ENABLED
+from fuglu.extensions.dnsquery import HAVE_PYDNS, HAVE_DNSPYTHON
 import logging
 import os
 import re
 
 DKIMPY_AVAILABLE = False
 PYSPF_AVAILABLE = False
-PYDNS_AVAILABLE = False
-DNSPYTHON_AVAILABLE = False
 IPADDRESS_AVAILABLE = False
 IPADDR_AVAILABLE = False
-
-try:
-    import dns
-    DNSPYTHON_AVAILABLE = True
-except ImportError:
-    pass
-
-try:
-    import DNS
-    PYDNS_AVAILABLE = True
-except ImportError:
-    pass
 
 try:
     import ipaddress
@@ -66,7 +53,7 @@ try:
     pkg_resources.get_distribution("dkimpy")
     from dkim import DKIM, sign, Simple, Relaxed, DKIMException
 
-    if not (PYDNS_AVAILABLE or DNSPYTHON_AVAILABLE):
+    if not (HAVE_PYDNS or HAVE_DNSPYTHON):
         raise Exception("no supported dns library available")
 
     DKIMPY_AVAILABLE = True
@@ -75,7 +62,7 @@ except Exception:
 
 
 try:
-    if not PYDNS_AVAILABLE:
+    if not HAVE_PYDNS:
         raise Exception("pydns not available")
     if not (IPADDR_AVAILABLE or IPADDRESS_AVAILABLE):
         raise Exception("ipaddress/ipaddr not available")
