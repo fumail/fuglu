@@ -26,17 +26,16 @@ import os
 class ControlServer(object):
 
     def __init__(self, controller, port=None, address="127.0.0.1"):
-        if port == None:
+        if port is None:
             port = "/tmp/fuglu_control.sock"
 
-        if type(port) == str:
+        if isinstance(port, str):
             try:
                 port = int(port)
-                porttype = "inet4"
-            except:
-                porttype = "unix"
+            except ValueError:
+                pass
 
-        if type(port) == int:
+        if isinstance(port, int):
             porttype = "inet4"
             self.logger = logging.getLogger("fuglu.control.%s" % port)
             self.logger.debug('Starting Control/Info server on port %s' % port)
@@ -60,7 +59,7 @@ class ControlServer(object):
             else:
                 try:
                     os.remove(port)
-                except:
+                except Exception:
                     pass
                 self._socket = socket.socket(
                     socket.AF_UNIX, socket.SOCK_STREAM)
@@ -75,10 +74,10 @@ class ControlServer(object):
         self.stayalive = False
         self.logger.info("Control Server on port %s shutting down" % self.port)
         try:
-            self._socket.shutdown()
+            self._socket.shutdown(socket.SHUT_RDWR)
             self._socket.close()
             time.sleep(3)
-        except:
+        except Exception:
             pass
 
     def serve(self):
@@ -96,7 +95,7 @@ class ControlServer(object):
                 self.logger.debug('Incoming connection from %s' % str(nsd[1]))
                 engine.handlesession()
 
-            except Exception as e:
+            except Exception:
                 fmt = traceback.format_exc()
                 self.logger.error('Exception in serve(): %s' % fmt)
 
@@ -225,10 +224,10 @@ class CrashStore(object):
 
     @staticmethod
     def store_exception(exc_info=None, thread=None):
-        if exc_info == None:
+        if exc_info is None:
             exc_info = sys.exc_info()
 
-        if thread == None:
+        if thread is None:
             thread = threading.currentThread()
 
         name = thread.getName()

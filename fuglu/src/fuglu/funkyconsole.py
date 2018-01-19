@@ -66,7 +66,7 @@ class FunkyConsole:
         """builds escape sequences"""
         escseq = "\x1b["
         for cmd in commandlist:
-            if cmd != None:
+            if cmd is not None:
                 escseq = escseq + cmd + ";"
         escseq = escseq[0:-1]  # strip last ;
         escseq = escseq + "m"

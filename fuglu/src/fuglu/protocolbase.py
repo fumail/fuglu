@@ -48,10 +48,10 @@ class ProtocolHandler(object):
 class BasicTCPServer(object):
 
     def __init__(self, controller, port=10125, address="127.0.0.1", protohandlerclass=None):
-        if protohandlerclass == None:
+        if protohandlerclass is None:
             protohandlerclass = ProtocolHandler
         self.protohandlerclass = protohandlerclass
-        self.logger = logging.getLogger("fuglu.incoming.%s" % (port))
+        self.logger = logging.getLogger("fuglu.incoming.%s" % port)
         self.logger.debug('Starting incoming Server on Port %s, protocol=%s' % (
             port, self.protohandlerclass.protoname))
         self.port = port
