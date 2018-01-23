@@ -173,7 +173,7 @@ class SMTPSession(object):
         self.tempfile = None
 
     def endsession(self, code, message):
-        self.socket.send("%s %s\r\n" % (code, message))
+        self.socket.send(("%s %s\r\n" % (code, message)).encode())
         data = ''
         completeLine = 0
         while not completeLine:
@@ -187,11 +187,11 @@ class SMTPSession(object):
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
-                        self.socket.send("%s %s\r\n" % (220, "BYE"))
+                        self.socket.send(("%s %s\r\n" % (220, "BYE")).encode())
                         self.closeconn()
                         return
                     self.socket.send(
-                        "%s %s\r\n" % (421, "Cannot accept further commands"))
+                        ("%s %s\r\n" % (421, "Cannot accept further commands")).encode())
                     self.closeconn()
                     return
             else:
@@ -208,7 +208,7 @@ class SMTPSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n")
+        self.socket.send("220 fuglu scanner ready \r\n".encode())
         while True:
             data = ''
             completeLine = 0
@@ -236,7 +236,7 @@ class SMTPSession(object):
                                 self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send(rsp + "\r\n")
+                        self.socket.send((rsp + "\r\n").encode())
                         if keep == 0:
                             self.socket.close()
                             return False

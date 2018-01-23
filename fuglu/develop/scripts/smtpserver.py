@@ -61,7 +61,7 @@ class SMTPSession:
 
     def _send(self, content):
         print("> %s" % content.strip())
-        self.socket.send(content)
+        self.socket.send(content.encode() if isinstance(content,str) else content)
 
     def endsession(self, code, message):
         self._send("%s %s\r\n" % (code, message))
