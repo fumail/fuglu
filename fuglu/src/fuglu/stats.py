@@ -176,41 +176,41 @@ class StatsThread(object):
         self.stayalive = True
 
     def writestats(self):
-        dir = self.config.get('main', 'mrtgdir')
-        if dir == None or dir.strip() == "":
+        mrtgdir = self.config.get('main', 'mrtgdir')
+        if mrtgdir is None or mrtgdir.strip() == "":
             self.logger.debug(
                 'No mrtg directory defined, disabling stats writer')
             return
 
-        if not os.path.isdir(dir):
+        if not os.path.isdir(mrtgdir):
             self.logger.error(
-                'MRTG directory %s not found, disabling stats writer' % dir)
+                'MRTG directory %s not found, disabling stats writer' % mrtgdir)
             return
 
-        self.logger.info('Writing statistics to %s' % dir)
+        self.logger.info('Writing statistics to %s' % mrtgdir)
 
         while self.stayalive:
             time.sleep(self.writeinterval)
             uptime = self.stats.uptime()
 
             # total messages
-            self.write_mrtg('%s/inout' % dir, float(self.stats.incount),
+            self.write_mrtg('%s/inout' % mrtgdir, float(self.stats.incount),
                             float(self.stats.outcount), uptime, self.identifier)
             # spam ham
-            self.write_mrtg('%s/hamspam' % dir, float(self.stats.hamcount),
+            self.write_mrtg('%s/hamspam' % mrtgdir, float(self.stats.hamcount),
                             float(self.stats.spamcount), uptime, self.identifier)
 
             # num threads
             self.write_mrtg(
-                '%s/threads' % dir, self.stats.numthreads(), None, uptime, self.identifier)
+                '%s/threads' % mrtgdir, self.stats.numthreads(), None, uptime, self.identifier)
 
             # virus
             self.write_mrtg(
-                '%s/virus' % dir, float(self.stats.viruscount), None, uptime, self.identifier)
+                '%s/virus' % mrtgdir, float(self.stats.viruscount), None, uptime, self.identifier)
 
             # scan time
             self.write_mrtg(
-                '%s/scantime' % dir, self.stats.scantime(), None, uptime, self.identifier)
+                '%s/scantime' % mrtgdir, self.stats.scantime(), None, uptime, self.identifier)
 
     def write_mrtg(self, filename, value1, value2, uptime, identifier):
         try:

@@ -18,7 +18,7 @@
 # source:
 # http://stackoverflow.com/questions/1407474/does-python-logging-handlers-rotatingfilehandler-allow-creation-of-a-group-writa
 
-import logging
+import logging.handlers
 import os
 
 

@@ -34,7 +34,7 @@ __all__ = [
 ]
 
 
-class Simple:
+class Simple(object):
 
     """Class that represents the "simple" canonicalization algorithm."""
 
@@ -51,7 +51,7 @@ class Simple:
         return re.sub("(\r\n)*$", "\r\n", body)
 
 
-class Relaxed:
+class Relaxed(object):
 
     """Class that represents the "relaxed" canonicalization algorithm."""
 
@@ -288,7 +288,7 @@ def rfc822_parse(message):
                 raise MessageFormatError(
                     "Unexpected characters in RFC822 header: %s" % lines[i])
         i += 1
-    return (headers, "\r\n".join(lines[i:]))
+    return headers, "\r\n".join(lines[i:])
 
 
 def dnstxt(name):
@@ -676,11 +676,11 @@ def verify(message, debuglog=None):
     return not [1 for x in zip(v, sig2) if x[0] != x[1]]
 
 if __name__ == "__main__":
-    message = """From: greg@hewgill.com\r\nSubject: test\r\n message\r\n\r\nHi.\r\n\r\nWe lost the game. Are you hungry yet?\r\n\r\nJoe.\r\n"""
-    print(rfc822_parse(message))
-    sig = sign(message, "greg", "hewgill.com", open(
+    msg = """From: greg@hewgill.com\r\nSubject: test\r\n message\r\n\r\nHi.\r\n\r\nWe lost the game. Are you hungry yet?\r\n\r\nJoe.\r\n"""
+    print(rfc822_parse(msg))
+    sign = sign(msg, "greg", "hewgill.com", open(
         "/home/greg/.domainkeys/rsa.private").read())
-    print(sig)
-    print(verify(sig + message))
+    print(sign)
+    print(verify(sign + msg))
     # print sign(open("/home/greg/tmp/message").read(), "greg", "hewgill.com",
     # open("/home/greg/.domainkeys/rsa.private").read())

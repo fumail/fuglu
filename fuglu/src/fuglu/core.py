@@ -67,11 +67,11 @@ def check_version_status(lint=False):
 
     m = re.match(
         r'^(?P<major>\d{1,4})\.(?P<minor>\d{1,4})\.(?P<patch>\d{1,4})(?:\-(?P<commitno>\d{1,4})\-g(?P<commitid>[a-f0-9]{7}))?$', FUGLU_VERSION)
-    if m == None:
+    if m is None:
         logging.warn("could not parse my version string %s" % FUGLU_VERSION)
         return
     parts = m.groupdict()
-    if 'commitid' not in parts or parts['commitid'] == None:
+    if 'commitid' not in parts or parts['commitid'] is None:
         parts['commitid'] = 'release'
 
     lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(
@@ -79,15 +79,15 @@ def check_version_status(lint=False):
     result = None
     try:
         result = socket.gethostbyname(lookup)
-    except:
+    except Exception:
         # DNS fails happen - try again next time
         pass
 
-    if result == None:
+    if result is None:
         return
 
     ret = re.match(r'^127\.0\.0\.(?P<replycode>\d{1,4})$', result)
-    if ret != None:
+    if ret is not None:
         code = int(ret.groupdict()['replycode'])
         for bitmask, message in bitmaskmap.items():
             if code & bitmask == bitmask:
@@ -600,7 +600,7 @@ class MainController(object):
         serversocket.bind((bind, port))
         serversocket.listen(1)
         clientsocket, address = serversocket.accept()  # client socket
-        self.logger.info("Interactive python connection from %s/%s" % address)
+        self.logger.info("Interactive python connection from %s/%s" % (address[0], address[1]))
 
         class sw:  # socket wrapper
 
@@ -696,7 +696,7 @@ class MainController(object):
             self.logger.info('Closing server socket on port %s' % server.port)
             server.shutdown()
 
-        if self.controlserver != None:
+        if self.controlserver is not None:
             self.controlserver.shutdown()
 
         if self.threadpool:
@@ -945,7 +945,7 @@ class MainController(object):
             if plug == "":
                 continue
             m = config_re.match(plug)
-            if m == None:
+            if m is None:
                 self.logger.error('Invalid Plugin Syntax: %s' % plug)
                 allOK = False
                 continue
@@ -977,7 +977,7 @@ class MainController(object):
         for component_name in component_names[1:]:
             mod = getattr(mod, component_name)
 
-        if configsection == None:
+        if configsection is None:
             plugininstance = mod(self.config)
         else:
             # check if plugin supports config override

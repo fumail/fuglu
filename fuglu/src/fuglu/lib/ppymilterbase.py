@@ -27,11 +27,7 @@ __author__ = 'Eric DeFriez'
 
 import binascii
 import logging
-import os
-import socket
 import struct
-import sys
-import types
 
 
 MILTER_VERSION = 2  # Milter version we claim to speak (from pmilter)
@@ -167,7 +163,7 @@ class PpyMilterDispatcher(object):
         milter_class instance.
 
         Args:
-          milter_class: A class (not an instance) that handles callbacks for
+          milter: A class (not an instance) that handles callbacks for
                         milter commands (e.g. a child of the PpyMilter class).
         """
         self.__milter = milter
