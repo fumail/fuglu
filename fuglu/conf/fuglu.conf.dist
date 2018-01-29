@@ -291,6 +291,12 @@ problemaction=DEFER
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
 
+#*EXPERIMENTAL*: fallback to clamscan if clamd is unavailable.
+clamscanfallback=0
+
+#the path to clamscan executable
+clamscan=/usr/bin/clamscan
+
 [SAPlugin]
 
 #hostname where spamd runs
