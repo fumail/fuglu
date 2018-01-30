@@ -20,7 +20,10 @@ import threading
 from fuglu.scansession import SessionHandler
 import traceback
 from multiprocessing.reduction import ForkingPickler
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 class ProtocolHandler(object):
     protoname = 'UNDEFINED'
