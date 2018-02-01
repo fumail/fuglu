@@ -123,6 +123,6 @@ class BasicTCPServer(object):
 
 def forking_dumps(obj):
     """ Pickle a socket This is required to pass the socket in multiprocessing"""
-    buf = StringIO.StringIO()
+    buf = StringIO()
     ForkingPickler(buf).dump(obj)
     return buf.getvalue()
