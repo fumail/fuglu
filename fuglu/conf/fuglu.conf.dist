@@ -297,6 +297,9 @@ clamscanfallback=0
 #the path to clamscan executable
 clamscan=/usr/bin/clamscan
 
+#process timeout
+clamscantimeout=30
+
 [SAPlugin]
 
 #hostname where spamd runs
