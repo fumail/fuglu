@@ -99,6 +99,11 @@ Tags:
                 'default': '/usr/bin/clamscan',
                 'description': "the path to clamscan executable",
             },
+            
+            'clamscantimeout': {
+                'default': '30',
+                'description': "process timeout",
+            },
         }
         self.logger = self._logger()
     
@@ -179,14 +184,28 @@ Tags:
     
     def scan_shell(self, content):
         clamscan = self.config.get(self.section, 'clamscan')
+        timeout = self.config.getint(self.section, 'clamscantimeout')
         
-        process = subprocess.Popen([clamscan, u'-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE) # file data by pipe
-        stdout = process.communicate(content)[0]
-        process.stdin.close()
-        exitcode = process.wait()
+        if not os.path.exists(clamscan):
+            raise Exception('could not find clamscan executable in %s' % clamscan)
         
-        if exitcode > 1: # 0: no virus, 1: virus, >1: error
-            raise Exception
+        try:
+            process = subprocess.Popen([clamscan, u'-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE) # file data by pipe
+            kill_proc = lambda p: p.kill()
+            timer = threading.Timer(timeout, kill_proc, [process])
+            timer.start()
+            stdout = process.communicate(content)[0]
+            process.stdin.close()
+            exitcode = process.wait()
+            timer.cancel()
+        except Exception:
+            exitcode = -1
+            stdout = ''
+        
+        if exitcode > 1: # 0: no virus, 1: virus, >1: error, -1 subprocess error
+            raise Exception('clamscan error')
+        elif exitcode < 0:
+            raise Exception('clamscan timeout after %ss' % timeout)
         
         dr = {}
         
