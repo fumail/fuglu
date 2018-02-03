@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +16,12 @@
 #
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
-import fuglu.extensions.sql
+from fuglu.extensions.sql import SQLALCHEMY_AVAILABLE, DBFile, DBConfig
 import re
 import mimetypes
 import os
 import os.path
 import logging
-from fuglu.extensions.sql import DBFile, DBConfig
 import threading
 import sys
 from email.header import decode_header
@@ -975,9 +975,8 @@ The other common template variables are available as well.
             dbconn = self.config.get(self.section, 'dbconnectstring')
         if dbconn.strip() != '':
             print("Reading per user/domain attachment rules from database")
-            if not fuglu.extensions.sql.ENABLED:
-                print(
-                    "Fuglu SQL Extension not available, cannot load attachment rules from database")
+            if not SQLALCHEMY_AVAILABLE:
+                print("Fuglu SQL Extension not available, cannot load attachment rules from database")
                 return False
             query = self.config.get(self.section, 'query')
             dbfile = DBFile(dbconn, query)

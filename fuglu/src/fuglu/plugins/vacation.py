@@ -21,7 +21,7 @@ Vacation/Autoreply Plugin
 
 from fuglu.shared import ScannerPlugin, DUNNO
 from fuglu.bounce import Bounce
-import fuglu.extensions.sql
+from fuglu.extensions.sql import SQLALCHEMY_AVAILABLE, get_session
 import time
 import re
 from threading import Lock
@@ -121,11 +121,10 @@ class VacationReply(object):
         self.recipient = None
 
 
-if fuglu.extensions.sql.ENABLED:
-    from sqlalchemy import Table, Column, TEXT, TIMESTAMP, Integer, String, MetaData, ForeignKey, Unicode, Boolean, DateTime, select
-    from sqlalchemy.sql import and_
+if SQLALCHEMY_AVAILABLE:
+    from sqlalchemy import Table, Column, TEXT, TIMESTAMP, Integer, ForeignKey, Unicode, Boolean
     from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import mapper, relation, column_property, object_session
+    from sqlalchemy.orm import mapper, relation
     DeclarativeBase = declarative_base()
     metadata = DeclarativeBase.metadata
 
@@ -198,8 +197,7 @@ class VacationCache(object):
         self.lastreload = time.time()
 
         newvacations = {}
-        dbsession = fuglu.extensions.sql.get_session(
-            self.config.get('VacationPlugin', 'dbconnectstring'), expire_on_commit=False)
+        dbsession = get_session(self.config.get('VacationPlugin', 'dbconnectstring'), expire_on_commit=False)
         vaccounter = 0
         now = datetime.now()
         for vac in dbsession.query(Vacation).filter_by(enabled=True).filter(Vacation.start < now).filter(Vacation.end > now):
@@ -396,8 +394,7 @@ SQL Example for mysql:
 
     def already_notified(self, vacation, recipient):
         """return true if this user has been notfied in the last 24 hours"""
-        dbsession = fuglu.extensions.sql.get_session(
-            self.config.get(self.section, 'dbconnectstring'))
+        dbsession = get_session(self.config.get(self.section, 'dbconnectstring'))
         log = dbsession.query(VacationReply).filter_by(vacation=vacation).filter(
             VacationReply.sent > datetime.now() - timedelta(days=1)).filter_by(recipient=recipient).first()
         dbsession.expunge_all()
@@ -456,8 +453,7 @@ SQL Example for mysql:
         log.sent = datetime.now()
         log.vacation = vacation
 
-        dbsession = fuglu.extensions.sql.get_session(
-            self.config.get(self.section, 'dbconnectstring'))
+        dbsession = get_session(self.config.get(self.section, 'dbconnectstring'))
         dbsession.add(log)
         dbsession.flush()
         dbsession.expunge_all()
@@ -467,13 +463,12 @@ SQL Example for mysql:
         return allok
 
     def lint_sql(self):
-        if not fuglu.extensions.sql.ENABLED:
+        if not SQLALCHEMY_AVAILABLE:
             print("Vacation requires the fuglu sql extension to be enabled")
             return False
 
         try:
-            dbsession = fuglu.extensions.sql.get_session(
-                self.config.get(self.section, 'dbconnectstring'))
+            dbsession = get_session(self.config.get(self.section, 'dbconnectstring'))
             bind = dbsession.get_bind(Vacation)
             bind.connect()
             now = datetime.now()

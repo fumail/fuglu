@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +26,7 @@ requires: pydns (or alternatively dnspython if only dkim is used)
 """
 
 from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_to_actioncode, get_default_cache
-from fuglu.extensions.sql import get_session, ENABLED
+from fuglu.extensions.sql import get_session, SQLALCHEMY_AVAILABLE
 from fuglu.extensions.dnsquery import HAVE_PYDNS, HAVE_DNSPYTHON
 import logging
 import os
@@ -603,7 +604,7 @@ class SpearPhishPlugin(ScannerPlugin):
         lint_ok = True
         sqlquery = self.config.get(self.section, 'domain_sql_query')
         dbconnection = self.config.get(self.section, 'dbconnection').strip()
-        if not ENABLED and dbconnection != '':
+        if not SQLALCHEMY_AVAILABLE and dbconnection != '':
             print('SQLAlchemy not available, cannot use SQL backend')
             lint_ok = False
         elif dbconnection == '':
