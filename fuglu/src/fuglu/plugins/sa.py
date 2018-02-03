@@ -76,6 +76,11 @@ Tags:
                 'default': '256000',
                 'description': "maximum size in bytes. larger messages will be skipped",
             },
+            
+            'strip_oversize':{
+                'default': '0',
+                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated",
+            },
 
             'retries': {
                 'default': '3',
@@ -339,6 +344,29 @@ Tags:
         return isspam, spamscore
     
     
+    def _strip_attachments(self, content, maxsize):
+        msgrep = email.message_from_string(content)
+        
+        new_src = ''
+        for hdr, val in msgrep.items():
+            headerline = '%s: %s\r\n' % (hdr, val)
+            new_src += headerline
+        new_src += '\r\n'
+        
+        if msgrep.is_multipart():
+            for part in msgrep.walk():
+                # only plaintext and html parts but no text attachments
+                if part.get_content_maintype() == 'text' and part.get_filename() is None:
+                    new_src += part.as_string()
+                    new_src += '\r\n\r\n'
+        
+        if len(new_src) > maxsize:
+            # truncate to maxsize
+            new_src = new_src[:maxsize-1]
+        
+        return new_src
+    
+    
     def examine(self, suspect):
         # check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip') is True:
@@ -350,9 +378,9 @@ Tags:
         
         spamsize = suspect.size
         maxsize = self.config.getint(self.section, 'maxsize')
-        spamheadername = self.config.get(self.section, 'spamheader')
+        strip_oversize = self.config.getboolean(self.section, 'strip_oversize')
         
-        if spamsize > maxsize:
+        if spamsize > maxsize and not strip_oversize:
             self.logger.info('%s Size Skip, %s > %s' % (suspect.id, spamsize, maxsize))
             suspect.debug('Too big for spamchecks. %s > %s' % (spamsize, maxsize))
             prependheader = self.config.get('main', 'prependaddedheaders')
@@ -360,12 +388,13 @@ Tags:
             suspect.set_tag('SAPlugin.skipreason', 'size skip')
             return self.check_sql_blacklist(suspect)
         
-        forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
-        
         if self.config.getboolean(self.section, 'scanoriginal'):
             content = suspect.get_original_source()
         else:
             content = suspect.get_source()
+            
+        if spamsize > maxsize:
+            content = self._strip_attachments(content, maxsize)
         
         # prepend temporary headers set by other plugins
         tempheader = suspect.get_tag('SAPlugin.tempheader')
@@ -376,6 +405,7 @@ Tags:
             if tempheader != '':
                 content = tempheader + '\r\n' + content
         
+        forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
         if forwardoriginal:
             ret = self.safilter_report(content, suspect.to_address)
             if ret is None:
@@ -400,6 +430,7 @@ Tags:
             
             newmsgrep = email.message_from_string(content)
             suspect.set_source(content)
+            spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
         
         action = DUNNO
