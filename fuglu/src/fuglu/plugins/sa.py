@@ -346,19 +346,20 @@ Tags:
     
     def _strip_attachments(self, content, maxsize):
         msgrep = email.message_from_string(content)
-        
-        new_src = ''
-        for hdr, val in msgrep.items():
-            headerline = '%s: %s\r\n' % (hdr, val)
-            new_src += headerline
-        new_src += '\r\n'
-        
+
         if msgrep.is_multipart():
+            new_src = ''
+            for hdr, val in msgrep.items():
+                headerline = '%s: %s\r\n' % (hdr, val)
+                new_src += headerline
+            new_src += '\r\n'
             for part in msgrep.walk():
                 # only plaintext and html parts but no text attachments
                 if part.get_content_maintype() == 'text' and part.get_filename() is None:
                     new_src += part.as_string()
                     new_src += '\r\n\r\n'
+        else:
+            new_src = content
         
         if len(new_src) > maxsize:
             # truncate to maxsize
