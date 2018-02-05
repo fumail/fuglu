@@ -345,6 +345,18 @@ Tags:
     
     
     def _strip_attachments(self, content, maxsize):
+        """
+        strip all attachments from multipart mails except for plaintext and html text parts.
+        if message is still too long, truncate.
+        
+        Args:
+            content: string containing message source
+            maxsize: integer of maximum message size accepted by spamassassin
+
+        Returns: stripped and truncated message content
+
+        """
+        
         msgrep = email.message_from_string(content)
 
         if msgrep.is_multipart():
@@ -359,6 +371,7 @@ Tags:
                     new_src += part.as_string()
                     new_src += '\r\n\r\n'
         else:
+            # text only mail - keep full content and truncate later
             new_src = content
         
         if len(new_src) > maxsize:
