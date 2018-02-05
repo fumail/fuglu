@@ -38,12 +38,13 @@ STATUS = "not loaded"
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker
-    SQLALCHEMY_AVAILABLE = True
+
+    SQL_EXTENSION_ENABLED = True
     STATUS = "available"
 except ImportError:
-    SQLALCHEMY_AVAILABLE = False
+    SQL_EXTENSION_ENABLED = False
     STATUS = "sqlalchemy not installed"
-ENABLED = SQLALCHEMY_AVAILABLE # fuglu compatibility
+ENABLED = SQL_EXTENSION_ENABLED # fuglu compatibility
 
 
 _sessmaker = None
@@ -51,11 +52,11 @@ _engines = {}
 
 
 def get_session(connectstring, **kwargs):
-    global SQLALCHEMY_AVAILABLE
+    global SQL_EXTENSION_ENABLED
     global _sessmaker
     global _engines
 
-    if not SQLALCHEMY_AVAILABLE:
+    if not SQL_EXTENSION_ENABLED:
         raise Exception("sql extension not enabled")
 
     if connectstring in _engines:
@@ -124,7 +125,7 @@ class DBConfig(RawConfigParser):
         del stringin
 
     def get(self, section, option, **kwargs):
-        if not SQLALCHEMY_AVAILABLE or (not self.has_section('databaseconfig')) or (not self.has_option('databaseconfig', 'dbconnectstring')):
+        if not SQL_EXTENSION_ENABLED or (not self.has_section('databaseconfig')) or (not self.has_option('databaseconfig', 'dbconnectstring')):
             return self.parentget(section, option, **kwargs)
 
         connectstring = self.parentget('databaseconfig', 'dbconnectstring')

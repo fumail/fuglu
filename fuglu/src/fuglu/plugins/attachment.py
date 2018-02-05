@@ -16,7 +16,7 @@
 #
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
-from fuglu.extensions.sql import SQLALCHEMY_AVAILABLE, DBFile, DBConfig
+from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
 import re
 import mimetypes
 import os
@@ -975,7 +975,7 @@ The other common template variables are available as well.
             dbconn = self.config.get(self.section, 'dbconnectstring')
         if dbconn.strip() != '':
             print("Reading per user/domain attachment rules from database")
-            if not SQLALCHEMY_AVAILABLE:
+            if not SQL_EXTENSION_ENABLED:
                 print("Fuglu SQL Extension not available, cannot load attachment rules from database")
                 return False
             query = self.config.get(self.section, 'query')

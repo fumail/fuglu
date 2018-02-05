@@ -15,7 +15,7 @@
 #
 #
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
-from fuglu.extensions.sql import DBConfig, get_session, SQLALCHEMY_AVAILABLE
+from fuglu.extensions.sql import DBConfig, get_session, SQL_EXTENSION_ENABLED
 from string import Template
 import time
 import socket
@@ -166,7 +166,7 @@ Tags:
         if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section, 'check_sql_blacklist'):
             return True
         
-        if not SQLALCHEMY_AVAILABLE:
+        if not SQL_EXTENSION_ENABLED:
             print("SQL Blacklist requested but SQLALCHEMY is not enabled")
             return False
         
@@ -256,7 +256,7 @@ Tags:
         if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section, 'check_sql_blacklist'):
             return DUNNO
         
-        if not SQLALCHEMY_AVAILABLE:
+        if not SQL_EXTENSION_ENABLED:
             self.logger.error('Cannot check sql blacklist, SQLALCHEMY extension is not available')
             return DUNNO
         

@@ -21,7 +21,7 @@ Vacation/Autoreply Plugin
 
 from fuglu.shared import ScannerPlugin, DUNNO
 from fuglu.bounce import Bounce
-from fuglu.extensions.sql import SQLALCHEMY_AVAILABLE, get_session
+from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, get_session
 import time
 import re
 from threading import Lock
@@ -121,7 +121,7 @@ class VacationReply(object):
         self.recipient = None
 
 
-if SQLALCHEMY_AVAILABLE:
+if SQL_EXTENSION_ENABLED:
     from sqlalchemy import Table, Column, TEXT, TIMESTAMP, Integer, ForeignKey, Unicode, Boolean
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy.orm import mapper, relation
@@ -463,7 +463,7 @@ SQL Example for mysql:
         return allok
 
     def lint_sql(self):
-        if not SQLALCHEMY_AVAILABLE:
+        if not SQL_EXTENSION_ENABLED:
             print("Vacation requires the fuglu sql extension to be enabled")
             return False
 
