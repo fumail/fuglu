@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,16 +34,17 @@ import traceback
 from fuglu.shared import default_template_values
 
 modlogger = logging.getLogger('fuglu.extensions.sql')
-ENABLED = False
 STATUS = "not loaded"
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker
-    ENABLED = True
-    STATUS = "available"
 
-except:
+    SQL_EXTENSION_ENABLED = True
+    STATUS = "available"
+except ImportError:
+    SQL_EXTENSION_ENABLED = False
     STATUS = "sqlalchemy not installed"
+ENABLED = SQL_EXTENSION_ENABLED # fuglu compatibility
 
 
 _sessmaker = None
@@ -50,11 +52,11 @@ _engines = {}
 
 
 def get_session(connectstring, **kwargs):
-    global ENABLED
+    global SQL_EXTENSION_ENABLED
     global _sessmaker
     global _engines
 
-    if not ENABLED:
+    if not SQL_EXTENSION_ENABLED:
         raise Exception("sql extension not enabled")
 
     if connectstring in _engines:
@@ -63,7 +65,7 @@ def get_session(connectstring, **kwargs):
         engine = create_engine(connectstring, pool_recycle=20)
         _engines[connectstring] = engine
 
-    if _sessmaker == None:
+    if _sessmaker is None:
         _sessmaker = sessionmaker(autoflush=True, autocommit=True, **kwargs)
 
     session = scoped_session(_sessmaker)
@@ -85,7 +87,7 @@ class DBFile(object):
         """Get the content from the database as a list of lines. If the query returns multiple columns, they are joined together with a space as separator
         templatevars: replace placeholders in the originalquery , eg. select bla from bla where domain=:domain
         """
-        if templatevars == None:
+        if templatevars is None:
             templatevars = {}
         sess = get_session(self.connectstring)
         res = sess.execute(self.query, templatevars)
@@ -123,7 +125,7 @@ class DBConfig(RawConfigParser):
         del stringin
 
     def get(self, section, option, **kwargs):
-        if not ENABLED or (not self.has_section('databaseconfig')) or (not self.has_option('databaseconfig', 'dbconnectstring')):
+        if not SQL_EXTENSION_ENABLED or (not self.has_section('databaseconfig')) or (not self.has_option('databaseconfig', 'dbconnectstring')):
             return self.parentget(section, option, **kwargs)
 
         connectstring = self.parentget('databaseconfig', 'dbconnectstring')
@@ -152,7 +154,7 @@ class DBConfig(RawConfigParser):
                 "Error getting database config override: %s" % trb)
 
         session.remove()
-        if result == None:
+        if result is None:
             #self.logger.debug('no result')
             return self.parentget(section, option, **kwargs)
         else:
