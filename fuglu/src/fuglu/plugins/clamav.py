@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -370,7 +371,7 @@ Tags:
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
-        allok = self.checkConfig() and self.lint_ping() and self.lint_eicar()
+        allok = self.checkConfig() and self.lint_ping() and self.lint_version() and self.lint_eicar()
         
         if self.config.getboolean(self.section, 'clamscanfallback'):
             print('WARNING: Fallback to clamscan enabled')
@@ -394,6 +395,17 @@ Tags:
         print("Got Pong: %s" % result)
         if result.strip() != 'PONG':
             print("Invalid PONG: %s" % result)
+        return True
+    
+    
+    def lint_version(self):
+        try:
+            s = self.__init_socket__(oneshot=True)
+        except Exception:
+            return False
+        s.sendall('VERSION')
+        result = s.recv(20000)
+        print("Got Version: %s" % result)
         return True
     
     
