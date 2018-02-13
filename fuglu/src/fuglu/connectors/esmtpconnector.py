@@ -182,6 +182,8 @@ class ESMTPPassthroughSession(object):
 
     def closeconn(self):
         """clocke socket to incoming postfix"""
+        if sys.version_info > (3,):
+            self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
         
     def _close_tempfile(self):
@@ -222,7 +224,7 @@ class ESMTPPassthroughSession(object):
 
                         self.socket.send((rsp + "\r\n").encode())
                         if keep == 0:
-                            self.socket.close()
+                            self.closeconn()
                             return False
                 else:
                     # EOF

@@ -202,6 +202,8 @@ class SMTPSession(object):
         return
 
     def closeconn(self):
+        if sys.version_info > (3,):
+            self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
 
     def _close_tempfile(self):
@@ -242,7 +244,7 @@ class SMTPSession(object):
 
                         self.socket.send((rsp + "\r\n").encode())
                         if keep == 0:
-                            self.socket.close()
+                            self.closeconn()
                             return False
                 else:
                     # EOF
