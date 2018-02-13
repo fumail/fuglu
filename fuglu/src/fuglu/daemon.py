@@ -87,7 +87,7 @@ class DaemonStuff(object):
         atexit.register(self.delpid)
         pid = str(os.getpid())
         pidfd = os.open(self.pidfile, os.O_WRONLY | os.O_CREAT, 0o644)
-        os.write(pidfd, ("%s\n" % pid).encode())  # important: encode the string into a byte stream for python 3
+        os.write(pidfd, ("%s\n" % pid).encode("utf-8","ignore"))  # important: encode the string into a byte stream for python 3
         os.close(pidfd)
         return 0
 

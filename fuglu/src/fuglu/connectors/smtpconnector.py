@@ -174,27 +174,26 @@ class SMTPSession(object):
         self.tempfile = None
 
     def endsession(self, code, message):
-        self.socket.send(("%s %s\r\n" % (code, message)).encode())
+        self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","ignore"))
         rawdata = b''
-        data = ''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
             if len(lump):
                 rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
                     completeLine = 1
-                    data = rawdata.decode("utf-8")
+                    data = rawdata.decode("utf-8","ignore")
                     cmd = data[0:4]
                     cmd = cmd.upper()
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
-                        self.socket.send(("%s %s\r\n" % (220, "BYE")).encode())
+                        self.socket.send(("%s %s\r\n" % (220, "BYE")).encode("utf-8","ignore"))
                         self.closeconn()
                         return
                     self.socket.send(
-                        ("%s %s\r\n" % (421, "Cannot accept further commands")).encode())
+                        ("%s %s\r\n" % (421, "Cannot accept further commands")).encode("utf-8","ignore"))
                     self.closeconn()
                     return
             else:
@@ -213,7 +212,7 @@ class SMTPSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n".encode())
+        self.socket.send("220 fuglu scanner ready \r\n".encode("utf-8","ignore"))
         while True:
             rawdata = b''
             data = ''
@@ -222,9 +221,9 @@ class SMTPSession(object):
                 lump = self.socket.recv(1024)
                 if len(lump):
                     rawdata += lump
-                    if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
+                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
                         completeLine = 1
-                        data = rawdata.decode("utf-8")
+                        data = rawdata.decode("utf-8","ignore")
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
                         else:
@@ -243,7 +242,7 @@ class SMTPSession(object):
                                 self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send((rsp + "\r\n").encode())
+                        self.socket.send((rsp + "\r\n").encode("utf-8","ignore"))
                         if keep == 0:
                             self.closeconn()
                             return False
@@ -317,7 +316,7 @@ class SMTPSession(object):
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
             # check if there is more data to write to the file
             if len(data) > 4:
-                self.tempfile.write(data[0:-5].encode())
+                self.tempfile.write(data[0:-5].encode("utf-8","ignore"))
 
             self._close_tempfile()
 

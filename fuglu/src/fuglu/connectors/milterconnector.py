@@ -233,7 +233,7 @@ class MilterSession(PpyMilter):
         """
         #self.logger.debug('  >>> %s', binascii.b2a_qp(response[0]))
         self.socket.send(struct.pack('!I', len(response)))
-        self.socket.send(response.encode() if isinstance(response,str) else response)
+        self.socket.send(response.encode("utf-8","ignore") if isinstance(response,str) else response)
 
 
 class MilterServer(BasicTCPServer):

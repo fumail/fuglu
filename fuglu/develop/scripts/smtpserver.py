@@ -61,7 +61,7 @@ class SMTPSession:
 
     def _send(self, content):
         print("> %s" % content.strip())
-        self.socket.send(content.encode() if isinstance(content,str) else content)
+        self.socket.send(content.encode("utf-8","ignore") if isinstance(content,str) else content)
 
     def endsession(self, code, message):
         self._send("%s %s\r\n" % (code, message))
@@ -72,9 +72,9 @@ class SMTPSession:
             lump = self.socket.recv(1024)
             if len(lump):
                 rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
                     completeLine = 1
-                    data = rawdata.decode("utf-8")
+                    data = rawdata.decode("utf-8","ignore")
                     cmd = data[0:4]
                     cmd = cmd.upper()
                     keep = 1
@@ -106,9 +106,9 @@ class SMTPSession:
                 lump = self.socket.recv(1024)
                 if len(lump):
                     rawdata += lump
-                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n':
+                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
                         completeLine = 1
-                        data = rawdata.decode("utf-8")
+                        data = rawdata.decode("utf-8","ignore")
                         print("< %s" % data)
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)

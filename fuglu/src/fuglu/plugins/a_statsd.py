@@ -24,25 +24,25 @@ class PluginTime(AppenderPlugin):
         }
         self.sock = None
         self.nodename = platform.node().split('.')[0]
-    
-    
+
+
     def process(self, suspect, decision):
         timings = suspect.get_tag('scantimes')
         if timings is None:
             return
-        
+
         host = self.config.get(self.section, 'host')
         port = int(self.config.get(self.section, 'port'))
-        
+
         buffer = ""
         if self.sock is None:
             addr_f = socket.getaddrinfo(host, 0)[0][0]
             self.sock = socket(addr_f, socket.SOCK_DGRAM)
-        
+
         for section, time in timings:
             buffer = "%s%s.fuglu.plugin.%s:%s|ms\n" % (
                 buffer, self.nodename, section, int(time * 1000))
-        self.sock.sendto(buffer.encode('utf-8'), (addr, port))
+        self.sock.sendto(buffer.encode('utf-8'), (host, port))
 
     def __str__(self):
         return 'Statsd Sender: Plugin Time'
@@ -69,14 +69,14 @@ class MessageStatus(AppenderPlugin):
         }
         self.sock = None
         self.nodename = platform.node().split('.')[0]
-    
-    
+
+
     def process(self, suspect, decision):
         buffer = "%s.fuglu.decision.%s:1|c\n" % (self.nodename, actioncode_to_string(decision))
 
         host = self.config.get(self.section, 'host')
         port = int(self.config.get(self.section, 'port'))
-        
+
         if self.sock is None:
             addr_f = socket.getaddrinfo(host, 0)[0][0]
             self.sock = socket(addr_f, socket.SOCK_DGRAM)
@@ -90,10 +90,10 @@ class MessageStatus(AppenderPlugin):
             buffer = "%s%s.fuglu.message.spam:1|c\n" % (buffer, self.nodename)
         else:
             buffer = "%s%s.fuglu.message.clean:1|c\n" % (buffer, self.nodename)
-        
-        self.sock.sendto(buffer.encode('utf-8'), (host, addr))
-    
-    
+
+        self.sock.sendto(buffer.encode('utf-8'), (host, port))
+
+
     def __str__(self):
         return 'Statsd Sender: Global Message Status'
 
@@ -123,8 +123,8 @@ class MessageStatusPerRecipient(AppenderPlugin):
         }
         self.sock = None
         self.nodename = platform.node().split('.')[0]
-    
-    
+
+
     def process(self, suspect, decision):
         recipient = suspect.to_domain
         if self.config.get(self.section, 'level') == 'email':
@@ -134,7 +134,7 @@ class MessageStatusPerRecipient(AppenderPlugin):
 
         host = self.config.get(self.section, 'host')
         port = int(self.config.get(self.section, 'port'))
-        
+
         buffer = ""
         if self.sock is None:
             addr_f = socket.getaddrinfo(host, 0)[0][0]
@@ -155,8 +155,8 @@ class MessageStatusPerRecipient(AppenderPlugin):
 
         self.sock.sendto(buffer.encode('utf-8'), (host, port))
         #self.logger.info("buffer: %s"%buffer)
-    
-    
+
+
     def __str__(self):
         return 'Statsd Sender: Per Recipient Message Status'
 

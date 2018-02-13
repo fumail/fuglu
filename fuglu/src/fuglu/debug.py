@@ -125,7 +125,7 @@ class ControlSession(object):
         self.logger.debug('Control Socket command: %s' % line)
         parts = line.split()
         answer = self.handle_command(parts[0], parts[1:])
-        self.socket.sendall(answer.encode() if isinstance(answer, str) else answer)
+        self.socket.sendall(answer.encode("utf-8","ignore") if isinstance(answer, str) else answer)
         self.socket.close()
 
     def handle_command(self, command, args):
