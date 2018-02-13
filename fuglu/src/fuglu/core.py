@@ -602,7 +602,7 @@ class MainController(object):
         serversocket.bind((address, port))
         serversocket.listen(1)
         clientsocket, _ = serversocket.accept()  # client socket
-        self.logger.info("Interactive python connection from %s/%s" % (address[0], address[1]))
+        self.logger.info("Interactive python connection from %s/%2" % (address, address)
 
         class sw:  # socket wrapper
 

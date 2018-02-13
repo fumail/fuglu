@@ -174,16 +174,18 @@ class SMTPSession(object):
 
     def endsession(self, code, message):
         self.socket.send(("%s %s\r\n" % (code, message)).encode())
+        rawdata = b''
         data = ''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
             if len(lump):
-                data += lump
-                if (len(data) >= 2) and data[-2:] == '\r\n':
+                rawdata += lump
+                if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
                     completeLine = 1
+                    data = rawdata.decode("utf-8")
                     cmd = data[0:4]
-                    cmd = string.upper(cmd)
+                    cmd = cmd.upper()
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
@@ -210,14 +212,16 @@ class SMTPSession(object):
         """return true if mail got in, false on error Session will be kept open"""
         self.socket.send("220 fuglu scanner ready \r\n".encode())
         while True:
+            rawdata = b''
             data = ''
             completeLine = 0
             while not completeLine:
                 lump = self.socket.recv(1024)
                 if len(lump):
-                    data += lump
-                    if (len(data) >= 2) and data[-2:] == '\r\n':
+                    rawdata += lump
+                    if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
                         completeLine = 1
+                        data = rawdata.decode("utf-8")
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
                         else:
@@ -248,7 +252,7 @@ class SMTPSession(object):
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = string.upper(cmd)
+        cmd = cmd.upper()
         keep = 1
         rv = None
         if cmd == "HELO":
@@ -310,7 +314,7 @@ class SMTPSession(object):
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
             # check if there is more data to write to the file
             if len(data) > 4:
-                self.tempfile.write(data[0:-5])
+                self.tempfile.write(data[0:-5].encode())
 
             self._close_tempfile()
 
@@ -334,7 +338,7 @@ class SMTPSession(object):
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = string.find(address, '>')
+        end = address.find('>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]
