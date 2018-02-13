@@ -20,6 +20,7 @@ import string
 import tempfile
 import os
 import re
+import sys
 
 from fuglu.shared import Suspect, apply_template
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer

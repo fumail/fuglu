@@ -19,6 +19,7 @@ import logging
 import string
 import tempfile
 import os
+import sys
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.shared import Suspect, apply_template
 
