@@ -61,7 +61,13 @@ class SMTPSession:
 
     def _send(self, content):
         print("> %s" % content.strip())
-        self.socket.send(content.encode("utf-8","ignore") if isinstance(content,str) else content)
+        try:
+            self.socket.send(content.encode("utf-8","strict") if isinstance(content,str) else content)
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            print("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
 
     def endsession(self, code, message):
         self._send("%s %s\r\n" % (code, message))
@@ -72,9 +78,15 @@ class SMTPSession:
             lump = self.socket.recv(1024)
             if len(lump):
                 rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
-                    data = rawdata.decode("utf-8","ignore")
+                    try:
+                        data = rawdata.decode("utf-8","strict")
+                    except Exception as e:
+                        from inspect import currentframe, getframeinfo
+                        frameinfo = getframeinfo(currentframe())
+                        print("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        raise e
                     cmd = data[0:4]
                     cmd = cmd.upper()
                     keep = 1
@@ -106,9 +118,15 @@ class SMTPSession:
                 lump = self.socket.recv(1024)
                 if len(lump):
                     rawdata += lump
-                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
+                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
-                        data = rawdata.decode("utf-8","ignore")
+                        try:
+                            data = rawdata.decode("utf-8","strict")
+                        except Exception as e:
+                            from inspect import currentframe, getframeinfo
+                            frameinfo = getframeinfo(currentframe())
+                            print("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            raise e
                         print("< %s" % data)
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)

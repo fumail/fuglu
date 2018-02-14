@@ -233,7 +233,13 @@ class MilterSession(PpyMilter):
         """
         #self.logger.debug('  >>> %s', binascii.b2a_qp(response[0]))
         self.socket.send(struct.pack('!I', len(response)))
-        self.socket.send(response.encode("utf-8","ignore") if isinstance(response,str) else response)
+        try:
+            self.socket.send(response.encode("utf-8","strict") if isinstance(response,str) else response)
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
 
 
 class MilterServer(BasicTCPServer):

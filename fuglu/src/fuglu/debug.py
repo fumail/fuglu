@@ -125,7 +125,13 @@ class ControlSession(object):
         self.logger.debug('Control Socket command: %s' % line)
         parts = line.split()
         answer = self.handle_command(parts[0], parts[1:])
-        self.socket.sendall(answer.encode("utf-8","ignore") if isinstance(answer, str) else answer)
+        try:
+            self.socket.sendall(answer.encode("utf-8","strict") if isinstance(answer, str) else answer)
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
         self.socket.close()
 
     def handle_command(self, command, args):

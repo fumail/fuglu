@@ -74,7 +74,13 @@ class NCSession(object):
         self.tempfile = None
 
     def send(self, message):
-        self.socket.sendall(message.encode("utf-8","ignore") if isinstance(message, str) else message)
+        try:
+            self.socket.sendall(message.encode("utf-8","strict") if isinstance(message, str) else message)
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
 
     def endsession(self, message):
         try:
@@ -89,7 +95,13 @@ class NCSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("fuglu scanner ready - please pipe your message\r\n".encode("utf-8","ignore"))
+        try:
+            self.socket.send("fuglu scanner ready - please pipe your message\r\n".encode("utf-8","strict"))
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
         try:
             (handle, tempfilename) = tempfile.mkstemp(
                 prefix='fuglu', dir=self.config.get('main', 'tempdir'))

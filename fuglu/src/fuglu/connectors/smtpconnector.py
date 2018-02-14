@@ -38,10 +38,22 @@ def buildmsgsource(suspect):
     for key in suspect.addheaders:
         # is ignore the right thing to do here?
         val = suspect.addheaders[key]
-        val.encode('UTF-8', 'ignore')
+        try:
+            val.encode('UTF-8', 'strict')
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
-        newheaders += "%s: %s\n" % (key, hdr.encode())
+        try:
+            newheaders += "%s: %s\n" % (key, hdr.encode())
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
 
     modifiedtext = newheaders + origmsgtxt
     return modifiedtext
@@ -174,26 +186,49 @@ class SMTPSession(object):
         self.tempfile = None
 
     def endsession(self, code, message):
-        self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","ignore"))
+        try:
+            self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","strict"))
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
         rawdata = b''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
             if len(lump):
                 rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
-                    data = rawdata.decode("utf-8","ignore")
+                    try:
+                        data = rawdata.decode("utf-8","strict")
+                    except Exception as e:
+                        from inspect import currentframe, getframeinfo
+                        frameinfo = getframeinfo(currentframe())
+                        self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        raise e
                     cmd = data[0:4]
                     cmd = cmd.upper()
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
-                        self.socket.send(("%s %s\r\n" % (220, "BYE")).encode("utf-8","ignore"))
+                        try:
+                            self.socket.send(("%s %s\r\n" % (220, "BYE")).encode("utf-8","strict"))
+                        except Exception as e:
+                            from inspect import currentframe, getframeinfo
+                            frameinfo = getframeinfo(currentframe())
+                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            raise e
                         self.closeconn()
                         return
-                    self.socket.send(
-                        ("%s %s\r\n" % (421, "Cannot accept further commands")).encode("utf-8","ignore"))
+                    try:
+                        self.socket.send( ("%s %s\r\n" % (421, "Cannot accept further commands")).encode("utf-8","strict"))
+                    except Exception as e:
+                        from inspect import currentframe, getframeinfo
+                        frameinfo = getframeinfo(currentframe())
+                        self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        raise e
                     self.closeconn()
                     return
             else:
@@ -212,7 +247,13 @@ class SMTPSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n".encode("utf-8","ignore"))
+        try:
+            self.socket.send("220 fuglu scanner ready \r\n".encode("utf-8","strict"))
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
         while True:
             rawdata = b''
             data = ''
@@ -221,9 +262,15 @@ class SMTPSession(object):
                 lump = self.socket.recv(1024)
                 if len(lump):
                     rawdata += lump
-                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","ignore"):
+                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
-                        data = rawdata.decode("utf-8","ignore")
+                        try:
+                            data = rawdata.decode("utf-8","strict")
+                        except Exception as e:
+                            from inspect import currentframe, getframeinfo
+                            frameinfo = getframeinfo(currentframe())
+                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            raise e
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
                         else:
@@ -242,7 +289,13 @@ class SMTPSession(object):
                                 self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send((rsp + "\r\n").encode("utf-8","ignore"))
+                        try:
+                            self.socket.send((rsp + "\r\n").encode("utf-8","strict"))
+                        except Exception as e:
+                            from inspect import currentframe, getframeinfo
+                            frameinfo = getframeinfo(currentframe())
+                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            raise e
                         if keep == 0:
                             self.closeconn()
                             return False
@@ -316,7 +369,13 @@ class SMTPSession(object):
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
             # check if there is more data to write to the file
             if len(data) > 4:
-                self.tempfile.write(data[0:-5].encode("utf-8","ignore"))
+                try:
+                    self.tempfile.write(data[0:-5].encode("utf-8","strict"))
+                except Exception as e:
+                    from inspect import currentframe, getframeinfo
+                    frameinfo = getframeinfo(currentframe())
+                    self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                    raise e
 
             self._close_tempfile()
 

@@ -87,7 +87,15 @@ class DaemonStuff(object):
         atexit.register(self.delpid)
         pid = str(os.getpid())
         pidfd = os.open(self.pidfile, os.O_WRONLY | os.O_CREAT, 0o644)
-        os.write(pidfd, ("%s\n" % pid).encode("utf-8","ignore"))  # important: encode the string into a byte stream for python 3
+        try:
+            os.write(pidfd, ("%s\n" % pid).encode("utf-8","strict"))  # important: encode the string into a byte stream for python 3
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            import logging
+            frameinfo = getframeinfo(currentframe())
+            logger = logging.getLogger("daemon")
+            logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
         os.close(pidfd)
         return 0
 

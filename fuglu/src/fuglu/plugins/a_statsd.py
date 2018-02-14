@@ -91,8 +91,7 @@ class MessageStatus(AppenderPlugin):
         else:
             buffer = "%s%s.fuglu.message.clean:1|c\n" % (buffer, self.nodename)
 
-        self.sock.sendto(buffer.encode('utf-8'), (host, port))
-
+        self.sock.sendto(buffer.encode('utf-8',"ignore"), (host,port))
 
     def __str__(self):
         return 'Statsd Sender: Global Message Status'
