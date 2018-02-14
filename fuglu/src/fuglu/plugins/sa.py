@@ -79,7 +79,7 @@ Tags:
             
             'strip_oversize':{
                 'default': '0',
-                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated",
+                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded",
             },
 
             'retries': {
@@ -157,6 +157,11 @@ Tags:
     
     
     def lint(self):
+        strip_oversize = self.config.getboolean(self.section, 'strip_oversize')
+        forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
+        if strip_oversize and not forwardoriginal:
+            print('WARNING: strip_oversize is enabled but forwardoriginal is not. This will result in broken oversize messages.')
+
         allok = (self.checkConfig() and self.lint_ping()
                  and self.lint_spam() and self.lint_blacklist())
         return allok
@@ -195,7 +200,8 @@ Tags:
                 s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
                 line = socketfile.readline()
-                answer = line.strip().split()
+                line = line.strip()
+                answer = line.split()
                 if len(answer) != 3:
                     print("Invalid SPAMD PONG: %s" % line)
                     return False
@@ -406,8 +412,10 @@ Tags:
             content = suspect.get_original_source()
         else:
             content = suspect.get_source()
-            
+        
+        stripped = False
         if spamsize > maxsize:
+            stripped = True
             content = self._strip_attachments(content, maxsize)
         
         # prepend temporary headers set by other plugins
@@ -444,6 +452,8 @@ Tags:
             
             newmsgrep = email.message_from_string(content)
             suspect.set_source(content)
+            if stripped:
+                self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
         
