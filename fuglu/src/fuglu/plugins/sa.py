@@ -157,13 +157,13 @@ Tags:
     
     
     def lint(self):
-        allok = (self.checkConfig() and self.lint_ping()
-                 and self.lint_spam() and self.lint_blacklist())
-        
         strip_oversize = self.config.getboolean(self.section, 'strip_oversize')
         forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
         if strip_oversize and not forwardoriginal:
-            print('WARNING: strip_oversize is enabled but forwardoriginal is not. This will result in broken oversize messages')
+            print('WARNING: strip_oversize is enabled but forwardoriginal is not. This will result in broken oversize messages.')
+
+        allok = (self.checkConfig() and self.lint_ping()
+                 and self.lint_spam() and self.lint_blacklist())
         return allok
     
     
@@ -200,7 +200,8 @@ Tags:
                 s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
                 line = socketfile.readline()
-                answer = line.strip().split()
+                line = line.strip()
+                answer = line.split()
                 if len(answer) != 3:
                     print("Invalid SPAMD PONG: %s" % line)
                     return False
