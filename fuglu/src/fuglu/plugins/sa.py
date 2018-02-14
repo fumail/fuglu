@@ -79,7 +79,7 @@ Tags:
             
             'strip_oversize':{
                 'default': '0',
-                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or large messages will be truncated",
+                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded",
             },
 
             'retries': {
