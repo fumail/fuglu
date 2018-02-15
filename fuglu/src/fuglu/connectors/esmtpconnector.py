@@ -42,7 +42,7 @@ def buildmsgsource(suspect):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
 
         #self.logger.debug('Adding header %s : %s'%(key,val))
@@ -52,7 +52,7 @@ def buildmsgsource(suspect):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
 
     modifiedtext = newheaders + origmsgtxt
@@ -172,7 +172,7 @@ class ESMTPPassthroughSession(object):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
         rawdata = b''
         data = ''
@@ -188,7 +188,7 @@ class ESMTPPassthroughSession(object):
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
                         frameinfo = getframeinfo(currentframe())
-                        self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                         raise e
                     cmd = data[0:4]
                     cmd = cmd.upper()
@@ -200,7 +200,7 @@ class ESMTPPassthroughSession(object):
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
-                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
                         self.closeconn()
                         return
@@ -209,7 +209,7 @@ class ESMTPPassthroughSession(object):
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
                         frameinfo = getframeinfo(currentframe())
-                        self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                         raise e
                     self.closeconn()
                     return
@@ -235,7 +235,7 @@ class ESMTPPassthroughSession(object):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
         while True:
             rawdata = b''
@@ -252,7 +252,7 @@ class ESMTPPassthroughSession(object):
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
-                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
                         if self.state != ESMTPPassthroughSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
@@ -277,7 +277,7 @@ class ESMTPPassthroughSession(object):
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
-                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
                         if keep == 0:
                             self.closeconn()
@@ -435,7 +435,7 @@ class ESMTPPassthroughSession(object):
                 except Exception as e:
                     from inspect import currentframe, getframeinfo
                     frameinfo = getframeinfo(currentframe())
-                    self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                    self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                     raise e
 
             self._close_tempfile()

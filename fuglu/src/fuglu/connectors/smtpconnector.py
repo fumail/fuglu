@@ -44,7 +44,7 @@ def buildmsgsource(suspect):
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
             logger = logging.getLogger("fuglu.buildmsgsource")
-            logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
@@ -54,7 +54,7 @@ def buildmsgsource(suspect):
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
             logger = logging.getLogger("fuglu.buildmsgsource")
-            logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
 
     modifiedtext = newheaders + origmsgtxt
@@ -191,7 +191,7 @@ class SMTPSession(object):
     def endsession(self, code, message):
         try:
             if self._noisy:
-                self.logger.debug("endsession - send message: \"{}\" and code: \"{}\"".format(str(message),str(code)))
+                self.logger.debug("endsession - send message: \"%s\" and code: \"%s\"" % (str(message),str(code)))
 
             self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","strict"))
             if self._noisy:
@@ -199,7 +199,7 @@ class SMTPSession(object):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
         rawdata = b''
         completeLine = 0
@@ -224,7 +224,7 @@ class SMTPSession(object):
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
                         frameinfo = getframeinfo(currentframe())
-                        self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                         raise e
                     cmd = data[0:4]
                     cmd = cmd.upper()
@@ -238,7 +238,7 @@ class SMTPSession(object):
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
-                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
                         self.closeconn()
                         return
@@ -249,7 +249,7 @@ class SMTPSession(object):
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
                         frameinfo = getframeinfo(currentframe())
-                        self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                        self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                         raise e
                     self.closeconn()
                     return
@@ -282,7 +282,7 @@ class SMTPSession(object):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
 
         while True:
@@ -295,13 +295,13 @@ class SMTPSession(object):
 
                 lump = self.socket.recv(1024)
                 if self._noisy:
-                    self.logger.debug("getincomingmail - after receiving 1024 bytes, lenth of lump is {}".format(len(lump)))
+                    self.logger.debug("getincomingmail - after receiving 1024 bytes, lenth of lump is %d" % (len(lump)))
 
                 if len(lump):
                     rawdata += lump
 
                     if self._noisy:
-                        self.logger.debug("getincomingmail - length of rawdata is {}".format(len(rawdata)))
+                        self.logger.debug("getincomingmail - length of rawdata is %d" % (len(rawdata)))
 
                     if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
@@ -314,11 +314,11 @@ class SMTPSession(object):
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
-                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
 
                         if self._noisy:
-                            self.logger.debug("getincomingmail - state = {}".format(self.state))
+                            self.logger.debug("getincomingmail - state = %s" % (self.state))
 
                         if self.state != SMTPSession.ST_DATA:
                             if self._noisy:
@@ -327,14 +327,14 @@ class SMTPSession(object):
                             rsp, keep = self.doCommand(data)
 
                             if self._noisy:
-                                self.logger.debug("getincomingmail - doCommand -> response rsp={}, keep={}".format(str(rsp),str(keep)))
+                                self.logger.debug("getincomingmail - doCommand -> response rsp=%s, keep=%s" % (str(rsp),str(keep)))
                         else:
                             try:
                                 if self._noisy:
                                     self.logger.debug("getincomingmail - running doData")
                                 rsp = self.doData(data)
                                 if self._noisy:
-                                    self.logger.debug("getincomingmail - doData -> response rsp={}".format(str(rsp)))
+                                    self.logger.debug("getincomingmail - doData -> response rsp=%s" % (str(rsp)))
                             except IOError:
                                 if self._noisy:
                                     self.logger.debug("getincomingmail - IOError")
@@ -356,13 +356,13 @@ class SMTPSession(object):
 
                         try:
                             if self._noisy:
-                                self.logger.debug("getincomingmail - send response: {}".format(str(rsp)))
+                                self.logger.debug("getincomingmail - send response: %s" % (str(rsp)))
 
                             self.socket.send((rsp + "\r\n").encode("utf-8","strict"))
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
-                            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
                         if keep == 0:
                             if self._noisy:
@@ -449,7 +449,7 @@ class SMTPSession(object):
                 except Exception as e:
                     from inspect import currentframe, getframeinfo
                     frameinfo = getframeinfo(currentframe())
-                    self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                    self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                     raise e
 
             self._close_tempfile()
@@ -462,7 +462,7 @@ class SMTPSession(object):
             except Exception as e:
                 from inspect import currentframe, getframeinfo
                 frameinfo = getframeinfo(currentframe())
-                self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
                 raise e
             return None
 

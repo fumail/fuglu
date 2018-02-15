@@ -238,7 +238,7 @@ class MilterSession(PpyMilter):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
 
 

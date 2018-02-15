@@ -94,7 +94,7 @@ class DaemonStuff(object):
             import logging
             frameinfo = getframeinfo(currentframe())
             logger = logging.getLogger("daemon")
-            logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
         os.close(pidfd)
         return 0
