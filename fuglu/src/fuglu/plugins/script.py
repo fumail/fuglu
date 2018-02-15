@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from fuglu.shared import ScannerPlugin, DUNNO, ACCEPT, DELETE, DEFER, REJECT, actioncode_to_string
 import os
 import traceback
@@ -83,7 +84,7 @@ Example script:
         return retaction, retmessage
 
     def lint(self):
-        allok = self.checkConfig() and self.lint_code()
+        allok = self.check_config() and self.lint_code()
         return allok
 
     def lint_code(self):

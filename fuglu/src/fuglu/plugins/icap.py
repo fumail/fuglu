@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -259,7 +260,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
-        allok = (self.checkConfig() and self.lint_eicar())
+        allok = self.check_config() and self.lint_eicar()
         return allok
 
     def lint_eicar(self):

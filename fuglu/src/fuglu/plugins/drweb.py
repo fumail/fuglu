@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 import socket
 import struct
@@ -217,7 +218,7 @@ Tags:
         return 'DrWeb AV'
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_info() and self.lint_eicar())
+        allok = self.check_config() and self.lint_info() and self.lint_eicar()
         return allok
 
     def lint_info(self):

@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,7 +64,7 @@ This plugin enables the fuglu_debug functionality. Make sure fuglu listens on th
         debugport = self.config.get(self.section, 'debugport')
         incomingport = self.config.get('main', 'incomingport')
 
-        allok = self.checkConfig()
+        allok = self.check_config()
 
         if debugport not in incomingport.split(','):
             print(

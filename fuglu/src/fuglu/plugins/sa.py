@@ -162,8 +162,7 @@ Tags:
         if strip_oversize and not forwardoriginal:
             print('WARNING: strip_oversize is enabled but forwardoriginal is not. This will result in broken oversize messages.')
 
-        allok = (self.checkConfig() and self.lint_ping()
-                 and self.lint_spam() and self.lint_blacklist())
+        allok = self.check_config() and self.lint_ping() and self.lint_spam() and self.lint_blacklist()
         return allok
     
     
