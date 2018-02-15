@@ -191,10 +191,11 @@ class SMTPSession(object):
     def endsession(self, code, message):
         try:
             if self._noisy:
-                self.logger.debug("endsession - send message and code")
+                self.logger.debug("endsession - send message: \"{}\" and code: \"{}\"".format(str(message),str(code)))
+
             self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","strict"))
             if self._noisy:
-                self.logger.debug("endsession - sent")
+                self.logger.debug("endsession - sent message and code")
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
@@ -243,7 +244,7 @@ class SMTPSession(object):
                         return
                     try:
                         if self._noisy:
-                            self.logger.debug("endsession - send 421")
+                            self.logger.debug("endsession - send 421, command is {}".cmd)
                         self.socket.send( ("%s %s\r\n" % (421, "Cannot accept further commands")).encode("utf-8","strict"))
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
@@ -276,27 +277,38 @@ class SMTPSession(object):
             if self._noisy:
                 self.logger.debug("getincomingmail - send ready string")
             self.socket.send("220 fuglu scanner ready \r\n".encode("utf-8","strict"))
+            if self._noisy:
+                self.logger.debug("getincomingmail - after sending ready string")
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
             self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
+
         while True:
             rawdata = b''
             data = ''
             completeLine = 0
             while not completeLine:
+                if self._noisy:
+                    self.logger.debug("getincomingmail - waiting to receive 1025 bytes...")
+
                 lump = self.socket.recv(1024)
                 if self._noisy:
                     self.logger.debug("getincomingmail - after receiving 1024 bytes, lenth of lump is {}".format(len(lump)))
+
                 if len(lump):
                     rawdata += lump
+
                     if self._noisy:
                         self.logger.debug("getincomingmail - length of rawdata is {}".format(len(rawdata)))
+
                     if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
+
                         if self._noisy:
                             self.logger.debug("getincomingmail - line is complete")
+
                         try:
                             data = rawdata.decode("utf-8","strict")
                         except Exception as e:
@@ -309,11 +321,17 @@ class SMTPSession(object):
                             self.logger.debug("getincomingmail - state = {}".format(self.state))
 
                         if self.state != SMTPSession.ST_DATA:
+                            if self._noisy:
+                                self.logger.debug("getincomingmail - running doCommand")
+
                             rsp, keep = self.doCommand(data)
+
                             if self._noisy:
                                 self.logger.debug("getincomingmail - doCommand -> response rsp={}, keep={}".format(str(rsp),str(keep)))
                         else:
                             try:
+                                if self._noisy:
+                                    self.logger.debug("getincomingmail - running doData")
                                 rsp = self.doData(data)
                                 if self._noisy:
                                     self.logger.debug("getincomingmail - doData -> response rsp={}".format(str(rsp)))
@@ -349,6 +367,7 @@ class SMTPSession(object):
                         if keep == 0:
                             if self._noisy:
                                 self.logger.debug("getincomingmail - keep = 0 -> close connection and return False")
+
                             self.closeconn()
                             return False
                 else:
