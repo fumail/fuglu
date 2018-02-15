@@ -218,7 +218,17 @@ class SMTPSession(object):
                     try:
                         if self._noisy:
                             self.logger.debug("endsession - decode raw data")
-                        data = rawdata.decode("utf-8","strict")
+                        try:
+                           data = rawdata.decode("utf-8","strict")
+                        except UnicodeDecodeError:
+                            import chardet
+                            self.logger.warning("endsession - found non utf-8 encoding, try to detect encoding")
+                            encoding = chardet.detect(rawdata)['encoding']
+                            self.logger.warning("endsession - encoding estimated as %s" % encoding)
+                            data = rawdata.decode(encoding,"strict")
+                        except Exception as e:
+                            raise e
+
                         if self._noisy:
                             self.logger.debug("endsession - decode raw data -> done")
                     except Exception as e:
@@ -310,7 +320,16 @@ class SMTPSession(object):
                             self.logger.debug("getincomingmail - line is complete")
 
                         try:
-                            data = rawdata.decode("utf-8","strict")
+                            try:
+                                data = rawdata.decode("utf-8","strict")
+                            except UnicodeDecodeError:
+                                import chardet
+                                self.logger.warning("incomingmail - found non utf-8 encoding, try to detect encoding")
+                                encoding = chardet.detect(rawdata)['encoding']
+                                self.logger.warning("incomingmail - encoding estimated as %s" % encoding)
+                                data = rawdata.decode(encoding,"strict")
+                            except Exception as e:
+                                raise e
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
