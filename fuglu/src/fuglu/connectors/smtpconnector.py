@@ -25,6 +25,7 @@ import sys
 from fuglu.shared import Suspect, apply_template
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from email.header import Header
+from fuglu.encodings import force_bString, force_uString
 
 
 def buildmsgsource(suspect):
@@ -38,14 +39,6 @@ def buildmsgsource(suspect):
     for key in suspect.addheaders:
         # is ignore the right thing to do here?
         val = suspect.addheaders[key]
-        try:
-            val.encode('UTF-8', 'strict')
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            logger = logging.getLogger("fuglu.buildmsgsource")
-            logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
         try:
@@ -193,7 +186,7 @@ class SMTPSession(object):
             if self._noisy:
                 self.logger.debug("endsession - send message: \"%s\" and code: \"%s\"" % (str(message),str(code)))
 
-            self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","strict"))
+            self.socket.send(force_bString("%s %s\r\n" % (code, message)))
             if self._noisy:
                 self.logger.debug("endsession - sent message and code")
         except Exception as e:
@@ -207,44 +200,23 @@ class SMTPSession(object):
             lump = self.socket.recv(1024)
             if self._noisy:
                 self.logger.debug("endsession - after receiving 1024 bytes")
+
             if len(lump):
                 if self._noisy:
                     self.logger.debug("endsession - adding lump to rawdata")
-                rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
-                    completeLine = 1
-                    if self._noisy:
-                        self.logger.debug("endsession - setting completeLine to 1")
-                    try:
-                        if self._noisy:
-                            self.logger.debug("endsession - decode raw data")
-                        try:
-                           data = rawdata.decode("utf-8","strict")
-                        except UnicodeDecodeError:
-                            import chardet
-                            self.logger.warning("endsession - found non utf-8 encoding, try to detect encoding")
-                            encoding = chardet.detect(rawdata)['encoding']
-                            self.logger.warning("endsession - encoding estimated as %s" % encoding)
-                            data = rawdata.decode(encoding,"strict")
-                        except Exception as e:
-                            raise e
 
-                        if self._noisy:
-                            self.logger.debug("endsession - decode raw data -> done")
-                    except Exception as e:
-                        from inspect import currentframe, getframeinfo
-                        frameinfo = getframeinfo(currentframe())
-                        self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-                        raise e
-                    cmd = data[0:4]
+                rawdata += lump
+                if (len(rawdata) >= 2) and rawdata[-2:] == force_bString('\r\n'):
+                    completeLine = 1
+                    cmd = rawdata[0:4]
                     cmd = cmd.upper()
                     keep = 1
                     rv = None
-                    if cmd == "QUIT":
+                    if cmd == force_bString("QUIT"):
                         if self._noisy:
                             self.logger.debug("endsession - QUIT command - send 220")
                         try:
-                            self.socket.send(("%s %s\r\n" % (220, "BYE")).encode("utf-8","strict"))
+                            self.socket.send(force_bString("%s %s\r\n" % (220, "BYE")))
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
@@ -254,8 +226,8 @@ class SMTPSession(object):
                         return
                     try:
                         if self._noisy:
-                            self.logger.debug("endsession - send 421, command is {}".cmd)
-                        self.socket.send( ("%s %s\r\n" % (421, "Cannot accept further commands")).encode("utf-8","strict"))
+                            self.logger.debug("endsession - send 421, command is %" % force_uString(cmd))
+                        self.socket.send( force_bString("%s %s\r\n" % (421, "Cannot accept further commands")))
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
                         frameinfo = getframeinfo(currentframe())
@@ -286,7 +258,7 @@ class SMTPSession(object):
         try:
             if self._noisy:
                 self.logger.debug("getincomingmail - send ready string")
-            self.socket.send("220 fuglu scanner ready \r\n".encode("utf-8","strict"))
+            self.socket.send(force_bString("220 fuglu scanner ready \r\n"))
             if self._noisy:
                 self.logger.debug("getincomingmail - after sending ready string")
         except Exception as e:
@@ -313,36 +285,19 @@ class SMTPSession(object):
                     if self._noisy:
                         self.logger.debug("getincomingmail - length of rawdata is %d" % (len(rawdata)))
 
-                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
+                    if (len(rawdata) >= 2) and rawdata[-2:] == force_bString('\r\n'):
                         completeLine = 1
 
                         if self._noisy:
                             self.logger.debug("getincomingmail - line is complete")
-
-                        try:
-                            try:
-                                data = rawdata.decode("utf-8","strict")
-                            except UnicodeDecodeError:
-                                import chardet
-                                self.logger.warning("incomingmail - found non utf-8 encoding, try to detect encoding")
-                                encoding = chardet.detect(rawdata)['encoding']
-                                self.logger.warning("incomingmail - encoding estimated as %s" % encoding)
-                                data = rawdata.decode(encoding,"strict")
-                            except Exception as e:
-                                raise e
-                        except Exception as e:
-                            from inspect import currentframe, getframeinfo
-                            frameinfo = getframeinfo(currentframe())
-                            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-                            raise e
-
-                        if self._noisy:
                             self.logger.debug("getincomingmail - state = %s" % (self.state))
 
                         if self.state != SMTPSession.ST_DATA:
                             if self._noisy:
                                 self.logger.debug("getincomingmail - running doCommand")
 
+                            # convert data to unicode if needed
+                            data = force_uString(rawdata)
                             rsp, keep = self.doCommand(data)
 
                             if self._noisy:
@@ -351,7 +306,8 @@ class SMTPSession(object):
                             try:
                                 if self._noisy:
                                     self.logger.debug("getincomingmail - running doData")
-                                rsp = self.doData(data)
+                                #directly use raw bytes-string data
+                                rsp = self.doData(rawdata)
                                 if self._noisy:
                                     self.logger.debug("getincomingmail - doData -> response rsp=%s" % (str(rsp)))
                             except IOError:
@@ -377,7 +333,7 @@ class SMTPSession(object):
                             if self._noisy:
                                 self.logger.debug("getincomingmail - send response: %s" % (str(rsp)))
 
-                            self.socket.send((rsp + "\r\n").encode("utf-8","strict"))
+                            self.socket.send(force_bString(rsp + "\r\n"))
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
                             frameinfo = getframeinfo(currentframe())
@@ -432,7 +388,7 @@ class SMTPSession(object):
             if self.state != SMTPSession.ST_RCPT:
                 return "503 Bad command sequence", 1
             self.state = SMTPSession.ST_DATA
-            self.dataAccum = ""
+            self.dataAccum = b""
             try:
                 (handle, tempfilename) = tempfile.mkstemp(
                     prefix='fuglu', dir=self.config.get('main', 'tempdir'))
@@ -452,6 +408,12 @@ class SMTPSession(object):
             return "250 OK", keep
 
     def doData(self, data):
+        """Store data in temporary file
+
+        Args:
+            data (): data as byte-string
+
+        """
         data = self.unquoteData(data)
         # store the last few bytes in memory to keep track when the msg is
         # finished
@@ -460,34 +422,31 @@ class SMTPSession(object):
         if len(self.dataAccum) > 4:
             self.dataAccum = self.dataAccum[-5:]
 
-        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
+        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == force_bString('\r\n.\r\n'):
             # check if there is more data to write to the file
             if len(data) > 4:
-                try:
-                    self.tempfile.write(data[0:-5].encode("utf-8","strict"))
-                except Exception as e:
-                    from inspect import currentframe, getframeinfo
-                    frameinfo = getframeinfo(currentframe())
-                    self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-                    raise e
+                self.tempfile.write(data[0:-5])
 
             self._close_tempfile()
 
             self.state = SMTPSession.ST_HELO
             return "250 OK - Data and terminator. found"
         else:
-            try:
-                self.tempfile.write(data.encode("utf-8","strict"))
-            except Exception as e:
-                from inspect import currentframe, getframeinfo
-                frameinfo = getframeinfo(currentframe())
-                self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-                raise e
+            self.tempfile.write(data)
             return None
 
     def unquoteData(self, data):
         """two leading dots at the beginning of a line must be unquoted to a single dot"""
-        return re.sub(r'(?m)^\.\.', '.', data)
+        try:
+            # this will work with python 2.x
+            return re.sub(r'(?m)^\.\.', '.', data)
+        except TypeError:
+            # Python 3 does not allow regex to work on binary string type
+            # todo: find regex working directly on binary string type
+            try:
+                return force_bString(re.sub(r'(?m)^\.\.', '.', force_uString(data)))
+            except Exception as e:
+                return data
 
     def stripAddress(self, address):
         """
