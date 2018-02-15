@@ -28,7 +28,7 @@ MAX_SCANS_PER_SOCKET = 5000
 
 class ClamavPlugin(ScannerPlugin):
 
-    """This plugin passes suspects to a clam daemon. 
+    """This plugin passes suspects to a clam daemon.
 
 Actions: This plugin will delete infected messages. If clamd is not reachable or times out, messages can be DEFERRED.
 
@@ -89,29 +89,29 @@ Tags:
                 'default': 'threat detected: ${virusname}',
                 'description': "reject message template if running in pre-queue mode and virusaction=REJECT",
             },
-            
+
             'clamscanfallback': {
                 'default': '0',
                 'description': "*EXPERIMENTAL*: fallback to clamscan if clamd is unavailable. YMMV, each scan can take 5-20 seconds and massively increase load on a busy system.",
             },
-            
+
             'clamscan': {
                 'default': '/usr/bin/clamscan',
                 'description': "the path to clamscan executable",
             },
-            
+
             'clamscantimeout': {
                 'default': '30',
                 'description': "process timeout",
             },
         }
         self.logger = self._logger()
-    
-    
+
+
     def __str__(self):
         return "Clam AV"
-    
-    
+
+
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
@@ -120,8 +120,8 @@ Tags:
         else:
             # in case of invalid problem action
             return DEFER
-        
-        
+
+
     def _virusreport(self, suspect, viruses):
         actioncode = DUNNO
         message = None
@@ -132,7 +132,7 @@ Tags:
             suspect.debug('viruses found in message : %s' % viruses)
         else:
             suspect.tags['virus']['ClamAV'] = False
-    
+
         if viruses is not None:
             virusaction = self.config.get(self.section, 'virusaction')
             actioncode = string_to_actioncode(virusaction, self.config)
@@ -142,8 +142,8 @@ Tags:
             message = apply_template(
                 self.config.get(self.section, 'rejectmessage'), suspect, values)
         return actioncode, message
-    
-    
+
+
     def examine(self, suspect):
 
         if suspect.size > self.config.getint(self.section, 'maxsize'):
@@ -170,7 +170,7 @@ Tags:
 
         self.logger.error("%s Clamdscan failed after %s retries" %
                           suspect.id, self.config.getint(self.section, 'retries'))
-        
+
         if self.config.getboolean(self.section, 'clamscanfallback'):
             try:
                 viruses = self.scan_shell(content)
@@ -178,17 +178,17 @@ Tags:
                 return actioncode, message
             except Exception:
                 self.logger.error('%s failed to scan using fallback clamscan' % suspect.id)
-        
+
         return self._problemcode()
-    
-    
+
+
     def scan_shell(self, content):
         clamscan = self.config.get(self.section, 'clamscan')
         timeout = self.config.getint(self.section, 'clamscantimeout')
-        
+
         if not os.path.exists(clamscan):
             raise Exception('could not find clamscan executable in %s' % clamscan)
-        
+
         try:
             process = subprocess.Popen([clamscan, u'-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE) # file data by pipe
             kill_proc = lambda p: p.kill()
@@ -201,14 +201,14 @@ Tags:
         except Exception:
             exitcode = -1
             stdout = ''
-        
+
         if exitcode > 1: # 0: no virus, 1: virus, >1: error, -1 subprocess error
             raise Exception('clamscan error')
         elif exitcode < 0:
             raise Exception('clamscan timeout after %ss' % timeout)
-        
+
         dr = {}
-        
+
         for line in stdout.splitlines():
             line = line.strip()
             if line.endswith('FOUND'):
@@ -220,8 +220,8 @@ Tags:
             return None
         else:
             return dr
-    
-    
+
+
     def scan_stream(self, buff):
         """
         Scan byte buffer
@@ -292,8 +292,8 @@ Tags:
             return None
         else:
             return dr
-    
-    
+
+
     def _read_until_delimiter(self, sock):
         data = ''
         while True:
@@ -306,13 +306,13 @@ Tags:
             if '\0' in chunk:
                 raise Exception("Protocol error: got unexpected additional data after delimiter")
         return data[:-1]  # remove \0 at the end
-    
-    
+
+
     def __invalidate_socket(self):
         threadLocal.clamdsocket = None
         threadLocal.expectedID = 0
-    
-    
+
+
     def __init_socket__(self, oneshot=False):
         """initialize a socket connection to clamd using host/port/file defined in the configuration
         this connection is initialized with clamd's "IDSESSION" and cached per thread
@@ -320,16 +320,13 @@ Tags:
          set oneshot=True to get a socket without caching it and without initializing it with an IDSESSION
          """
 
-        existing_socket = getattr(threadLocal, 'clamdsocket', None)
-
-        socktimeout = self.config.getint(self.section, 'timeout')
-
-        if existing_socket is not None and not oneshot:
-            existing_socket.settimeout(socktimeout)
-            return existing_socket
-
-        clamd_HOST = self.config.get(self.section, 'host')
         unixsocket = False
+        timeout = self.config.getint(self.section, 'timeout')
+
+        existing_socket = getattr(threadLocal, 'clamdsocket', None)
+        if existing_socket is not None and not oneshot:
+            existing_socket.settimeout(timeout)
+            return existing_socket
 
         try:
             int(self.config.get(self.section, 'port'))
@@ -341,22 +338,18 @@ Tags:
             if not os.path.exists(sock):
                 raise Exception("unix socket %s not found" % sock)
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.settimeout(socktimeout)
+            s.settimeout(timeout)
             try:
                 s.connect(sock)
             except socket.error:
                 raise Exception('Could not reach clamd using unix socket %s' % sock)
         else:
-            clamd_PORT = int(self.config.get(self.section, 'port'))
-            proto = socket.AF_INET
-            if ':' in clamd_HOST:
-                proto = socket.AF_INET6
-            s = socket.socket(proto, socket.SOCK_STREAM)
-            s.settimeout(socktimeout)
+            host = self.config.get(self.section, 'host')
+            port = int(self.config.get(self.section, 'port'))
             try:
-                s.connect((clamd_HOST, clamd_PORT))
+                s = socket.create_connection((host, port), timeout)
             except socket.error:
-                raise Exception('Could not reach clamd using network (%s, %s)' % (clamd_HOST, clamd_PORT))
+                raise Exception('Could not reach clamd using network (%s, %s)' % (host, port))
 
         # initialize an IDSESSION
         if not oneshot:
@@ -364,14 +357,14 @@ Tags:
             threadLocal.clamdsocket = s
             threadLocal.expectedID = 0
         return s
-    
-    
+
+
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
-        allok = self.checkConfig() and self.lint_ping() and self.lint_eicar()
-        
+        allok = self.checkConfig() and self.lint_ping() and self.lint_version() and self.lint_eicar()
+
         if self.config.getboolean(self.section, 'clamscanfallback'):
             print('WARNING: Fallback to clamscan enabled')
             starttime = time.time()
@@ -379,10 +372,10 @@ Tags:
             if allok:
                 runtime = time.time()-starttime
                 print('clamscan scan time: %.2fs' % runtime)
-        
+
         return allok
-    
-    
+
+
     def lint_ping(self):
         try:
             s = self.__init_socket__(oneshot=True)
@@ -395,8 +388,19 @@ Tags:
         if result.strip() != 'PONG':
             print("Invalid PONG: %s" % result)
         return True
-    
-    
+
+
+   def lint_version(self):
+        try:
+            s = self.__init_socket__(oneshot=True)
+        except Exception:
+            return False
+        s.sendall('VERSION')
+        result = s.recv(20000)
+        print("Got Version: %s" % result)
+        return True
+
+
     def lint_eicar(self, mode='stream'):
         stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org
@@ -421,16 +425,17 @@ AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
 AAEAAQA3AAAAbQAAAAAA
 
 ------=_MIME_BOUNDARY_000_12140--"""
-        
+
         if mode=='stream':
             result = self.scan_stream(stream)
         elif mode=='shell':
             result = self.scan_shell(stream)
         else:
             result = None
-            
+
         if result is None:
             print("EICAR Test virus not found!")
             return False
         print("Clamav found virus", result)
         return True
+

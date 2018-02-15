@@ -128,7 +128,7 @@ def sayGoodbye(s):
 
 class SSSPPlugin(ScannerPlugin):
 
-    """ This plugin scans the suspect using the sophos SSSP protocol. 
+    """ This plugin scans the suspect using the sophos SSSP protocol.
 
 Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 """
@@ -226,7 +226,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("SSSP scan failed after %s retries" %
                           self.config.getint(self.section, 'retries'))
-        
+
         return self._problemcode()
 
     def scan_stream(self, buf):
@@ -331,12 +331,10 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             return dr
 
     def __init_socket__(self):
-        sssp_HOST = self.config.get(self.section, 'host')
         unixsocket = False
-        iport = None
 
         try:
-            iport = int(self.config.get(self.section, 'port'))
+            int(self.config.get(self.section, 'port'))
         except ValueError:
             unixsocket = True
 
@@ -352,17 +350,14 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                 raise Exception(
                     'Could not reach SSSP server using unix socket %s' % sock)
         else:
-            sssp_PORT = iport
-            proto = socket.AF_INET
-            if ':' in sssp_HOST:
-                proto = socket.AF_INET6
-            s = socket.socket(proto, socket.SOCK_STREAM)
-            s.settimeout(self.config.getint(self.section, 'timeout'))
+            host = self.config.get(self.section, 'host')
+            port = int(self.config.get(self.section, 'port'))
+            timeout = self.config.getint(self.section, 'timeout')
             try:
-                s.connect((sssp_HOST, sssp_PORT))
+                s = socket.create_connection((host, port), timeout)
             except socket.error:
                 raise Exception(
-                    'Could not reach SSSP server using network (%s, %s)' % (sssp_HOST, sssp_PORT))
+                    'Could not reach SSSP server using network (%s, %s)' % (host, port))
 
         return s
 
@@ -404,3 +399,4 @@ AAEAAQA3AAAAbQAAAAAA
             return False
         print("SSSP server found virus", result)
         return True
+
