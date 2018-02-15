@@ -43,7 +43,8 @@ def buildmsgsource(suspect):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            logger = logging.getLogger("fuglu.buildmsgsource")
+            logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
@@ -52,7 +53,8 @@ def buildmsgsource(suspect):
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
-            self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            logger = logging.getLogger("fuglu.buildmsgsource")
+            logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
             raise e
 
     modifiedtext = newheaders + origmsgtxt
@@ -184,10 +186,15 @@ class SMTPSession(object):
         self.logger = logging.getLogger("fuglu.smtpsession")
         self.tempfilename = None
         self.tempfile = None
+        self._noisy = True
 
     def endsession(self, code, message):
         try:
+            if self._noisy:
+                self.logger.debug("endsession - send message and code")
             self.socket.send(("%s %s\r\n" % (code, message)).encode("utf-8","strict"))
+            if self._noisy:
+                self.logger.debug("endsession - sent")
         except Exception as e:
             from inspect import currentframe, getframeinfo
             frameinfo = getframeinfo(currentframe())
@@ -197,12 +204,22 @@ class SMTPSession(object):
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
+            if self._noisy:
+                self.logger.debug("endsession - after receiving 1024 bytes")
             if len(lump):
+                if self._noisy:
+                    self.logger.debug("endsession - adding lump to rawdata")
                 rawdata += lump
                 if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
+                    if self._noisy:
+                        self.logger.debug("endsession - setting completeLine to 1")
                     try:
+                        if self._noisy:
+                            self.logger.debug("endsession - decode raw data")
                         data = rawdata.decode("utf-8","strict")
+                        if self._noisy:
+                            self.logger.debug("endsession - decode raw data -> done")
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
                         frameinfo = getframeinfo(currentframe())
@@ -213,6 +230,8 @@ class SMTPSession(object):
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
+                        if self._noisy:
+                            self.logger.debug("endsession - QUIT command - send 220")
                         try:
                             self.socket.send(("%s %s\r\n" % (220, "BYE")).encode("utf-8","strict"))
                         except Exception as e:
@@ -223,6 +242,8 @@ class SMTPSession(object):
                         self.closeconn()
                         return
                     try:
+                        if self._noisy:
+                            self.logger.debug("endsession - send 421")
                         self.socket.send( ("%s %s\r\n" % (421, "Cannot accept further commands")).encode("utf-8","strict"))
                     except Exception as e:
                         from inspect import currentframe, getframeinfo
@@ -232,8 +253,12 @@ class SMTPSession(object):
                     self.closeconn()
                     return
             else:
+                if self._noisy:
+                    self.logger.debug("endsession - lump length is zero -> ending session")
                 self.closeconn()
                 return
+        if self._noisy:
+           self.logger.debug("endsession - end of function return statement reached")
         return
 
     def closeconn(self):
@@ -248,6 +273,8 @@ class SMTPSession(object):
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
         try:
+            if self._noisy:
+                self.logger.debug("getincomingmail - send ready string")
             self.socket.send("220 fuglu scanner ready \r\n".encode("utf-8","strict"))
         except Exception as e:
             from inspect import currentframe, getframeinfo
@@ -260,10 +287,16 @@ class SMTPSession(object):
             completeLine = 0
             while not completeLine:
                 lump = self.socket.recv(1024)
+                if self._noisy:
+                    self.logger.debug("getincomingmail - after receiving 1024 bytes, lenth of lump is {}".format(len(lump)))
                 if len(lump):
                     rawdata += lump
+                    if self._noisy:
+                        self.logger.debug("getincomingmail - length of rawdata is {}".format(len(rawdata)))
                     if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
+                        if self._noisy:
+                            self.logger.debug("getincomingmail - line is complete")
                         try:
                             data = rawdata.decode("utf-8","strict")
                         except Exception as e:
@@ -271,25 +304,42 @@ class SMTPSession(object):
                             frameinfo = getframeinfo(currentframe())
                             self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
+
+                        if self._noisy:
+                            self.logger.debug("getincomingmail - state = {}".format(self.state))
+
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
+                            if self._noisy:
+                                self.logger.debug("getincomingmail - doCommand -> response rsp={}, keep={}".format(str(rsp),str(keep)))
                         else:
                             try:
                                 rsp = self.doData(data)
+                                if self._noisy:
+                                    self.logger.debug("getincomingmail - doData -> response rsp={}".format(str(rsp)))
                             except IOError:
+                                if self._noisy:
+                                    self.logger.debug("getincomingmail - IOError")
+
                                 self.endsession(
                                     421, "Could not write to temp file")
                                 self._close_tempfile()
                                 return False
 
                             if rsp is None:
+                                if self._noisy:
+                                    self.logger.debug("getincomingmail - rsp is None -> continue")
                                 continue
                             else:
                                 # data finished.. keep connection open though
-                                self.logger.debug('incoming message finished')
+                                if self._noisy:
+                                    self.logger.debug('incoming message finished')
                                 return True
 
                         try:
+                            if self._noisy:
+                                self.logger.debug("getincomingmail - send response: {}".format(str(rsp)))
+
                             self.socket.send((rsp + "\r\n").encode("utf-8","strict"))
                         except Exception as e:
                             from inspect import currentframe, getframeinfo
@@ -297,11 +347,17 @@ class SMTPSession(object):
                             self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
                             raise e
                         if keep == 0:
+                            if self._noisy:
+                                self.logger.debug("getincomingmail - keep = 0 -> close connection and return False")
                             self.closeconn()
                             return False
                 else:
                     # EOF
+                    if self._noisy:
+                        self.logger.debug("getincomingmail -> EOF -> Return False")
                     return False
+        if self._noisy:
+            self.logger.debug("getincomingmail -> End of routine -> Return False")
         return False
 
     def doCommand(self, data):
@@ -382,7 +438,13 @@ class SMTPSession(object):
             self.state = SMTPSession.ST_HELO
             return "250 OK - Data and terminator. found"
         else:
-            self.tempfile.write(data)
+            try:
+                self.tempfile.write(data.encode("utf-8","strict"))
+            except Exception as e:
+                from inspect import currentframe, getframeinfo
+                frameinfo = getframeinfo(currentframe())
+                self.logger.error("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+                raise e
             return None
 
     def unquoteData(self, data):
