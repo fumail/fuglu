@@ -437,16 +437,7 @@ class SMTPSession(object):
 
     def unquoteData(self, data):
         """two leading dots at the beginning of a line must be unquoted to a single dot"""
-        try:
-            # this will work with python 2.x
-            return re.sub(r'(?m)^\.\.', '.', data)
-        except TypeError:
-            # Python 3 does not allow regex to work on binary string type
-            # todo: find regex working directly on binary string type
-            try:
-                return force_bString(re.sub(r'(?m)^\.\.', '.', force_uString(data)))
-            except Exception as e:
-                return data
+        return re.sub(b'(?m)^\.\.', b'.', force_bString(data))
 
     def stripAddress(self, address):
         """
