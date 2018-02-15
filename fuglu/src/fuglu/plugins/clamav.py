@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -390,7 +391,7 @@ Tags:
         return True
 
 
-   def lint_version(self):
+    def lint_version(self):
         try:
             s = self.__init_socket__(oneshot=True)
         except Exception:

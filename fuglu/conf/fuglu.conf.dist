@@ -364,6 +364,14 @@ sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
 #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})
 
+#enable scanning of messages larger than maxsize.
+#all attachments will be stripped and only headers,
+#plaintext and html part will be scanned. If message
+#is still oversize it will be truncated.
+#Also enable forwardoriginal or truncated version of
+#large messages will be forwarded.
+strip_oversize=0
+
 [debug]
 
 #messages incoming on this port will be debugged to a logfile
