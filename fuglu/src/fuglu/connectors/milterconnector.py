@@ -18,7 +18,6 @@
 
 import logging
 import struct
-import binascii
 import traceback
 
 from fuglu.lib.ppymilterbase import PpyMilter, PpyMilterDispatcher, PpyMilterCloseConnection, SMFIC_BODYEOB, RESPONSE
@@ -27,6 +26,7 @@ from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 import tempfile
 import os
+from fuglu.encodings import force_bString, force_uString
 
 MILTER_LEN_BYTES = 4  # from sendmail's include/libmilter/mfdef.h
 
@@ -163,7 +163,7 @@ class MilterSession(PpyMilter):
             pdat = self.socket.recv(MILTER_LEN_BYTES - lenread)
             lenbuf.append(pdat)
             lenread += len(pdat)
-        dat = "".join(lenbuf)
+        dat = b"".join(lenbuf)
         # self.logger.info(dat)
         # self.logger.info(len(dat))
         packetlen = int(struct.unpack('!I', dat)[0])
@@ -173,7 +173,7 @@ class MilterSession(PpyMilter):
             partial_data = self.socket.recv(packetlen - read)
             inbuf.append(partial_data)
             read += len(partial_data)
-        data = "".join(inbuf)
+        data = b"".join(inbuf)
         return data
 
     def finish(self):
@@ -231,15 +231,8 @@ class MilterSession(PpyMilter):
         Args:
           response: the data to send
         """
-        #self.logger.debug('  >>> %s', binascii.b2a_qp(response[0]))
         self.socket.send(struct.pack('!I', len(response)))
-        try:
-            self.socket.send(response.encode("utf-8","strict") if isinstance(response,str) else response)
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
+        self.socket.send(force_bString(response))
 
 
 class MilterServer(BasicTCPServer):
