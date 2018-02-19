@@ -89,8 +89,7 @@ class NCSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send(
-            ("fuglu scanner ready - please pipe your message\r\n").encode('utf-8'))
+        self.socket.send("fuglu scanner ready - please pipe your message\r\n")
         try:
             (handle, tempfilename) = tempfile.mkstemp(
                 prefix='fuglu', dir=self.config.get('main', 'tempdir'))
