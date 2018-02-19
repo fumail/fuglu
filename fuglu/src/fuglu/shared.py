@@ -193,7 +193,7 @@ class Suspect(object):
         self.from_address = from_address
 
         # backwards compatibility, recipients can be a single address
-        if type(recipients) is list:
+        if isinstance(recipients, list):
             self.recipients = recipients
         else:
             self.recipients = [recipients, ]
@@ -240,7 +240,7 @@ class Suspect(object):
         """Returns the local part of the first recipient"""
         try:
             return self.to_address.rsplit('@', 1)[0]
-        except:
+        except Exception:
             logging.getLogger('suspect').error('could not extract localpart from recipient address %s' % self.to_address)
             return None
 
@@ -249,7 +249,7 @@ class Suspect(object):
         """Returns the local part of the first recipient"""
         try:
             return self.to_address.rsplit('@', 1)[1]
-        except:
+        except Exception:
             logging.getLogger('suspect').error('could not extract domain from recipient address %s' % self.from_address)
             return None
 
@@ -262,7 +262,7 @@ class Suspect(object):
         else:
             try:
                return self.from_address.rsplit('@', 1)[0]
-            except:
+            except Exception:
                 logging.getLogger('suspect').error('could not extract localpart from sender address %s'%self.from_address)
                 return None
 
@@ -274,7 +274,7 @@ class Suspect(object):
         else:
             try:
                 return self.from_address.rsplit('@', 1)[1]
-            except:
+            except Exception:
                 logging.getLogger('suspect').error('could not extract domain from sender address %s' % self.from_address)
                 return None
 
@@ -339,7 +339,7 @@ class Suspect(object):
         """
         if immediate:
             # is ignore the right thing to do here?
-            value.encode('UTF-8', 'ignore')
+            value = value.encode('UTF-8', 'ignore')
             hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
             src = hdrline + self.get_source()
@@ -366,7 +366,7 @@ class Suspect(object):
         try:
             pluginname, code = dectag[-1]
             return code
-        except:
+        except Exception:
             return DUNNO
 
     def _short_tag_rep(self):
@@ -380,7 +380,7 @@ class Suspect(object):
 
             try:
                 strrep = str(v)
-            except:  # Unicodedecode errors and stuff like that
+            except Exception:  # Unicodedecode errors and stuff like that
                 continue
 
             therep = v
@@ -850,7 +850,7 @@ class SuspectFilter(object):
         try:
             stripper.feed(content)
             return stripper.get_stripped_data()
-        except:  # ignore parsing/encoding errors
+        except Exception:  # ignore parsing/encoding errors
             pass
         # use regex replace
         return re.sub(self.stripre, '', content)
