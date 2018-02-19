@@ -331,6 +331,14 @@ class Suspect(object):
             if val:
                 return True
         return False
+
+    def is_virus(self):
+        """Returns True if ANY of the antivirus engines tagged this suspect as infected"""
+        for key in list(self.tags['virus'].keys()):
+            val = self.tags['virus'][key]
+            if val:
+                return True
+        return False
     
     def update_subject(self, subject_cb, **cb_params):
         """
@@ -369,14 +377,6 @@ class Suspect(object):
     def addheader(self, key, value, immediate=False):
         """old name for add_header"""
         return self.add_header(key, value, immediate)
-
-    def is_virus(self):
-        """Returns True if ANY of the antivirus engines tagged this suspect as infected"""
-        for key in list(self.tags['virus'].keys()):
-            val = self.tags['virus'][key]
-            if val:
-                return True
-        return False
 
     def get_current_decision_code(self):
         dectag = self.get_tag('decisions')
