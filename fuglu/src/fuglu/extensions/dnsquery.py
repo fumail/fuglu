@@ -15,7 +15,7 @@ except ImportError:
     DNS = None
     HAVE_PYDNS=False
 
-HAVE_DNS = HAVE_DNSPYTHON or HAVE_PYDNS
+ENABLED = DNSQUERY_EXTENSION_ENABLED = HAVE_DNSPYTHON or HAVE_PYDNS
 
 
 def lookup(hostname, qtype='A'):
