@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # $Id: ppymilterbase.py 33 2009-04-08 20:40:02Z codewhale $
 # ==============================================================================
 # Copyright 2008 Google Inc.
@@ -187,7 +188,7 @@ class PpyMilterDispatcher(object):
           PpyMilterCloseConnection: Indicating the (milter) connection should
                                     be closed.
         """
-        (cmd, data) = (data[0], data[1:])
+        cmd, data = data[0], data[1:]
         try:
             if cmd not in COMMANDS:
                 logging.warn('Unknown command code: "%s" ("%s")', cmd, data)
@@ -215,7 +216,7 @@ class PpyMilterDispatcher(object):
         except PpyMilterPermFailure as e:
             logging.info('Perm Failure: %s', str(e))
             return RESPONSE['REJECT']
-        return RESPONSE['CONTINUE']
+        #return RESPONSE['CONTINUE'] # this line is never reached
 
     def _ParseOptNeg(self, cmd, data):
         """Parse the 'OptNeg' milter data into arguments for the milter handler.
@@ -233,8 +234,8 @@ class PpyMilterDispatcher(object):
             protocol: Bitmask of the callback functions we are registering.
 
         """
-        (ver, actions, protocol) = struct.unpack('!III', data)
-        return (cmd, ver, actions, protocol)
+        ver, actions, protocol = struct.unpack('!III', data)
+        return cmd, ver, actions, protocol
 
     def _ParseMacro(self, cmd, data):
         """Parse the 'Macro' milter data into arguments for the milter handler.
@@ -249,8 +250,8 @@ class PpyMilterDispatcher(object):
             macro: The single character command code this macro is for.
             data: A list of strings alternating between name, value of macro.
         """
-        (macro, data) = (data[0], data[1:])
-        return (cmd, macro, data.split('\0'))
+        macro, data = (data[0], data[1:])
+        return cmd, macro, data.split('\0')
 
     def _ParseConnect(self, cmd, data):
         """Parse the 'Connect' milter data into arguments for the milter handler.
@@ -267,7 +268,7 @@ class PpyMilterDispatcher(object):
             port: The network port if appropriate for the connection.
             address: Remote address of the connection (e.g. IP address).
         """
-        (hostname, data) = data.split('\0', 1)
+        hostname, data = data.split('\0', 1)
         family = struct.unpack('c', data[0])[0]
         if family in ('4', '6'):  # SMFIA_INET / SMFIA_INET6
             port = struct.unpack('!H', data[1:3])[0]
@@ -275,7 +276,7 @@ class PpyMilterDispatcher(object):
         else:  # SMFIA_UNKNOWN / SMFIA_UNIX
             port = None
             address = None
-        return (cmd, hostname, family, port, address)
+        return cmd, hostname, family, port, address
 
     def _ParseHelo(self, cmd, data):
         """Parse the 'Helo' milter data into arguments for the milter handler.
@@ -291,7 +292,7 @@ class PpyMilterDispatcher(object):
         """
         data = data.split('\0')[0]
 
-        return (cmd, data)
+        return cmd, data
 
     def _ParseMailFrom(self, cmd, data):
         """Parse the 'MailFrom' milter data into arguments for the milter handler.
@@ -306,8 +307,8 @@ class PpyMilterDispatcher(object):
             mailfrom: The canonicalized MAIL From email address.
             esmtp_info: Extended SMTP (esmtp) info as a list of strings.
         """
-        (mailfrom, esmtp_info) = data.split('\0', 1)
-        return (cmd, CanonicalizeAddress(mailfrom), esmtp_info.split('\0'))
+        mailfrom, esmtp_info = data.split('\0', 1)
+        return cmd, CanonicalizeAddress(mailfrom), esmtp_info.split('\0')
 
     def _ParseRcptTo(self, cmd, data):
         """Parse the 'RcptTo' milter data into arguments for the milter handler.
@@ -322,8 +323,8 @@ class PpyMilterDispatcher(object):
             rcptto: The canonicalized RCPT To email address.
             esmtp_info: Extended SMTP (esmtp) info as a list of strings.
         """
-        (rcptto, esmtp_info) = data.split('\0', 1)
-        return (cmd, CanonicalizeAddress(rcptto), esmtp_info.split('\0'))
+        rcptto, esmtp_info = data.split('\0', 1)
+        return cmd, CanonicalizeAddress(rcptto), esmtp_info.split('\0')
 
     def _ParseHeader(self, cmd, data):
         """Parse the 'Header' milter data into arguments for the milter handler.
@@ -338,8 +339,8 @@ class PpyMilterDispatcher(object):
             key: The name of the header.
             val: The value/data for the header.
         """
-        (key, val) = data.split('\0', 1)
-        return (cmd, key, val)
+        key, val = data.split('\0', 1)
+        return cmd, key, val
 
     def _ParseEndHeaders(self, cmd, data):
         """Parse the 'EndHeaders' milter data into arguments for the milter handler.
@@ -352,7 +353,7 @@ class PpyMilterDispatcher(object):
           A tuple (cmd) where:
             cmd: The single character command code representing this command.
         """
-        return (cmd)
+        return cmd
 
     def _ParseBody(self, cmd, data):
         """Parse the 'Body' milter data into arguments for the milter handler.
@@ -366,7 +367,7 @@ class PpyMilterDispatcher(object):
             cmd : The single character command code representing this command.
             data: TODO: parse this better
         """
-        return (cmd, data)
+        return cmd, data
 
     def _ParseEndBody(self, cmd, data):
         """Parse the 'EndBody' milter data into arguments for the milter handler.
@@ -379,7 +380,7 @@ class PpyMilterDispatcher(object):
           A tuple (cmd) where:
             cmd: The single character command code representing this command.
         """
-        return (cmd)
+        return cmd
 
     def _ParseQuit(self, cmd, data):
         """Parse the 'Quit' milter data into arguments for the milter handler.
@@ -392,7 +393,7 @@ class PpyMilterDispatcher(object):
           A tuple (cmd) where:
             cmd: The single character command code representing this command.
         """
-        return (cmd)
+        return cmd
 
     def _ParseAbort(self, cmd, data):
         """Parse the 'Abort' milter data into arguments for the milter handler.
@@ -405,11 +406,11 @@ class PpyMilterDispatcher(object):
           A tuple (cmd) where:
             cmd: The single character command code representing this command.
         """
-        return (cmd)
+        return cmd
 
     def _ParseData(self, cmd, data):
         # print "pdata: cmd=%s data=%s"%(cmd,data)
-        return (cmd, data)
+        return cmd, data
 
 
 class PpyMilter(object):
@@ -580,8 +581,7 @@ class PpyMilter(object):
         try:
             self.OnResetState()
         except AttributeError:
-            logging.warn(
-                'No OnResetState() callback is defined for this milter.')
+            logging.warn('No OnResetState() callback is defined for this milter.')
 
     # you probably should not be overriding this  :-p
     def OnOptNeg(self, cmd, ver, actions, protocol):
