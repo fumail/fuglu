@@ -77,7 +77,7 @@ class ESMTPHandler(ProtocolHandler):
         sess = self.sess
         fromaddr = sess.from_address
         tempfilename = sess.tempfilename
-        
+
         try:
             suspect = Suspect(fromaddr, sess.recipients, tempfilename)
         except ValueError as e:
@@ -153,25 +153,27 @@ class ESMTPPassthroughSession(object):
 
     def endsession(self, code, message):
         """End session with incoming postfix"""
-        self.socket.send("%s %s\r\n" % (code, message))
-        data = ''
+        self.socket.send(("%s %s\r\n" % (code, message)).encode('utf-8'))
+        data = b''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
             if len(lump):
                 data += lump
                 if (len(data) >= 2) and data[-2:] == '\r\n':
+                    data = data.decode('utf-8')
                     completeLine = 1
                     cmd = data[0:4]
-                    cmd = string.upper(cmd)
+                    cmd = cmd.upper()
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
-                        self.socket.send("%s %s\r\n" % (220, "BYE"))
+                        self.socket.send(("%s %s\r\n" % (220, "BYE")).encode('utf-8'))
                         self.closeconn()
                         return
                     self.socket.send(
-                        "%s %s\r\n" % (421, "Cannot accept further commands"))
+                        ("%s %s\r\n" % (
+                            421, "Cannot accept further commands")).encode('utf-8'))
                     self.closeconn()
                     return
             else:
@@ -182,22 +184,23 @@ class ESMTPPassthroughSession(object):
     def closeconn(self):
         """clocke socket to incoming postfix"""
         self.socket.close()
-        
+
     def _close_tempfile(self):
         if self.tempfile and not self.tempfile.closed:
             self.tempfile.close()
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n")
+        self.socket.send("220 fuglu scanner ready \r\n".encode('utf-8'))
         while True:
-            data = ''
+            data = b''
             completeLine = 0
             while not completeLine:
                 lump = self.socket.recv(1024)
                 if len(lump):
                     data += lump
                     if (len(data) >= 2) and data[-2:] == '\r\n':
+                        data = data.decode('utf-8')
                         completeLine = 1
                         if self.state != ESMTPPassthroughSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
@@ -217,7 +220,7 @@ class ESMTPPassthroughSession(object):
                                 self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send(rsp + "\r\n")
+                        self.socket.send((rsp + "\r\n").encode('utf-8'))
                         if keep == 0:
                             self.socket.close()
                             return False
@@ -265,7 +268,7 @@ class ESMTPPassthroughSession(object):
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = string.upper(cmd)
+        cmd = cmd.upper()
         keep = 1
         rv = None
 
@@ -369,7 +372,7 @@ class ESMTPPassthroughSession(object):
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
             # check if there is more data to write to the file
             if len(data) > 4:
-                self.tempfile.write(data[0:-5])
+                self.tempfile.write(data[0:-5].encode('utf-8'))
 
             self._close_tempfile()
 
@@ -393,7 +396,7 @@ class ESMTPPassthroughSession(object):
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = string.find(address, '>')
+        end = address.find('>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]
