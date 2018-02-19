@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,8 +100,7 @@ Note: The first rule to match in a message is the only rule that will be applied
         return "Archive"
 
     def lint(self):
-        allok = (
-            self.checkConfig() and self.check_deprecated() and self.lint_dirs() and self.lint_filter())
+        allok = self.check_config() and self.check_deprecated() and self.lint_dirs() and self.lint_filter()
         return allok
 
     def check_deprecated(self):

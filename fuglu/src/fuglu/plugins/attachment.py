@@ -938,8 +938,7 @@ The other common template variables are available as well.
     
     
     def lint(self):
-        allok = (self.checkConfig() and self.lint_magic()
-                 and self.lint_sql() and self.lint_archivetypes())
+        allok = self.check_config() and self.lint_magic() and self.lint_sql() and self.lint_archivetypes()
         return allok
     
     

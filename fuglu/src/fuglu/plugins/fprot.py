@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -235,7 +236,7 @@ Tags:
         return 'F-Prot AV'
 
     def lint(self):
-        allok = (self.checkConfig() and self.lint_eicar())
+        allok = self.check_config() and self.lint_eicar()
         return allok
 
     def lint_eicar(self):

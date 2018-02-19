@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,7 +62,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:
         return listcopy
 
     def _initfilter(self):
-        if self.filter != None:
+        if self.filter is not None:
             return True
 
         filename = self.config.get(self.section, 'filterfile')
@@ -69,15 +70,14 @@ eg. put this in /etc/fuglu/pluginfraction.regex:
             return False
 
         if not os.path.exists(filename):
-            self.logger.error(
-                'Filterfile not found for pluginfraction: %s' % filename)
+            self.logger.error('Filterfile not found for pluginfraction: %s' % filename)
             return False
 
         self.filter = SuspectFilter(filename)
         return True
 
     def lint(self):
-        return (self.checkConfig() and self.lint_filter())
+        return self.check_config() and self.lint_filter()
 
     def lint_filter(self):
         filterfile = self.config.get(self.section, 'filterfile')

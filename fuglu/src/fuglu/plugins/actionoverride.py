@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +38,7 @@ class ActionOverridePlugin(ScannerPlugin):
         return "Action Override"
 
     def lint(self):
-        allok = self.checkConfig() and self.lint_filter()
+        allok = self.check_config() and self.lint_filter()
         return allok
 
     def lint_filter(self):

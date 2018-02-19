@@ -150,7 +150,7 @@ It is currently recommended to leave both header and body canonicalization as 'r
             print("(also requires either dnspython or pydns)")
             return False
 
-        return self.checkConfig()
+        return self.check_config()
 
 # test:
 # plugdummy.py -p ...  domainauth.DKIMSignPlugin -s <sender> -o canonicalizeheaders:relaxed -o canonicalizebody:simple -o signbodylength:False
@@ -284,7 +284,7 @@ known issues:
             print("Private key file %s not found" % privkeytemplate)
             return False
 
-        return self.checkConfig()
+        return self.check_config()
 
 
 class SPFPlugin(ScannerPlugin):
@@ -340,7 +340,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
             print("(also requires pydns and ipaddress or ipaddr)")
             return False
 
-        return self.checkConfig()
+        return self.check_config()
 
 
 class DomainAuthPlugin(ScannerPlugin):
@@ -413,7 +413,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
         return "DomainAuth"
 
     def lint(self):
-        allok = self.checkConfig() and self.lint_file()
+        allok = self.check_config() and self.lint_file()
         return allok
 
     def lint_file(self):
@@ -588,7 +588,7 @@ class SpearPhishPlugin(ScannerPlugin):
     
     
     def lint(self):
-        allok = self.checkConfig() and self._lint_file() and self._lint_sql()
+        allok = self.check_config() and self._lint_file() and self._lint_sql()
         return allok
     
     
