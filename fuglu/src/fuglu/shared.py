@@ -356,6 +356,8 @@ class Suspect(object):
             del msgrep["subject"]
             msgrep["subject"] = newsubj
             self.set_message_rep(msgrep)
+            if self.get_tag('origsubj') is None:
+                self.set_tag('origsubj', oldsubj)
             return True
         return False
 
