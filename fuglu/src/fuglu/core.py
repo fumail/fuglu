@@ -589,17 +589,19 @@ class MainController(object):
         terp = code.InteractiveConsole(locals())
         terp.interact("")
 
-    def run_netconsole(self, port=1337, bind="0.0.0.0"):
+    def run_netconsole(self, port=1337, address="0.0.0.0"):
         """start a network console"""
         old_stdin = sys.stdin
         old_stdout = sys.stdout
         old_stderr = sys.stderr
 
-        serversocket = socket.socket()
+        addr_f = socket.getaddrinfo(address, 0)[0][0]
+
+        serversocket = socket.socket(addr_f)
         serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        serversocket.bind((bind, port))
+        serversocket.bind((address, port))
         serversocket.listen(1)
-        clientsocket, address = serversocket.accept()  # client socket
+        clientsocket, _ = serversocket.accept()  # client socket
         self.logger.info("Interactive python connection from %s/%s" % (address[0], address[1]))
 
         class sw:  # socket wrapper
@@ -627,7 +629,7 @@ class MainController(object):
         except:
             pass
         self.logger.info(
-            "done talking to %s - closing interactive shell on %s/%s" % (address[0], bind, port))
+            "done talking to %s - closing interactive shell on %s/%s" % (address, address, port))
         sys.stdin = old_stdin
         sys.stdout = old_stdout
         sys.stderr = old_stderr
@@ -987,3 +989,4 @@ class MainController(object):
                 raise Exception('Cannot set Config Section %s : Plugin %s does not support config override' % (
                     configsection, mod))
         return plugininstance
+

@@ -221,11 +221,10 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             return dr
 
     def __init_socket__(self):
-        icap_HOST = self.config.get(self.section, 'host')
         unixsocket = False
 
         try:
-            iport = int(self.config.get(self.section, 'port'))
+            int(self.config.get(self.section, 'port'))
         except ValueError:
             unixsocket = True
 
@@ -241,17 +240,14 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                 raise Exception(
                     'Could not reach ICAP server using unix socket %s' % sock)
         else:
-            icap_PORT = int(self.config.get(self.section, 'port'))
-            proto = socket.AF_INET
-            if ':' in icap_HOST:
-                proto = socket.AF_INET6
-            s = socket.socket(proto, socket.SOCK_STREAM)
-            s.settimeout(self.config.getint(self.section, 'timeout'))
+            host = self.config.get(self.section, 'host')
+            port = int(self.config.get(self.section, 'port'))
+            timeout = int(self.config.get(self.section, 'timeout'))
             try:
-                s.connect((icap_HOST, icap_PORT))
+                s = socket.create_connection((host, port), timeout)
             except socket.error:
                 raise Exception(
-                    'Could not reach ICAP server using network (%s, %s)' % (icap_HOST, icap_PORT))
+                    'Could not reach ICAP server using network (%s, %s)' % (host, port))
 
         return s
 
@@ -293,3 +289,4 @@ AAEAAQA3AAAAbQAAAAAA
             return False
         print("ICAP server found virus", result)
         return True
+

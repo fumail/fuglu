@@ -61,8 +61,10 @@ class BasicTCPServer(object):
         self.controller = controller
         self.stayalive = True
 
+        addr_f = socket.getaddrinfo(address, 0)[0][0]
+
         try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._socket = socket.socket(addr_f, socket.SOCK_STREAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._socket.bind((address, port))
             self._socket.listen(5)
@@ -126,3 +128,4 @@ def forking_dumps(obj):
     buf = StringIO()
     ForkingPickler(buf).dump(obj)
     return buf.getvalue()
+
