@@ -331,6 +331,25 @@ class Suspect(object):
             if val:
                 return True
         return False
+    
+    def update_subject(self, subject_cb, **cb_params):
+        """
+        update/alter the message subject
+        Args:
+            subject_cb: callback function that alters the subject. must accept a string and return a string
+            cb_params: additional parameters to be passed to subject_cb
+        Return:
+            True if subject was altered, False otherwise
+        """
+        msgrep = self.get_message_rep()
+        oldsubj = msgrep.get("subject","")
+        newsubj = subject_cb(oldsubj, **cb_params)
+        if oldsubj != newsubj:
+            del msgrep["subject"]
+            msgrep["subject"] = newsubj
+            self.set_message_rep(msgrep)
+            return True
+        return False
 
     def add_header(self, key, value, immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
