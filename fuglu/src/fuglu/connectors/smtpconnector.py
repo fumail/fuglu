@@ -173,7 +173,7 @@ class SMTPSession(object):
         self.tempfile = None
 
     def endsession(self, code, message):
-        self.socket.send(("%s %s\r\n" % (code, message)).encode('utf-8'))
+        self.socket.send("%s %s\r\n" % (code, message))
         data = ''
         completeLine = 0
         while not completeLine:
@@ -181,21 +181,17 @@ class SMTPSession(object):
             if len(lump):
                 data += lump
                 if (len(data) >= 2) and data[-2:] == '\r\n':
-                    data = data.decode('utf-8')
                     completeLine = 1
                     cmd = data[0:4]
-                    cmd = cmd.upper()
+                    cmd = string.upper(cmd)
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
-                        self.socket.send(
-                            ("%s %s\r\n" % (220, "BYE")).encode('utf-8'))
+                        self.socket.send("%s %s\r\n" % (220, "BYE"))
                         self.closeconn()
                         return
                     self.socket.send(
-                        ("%s %s\r\n" % (
-                            421,
-                            "Cannot accept further commands")).encode('utf-8'))
+                        "%s %s\r\n" % (421, "Cannot accept further commands"))
                     self.closeconn()
                     return
             else:
@@ -212,7 +208,7 @@ class SMTPSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n".encode('utf-8'))
+        self.socket.send("220 fuglu scanner ready \r\n")
         while True:
             data = ''
             completeLine = 0
@@ -221,7 +217,6 @@ class SMTPSession(object):
                 if len(lump):
                     data += lump
                     if (len(data) >= 2) and data[-2:] == '\r\n':
-                        data = data.decode('utf-8')
                         completeLine = 1
                         if self.state != SMTPSession.ST_DATA:
                             rsp, keep = self.doCommand(data)
@@ -241,7 +236,7 @@ class SMTPSession(object):
                                 self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send((rsp + "\r\n").encode('utf-8'))
+                        self.socket.send(rsp + "\r\n")
                         if keep == 0:
                             self.socket.close()
                             return False
@@ -253,7 +248,7 @@ class SMTPSession(object):
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = cmd.upper()
+        cmd = string.upper(cmd)
         keep = 1
         rv = None
         if cmd == "HELO":
@@ -315,7 +310,7 @@ class SMTPSession(object):
         if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
             # check if there is more data to write to the file
             if len(data) > 4:
-                self.tempfile.write(data[0:-5].encode('utf-8'))
+                self.tempfile.write(data[0:-5])
 
             self._close_tempfile()
 
@@ -339,7 +334,7 @@ class SMTPSession(object):
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = address.find('>')
+        end = string.find(address, '>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]

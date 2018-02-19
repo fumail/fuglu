@@ -74,7 +74,7 @@ class SMTPSession:
                 if (len(data) >= 2) and data[-2:] == '\r\n':
                     completeLine = 1
                     cmd = data[0:4]
-                    cmd = cmd.upper()
+                    cmd = string.upper(cmd)
                     keep = 1
                     rv = None
                     if cmd == "QUIT":
@@ -135,7 +135,7 @@ class SMTPSession:
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = cmd.upper()
+        cmd = string.upper(cmd)
         keep = 1
         rv = None
         if cmd == "HELO" or cmd == "EHLO":
@@ -213,7 +213,7 @@ class SMTPSession:
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = address.find('>')
+        end = string.find(address, '>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]
