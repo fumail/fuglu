@@ -22,7 +22,7 @@ import os
 
 class FprotPlugin(ScannerPlugin):
 
-    """ This plugin passes suspects to a f-prot scan daemon 
+    """ This plugin passes suspects to a f-prot scan daemon
 
 Prerequisites: f-protd must be installed and running, not necessarily on the same box as fuglu though.
 
@@ -223,13 +223,9 @@ Tags:
     def __init_socket__(self):
         host = self.config.get(self.section, 'host')
         port = self.config.getint(self.section, 'port')
-        proto = socket.AF_INET
-        if ':' in host:
-            proto = socket.AF_INET6
-        s = socket.socket(proto, socket.SOCK_STREAM)
-        s.settimeout(self.config.getint(self.section, 'timeout'))
+        socktimeout = self.config.getint(self.section, 'timeout')
         try:
-            s.connect((host,port))
+            s = socket.create_connection((host, port), socktimeout)
         except socket.error:
             raise Exception('Could not reach fpscand using network (%s, %s)' % (
                 self.config.get(self.section, 'host'), self.config.getint(self.section, 'port')))
@@ -274,3 +270,4 @@ AAEAAQA3AAAAbQAAAAAA
             return False
         print("F-Prot found virus", result)
         return True
+

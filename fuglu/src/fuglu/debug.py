@@ -36,7 +36,7 @@ class ControlServer(object):
                 pass
 
         if isinstance(port, int):
-            porttype = "inet4"
+            porttype = "inet"
             self.logger = logging.getLogger("fuglu.control.%s" % port)
             self.logger.debug('Starting Control/Info server on port %s' % port)
         else:
@@ -50,9 +50,10 @@ class ControlServer(object):
         self.stayalive = 1
 
         try:
-            if porttype == "inet4":
+            if porttype == "inet":
+                addr_f = socket.getaddrinfo(address, 0)[0][0]
                 self._socket = socket.socket(
-                    socket.AF_INET, socket.SOCK_STREAM)
+                    addr_f, socket.SOCK_STREAM)
                 self._socket.setsockopt(
                     socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._socket.bind((address, port))
@@ -240,3 +241,4 @@ class CrashStore(object):
         CrashStore.exceptions.append((exc_info, time.time(), desc),)
         while len(CrashStore.exceptions) > maxtracebacks:
             CrashStore.exceptions.pop(0)
+

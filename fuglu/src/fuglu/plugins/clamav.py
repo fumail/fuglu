@@ -371,7 +371,7 @@ Tags:
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
-        allok = self.check_config() and self.lint_ping() and self.lint_version() and self.lint_eicar()
+        allok = self.checkConfig() and self.lint_ping() and self.lint_version() and self.lint_eicar()
         
         if self.config.getboolean(self.section, 'clamscanfallback'):
             print('WARNING: Fallback to clamscan enabled')

@@ -76,7 +76,7 @@ Tags:
                 'default': '256000',
                 'description': "maximum size in bytes. larger messages will be skipped",
             },
-            
+
             'strip_oversize':{
                 'default': '0',
                 'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded",
@@ -136,13 +136,13 @@ Tags:
                 'default': '0',
                 'description': "consult spamassassins(or any other) sql blacklist for messages that are too big for spam checks\nrequires the sql extension to be enabled",
             },
-            
+
             'sql_blacklist_dbconnectstring': {
                 'default': 'mysql:///localhost/spamassassin',
                 'description': "sqlalchemy db connect string",
                 'confidential': True,
             },
-            
+
             'sql_blacklist_sql': {
                 'default': """SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})""",
                 'description': "SQL query to get the blacklist entries for a suspect\nyou may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}",
@@ -150,12 +150,12 @@ Tags:
 
         }
         self.logger = self._logger()
-    
-    
+
+
     def __str__(self):
         return "SpamAssassin"
-    
-    
+
+
     def lint(self):
         strip_oversize = self.config.getboolean(self.section, 'strip_oversize')
         forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
@@ -164,16 +164,16 @@ Tags:
 
         allok = self.check_config() and self.lint_ping() and self.lint_spam() and self.lint_blacklist()
         return allok
-    
-    
+
+
     def lint_blacklist(self):
         if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section, 'check_sql_blacklist'):
             return True
-        
+
         if not SQL_EXTENSION_ENABLED:
             print("SQL Blacklist requested but SQLALCHEMY is not enabled")
             return False
-        
+
         session = get_session(self.config.get(self.section, 'sql_blacklist_dbconnectstring'))
         suspect = Suspect('dummy@example.com', 'dummy@example.com', '/dev/null')
         conf_sql = self.config.get(self.section, 'sql_blacklist_sql')
@@ -185,8 +185,8 @@ Tags:
         except Exception as e:
             print(e)
             return False
-    
-    
+
+
     def lint_ping(self):
         """ping sa"""
         retries = self.config.getint(self.section, 'retries')
@@ -221,8 +221,8 @@ Tags:
 
             time.sleep(1)
         return False
-    
-    
+
+
     def lint_spam(self):
         spamflag, score, rules = self.safilter_symbols(GTUBE, 'test')
         if 'GTUBE' in rules:
@@ -231,8 +231,8 @@ Tags:
         else:
             print("SA did not detect GTUBE")
             return False
-    
-    
+
+
     def _replace_sql_params(self, suspect, conf_sql):
         """replace template variables in sql with parameters and set sqlalchemy parameters from suspect"""
         values = {}
@@ -253,18 +253,18 @@ Tags:
         }
 
         return sql, params
-    
-    
+
+
     def check_sql_blacklist(self, suspect, runtimeconfig=None):
         """Check this message against the SQL blacklist. returns highspamaction on hit, DUNNO otherwise"""
         #work in progress
         if not self.config.has_option(self.section, 'check_sql_blacklist') or not self.config.getboolean(self.section, 'check_sql_blacklist'):
             return DUNNO
-        
+
         if not SQL_EXTENSION_ENABLED:
             self.logger.error('Cannot check sql blacklist, SQLALCHEMY extension is not available')
             return DUNNO
-        
+
         try:
             dbsession = get_session(self.config.get(self.section, 'sql_blacklist_dbconnectstring'))
             conf_sql = self.config.get(self.section, 'sql_blacklist_sql')
@@ -274,7 +274,7 @@ Tags:
             self.logger.error('Could not read blacklist from DB: %s' % e)
             suspect.debug('Blacklist check failed: %s' % e)
             return DUNNO
-        
+
         for result in resultproxy:
             dbvalue = result[0]  # this value might have multiple words
             allvalues = dbvalue.split()
@@ -302,8 +302,8 @@ Tags:
                     return configaction
 
         return DUNNO
-    
-    
+
+
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
@@ -312,8 +312,8 @@ Tags:
         else:
             # in case of invalid problem action
             return DEFER
-    
-    
+
+
     def _extract_spamstatus(self, msgrep, spamheadername, suspect):
         """
         extract spamstatus and score from messages returned by spamassassin
@@ -347,13 +347,13 @@ Tags:
                 self.logger.warning('%s Could not extract spam score from header: %s' % (suspect.id, spamheader))
                 suspect.debug( 'Could not read spam score from header %s' % spamheader)
         return isspam, spamscore
-    
-    
+
+
     def _strip_attachments(self, content, maxsize):
         """
         strip all attachments from multipart mails except for plaintext and html text parts.
         if message is still too long, truncate.
-        
+
         Args:
             content: string containing message source
             maxsize: integer of maximum message size accepted by spamassassin
@@ -361,7 +361,7 @@ Tags:
         Returns: stripped and truncated message content
 
         """
-        
+
         msgrep = email.message_from_string(content)
 
         if msgrep.is_multipart():
@@ -378,27 +378,27 @@ Tags:
         else:
             # text only mail - keep full content and truncate later
             new_src = content
-        
+
         if len(new_src) > maxsize:
             # truncate to maxsize
             new_src = new_src[:maxsize-1]
-        
+
         return new_src
-    
-    
+
+
     def examine(self, suspect):
         # check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip') is True:
             self.logger.debug('%s Skipping SA Plugin (requested by previous plugin)' % suspect.id)
             suspect.set_tag('SAPlugin.skipreason', 'requested by previous plugin')
             return DUNNO
-        
+
         runtimeconfig = DBConfig(self.config, suspect)
-        
+
         spamsize = suspect.size
         maxsize = self.config.getint(self.section, 'maxsize')
         strip_oversize = self.config.getboolean(self.section, 'strip_oversize')
-        
+
         if spamsize > maxsize and not strip_oversize:
             self.logger.info('%s Size Skip, %s > %s' % (suspect.id, spamsize, maxsize))
             suspect.debug('Too big for spamchecks. %s > %s' % (spamsize, maxsize))
@@ -406,17 +406,17 @@ Tags:
             suspect.addheader("%sSA-SKIP" % prependheader, 'Too big for spamchecks. %s > %s' % (spamsize, maxsize))
             suspect.set_tag('SAPlugin.skipreason', 'size skip')
             return self.check_sql_blacklist(suspect)
-        
+
         if self.config.getboolean(self.section, 'scanoriginal'):
             content = suspect.get_original_source()
         else:
             content = suspect.get_source()
-        
+
         stripped = False
         if spamsize > maxsize:
             stripped = True
             content = self._strip_attachments(content, maxsize)
-        
+
         # prepend temporary headers set by other plugins
         tempheader = suspect.get_tag('SAPlugin.tempheader')
         if tempheader is not None:
@@ -425,7 +425,7 @@ Tags:
             tempheader = tempheader.strip()
             if tempheader != '':
                 content = tempheader + '\r\n' + content
-        
+
         forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
         if forwardoriginal:
             ret = self.safilter_report(content, suspect.to_address)
@@ -437,7 +437,7 @@ Tags:
                 return self._problemcode()
             isspam, spamscore, report = ret
             suspect.tags['SAPlugin.report'] = report
-        
+
         else:
             filtered = self.safilter(content, suspect.to_address)
             if filtered is None:
@@ -448,17 +448,17 @@ Tags:
                 return self._problemcode()
             else:
                 content = filtered
-            
+
             newmsgrep = email.message_from_string(content)
             suspect.set_source(content)
             if stripped:
                 self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
-        
+
         action = DUNNO
         message = None
-        
+
         if isspam:
             self.logger.debug('%s Message is spam' % suspect.id)
             suspect.debug('Message is spam')
@@ -473,7 +473,7 @@ Tags:
         else:
             self.logger.debug('%s Message is not spam' % suspect.id)
             suspect.debug('Message is not spam')
-        
+
         suspect.tags['spam']['SpamAssassin'] = isspam
         suspect.tags['highspam']['SpamAssassin'] = False
         if spamscore is not None:
@@ -485,16 +485,14 @@ Tags:
                 if configaction is not None:
                     action = configaction
         return action, message
-    
-    
+
+
     def __init_socket(self):
-        host = self.config.get(self.section, 'host')
         unixsocket = False
 
         try:
-            port = int(self.config.get(self.section, 'port'))
+            int(self.config.get(self.section, 'port'))
         except ValueError:
-            port = None
             unixsocket = True
 
         if unixsocket:
@@ -508,19 +506,17 @@ Tags:
             except socket.error:
                 raise Exception('Could not reach spamd using unix socket %s' % sock)
         else:
-            proto = socket.AF_INET
-            if ':' in host:
-                proto = socket.AF_INET6
-            s = socket.socket(proto, socket.SOCK_STREAM)
-            s.settimeout(self.config.getint(self.section, 'timeout'))
+            host = self.config.get(self.section, 'host')
+            port = int(self.config.get(self.section, 'port'))
+            timeout = self.config.getint(self.section, 'timeout')
             try:
-                s.connect((host, port))
+                s = socket.create_connection((host, port), timeout)
             except socket.error:
                 raise Exception('Could not reach spamd using network (%s, %s)' % (host, port))
 
         return s
-    
-    
+
+
     def safilter(self, messagecontent, user):
         """pass content to sa, return sa-processed mail"""
         retries = self.config.getint(self.section, 'retries')
@@ -572,8 +568,8 @@ Tags:
 
             time.sleep(1)
         return None
-    
-    
+
+
     def safilter_symbols(self, messagecontent, user):
         """Pass content to sa, return spamflag, score, rules"""
         ret = self._safilter_content(messagecontent, user, 'SYMBOLS')
@@ -584,12 +580,12 @@ Tags:
 
         rules = content.split(',')
         return status, score, rules
-    
-    
+
+
     def safilter_report(self, messagecontent, user):
         return self._safilter_content(messagecontent, user, 'REPORT')
-    
-    
+
+
     def _safilter_content(self, messagecontent, user, command):
         """pass content to sa, return body"""
         assert command in ['SYMBOLS', 'REPORT', ]
@@ -649,23 +645,21 @@ Tags:
 
             time.sleep(1)
         return None
-    
-    
+
+
     def debug_proto(self, messagecontent, command='SYMBOLS'):
         """proto debug.. only used for development"""
         command = command.upper()
         assert command in ['CHECK', 'SYMBOLS', 'REPORT',
                            'REPORT_IFSPAM', 'SKIP', 'PING', 'PROCESS', 'TELL']
 
-        serverHost = "127.0.0.1"
-        serverPort = 783
+        host = "127.0.0.1"
+        port = 783
         timeout = 20
 
         spamsize = len(messagecontent)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        s.settimeout(timeout)
-        s.connect((serverHost, serverPort))
+        s = socket.create_connection((host, port), timeout)
         s.sendall('%s SPAMC/1.2' % command)
         s.sendall("\r\n")
         s.sendall("Content-length: %s" % spamsize)
@@ -687,3 +681,4 @@ if __name__ == '__main__':
     print("--------------")
     plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
+

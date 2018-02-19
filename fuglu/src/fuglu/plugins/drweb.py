@@ -201,16 +201,11 @@ Tags:
     def __init_socket__(self):
         host = self.config.get(self.section, 'host')
         port = self.config.getint(self.section, 'port')
-        proto = socket.AF_INET
-        if ':' in host:
-            proto = socket.AF_INET6
-        s = socket.socket(proto, socket.SOCK_STREAM)
-        s.settimeout(self.config.getint(self.section, 'timeout'))
+        timeout = self.config.getint(self.section, 'timeout')
         try:
-            s.connect((host,port))
+            s = socket.create_connection((host, port), timeout)
         except socket.error:
-            raise Exception('Could not reach drweb using network (%s, %s)' % (
-                self.config.get(self.section, 'host'), self.config.getint(self.section, 'port')))
+            raise Exception('Could not reach drweb using network (%s, %s)' % (host, port))
 
         return s
 
@@ -344,3 +339,4 @@ if __name__ == '__main__':
         print("%s / %s files infected" % (infected, counter))
     else:
         plugin.lint_eicar()
+
