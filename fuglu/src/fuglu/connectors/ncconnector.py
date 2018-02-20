@@ -18,6 +18,7 @@ import tempfile
 from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.connectors.smtpconnector import buildmsgsource
+from fuglu.encodings import force_bString, force_uString
 import os
 import socket
 
@@ -74,13 +75,7 @@ class NCSession(object):
         self.tempfile = None
 
     def send(self, message):
-        try:
-            self.socket.sendall(message.encode("utf-8","strict") if isinstance(message, str) else message)
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
+        self.socket.sendall(force_bString(message))
 
     def endsession(self, message):
         try:
@@ -95,13 +90,7 @@ class NCSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        try:
-            self.socket.send("fuglu scanner ready - please pipe your message\r\n".encode("utf-8","strict"))
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
+        self.socket.send(force_bString("fuglu scanner ready - please pipe your message\r\n"))
         try:
             (handle, tempfilename) = tempfile.mkstemp(
                 prefix='fuglu', dir=self.config.get('main', 'tempdir'))

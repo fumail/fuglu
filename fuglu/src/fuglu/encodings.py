@@ -1,6 +1,12 @@
 import sys
-import chardet
 import logging
+
+try:
+    import chardet
+    chardetAvailable = True
+except ImportError:
+    chardetAvailable = False
+
 
 def try_encoding(u_inputstring,encoding="utf-8"):
     """Try to encode a unicode string
@@ -39,11 +45,15 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
         u_outputstring = b_inputstring.decode(encodingGuess,"strict")
     except UnicodeDecodeError:
         logger.warning("found non %s encoding, try to detect encoding" % encodingGuess)
-        encoding = chardet.detect(b_inputstring)['encoding']
-        logger.warning("encoding estimated as %s" % encoding)
-        try:
-            u_outputstring = b_inputstring.decode(encoding,"strict")
-        except Exception as e:
+        if chardetAvailable:
+            encoding = chardet.detect(b_inputstring)['encoding']
+            logger.warning("encoding estimated as %s" % encoding)
+            try:
+                u_outputstring = b_inputstring.decode(encoding,"strict")
+            except Exception as e:
+                raise e
+        else:
+            logger.warning("module chardet not available -> skip autodetect")
             raise e
     except Exception as e:
         logger.error("decoding failed!")
