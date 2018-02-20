@@ -21,6 +21,7 @@ import datetime
 import traceback
 import string
 import os
+from fuglu.encodings import force_bString
 
 
 class ControlServer(object):
@@ -118,20 +119,14 @@ class ControlSession(object):
 
     def handlesession(self):
         line = self.socket.recv(4096).lower().strip()
-        if line == '':
+        if line == b'':
             self.socket.close()
             return
 
         self.logger.debug('Control Socket command: %s' % line)
         parts = line.split()
         answer = self.handle_command(parts[0], parts[1:])
-        try:
-            self.socket.sendall(answer.encode("utf-8","strict") if isinstance(answer, str) else answer)
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
+        self.socket.sendall(force_bString(answer))
         self.socket.close()
 
     def handle_command(self, command, args):

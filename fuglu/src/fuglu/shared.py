@@ -16,10 +16,12 @@
 #
 import logging
 import os
+import sys
 import time
 import socket
 import uuid
 import threading
+from fuglu.encodings import force_uString, force_bString
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -338,11 +340,9 @@ class Suspect(object):
         visible to later plugins (eg. for spamassassin rules), otherwise, leave as False which is faster.
         """
         if immediate:
-            # is ignore the right thing to do here?
-            value.encode('UTF-8', 'ignore')
             hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
-            src = hdrline + self.get_source()
+            src = force_bString(hdrline) + force_bString(self.get_source())
             self.set_source(src)
         else:
             self.addheaders[key] = value
@@ -421,12 +421,32 @@ class Suspect(object):
             return self._msgrep
 
         if self.source is not None:
-            msgrep = email.message_from_string(self.source)
+            if sys.version_info > (3,):
+                # Python 3 and larger
+                # the basic "str" type is unicode
+                if isinstance(self.source,str):
+                    msgrep = email.message_from_string(self.source)
+                else:
+                    msgrep = email.message_from_bytes(self.source)
+            else:
+                # Python 2.x
+                msgrep = email.message_from_string(self.source)
+
             self._msgrep = msgrep
             return msgrep
         else:
-            with open(self.tempfile, 'r') as fh:
-                msgrep = email.message_from_file(fh)
+            if sys.version_info > (3,):
+                # Python 3 and larger
+                try:
+                    with open(self.tempfile, 'r') as fh:
+                        msgrep = email.message_from_file(fh)
+                except UnicodeEncodeError:
+                    with open(self.tempfile, 'rb') as fh:
+                        msgrep = email.message_from_binary_file(fh)
+            else:
+                # Python 2.x
+                with open(self.tempfile, 'r') as fh:
+                    msgrep = email.message_from_file(fh)
             self._msgrep = msgrep
             return msgrep
 
@@ -438,7 +458,14 @@ class Suspect(object):
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
         """
-        self.set_source(msgrep.as_string())
+        if sys.version_info > (3,):
+            # Python 3 and larger
+            # stick to bytes...
+            self.set_source(msgrep.as_bytes())
+        else:
+            # Python 2.x
+            self.set_source(msgrep.as_string())
+
         # order is important, set_source sets source to None
         self._msgrep = msgrep
 
@@ -490,7 +517,7 @@ class Suspect(object):
     def get_headers(self):
         """returns the message headers as string"""
         headers = re.split(
-            '(?:\n\n)|(?:\r\n\r\n)', self.get_source(maxbytes=1048576), 1)[0]
+            b'(?:\n\n)|(?:\r\n\r\n)', self.get_source(maxbytes=1048576), 1)[0]
         return headers
 
     def get_client_info(self, config=None):
