@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.encodings import force_bString, force_uString
 import socket
 import os
 import struct
@@ -195,7 +196,7 @@ Tags:
             kill_proc = lambda p: p.kill()
             timer = threading.Timer(timeout, kill_proc, [process])
             timer.start()
-            stdout = process.communicate(content)[0]
+            stdout = process.communicate(force_bString(content))[0]
             process.stdin.close()
             exitcode = process.wait()
             timer.cancel()
@@ -214,7 +215,7 @@ Tags:
             line = line.strip()
             if line.endswith('FOUND'):
                 filename, virusname, found = line.rsplit(None, 2)
-                filename = filename.rstrip(':')
+                filename = force_uString(filename.rstrip(b':'))
                 dr[filename] = virusname
 
         if dr == {}:
@@ -234,9 +235,9 @@ Tags:
         """
         pipelining = self.config.getboolean(self.section, 'pipelining')
         s = self.__init_socket__(oneshot=not pipelining)
-        s.sendall('zINSTREAM\0')
+        s.sendall(b'zINSTREAM\0')
         default_chunk_size = 2048
-        remainingbytes = buff
+        remainingbytes = force_bString(buff)
 
         while len(remainingbytes) > 0:
             chunklength = min(default_chunk_size, len(remainingbytes))
@@ -250,17 +251,17 @@ Tags:
 
         result = self._read_until_delimiter(s).strip()
 
-        if result.startswith('INSTREAM size limit exceeded'):
+        if result.startswith(b'INSTREAM size limit exceeded'):
             raise Exception(
                 "Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
-        if result.startswith('UNKNOWN'):
+        if result.startswith(b'UNKNOWN'):
             raise Exception("Clamd doesn't understand INSTREAM command. very old version?")
 
         if pipelining:
             try:
-                ans_id, filename, virusinfo = result.split(':', 2)
-                filename = filename.strip()
-                virusinfo = virusinfo.strip()
+                ans_id, filename, virusinfo = result.split(b':', 2)
+                filename = force_uString(filename.strip())  # use unicode for filename
+                virusinfo = force_uString(virusinfo.strip())  # lets use unicode for the info
             except:
                 raise Exception("Protocol error, could not parse result: %s" % result)
 
@@ -275,14 +276,14 @@ Tags:
 
             if threadLocal.expectedID >= MAX_SCANS_PER_SOCKET:
                 try:
-                    s.sendall('zEND\0')
+                    s.sendall(b'zEND\0')
                     s.close()
                 finally:
                     self.__invalidate_socket()
         else:
-            filename, virusinfo = result.split(':', 1)
-            filename = filename.strip()
-            virusinfo = virusinfo.strip()
+            filename, virusinfo = result.split(b':', 1)
+            filename = force_uString(filename.strip())  # use unicode for filename
+            virusinfo = force_uString(virusinfo.strip())  # use unicode for virus info
             if virusinfo[-5:] == 'ERROR':
                 raise Exception(virusinfo)
             elif virusinfo != 'OK':
@@ -296,15 +297,15 @@ Tags:
     
     
     def _read_until_delimiter(self, sock):
-        data = ''
+        data = b''
         while True:
             chunk = sock.recv(4096)
             if len(chunk) == 0:
                 continue
             data += chunk
-            if chunk.endswith('\0'):
+            if chunk.endswith(b'\0'):
                 break
-            if '\0' in chunk:
+            if b'\0' in chunk:
                 raise Exception("Protocol error: got unexpected additional data after delimiter")
         return data[:-1]  # remove \0 at the end
     
@@ -390,11 +391,11 @@ Tags:
         except Exception as e:
             print("Could not contact clamd: %s" % (str(e)))
             return False
-        s.sendall('PING')
+        s.sendall(force_bString('PING'))
         result = s.recv(20000)
-        print("Got Pong: %s" % result)
-        if result.strip() != 'PONG':
-            print("Invalid PONG: %s" % result)
+        print("Got Pong: %s" % force_uString(result))
+        if result.strip() != b'PONG':
+            print("Invalid PONG: %s" % force_uString(result))
         return True
     
     
