@@ -54,7 +54,7 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
                 raise e
         else:
             logger.warning("module chardet not available -> skip autodetect")
-            raise e
+            raise UnicodeDecodeError
     except Exception as e:
         logger.error("decoding failed!")
         logger.exception(e)
