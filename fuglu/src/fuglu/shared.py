@@ -21,7 +21,7 @@ import time
 import socket
 import uuid
 import threading
-from fuglu.encodings import force_uString, force_bString
+from fuglu.localStringEncoding import force_uString, force_bString
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -129,7 +129,7 @@ def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
     if valuesfunction is not None:
         values = valuesfunction(values)
 
-    template = Template(templatecontent)
+    template = Template(force_uString(templatecontent))
 
     message = template.safe_substitute(values)
     return message
@@ -437,12 +437,12 @@ class Suspect(object):
         else:
             if sys.version_info > (3,):
                 # Python 3 and larger
-                try:
-                    with open(self.tempfile, 'r') as fh:
-                        msgrep = email.message_from_file(fh)
-                except UnicodeEncodeError:
-                    with open(self.tempfile, 'rb') as fh:
-                        msgrep = email.message_from_binary_file(fh)
+                # file should be binary...
+
+                # IMPORTANT: It is possible to use email.message_from_bytes BUT this will automatically replace
+                #            '\r\n' in the message (_payload) by '\n' and the endtoend_test.py will fail!
+                tmpSource = self.get_original_source()
+                msgrep = email.message_from_bytes(tmpSource)
             else:
                 # Python 2.x
                 with open(self.tempfile, 'r') as fh:
@@ -502,7 +502,7 @@ class Suspect(object):
         if maxbytes is not None:
             readbytes = maxbytes
         try:
-            with open(self.tempfile) as fh:
+            with open(self.tempfile,'rb') as fh:
                 source = fh.read(readbytes)
         except Exception as e:
             logging.getLogger('fuglu.suspect').error(
@@ -807,6 +807,8 @@ class SuspectFilter(object):
         statinfo = os.stat(self.filename)
         ctime = statinfo.st_ctime
         self.lastreload = ctime
+
+        # config file is text
         with open(self.filename, 'r') as fp:
             lines = fp.readlines()
         newpatterns = []
@@ -1081,6 +1083,8 @@ class SuspectFilter(object):
         if not os.path.isfile(self.filename):
             print("SuspectFilter file not found: %s" % self.filename)
             return False
+
+        # config file is text
         with open(self.filename, 'r') as fp:
             lines = fp.readlines()
         lineno = 0
