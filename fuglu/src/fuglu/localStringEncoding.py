@@ -132,6 +132,19 @@ def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
         return b_outString
 
 def forceBytesFromChar(chars_iteratable):
+    """Python 2 like bytes from char for Python 3
+
+    Implemented to have the same char-byte conversion in Python 3 ad in Python 2
+    for special applications. In general it is recommended to use the real
+    str.encode() function for Python3
+
+    Args:
+        chars_iteratable (str or bytes): char-string to be byte-encoded
+
+    Returns:
+        bytes: a byte-string
+
+    """
     if isinstance(chars_iteratable,bytes):
         return chars_iteratable
     elif isinstance(chars_iteratable,str):
@@ -140,6 +153,19 @@ def forceBytesFromChar(chars_iteratable):
         raise AttributeError
 
 def forceCharFromBytes(bytes_iteratable):
+    """Python 2 like chars from bytes for Python 3
+
+    Implemented to have the same byte-char conversion in Python 3 as in Python 2
+    for special applications. In general it is recommended to use the real
+    bytes.decode() function for Python3
+
+    Args:
+        bytes_iteratable (): byte-string
+
+    Returns:
+        str: chr - string
+
+    """
     if isinstance(bytes_iteratable,str):
         return bytes_iteratable
     elif isinstance(bytes_iteratable,bytes):
