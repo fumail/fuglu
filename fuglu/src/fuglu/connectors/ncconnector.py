@@ -18,7 +18,7 @@ import tempfile
 from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.connectors.smtpconnector import buildmsgsource
-from fuglu.encodings import force_bString, force_uString
+from fuglu.localStringEncoding import force_bString, force_uString
 import os
 import socket
 

@@ -26,7 +26,7 @@ from fuglu.shared import Suspect
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 import tempfile
 import os
-from fuglu.encodings import force_bString, force_uString
+from fuglu.localStringEncoding import force_bString, force_uString
 
 MILTER_LEN_BYTES = 4  # from sendmail's include/libmilter/mfdef.h
 

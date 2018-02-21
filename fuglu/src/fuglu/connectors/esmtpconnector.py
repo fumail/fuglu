@@ -21,7 +21,7 @@ import os
 import sys
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.shared import Suspect, apply_template
-from fuglu.encodings import force_bString, force_uString
+from fuglu.localStringEncoding import force_bString, force_uString
 
 from email.header import Header
 import re

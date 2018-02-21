@@ -24,7 +24,7 @@ import sys
 from fuglu.shared import Suspect, apply_template
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from email.header import Header
-from fuglu.encodings import force_bString, force_uString
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 def buildmsgsource(suspect):
@@ -218,13 +218,7 @@ class SMTPSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        try:
-            self.socket.send(force_bString("220 fuglu scanner ready \r\n"))
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            self.logger.error("%s:%s %s" % (frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
+        self.socket.send(force_bString("220 fuglu scanner ready \r\n"))
 
         while True:
             rawdata = b''
