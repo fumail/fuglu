@@ -130,3 +130,19 @@ def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
         return try_encoding(try_decoding(b_outString,encodingGuess=encoding),encoding=encoding)
     else:
         return b_outString
+
+def forceBytesFromChar(chars_iteratable):
+    if isinstance(chars_iteratable,bytes):
+        return chars_iteratable
+    elif isinstance(chars_iteratable,str):
+        return bytes([ord(x) for x in chars_iteratable])
+    else:
+        raise AttributeError
+
+def forceCharFromBytes(bytes_iteratable):
+    if isinstance(bytes_iteratable,str):
+        return bytes_iteratable
+    elif isinstance(bytes_iteratable,bytes):
+        return "".join([chr(x) for x in bytes_iteratable])
+    else:
+        raise AttributeError
