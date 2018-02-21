@@ -28,7 +28,7 @@ __author__ = 'Eric DeFriez'
 import binascii
 import logging
 import struct
-from fuglu.encodings import force_bString, force_uString
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 MILTER_VERSION = 2  # Milter version we claim to speak (from pmilter)
