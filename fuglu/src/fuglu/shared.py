@@ -461,7 +461,10 @@ class Suspect(object):
         if sys.version_info > (3,):
             # Python 3 and larger
             # stick to bytes...
-            self.set_source(msgrep.as_bytes())
+            try:
+                self.set_source(msgrep.as_bytes())
+            except AttributeError:
+                self.set_source(force_bString(msgrep.as_string()))
         else:
             # Python 2.x
             self.set_source(msgrep.as_string())
