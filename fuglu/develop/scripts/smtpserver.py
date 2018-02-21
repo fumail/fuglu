@@ -4,6 +4,7 @@ import os
 import socket
 import string
 import tempfile
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 class SMTPServer:
@@ -61,13 +62,7 @@ class SMTPSession:
 
     def _send(self, content):
         print("> %s" % content.strip())
-        try:
-            self.socket.send(content.encode("utf-8","strict") if isinstance(content,str) else content)
-        except Exception as e:
-            from inspect import currentframe, getframeinfo
-            frameinfo = getframeinfo(currentframe())
-            print("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
-            raise e
+        self.socket.send(force_bString(content))
 
     def endsession(self, code, message):
         self._send("%s %s\r\n" % (code, message))
@@ -80,18 +75,11 @@ class SMTPSession:
                 rawdata += lump
                 if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
-                    try:
-                        data = rawdata.decode("utf-8","strict")
-                    except Exception as e:
-                        from inspect import currentframe, getframeinfo
-                        frameinfo = getframeinfo(currentframe())
-                        print("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
-                        raise e
-                    cmd = data[0:4]
+                    cmd = rawdata[0:4]
                     cmd = cmd.upper()
                     keep = 1
                     rv = None
-                    if cmd == "QUIT":
+                    if cmd == b"QUIT":
                         self._send("%s %s\r\n" % (220, "BYE"))
                         self.closeconn()
                         return
@@ -120,19 +108,13 @@ class SMTPSession:
                     rawdata += lump
                     if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
-                        try:
-                            data = rawdata.decode("utf-8","strict")
-                        except Exception as e:
-                            from inspect import currentframe, getframeinfo
-                            frameinfo = getframeinfo(currentframe())
-                            print("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
-                            raise e
                         print("< %s" % data)
                         if self.state != SMTPSession.ST_DATA:
+                            data = force_uString(rawdata)
                             rsp, keep = self.doCommand(data)
                         else:
                             try:
-                                rsp = self.doData(data)
+                                rsp = self.doData(rawdata)
                             except IOError:
                                 self.endsession(
                                     421, "Could not write to temp file")
@@ -213,7 +195,7 @@ class SMTPSession:
         if len(self.dataAccum) > 4:
             self.dataAccum = self.dataAccum[-5:]
 
-        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
+        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == b'\r\n.\r\n':
             if len(data) > 5:
                 self.tempfile.write(data[0:-6])
             self.tempfile.close()

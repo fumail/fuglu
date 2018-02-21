@@ -1,6 +1,8 @@
 #!/bin/bash
 # run unit and integration tests in various docker environments
 srcdir=$(cd "$(dirname "$0")/../../"; pwd)
+
+# centos-7 as default
 folder=${1:-"centos-7"}
 
 

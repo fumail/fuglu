@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
-from fuglu.encodings import force_bString, force_uString
+from fuglu.localStringEncoding import force_bString, force_uString
 import socket
 import os
 import struct
@@ -171,7 +171,7 @@ Tags:
                 self.__invalidate_socket()
 
         self.logger.error("%s Clamdscan failed after %s retries" %
-                          suspect.id, self.config.getint(self.section, 'retries'))
+                          (suspect.id, self.config.getint(self.section, 'retries')))
         
         if self.config.getboolean(self.section, 'clamscanfallback'):
             try:

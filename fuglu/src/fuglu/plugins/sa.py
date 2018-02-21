@@ -1,5 +1,4 @@
-# -*- coding: UTF-8 -*-
-#   Copyright 2009-2018 Oli Schacher
+# -*- coding: UTF-8 -*- #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +15,7 @@
 #
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
 from fuglu.extensions.sql import DBConfig, get_session, SQL_EXTENSION_ENABLED
+from fuglu.localStringEncoding import force_bString, force_uString
 from string import Template
 import time
 import socket
@@ -449,7 +449,18 @@ Tags:
             else:
                 content = filtered
 
-            newmsgrep = email.message_from_string(content)
+            if sys.version_info > (3,):
+                # Python 3 and larger
+                # the basic "str" type is unicode
+                if isinstance(content,str):
+                    newmsgrep = email.message_from_string(content)
+                else:
+                    newmsgrep = email.message_from_bytes(content)
+            else:
+                # Python 2.x
+                newmsgrep = email.message_from_string(content)
+
+
             suspect.set_source(content)
             if stripped:
                 self.logger.warning('%s forwarding truncated message')
@@ -526,19 +537,20 @@ Tags:
             try:
                 self.logger.debug('Contacting spamd (Try %s of %s)' % (i + 1, retries))
                 s = self.__init_socket()
-                s.sendall('PROCESS SPAMC/1.2')
-                s.sendall("\r\n")
-                s.sendall("Content-length: %s" % spamsize)
-                s.sendall("\r\n")
+                s.sendall(force_bString('PROCESS SPAMC/1.2'))
+                s.sendall(force_bString("\r\n"))
+                s.sendall(force_bString("Content-length: %s" % spamsize))
+                s.sendall(force_bString("\r\n"))
                 if peruserconfig:
-                    s.sendall("User: %s" % user)
-                    s.sendall("\r\n")
-                s.sendall("\r\n")
-                s.sendall(messagecontent)
+                    s.sendall(force_bString("User: %s" % user))
+                    s.sendall(force_bString("\r\n"))
+                s.sendall(force_bString("\r\n"))
+                s.sendall(force_bString(messagecontent))
                 self.logger.debug('Sent %s bytes to spamd' % spamsize)
                 s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
                 line1_info = socketfile.readline()
+                line1_info = force_uString(line1_info)  # convert to unicode string
                 self.logger.debug(line1_info)
                 line2_contentlength = socketfile.readline()
                 line3_empty = socketfile.readline()
@@ -578,6 +590,7 @@ Tags:
 
         status, score, content = ret
 
+        content = force_uString(content)
         rules = content.split(',')
         return status, score, rules
 
@@ -596,23 +609,23 @@ Tags:
             try:
                 self.logger.debug('Contacting spamd  (Try %s of %s)' % (i + 1, retries))
                 s = self.__init_socket()
-                s.sendall('%s SPAMC/1.2' % command)
-                s.sendall("\r\n")
-                s.sendall("Content-length: %s" % spamsize)
-                s.sendall("\r\n")
+                s.sendall(force_bString('%s SPAMC/1.2' % command))
+                s.sendall(force_bString("\r\n"))
+                s.sendall(force_bString("Content-length: %s" % spamsize))
+                s.sendall(force_bString("\r\n"))
                 if peruserconfig:
-                    s.sendall("User: %s" % user)
-                    s.sendall("\r\n")
-                s.sendall("\r\n")
-                s.sendall(messagecontent)
+                    s.sendall(force_bString("User: %s" % user))
+                    s.sendall(force_bString("\r\n"))
+                s.sendall(force_bString("\r\n"))
+                s.sendall(force_bString(messagecontent))
                 self.logger.debug('Sent %s bytes to spamd' % spamsize)
                 s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
-                line1_info = socketfile.readline()
+                line1_info = force_uString(socketfile.readline())
                 self.logger.debug(line1_info)
-                line2_spaminfo = socketfile.readline()
+                line2_spaminfo = force_uString(socketfile.readline())
 
-                line3 = socketfile.readline()
+                line3 = force_uString(socketfile.readline())
                 content = socketfile.read()
                 content = content.strip()
 

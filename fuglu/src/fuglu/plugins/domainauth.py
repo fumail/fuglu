@@ -69,7 +69,8 @@ try:
         raise Exception("ipaddress/ipaddr not available")
     import spf
     PYSPF_AVAILABLE = True
-except Exception:
+except Exception as e:
+    print(e)
     pass
 
 

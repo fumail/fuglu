@@ -207,7 +207,13 @@ if __name__ == '__main__':
 
     # create tempfile...
     tmpfile = '/tmp/fuglu_dummy_message_in.eml'
-    open(tmpfile, 'w').write(mailmessage.as_string())
+
+    if sys.version > (3,):
+        # Python 3
+        open(tmpfile, 'wb').write(mailmessage.as_bytes())
+    else:
+        open(tmpfile, 'w').write(mailmessage.as_string())
+
     logging.info("Input file created as %s" % tmpfile)
     suspect = Suspect(opts.sender, opts.recipients[0], tmpfile)
     suspect.recipients = opts.recipients

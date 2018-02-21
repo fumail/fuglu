@@ -1,4 +1,5 @@
 from fuglu.shared import AppenderPlugin, actioncode_to_string
+from fuglu.localStringEncoding import force_bString, force_uString
 import platform
 from socket import socket
 
@@ -91,7 +92,7 @@ class MessageStatus(AppenderPlugin):
         else:
             buffer = "%s%s.fuglu.message.clean:1|c\n" % (buffer, self.nodename)
 
-        self.sock.sendto(buffer.encode('utf-8',"ignore"), (host,port))
+        self.sock.sendto(force_bString(buffer), (host,port))
 
     def __str__(self):
         return 'Statsd Sender: Global Message Status'
@@ -125,7 +126,7 @@ class MessageStatusPerRecipient(AppenderPlugin):
 
 
     def process(self, suspect, decision):
-        recipient = suspect.to_domain
+        recipient = force_uString(suspect.to_domain) # work with unicode string
         if self.config.get(self.section, 'level') == 'email':
             recipient = suspect.to_address
         recipient = recipient.replace('.', '-')
@@ -152,7 +153,7 @@ class MessageStatusPerRecipient(AppenderPlugin):
             buffer = "%s%s.fuglu.recipient.%s.clean:1|c\n" % (
                 buffer, self.nodename, recipient)
 
-        self.sock.sendto(buffer.encode('utf-8'), (host, port))
+        self.sock.sendto(force_bString(buffer), (host, port))
         #self.logger.info("buffer: %s"%buffer)
 
 
