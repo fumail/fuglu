@@ -340,6 +340,12 @@ class Suspect(object):
                 return True
         return False
     
+    def is_ham(self):
+        """Returns True if message is neither considered to be spam, virus or blocked"""
+        if self.is_spam() or self.is_virus() or self.is_blocked() or self.is_highspam():
+            return False
+        return True
+    
     def update_subject(self, subject_cb, **cb_params):
         """
         update/alter the message subject
