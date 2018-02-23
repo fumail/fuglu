@@ -170,7 +170,7 @@ Tags:
                 self.__invalidate_socket()
 
         self.logger.error("%s Clamdscan failed after %s retries" %
-                          suspect.id, self.config.getint(self.section, 'retries'))
+                          (suspect.id, self.config.getint(self.section, 'retries')))
         
         if self.config.getboolean(self.section, 'clamscanfallback'):
             try:
