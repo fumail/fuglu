@@ -1,0 +1,38 @@
+image: localhost:5000/centos-7-fuglu-testenv
+
+stages:
+  - build
+  - test
+
+unittests:
+  stage: test
+  script:
+    - cd fuglu
+    - nosetests --rednose tests/unit
+  only:
+    - master
+
+integrationtests:
+  stage: test
+  script:
+    - sh /usr/local/bin/start-services.sh
+    - cat clamd.log
+    - sh /usr/local/bin/start-services.sh
+    - cd fuglu
+    - nosetests --rednose tests/integration
+  only:
+    - master
+
+
+# define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
+
+buildfuglu:
+  stage: build
+  script:
+    - cd fuglu 
+    - python setup.py build_py -d /tmp/build install --force
+    - rename '.dist' '' /etc/fuglu/*.dist
+    - mkdir -p /var/log/fuglu
+    - chown nobody /var/log/fuglu
+  only:
+    - master
