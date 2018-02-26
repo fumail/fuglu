@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -841,7 +842,7 @@ class SuspectFilter(object):
 
         self.patterns = newpatterns
 
-    def strip_text(self, content, remove_tags=None, use_bfs=True):
+    def strip_text(self, content, remove_tags=None, replace_nbsp=True, use_bfs=True):
         """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
 
         if remove_tags is None:
@@ -863,20 +864,33 @@ class SuspectFilter(object):
                 [x.extract() for x in soup.findAll(r)]
 
             if BS_VERSION >= 4:
-                text = soup.get_text()
-                return text
+                stripped = soup.get_text()
+                if replace_nbsp:
+                    stripped = stripped.replace(u'\xa0', u' ')
+                return stripped
             else:
                 stripped = ''.join(
                     # Can retain unicode check since BS < 4 is Py2 only
-                    [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
+                    [e for e in soup.recursiveChildGenerator() \
+                         if isinstance(e, unicode) \
+                         and not isinstance(e, BeautifulSoup.Declaration) \
+                         and not isinstance(e, BeautifulSoup.ProcessingInstruction) \
+                         and not isinstance(e, BeautifulSoup.Comment)
+                     ])
+                if replace_nbsp:
+                    stripped = stripped.replace(u'\xa0', u' ')
                 return stripped
 
         # no BeautifulSoup available, let's try a modified version of pyzor's
         # html stripper
         stripper = HTMLStripper(strip_tags=remove_tags)
+        
+        # always replace nbsp as HTMLStripper would just remove them
+        content = content.replace("&nbsp;", " ").replace("&#xa0;", " ").replace("&#160;", " ")
         try:
             stripper.feed(content)
-            return stripper.get_stripped_data()
+            stripped = stripper.get_stripped_data()
+            return stripped
         except Exception:  # ignore parsing/encoding errors
             pass
         # use regex replace
