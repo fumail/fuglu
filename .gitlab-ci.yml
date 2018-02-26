@@ -3,6 +3,8 @@ image: localhost:5000/centos-7-fuglu-testenv
 stages:
   - build
   - test
+  - build_py3
+  - test_py3
 
 unittests:
   stage: test
@@ -14,7 +16,7 @@ unittests:
     - python3
 
 unittests_py3:
-  stage: test
+  stage: test_py3
   script:
     - cd fuglu
     - nosetests-3.4 --rednose tests/unit
@@ -34,7 +36,7 @@ integrationtests:
     - python3
 
 integrationtests_py3:
-  stage: test
+  stage: test_py3
   script:
     - sh /usr/local/bin/start-services.sh
     - cat clamd.log
@@ -60,7 +62,7 @@ buildfuglu:
     - python3
 
 buildfuglu_py3:
-  stage: build
+  stage: build_py3
   script:
     - cd fuglu 
     - python3 setup.py build_py -d /tmp/build install --force
