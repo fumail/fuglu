@@ -11,17 +11,38 @@ unittests:
     - nosetests --rednose tests/unit
   only:
     - master
+    - python3
+
+unittests_py3:
+  stage: test
+  script:
+    - cd fuglu
+    - nosetests-3.4 --rednose tests/unit
+  only:
+    - python3
 
 integrationtests:
   stage: test
   script:
     - sh /usr/local/bin/start-services.sh
     - cat clamd.log
-    - sh /usr/local/bin/start-services.sh
+    - cat spamd.log
     - cd fuglu
     - nosetests --rednose tests/integration
   only:
     - master
+    - python3
+
+integrationtests_py3:
+  stage: test
+  script:
+    - sh /usr/local/bin/start-services.sh
+    - cat clamd.log
+    - cat spamd.log
+    - cd fuglu
+    - nosetests-3.4 --rednose tests/integration
+  only:
+    - python3
 
 
 # define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
@@ -36,3 +57,15 @@ buildfuglu:
     - chown nobody /var/log/fuglu
   only:
     - master
+    - python3
+
+buildfuglu_py3:
+  stage: build
+  script:
+    - cd fuglu 
+    - python3 setup.py build_py -d /tmp/build install --force
+    - rename '.dist' '' /etc/fuglu/*.dist
+    - mkdir -p /var/log/fuglu
+    - chown nobody /var/log/fuglu
+  only:
+    - python3

@@ -34,19 +34,38 @@ wait_for_file () {
 
 
 
+createlog=1
+if [ "$1" = "nolog" ];  then
+   echo "no log file will be created and no wait operation performed"
+   let createlog=0
+fi
+
 if [ -z "$(ps -ef | grep -i 'clamd' | tail -n +2)" ]; then 
    echo "clamd not running"
-   /usr/sbin/clamd -c /etc/clamd.conf --foreground=yes > clamd.log 2>&1 &
 
-   # wait for something to apper in the log file
-   # args: filename, number of tries, time to wait between tries
-   wait_for_file clamd.log 12 5
+   if [ $createlog -eq 1 ]; then
+      /usr/sbin/clamd -c /etc/clamd.conf --foreground=yes > clamd.log 2>&1 &
+      # wait for something to apper in the log file
+      # args: filename, number of tries, time to wait between tries
+      wait_for_file clamd.log 12 5
+   else
+      /usr/sbin/clamd -c /etc/clamd.conf --foreground=yes > /dev/null 2>&1 &
+   fi
+else
+   echo "clamd is already running..."
 fi
+
 if [ -z "$(ps -ef | grep -i 'spamd' | tail -n +2)" ]; then 
    echo "spamd not running"
-   spamd  > spamd.log 2>&1 &
-   # wait for something to apper in the log file
-   # args: filename, number of tries, time to wait between tries
-   wait_for_file clamd.log 12 5
-   sleep 5
+
+   if [ $createlog -eq 1 ]; then
+      spamd  > spamd.log 2>&1 &
+      # wait for something to apper in the log file
+      # args: filename, number of tries, time to wait between tries
+      wait_for_file clamd.log 12 5
+   else
+      spamd  > /dev/null 2>&1 &
+   fi
+else
+   echo "spamd is already running..."
 fi
