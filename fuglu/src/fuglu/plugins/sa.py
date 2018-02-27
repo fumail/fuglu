@@ -417,6 +417,9 @@ Tags:
             stripped = True
             content = self._strip_attachments(content, maxsize)
 
+        # stick to bytes
+        content = force_bString(content)
+
         # prepend temporary headers set by other plugins
         tempheader = suspect.get_tag('SAPlugin.tempheader')
         if tempheader is not None:
@@ -424,7 +427,7 @@ Tags:
                 tempheader = "\r\n".join(tempheader)
             tempheader = tempheader.strip()
             if tempheader != '':
-                content = tempheader + '\r\n' + content
+                content = force_bString(tempheader + '\r\n') + content
 
         forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
         if forwardoriginal:

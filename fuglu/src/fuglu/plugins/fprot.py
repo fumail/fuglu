@@ -83,7 +83,7 @@ Tags:
             },
         }
 
-        self.pattern = re.compile('^(\d)+ <(.+)> (.+)$')
+        self.pattern = re.compile(b'^(\d)+ <(.+)> (.+)$')
 
     def _problemcode(self):
         retcode = string_to_actioncode(
@@ -143,15 +143,15 @@ Tags:
 
     def _parse_result(self, result):
         dr = {}
-        for line in result.strip().split('\n'):
+        for line in result.strip().split(b'\n'):
             m = self.pattern.match(line)
             if m == None:
                 self._logger().error(
                     'Could not parse line from f-prot: %s' % line)
                 raise Exception('f-prot: Unparseable answer: %s' % result)
-            status = m.group(1)
-            text = m.group(2)
-            details = m.group(3)
+            status = force_uString(m.group(1))
+            text = force_uString(m.group(2))
+            details = force_uString(m.group(3))
 
             status = int(status)
             self._logger().debug("f-prot scan status: %s" % status)
@@ -184,9 +184,9 @@ Tags:
     def scan_file(self, filename):
         filename = os.path.abspath(filename)
         s = self.__init_socket__()
-        s.sendall('SCAN %s FILE %s' %
-                  (self.config.get(self.section, 'scanoptions'), filename))
-        s.sendall('\n')
+        s.sendall(force_bString('SCAN %s FILE %s' %
+                  (self.config.get(self.section, 'scanoptions'), filename)))
+        s.sendall(b'\n')
 
         result = s.recv(20000)
         if len(result) < 1:

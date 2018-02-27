@@ -1,7 +1,7 @@
 from fuglu.shared import AppenderPlugin, actioncode_to_string
 from fuglu.localStringEncoding import force_bString, force_uString
 import platform
-from socket import socket
+import socket
 
 
 class PluginTime(AppenderPlugin):
@@ -38,7 +38,7 @@ class PluginTime(AppenderPlugin):
         buffer = ""
         if self.sock is None:
             addr_f = socket.getaddrinfo(host, 0)[0][0]
-            self.sock = socket(addr_f, socket.SOCK_DGRAM)
+            self.sock = socket.socket(addr_f, socket.SOCK_DGRAM)
 
         for section, time in timings:
             buffer = "%s%s.fuglu.plugin.%s:%s|ms\n" % (
@@ -80,7 +80,7 @@ class MessageStatus(AppenderPlugin):
 
         if self.sock is None:
             addr_f = socket.getaddrinfo(host, 0)[0][0]
-            self.sock = socket(addr_f, socket.SOCK_DGRAM)
+            self.sock = socket.socket(addr_f, socket.SOCK_DGRAM)
 
         if suspect.is_virus():
             buffer = "%s%s.fuglu.message.virus:1|c\n" % (buffer, self.nodename)
@@ -138,7 +138,7 @@ class MessageStatusPerRecipient(AppenderPlugin):
         buffer = ""
         if self.sock is None:
             addr_f = socket.getaddrinfo(host, 0)[0][0]
-            self.sock = socket(addr_f, socket.SOCK_DGRAM)
+            self.sock = socket.socket(addr_f, socket.SOCK_DGRAM)
 
         if suspect.is_virus():
             buffer = "%s%s.fuglu.recipient.%s.virus:1|c\n" % (
