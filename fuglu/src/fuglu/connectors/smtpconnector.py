@@ -210,7 +210,7 @@ class SMTPSession(object):
     def closeconn(self):
         try:
             self.socket.shutdown(socket.SHUT_RDWR)
-        except OSError:
+        except (OSError, socket.error):
             pass
         finally:
             self.socket.close()

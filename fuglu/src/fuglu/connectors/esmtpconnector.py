@@ -189,7 +189,7 @@ class ESMTPPassthroughSession(object):
         """clocke socket to incoming postfix"""
         try:
             self.socket.shutdown(socket.SHUT_RDWR)
-        except OSError:
+        except (OSError, socket.error):
             pass
         finally:
             self.socket.close()
