@@ -167,7 +167,7 @@ class ESMTPPassthroughSession(object):
             lump = self.socket.recv(1024)
             if len(lump):
                 rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.enocde("utf-8","strict"):
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
                     cmd = data[0:4]
                     cmd = cmd.upper()
@@ -187,9 +187,12 @@ class ESMTPPassthroughSession(object):
 
     def closeconn(self):
         """clocke socket to incoming postfix"""
-        if sys.version_info > (3,):
+        try:
             self.socket.shutdown(socket.SHUT_RDWR)
-        self.socket.close()
+        except OSError:
+            pass
+        finally:
+            self.socket.close()
         
     def _close_tempfile(self):
         if self.tempfile and not self.tempfile.closed:
