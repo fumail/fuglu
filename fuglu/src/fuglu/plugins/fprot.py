@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
+from fuglu.localStringEncoding import force_bString, force_uString
 import socket
 import time
 import re
@@ -101,7 +102,10 @@ Tags:
                                 (suspect.size, self.config.getint(self.section, 'maxsize')))
             return DUNNO
 
-        content = suspect.get_message_rep().as_string()
+        try:
+           content = suspect.get_message_rep().as_bytes()
+        except AttributeError:
+           content = force_bString(suspect.get_message_rep().as_string())
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
@@ -203,17 +207,18 @@ Tags:
         """
 
         s = self.__init_socket__()
+        buffer = force_bString(buffer)
         buflen = len(buffer)
-        s.sendall('SCAN %s STREAM fu_stream SIZE %s' %
-                  (self.config.get(self.section, 'scanoptions'), buflen))
-        s.sendall('\n')
+        s.sendall(force_bString('SCAN %s STREAM fu_stream SIZE %s' %
+                  (self.config.get(self.section, 'scanoptions'), buflen)))
+        s.sendall(b'\n')
         self._logger().debug(
             'Sending buffer (length=%s) to fpscand...' % buflen)
         s.sendall(buffer)
         self._logger().debug(
             'Sent %s bytes to fpscand, waiting for scan result' % buflen)
 
-        result = s.recv(20000)
+        result = force_uString(s.recv(20000))
         if len(result) < 1:
             self._logger().error('Got no reply from fpscand')
         s.close()
@@ -264,7 +269,7 @@ AAEAAQA3AAAAbQAAAAAA
 
 ------=_MIME_BOUNDARY_000_12140--"""
 
-        result = self.scan_stream(stream)
+        result = self.scan_stream(force_bString(stream))
         if result == None:
             print("EICAR Test virus not found!")
             return False

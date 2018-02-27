@@ -213,7 +213,7 @@ Tags:
         
         for line in stdout.splitlines():
             line = line.strip()
-            if line.endswith('FOUND'):
+            if line.endswith(b'FOUND'):
                 filename, virusname, found = line.rsplit(None, 2)
                 filename = force_uString(filename.rstrip(b':'))
                 dr[filename] = virusname
@@ -404,9 +404,9 @@ Tags:
             s = self.__init_socket__(oneshot=True)
         except Exception:
             return False
-        s.sendall('VERSION')
+        s.sendall(b'VERSION')
         result = s.recv(20000)
-        print("Got Version: %s" % result)
+        print("Got Version: %s" % force_uString(result))
         return True
     
     

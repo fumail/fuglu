@@ -16,6 +16,7 @@
 #
 
 from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.localStringEncoding import force_bString, force_uString
 import socket
 import os
 
@@ -32,12 +33,12 @@ import re
 
 # Regular Expressions defining some messages from the server.
 
-acceptsyntax = re.compile("^ACC\s+(.*?)\s*$")
-optionsyntax = re.compile("^(\w+):\s*(.*?)\s*$")
-virussyntax = re.compile("^VIRUS\s+(\S+)\s+(.*)")
-typesyntax = re.compile("^TYPE\s+(\w+)")
-donesyntax = re.compile("^DONE\s+(\w+)\s+(\w+)\s+(.*?)\s*$")
-eventsyntax = re.compile("^([A-Z]+)\s+(\w+)")
+acceptsyntax = re.compile(b"^ACC\s+(.*?)\s*$")
+optionsyntax = re.compile(b"^(\w+):\s*(.*?)\s*$")
+virussyntax = re.compile(b"^VIRUS\s+(\S+)\s+(.*)")
+typesyntax = re.compile(b"^TYPE\s+(\w+)")
+donesyntax = re.compile(b"^DONE\s+(\w+)\s+(\w+)\s+(.*?)\s*$")
+eventsyntax = re.compile(b"^([A-Z]+)\s+(\w+)")
 
 
 # Receives a line of text from the socket
@@ -46,14 +47,14 @@ eventsyntax = re.compile("^([A-Z]+)\s+(\w+)")
 # NUL chars indicate a broken socket
 
 def receiveline(s):
-    line = ''
+    line = b''
     done = 0
     while not done:
         c = s.recv(1)
-        if c == '':
-            return ''
-        done = (c == '\n')
-        if not done and c != '\r':
+        if c == b'':
+            return b''
+        done = (c == b'\n')
+        if not done and c != b'\r':
             line = line + c
 
     return line
@@ -94,10 +95,11 @@ def readoptions(s):
     for l in resp:
         parts = optionsyntax.findall(l)
         for p in parts:
-            if p[0] not in opts:
-                opts[p[0]] = []
+            p0 = force_uString(p[0])
+            if p0 not in opts:
+                opts[p0] = []
 
-            opts[p[0]].append(p[1])
+            opts[p0].append(force_uString(p[1]))
 
     return opts
 
@@ -108,10 +110,10 @@ def exchangeGreetings(s):
 
     line = receiveline(s)
 
-    if not line.startswith('OK SSSP/1.0'):
+    if not line.startswith(b'OK SSSP/1.0'):
         return 0
 
-    s.send('SSSP/1.0\n')
+    s.send(b'SSSP/1.0\n')
 
     if not accepted(s):
         print("Greeting Rejected!!")
@@ -123,7 +125,7 @@ def exchangeGreetings(s):
 # performs the final exchange of messages
 
 def sayGoodbye(s):
-    s.send('BYE\n')
+    s.send(b'BYE\n')
     receiveline(s)
 
 
@@ -250,8 +252,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             raise Exception("SSSP Greeting failed")
 
         # QUERY to discover the maxclassificationsize
-
-        s.send('SSSP/1.0 QUERY\n')
+        s.send(b'SSSP/1.0 QUERY\n')
 
         if not accepted(s):
             raise Exception("SSSP Query rejected")
@@ -260,33 +261,34 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 
         # Set the options for classification
         enableoptions = [
-            "TnefAttachmentHandling",
-            "ActiveMimeHandling",
-            "Mime",
-            "ZipDecompression",
-            "DynamicDecompression",
+            b"TnefAttachmentHandling",
+            b"ActiveMimeHandling",
+            b"Mime",
+            b"ZipDecompression",
+            b"DynamicDecompression",
         ]
 
         enablegroups = [
-            'GrpExecutable',
-            'GrpArchiveUnpack',
-            'GrpSelfExtract',
-            'GrpInternet',
-            'GrpSuper',
-            'GrpMisc',
+            b'GrpExecutable',
+            b'GrpArchiveUnpack',
+            b'GrpSelfExtract',
+            b'GrpInternet',
+            b'GrpSuper',
+            b'GrpMisc',
         ]
 
         sendbuf = "OPTIONS\nreport:all\n"
         for opt in enableoptions:
-            sendbuf += "savists: %s 1\n" % opt
+            sendbuf += "savists: %s 1\n" % force_uString(opt)
+
 
         for grp in enablegroups:
-            sendbuf += "savigrp: %s 1\n" % grp
+            sendbuf += "savigrp: %s 1\n" % force_uString(grp)
 
         # all sent, add aditional newline
         sendbuf += "\n"
 
-        s.send(sendbuf)
+        s.send(force_bString(sendbuf))
 
         if not accepted(s):
             raise Exception("SSSP Options not accepted")
@@ -296,17 +298,17 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
         for l in resp:
             if donesyntax.match(l):
                 parts = donesyntax.findall(l)
-                if parts[0][0] != 'OK':
+                if parts[0][0] != b'OK':
                     raise Exception("SSSP Options failed")
                 break
 
         # Send the SCAN request
 
-        s.send('SCANDATA ' + str(len(buf)) + '\n')
+        s.send(force_bString('SCANDATA ' + str(len(buf)) + '\n'))
         if not accepted(s):
             raise Exception("SSSP Scan rejected")
 
-        s.sendall(buf)
+        s.sendall(force_bString(buf))
 
         # and read the result
         events = receivemsg(s)
@@ -314,8 +316,8 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
         for l in events:
             if virussyntax.match(l):
                 parts = virussyntax.findall(l)
-                virus = parts[0][0]
-                filename = parts[0][1]
+                virus = force_uString(parts[0][0])
+                filename = force_uString(parts[0][1])
                 dr[filename] = virus
 
         try:
@@ -394,7 +396,7 @@ AAEAAQA3AAAAbQAAAAAA
 
 ------=_MIME_BOUNDARY_000_12140--"""
 
-        result = self.scan_stream(stream)
+        result = self.scan_stream(force_bString(stream))
         if result is None:
             print("EICAR Test virus not found!")
             return False

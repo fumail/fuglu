@@ -194,11 +194,11 @@ Tags:
             try:
                 self.logger.debug('Contacting spamd (Try %s of %s)' % (i + 1, retries))
                 s = self.__init_socket()
-                s.sendall('PING SPAMC/1.2')
-                s.sendall("\r\n")
+                s.sendall(b'PING SPAMC/1.2')
+                s.sendall(b"\r\n")
                 s.shutdown(socket.SHUT_WR)
                 socketfile = s.makefile("rb")
-                line = socketfile.readline()
+                line = force_uString(socketfile.readline())
                 line = line.strip()
                 answer = line.split()
                 if len(answer) != 3:
