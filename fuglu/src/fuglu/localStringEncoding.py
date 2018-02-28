@@ -18,6 +18,8 @@ def try_encoding(u_inputstring,encoding="utf-8"):
     Returns:
         byte-string
     """
+    if u_inputstring is None:
+        return None
 
     logger = logging.getLogger("fuglu.encoding.try_encoding")
     try:
@@ -39,7 +41,9 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
         unicode string
 
     """
-    u_outputstring = None
+    if b_inputstring is None:
+        return None
+    
     logger = logging.getLogger("fuglu.encoding.try_decoding")
     try:
         u_outputstring = b_inputstring.decode(encodingGuess,"strict")
@@ -72,6 +76,8 @@ def force_uString(inputstring):
         unicode string
 
     """
+    if inputstring is None:
+        return None
 
     if sys.version_info > (3,):
         # Python 3 and larger
@@ -95,14 +101,14 @@ def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
 
     Args:
         inputstring (unicode or byte-string): input string
-
-    Keyword Args:
         encoding (str): encoding type in case of encoding needed
         checkEncoding (bool): if input string is encoded, check type
 
     Returns: encoded byte string
 
     """
+    if inputstring is None:
+        return None
 
     if sys.version_info > (3,):
         # Python 3 and larger
