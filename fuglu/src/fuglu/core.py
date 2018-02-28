@@ -610,10 +610,10 @@ class MainController(object):
                 self.s = s
 
             def read(self, length):
-                return self.s.recv(length)
+                return force_uString(self.s.recv(length))
 
             def write(self, st):
-                return self.s.send(st)
+                return self.s.send(force_bString(st))
 
             def readline(self):
                 return self.read(256)
