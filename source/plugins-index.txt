@@ -8,7 +8,7 @@ Plugins
 Overview
 --------
 
-The fuglu core does nothing except receiving mails from postfix and sending them back. All functionality 
+The fuglu core does nothing except receiving mails from postfix and sending them back. All functionality
 is written in plugins which can be enabled or disabled at will. Fuglu provides plugins for the most common
 mail filtering requirements, but if some functionality is missing, it is easy to add new plugins without knowing
 all of fuglu's internals.
@@ -48,7 +48,7 @@ Appender Plugins
 ................
 
 Appender plugins are run after the scanner plugins when the message has already been re-injected into postfix
-(or rejected or deleted or...) so they don't increase your scanning time . They are mostly used for statistical tasks, updating counters in a database etc. 
+(or rejected or deleted or...) so they don't increase your scanning time . They are mostly used for statistical tasks, updating counters in a database etc.
 
 
 --------------------
@@ -64,7 +64,7 @@ For example, the Spamassassin Plugin's Name is ``SAplugin``, so it would search 
 Suspect Filters
 ...............
 
-SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a message header or suspect tag. 
+SuspectFilter are special rule files used by many fuglu plugins. Often they define actions a plugin should take based on a message header or suspect tag.
 
 The format is : ``<property> <regex> <optional argument>``
 
@@ -109,7 +109,7 @@ Example:
 	envelope_from ^sender@example\.com$
 
 	#match a tag from a previous plugin
-	@SAPlugin.report MISSING_HEADER 
+	@SAPlugin.report MISSING_HEADER
 
 	#wildcard
 	X-Spam-* .*     a X-Spam-<something> header exists
@@ -128,7 +128,7 @@ see :ref:`debug-suspect-filter` for info on how to debug suspect filter files on
 Template Variables
 ..................
 
-Some plugins allow you to create templates (errormessages in bounces, reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation. 
+Some plugins allow you to create templates (errormessages in bounces, reject reasons, ...). Here is a list of commonly used template variables that should be available in those templates. Plugins may not support all those variables and can add more variables not listed here. If unsure, check the plugin documentation.
 
  * ``${from_address}`` : Envelope Sender Address
  * ``${to_address}``   : Envelope Recipient Address
@@ -147,12 +147,13 @@ Plugins included in Fuglu
 
 .. include:: includedplugins-autogen.txt
 
+Note, in addition to the plugins included in the fuglu distribution there are additional contributed plugins available in the fuglu-extra-plugins repository: https://github.com/gryphius/fuglu-extra-plugins/
 
 ------------------------
 Writing your own plugins
 ------------------------
 
-Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from ``ScannerPlugin``, override ``__str__`` to provide a nice human readable name and override ``examine`` to do the actual work of your plugins. ``examine`` should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. ``return DEFER, 'please try again later'`` 
+Assuming you know python basics, writing plugins for fuglu is very easy. All you have to do is create a new class which extends from ``ScannerPlugin``, override ``__str__`` to provide a nice human readable name and override ``examine`` to do the actual work of your plugins. ``examine`` should return one of the action codes above (DUNNO, DEFER, DELETE, ....) and optionally a reason for the action. (e.g. ``return DEFER, 'please try again later'``
 In plugin you usually only have to import things from :ref:`fuglu.shared<api-shared>` , so it's probably a good idea to get familiar with  that module.
 
 
@@ -173,18 +174,18 @@ This is a quick example of how your plugin code skeleton would look like:
 		#    'maxsize':{
 		#        'default':'1337',
 		#        'description':'Maximum message size',
-		#    }                  
+		#    }
 		#}
-		
+
 	    def examine(self,suspect):
 		#config Example
 		#maxsize=self.config.getint(self.section, 'maxsize')
-		
+
 		#debug example
 		#self._logger().debug('hello world from DemoPlugin')
-		  
+
 		#PUT PLUGIN CODE HERE
-		
+
 		return DUNNO
 
 
@@ -202,7 +203,7 @@ in ``__init__`` you only call BasicPlugin's ``__init__``  for now. This sets ``s
         ScannerPlugin.__init__(self,config,section)
 
 
-then code your ``examine`` method. You will have to work with :ref:`api-Suspect`, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins. 
+then code your ``examine`` method. You will have to work with :ref:`api-Suspect`, which is a representation of the message being analyzed. The suspect has ``tags`` that are read and written by plugins.
 You can tag a message as virus, as spam, define your own tags, read tags from previous plugins... it's probably a good idea to look at the Suspect class in ``fuglu.shared`` to get a list of things you can do with the suspect.
 
 
@@ -227,7 +228,7 @@ Example:
 		        'default':'localhost',
 		        'description':'hostname',
 		    },
-		    
+
 		    'username':{
 		        'default':'root',
 		    },
@@ -240,7 +241,7 @@ Example:
 	       }
 
 
-This would tell fuglu that your plugin has three config options: host, username and password. 
+This would tell fuglu that your plugin has three config options: host, username and password.
 
 The 'dict of dicts' uses your config option name as key for the outer dict. The inner dict supports the following keys:
 
@@ -254,7 +255,7 @@ The 'dict of dicts' uses your config option name as key for the outer dict. The 
 Read the config
 ---------------
 
-Configs in fuglu are stored in ``/etc/fuglu/fuglu.conf`` (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own section named like the plugin class. 
+Configs in fuglu are stored in ``/etc/fuglu/fuglu.conf`` (or any .conf file in /etc/fuglu/conf.d ) in ini-style format. Your plugin gets its own section named like the plugin class.
 
 Example:
 
@@ -334,7 +335,7 @@ Make plugin '--lint'-able
 
 By default, ``lint()`` only validates the plugin's configuration settings from ``self.requiredvars``. You can override ``lint()`` to do more stuff.
 
- * use simple ``print`` in this method, no logging stuff. 
+ * use simple ``print`` in this method, no logging stuff.
  * if you override ``lint()`` you should run ``self.checkConfig()`` to test the configuration
  * ``lint()`` must return True or False
 
@@ -346,7 +347,7 @@ Example of a plugin that would check if an imap account is available:
     def lint(self):
         allok=(self.checkConfig() and self.lint_imap())
         return allok
-    
+
     def lint_imap(self):
         try:
             M=imaplib.IMAP4(self.config.get(self.section, 'host'))
@@ -378,13 +379,13 @@ SuspectFilters are a common way for all plugins to perform an action based on co
 	class MyPlugin(ScannerPlugin):
 	    def __init__(self,config,section=None):
 		ScannerPlugin.__init__(self,config,section)
-		
+
 		self.requiredvars={
 		    'myrulesfile':{
 		        'default':'/etc/fuglu/mypluginrules.regex',
 		        'description':'Filter file for my plugin',
 		    },
-		                   
+
 		   [...]
 		}
 		self.filter=None
@@ -408,7 +409,7 @@ Run the filter in examine: ``(match,arg)=self.filter.matches(suspect)``
 
 
 ::
-     
+
         (match,arg)=self.filter.matches(suspect)
         if match:
             if arg!=None:
@@ -453,7 +454,7 @@ run ``fuglu --console`` to enter an interactive python console after fuglu start
 Debug a plugin without running fuglu
 ------------------------------------
 
-``plugdummy.py`` is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn't require a running fuglu or postfix. it will create a dummy suspect, call the plugin's examine method and print the result (and debug output). 
+``plugdummy.py`` is a tool that makes plugin development and testing much easier by creating a minimal fuglu environment for the plugin to run. it doesn't require a running fuglu or postfix. it will create a dummy suspect, call the plugin's examine method and print the result (and debug output).
 
 the generated input messag is stored as: ``/tmp/fuglu_dummy_message_in.eml``
 
@@ -473,7 +474,7 @@ assuming your plugin file ('myplugin.py') is in ``/usr/local/fuglu/plugins`` you
 	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 	INFO:root:Running plugin: ExamplePlugin
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
-	INFO:root:Result: DUNNO 
+	INFO:root:Result: DUNNO
 	INFO:root:Suspect a7babc1e4cfe49c36710065966e6ed0a: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}
 
 Advanced usage:
@@ -495,12 +496,12 @@ the '-s' and '-f' options change the envelope sender/recipient. -r can be specif
 
 ::
 
-	./plugdummy.py -s me@example.org -r you@example.net  myplugin.ExamplePlugin                                                                                           
-	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml                                                                                                                                                   
-	INFO:root:Running plugin: ExamplePlugin                                                                                                                                                                           
-	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!                                                                                                                               
-	INFO:root:Result: DUNNO                                                                                                                                                                                           
-	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}  
+	./plugdummy.py -s me@example.org -r you@example.net  myplugin.ExamplePlugin
+	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
+	INFO:root:Running plugin: ExamplePlugin
+	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets you@example.net: hello world!
+	INFO:root:Result: DUNNO
+	INFO:root:Suspect 423e02e1461cd1c314ac9a409176c4f4: from=me@example.org to=you@example.net size=221 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}
 
 
 Adding headers to the input message
@@ -509,7 +510,7 @@ Adding headers to the input message
 
 	./plugdummy.py -h 'subject:yo! whassup' myplugin.ExamplePlugin
 	[...]
-	cat /tmp/fuglu_dummy_message_in.eml 
+	cat /tmp/fuglu_dummy_message_in.eml
 	Content-Type: text/plain; charset="us-ascii"
 	MIME-Version: 1.0
 	Content-Transfer-Encoding: 7bit
@@ -525,11 +526,11 @@ Adding tags:
 
 ::
 
-	./plugdummy.py -t 'mytag:myvalue' myplugin.ExamplePlugin 
+	./plugdummy.py -t 'mytag:myvalue' myplugin.ExamplePlugin
 	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 	INFO:root:Running plugin: ExamplePlugin
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
-	INFO:root:Result: DUNNO 
+	INFO:root:Result: DUNNO
 	INFO:root:Suspect 168268d6ff2c2748454183efcb554242: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'spam': {}, 'virus': {}, 'mytag': 'myvalue', 'highspam': {}}
 
 
@@ -548,7 +549,7 @@ Setting the message body:
 
 ::
 
-	#set body	
+	#set body
 	./plugdummy.py -b 'hi there, whassup!' myplugin.ExamplePlugin
 
 	#read body from file
@@ -565,14 +566,14 @@ Running a interactive console in the dummy enrivonment:
 	INFO:root:Input file created as /tmp/fuglu_dummy_message_in.eml
 	INFO:root:Running plugin: ExamplePlugin
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
-	INFO:root:Result: DUNNO 
+	INFO:root:Result: DUNNO
 	INFO:root:Suspect 3cf496cbe2a1097abc37ebda5a645cd2: from=sender@fuglu.local to=recipient@fuglu.local size=231 spam=no virus=no modified=no tags={'virus': {}, 'spam': {}, 'highspam': {}}
 	Fuglu Interactive Console started
 
 	pre-defined locals:
 	{'config': <ConfigParser.ConfigParser instance at 0x1ac9e60>, 'suspect': <fuglu.shared.Suspect object at 0x1ac8750>, 'result': 0, 'plugin': <myplugin.ExamplePlugin object at 0x1ac8290>}
 
-	>>> plugin.requiredvars  
+	>>> plugin.requiredvars
 	{'greeting': {'default': 'hello world!', 'description': 'greeting the plugin should log to the console'}}
 	>>> plugin.examine(suspect)
 	INFO:fuglu.plugin.ExamplePlugin:sender@fuglu.local greets recipient@fuglu.local: hello world!
@@ -582,7 +583,7 @@ Running a interactive console in the dummy enrivonment:
 	>>> plugin.examine(suspect)
 	INFO:fuglu.plugin.ExamplePlugin:me@example.org greets recipient@fuglu.local: Greetings, Earthling
 	0
-	>>> 
+	>>>
 
 Deploying Plugins
 .................
@@ -593,4 +594,3 @@ Deploying Plugins
  * If your plugin reads configuration entries, make sure those are present in fuglu.conf or in a custom conf-file in /etc/fuglu/conf.d
  * Run ``fuglu --lint`` to check if fuglu is happy with your new plugin
  * (Re)start fuglu
-
