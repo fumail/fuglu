@@ -487,7 +487,8 @@ The other common template variables are available as well.
         enabledarchivetypes = runtimeconfig.get(self.section, 'enabledarchivetypes')
         if enabledarchivetypes:
             enabled = [t.strip() for t in enabledarchivetypes.split(',')]
-            for archtype in self.supported_archive_extensions.keys():
+            archtypes = list(self.supported_archive_extensions.keys())
+            for archtype in archtypes:
                 if archtype not in enabled:
                     del self.supported_archive_extensions[archtype]
 

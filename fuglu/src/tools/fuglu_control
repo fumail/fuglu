@@ -21,7 +21,7 @@
 import sys
 import socket
 from optparse import OptionParser
-
+from fuglu.localStringEncoding import force_bString, force_uString
 
 def usage():
     return """
@@ -71,7 +71,7 @@ except Exception as e:
     print(str(e))
     sys.exit(1)
 
-s.sendall(cmd)
+s.sendall(force_bString(cmd))
 data = s.recv(32768)
 s.close()
-print(data)
+print(force_uString(data))

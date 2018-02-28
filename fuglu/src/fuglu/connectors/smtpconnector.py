@@ -16,14 +16,15 @@
 import smtplib
 import logging
 import socket
-import string
 import tempfile
 import os
 import re
+import sys
 
 from fuglu.shared import Suspect, apply_template
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from email.header import Header
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 def buildmsgsource(suspect):
@@ -31,18 +32,21 @@ def buildmsgsource(suspect):
 
     # we must prepend headers manually as we can't set a header order in email
     # objects
+
+    # -> the original message source is bytes
     origmsgtxt = suspect.get_source()
     newheaders = ""
 
     for key in suspect.addheaders:
         # is ignore the right thing to do here?
         val = suspect.addheaders[key]
-        val.encode('UTF-8', 'ignore')
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
         newheaders += "%s: %s\n" % (key, hdr.encode())
 
-    modifiedtext = newheaders + origmsgtxt
+    # the original message should be in bytes, make sure the header added
+    # is an encoded string as well
+    modifiedtext = force_bString(newheaders) + force_bString(origmsgtxt)
     return modifiedtext
 
 
@@ -75,7 +79,8 @@ class SMTPHandler(ProtocolHandler):
             helo = socket.gethostname()
         client.helo(helo)
 
-        client.sendmail(suspect.from_address, suspect.recipients, msgcontent)
+        # for sending, make sure the string to sent is byte string
+        client.sendmail(suspect.from_address, suspect.recipients, force_bString(msgcontent))
         # if we did not get an exception so far, we can grab the server answer using the patched client
         # servercode=client.lastservercode
         serveranswer = client.lastserveranswer
@@ -103,7 +108,7 @@ class SMTPHandler(ProtocolHandler):
         try:
             suspect = Suspect(fromaddr, sess.recipients, tempfilename)
         except ValueError as e:
-            if len(sess.recipients)>0:
+            if len(sess.recipients) > 0:
                 toaddr = sess.recipients[0]
             else:
                 toaddr = ''
@@ -173,25 +178,28 @@ class SMTPSession(object):
         self.tempfile = None
 
     def endsession(self, code, message):
-        self.socket.send("%s %s\r\n" % (code, message))
-        data = ''
+        self.socket.send(force_bString("%s %s\r\n" % (code, message)))
+
+        rawdata = b''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
+
             if len(lump):
-                data += lump
-                if (len(data) >= 2) and data[-2:] == '\r\n':
+
+                rawdata += lump
+                if (len(rawdata) >= 2) and rawdata[-2:] == force_bString('\r\n'):
                     completeLine = 1
-                    cmd = data[0:4]
-                    cmd = string.upper(cmd)
+                    cmd = rawdata[0:4]
+                    cmd = cmd.upper()
                     keep = 1
                     rv = None
-                    if cmd == "QUIT":
-                        self.socket.send("%s %s\r\n" % (220, "BYE"))
+                    if cmd == force_bString("QUIT"):
+                        self.socket.send(force_bString("%s %s\r\n" % (220, "BYE")))
                         self.closeconn()
                         return
-                    self.socket.send(
-                        "%s %s\r\n" % (421, "Cannot accept further commands"))
+
+                    self.socket.send( force_bString("%s %s\r\n" % (421, "Cannot accept further commands")))
                     self.closeconn()
                     return
             else:
@@ -200,7 +208,12 @@ class SMTPSession(object):
         return
 
     def closeconn(self):
-        self.socket.close()
+        try:
+            self.socket.shutdown(socket.SHUT_RDWR)
+        except (OSError, socket.error):
+            pass
+        finally:
+            self.socket.close()
 
     def _close_tempfile(self):
         if self.tempfile and not self.tempfile.closed:
@@ -208,22 +221,34 @@ class SMTPSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n")
+        self.socket.send(force_bString("220 fuglu scanner ready \r\n"))
+
         while True:
+            rawdata = b''
             data = ''
             completeLine = 0
             while not completeLine:
+
                 lump = self.socket.recv(1024)
+
                 if len(lump):
-                    data += lump
-                    if (len(data) >= 2) and data[-2:] == '\r\n':
+                    rawdata += lump
+
+                    if (len(rawdata) >= 2) and rawdata[-2:] == force_bString('\r\n'):
                         completeLine = 1
+
                         if self.state != SMTPSession.ST_DATA:
+
+                            # convert data to unicode if needed
+                            data = force_uString(rawdata)
                             rsp, keep = self.doCommand(data)
+
                         else:
                             try:
-                                rsp = self.doData(data)
+                                #directly use raw bytes-string data
+                                rsp = self.doData(rawdata)
                             except IOError:
+
                                 self.endsession(
                                     421, "Could not write to temp file")
                                 self._close_tempfile()
@@ -233,12 +258,12 @@ class SMTPSession(object):
                                 continue
                             else:
                                 # data finished.. keep connection open though
-                                self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send(rsp + "\r\n")
+                        self.socket.send(force_bString(rsp + "\r\n"))
+
                         if keep == 0:
-                            self.socket.close()
+                            self.closeconn()
                             return False
                 else:
                     # EOF
@@ -248,7 +273,7 @@ class SMTPSession(object):
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = string.upper(cmd)
+        cmd = cmd.upper()
         keep = 1
         rv = None
         if cmd == "HELO":
@@ -279,7 +304,7 @@ class SMTPSession(object):
             if self.state != SMTPSession.ST_RCPT:
                 return "503 Bad command sequence", 1
             self.state = SMTPSession.ST_DATA
-            self.dataAccum = ""
+            self.dataAccum = b""
             try:
                 (handle, tempfilename) = tempfile.mkstemp(
                     prefix='fuglu', dir=self.config.get('main', 'tempdir'))
@@ -299,6 +324,12 @@ class SMTPSession(object):
             return "250 OK", keep
 
     def doData(self, data):
+        """Store data in temporary file
+
+        Args:
+            data (str or bytes): data as byte-string
+
+        """
         data = self.unquoteData(data)
         # store the last few bytes in memory to keep track when the msg is
         # finished
@@ -307,7 +338,7 @@ class SMTPSession(object):
         if len(self.dataAccum) > 4:
             self.dataAccum = self.dataAccum[-5:]
 
-        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
+        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == force_bString('\r\n.\r\n'):
             # check if there is more data to write to the file
             if len(data) > 4:
                 self.tempfile.write(data[0:-5])
@@ -322,7 +353,7 @@ class SMTPSession(object):
 
     def unquoteData(self, data):
         """two leading dots at the beginning of a line must be unquoted to a single dot"""
-        return re.sub(r'(?m)^\.\.', '.', data)
+        return re.sub(b'(?m)^\.\.', b'.', force_bString(data))
 
     def stripAddress(self, address):
         """
@@ -334,7 +365,7 @@ class SMTPSession(object):
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = string.find(address, '>')
+        end = address.find('>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]

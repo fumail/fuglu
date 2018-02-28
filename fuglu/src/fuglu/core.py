@@ -602,7 +602,7 @@ class MainController(object):
         serversocket.bind((address, port))
         serversocket.listen(1)
         clientsocket, _ = serversocket.accept()  # client socket
-        self.logger.info("Interactive python connection from %s/%s" % (address[0], address[1]))
+        self.logger.info("Interactive python connection from %s/%2" % (address, address))
 
         class sw:  # socket wrapper
 
@@ -610,10 +610,10 @@ class MainController(object):
                 self.s = s
 
             def read(self, length):
-                return self.s.recv(length)
+                return force_uString(self.s.recv(length))
 
             def write(self, st):
-                return self.s.send(st)
+                return self.s.send(force_bString(st))
 
             def readline(self):
                 return self.read(256)

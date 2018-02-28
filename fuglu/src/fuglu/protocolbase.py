@@ -23,7 +23,8 @@ from multiprocessing.reduction import ForkingPickler
 try:
     from StringIO import StringIO
 except ImportError:
-    from io import StringIO
+    # Python 3
+    from io import BytesIO as StringIO
 
 class ProtocolHandler(object):
     protoname = 'UNDEFINED'

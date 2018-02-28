@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -194,7 +193,7 @@ class Suspect(object):
         self.from_address = from_address
 
         # backwards compatibility, recipients can be a single address
-        if isinstance(recipients, list):
+        if type(recipients) is list:
             self.recipients = recipients
         else:
             self.recipients = [recipients, ]
@@ -241,7 +240,7 @@ class Suspect(object):
         """Returns the local part of the first recipient"""
         try:
             return self.to_address.rsplit('@', 1)[0]
-        except Exception:
+        except:
             logging.getLogger('suspect').error('could not extract localpart from recipient address %s' % self.to_address)
             return None
 
@@ -250,7 +249,7 @@ class Suspect(object):
         """Returns the local part of the first recipient"""
         try:
             return self.to_address.rsplit('@', 1)[1]
-        except Exception:
+        except:
             logging.getLogger('suspect').error('could not extract domain from recipient address %s' % self.from_address)
             return None
 
@@ -263,7 +262,7 @@ class Suspect(object):
         else:
             try:
                return self.from_address.rsplit('@', 1)[0]
-            except Exception:
+            except:
                 logging.getLogger('suspect').error('could not extract localpart from sender address %s'%self.from_address)
                 return None
 
@@ -275,7 +274,7 @@ class Suspect(object):
         else:
             try:
                 return self.from_address.rsplit('@', 1)[1]
-            except Exception:
+            except:
                 logging.getLogger('suspect').error('could not extract domain from sender address %s' % self.from_address)
                 return None
 
@@ -333,41 +332,6 @@ class Suspect(object):
                 return True
         return False
 
-    def is_virus(self):
-        """Returns True if ANY of the antivirus engines tagged this suspect as infected"""
-        for key in list(self.tags['virus'].keys()):
-            val = self.tags['virus'][key]
-            if val:
-                return True
-        return False
-    
-    def is_ham(self):
-        """Returns True if message is neither considered to be spam, virus or blocked"""
-        if self.is_spam() or self.is_virus() or self.is_blocked() or self.is_highspam():
-            return False
-        return True
-    
-    def update_subject(self, subject_cb, **cb_params):
-        """
-        update/alter the message subject
-        Args:
-            subject_cb: callback function that alters the subject. must accept a string and return a string
-            cb_params: additional parameters to be passed to subject_cb
-        Return:
-            True if subject was altered, False otherwise
-        """
-        msgrep = self.get_message_rep()
-        oldsubj = msgrep.get("subject","")
-        newsubj = subject_cb(oldsubj, **cb_params)
-        if oldsubj != newsubj:
-            del msgrep["subject"]
-            msgrep["subject"] = newsubj
-            self.set_message_rep(msgrep)
-            if self.get_tag('origsubj') is None:
-                self.set_tag('origsubj', oldsubj)
-            return True
-        return False
-
     def add_header(self, key, value, immediate=False):
         """adds a header to the message. by default, headers will added when re-injecting the message back to postfix
         if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
@@ -375,7 +339,7 @@ class Suspect(object):
         """
         if immediate:
             # is ignore the right thing to do here?
-            value = value.encode('UTF-8', 'ignore')
+            value.encode('UTF-8', 'ignore')
             hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
             src = hdrline + self.get_source()
@@ -387,6 +351,14 @@ class Suspect(object):
         """old name for add_header"""
         return self.add_header(key, value, immediate)
 
+    def is_virus(self):
+        """Returns True if ANY of the antivirus engines tagged this suspect as infected"""
+        for key in list(self.tags['virus'].keys()):
+            val = self.tags['virus'][key]
+            if val:
+                return True
+        return False
+
     def get_current_decision_code(self):
         dectag = self.get_tag('decisions')
         if dectag is None:
@@ -394,7 +366,7 @@ class Suspect(object):
         try:
             pluginname, code = dectag[-1]
             return code
-        except Exception:
+        except:
             return DUNNO
 
     def _short_tag_rep(self):
@@ -408,7 +380,7 @@ class Suspect(object):
 
             try:
                 strrep = str(v)
-            except Exception:  # Unicodedecode errors and stuff like that
+            except:  # Unicodedecode errors and stuff like that
                 continue
 
             therep = v
@@ -842,7 +814,7 @@ class SuspectFilter(object):
 
         self.patterns = newpatterns
 
-    def strip_text(self, content, remove_tags=None, replace_nbsp=True, use_bfs=True):
+    def strip_text(self, content, remove_tags=None, use_bfs=True):
         """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
 
         if remove_tags is None:
@@ -864,34 +836,21 @@ class SuspectFilter(object):
                 [x.extract() for x in soup.findAll(r)]
 
             if BS_VERSION >= 4:
-                stripped = soup.get_text()
-                if replace_nbsp:
-                    stripped = stripped.replace(u'\xa0', u' ')
-                return stripped
+                text = soup.get_text()
+                return text
             else:
                 stripped = ''.join(
                     # Can retain unicode check since BS < 4 is Py2 only
-                    [e for e in soup.recursiveChildGenerator() \
-                         if isinstance(e, unicode) \
-                         and not isinstance(e, BeautifulSoup.Declaration) \
-                         and not isinstance(e, BeautifulSoup.ProcessingInstruction) \
-                         and not isinstance(e, BeautifulSoup.Comment)
-                     ])
-                if replace_nbsp:
-                    stripped = stripped.replace(u'\xa0', u' ')
+                    [e for e in soup.recursiveChildGenerator() if isinstance(e, unicode) and not isinstance(e, BeautifulSoup.Declaration)and not isinstance(e, BeautifulSoup.ProcessingInstruction) and not isinstance(e, BeautifulSoup.Comment)])
                 return stripped
 
         # no BeautifulSoup available, let's try a modified version of pyzor's
         # html stripper
         stripper = HTMLStripper(strip_tags=remove_tags)
-        
-        # always replace nbsp as HTMLStripper would just remove them
-        content = content.replace("&nbsp;", " ").replace("&#xa0;", " ").replace("&#160;", " ")
         try:
             stripper.feed(content)
-            stripped = stripper.get_stripped_data()
-            return stripped
-        except Exception:  # ignore parsing/encoding errors
+            return stripper.get_stripped_data()
+        except:  # ignore parsing/encoding errors
             pass
         # use regex replace
         return re.sub(self.stripre, '', content)

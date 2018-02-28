@@ -22,6 +22,7 @@ from email.header import Header
 import socket
 
 from fuglu.shared import apply_template
+from fuglu.localStringEncoding import force_uString
 
 
 class Bounce(object):
@@ -57,10 +58,11 @@ class Bounce(object):
     def send_template_file(self, recipient, templatefile, suspect, values):
         """Send a E-Mail Bounce Message
 
-        recipient     -- Message recipient (bla@bla.com)
-        templatefile  -- Template to use
-        suspect      -- suspect that caused the bounce
-        values       -- Values to apply to the template. ensure all values are of type <str>
+        Args:
+            recipient    (str):  Message recipient (bla@bla.com)
+            templatefile (str): Template to use
+            suspect      (fuglu.shared.Suspect) suspect that caused the bounce
+            values            :Values to apply to the template. ensure all values are of type <str>
 
         If the suspect has the 'nobounce' tag set, the message will not be sent. The same happens
         if the global configuration 'disablebounces' is set.
@@ -73,18 +75,20 @@ class Bounce(object):
 
         with open(templatefile) as fp:
             filecontent = fp.read()
-        self.send_template_string(recipient, filecontent, suspect, values)
+
+        self.send_template_string(recipient, force_uString(filecontent), suspect, values)
 
     def send_template_string(self, recipient, templatecontent, suspect, values):
         """Send a E-Mail Bounce Message
 
-        recipient     -- Message recipient (bla@bla.com)
-        templatecontent  -- Template to use
-        suspect      -- suspect that caused the bounce
-        values       -- Values to apply to the template
-
         If the suspect has the 'nobounce' tag set, the message will not be sent. The same happens
         if the global configuration 'disablebounces' is set.
+
+        Args:
+            recipient       (unicode or str) : Message recipient (bla@bla.com)
+            templatecontent (unicode or str) : Template to use
+            suspect         (fuglu.shared.Suspect) : suspect that caused the bounce
+            values       : Values to apply to the template
         """
         if suspect.get_tag('nobounce'):
             self.logger.info(

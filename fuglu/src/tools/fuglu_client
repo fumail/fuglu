@@ -67,7 +67,13 @@ class ConsoleConnector(ProtocolHandler):
 
         fd = os.fdopen(handle, 'w+b')
         content=load_message(self.options.input)
-        fd.write(content)
+        try:
+            fd.write(content.encode("utf-8","strict"))
+        except Exception as e:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            sys.stderr.write("{}:{} {}".format(frameinfo.filename, frameinfo.lineno,str(e)))
+            raise e
 
         fd.close()
         fromaddr = "unknown@example.org"

@@ -1,5 +1,4 @@
-#   Copyright 2009-2018 Oli Schacher
-#
+#   Copyright 2009-2018 Oli Schacher #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,11 +15,13 @@
 #
 import smtplib
 import logging
-import string
+import socket
 import tempfile
 import os
+import sys
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.shared import Suspect, apply_template
+from fuglu.localStringEncoding import force_bString, force_uString
 
 from email.header import Header
 import re
@@ -30,18 +31,23 @@ def buildmsgsource(suspect):
     """Build the message source with fuglu headers prepended"""
     # we must prepend headers manually as we can't set a header order in email
     # objects
+
+    # -> the original message source is bytes
     origmsgtxt = suspect.get_source()
     newheaders = ""
 
     for key in suspect.addheaders:
         # is ignore the right thing to do here?
         val = suspect.addheaders[key]
-        val.encode('UTF-8', 'ignore')
+
         #self.logger.debug('Adding header %s : %s'%(key,val))
         hdr = Header(val, header_name=key, continuation_ws=' ')
+
         newheaders += "%s: %s\n" % (key, hdr.encode())
 
-    modifiedtext = newheaders + origmsgtxt
+    # the original message should be in bytes, make sure the header added
+    # is an encoded string as well
+    modifiedtext = force_bString(newheaders) + force_bString(origmsgtxt)
     return modifiedtext
 
 
@@ -65,7 +71,7 @@ class ESMTPHandler(ProtocolHandler):
         else:
             msgcontent = buildmsgsource(suspect)
 
-        (code, answer) = self.sess.forwardconn.data(msgcontent)
+        (code, answer) = self.sess.forwardconn.data(force_bString(msgcontent))
         return code, answer
 
     def get_suspect(self):
@@ -153,25 +159,25 @@ class ESMTPPassthroughSession(object):
 
     def endsession(self, code, message):
         """End session with incoming postfix"""
-        self.socket.send("%s %s\r\n" % (code, message))
+        self.socket.send(force_bString("%s %s\r\n" % (code, message)))
+        rawdata = b''
         data = ''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
             if len(lump):
-                data += lump
-                if (len(data) >= 2) and data[-2:] == '\r\n':
+                rawdata += lump
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
                     cmd = data[0:4]
-                    cmd = string.upper(cmd)
+                    cmd = cmd.upper()
                     keep = 1
                     rv = None
-                    if cmd == "QUIT":
-                        self.socket.send("%s %s\r\n" % (220, "BYE"))
+                    if cmd == b"QUIT":
+                        self.socket.send(force_bString("%s %s\r\n" % (220, "BYE")))
                         self.closeconn()
                         return
-                    self.socket.send(
-                        "%s %s\r\n" % (421, "Cannot accept further commands"))
+                    self.socket.send(force_bString("%s %s\r\n" % (421, "Cannot accept further commands")))
                     self.closeconn()
                     return
             else:
@@ -181,7 +187,12 @@ class ESMTPPassthroughSession(object):
 
     def closeconn(self):
         """clocke socket to incoming postfix"""
-        self.socket.close()
+        try:
+            self.socket.shutdown(socket.SHUT_RDWR)
+        except (OSError, socket.error):
+            pass
+        finally:
+            self.socket.close()
         
     def _close_tempfile(self):
         if self.tempfile and not self.tempfile.closed:
@@ -189,21 +200,26 @@ class ESMTPPassthroughSession(object):
 
     def getincomingmail(self):
         """return true if mail got in, false on error Session will be kept open"""
-        self.socket.send("220 fuglu scanner ready \r\n")
+        self.socket.send(force_bString("220 fuglu scanner ready \r\n"))
+
         while True:
+            rawdata = b''
             data = ''
             completeLine = 0
             while not completeLine:
                 lump = self.socket.recv(1024)
                 if len(lump):
-                    data += lump
-                    if (len(data) >= 2) and data[-2:] == '\r\n':
+                    rawdata += lump
+                    if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
                         completeLine = 1
+
                         if self.state != ESMTPPassthroughSession.ST_DATA:
+                            # decode message (except data) from binary to unicode
+                            data = force_uString(rawdata)
                             rsp, keep = self.doCommand(data)
                         else:
                             try:
-                                rsp = self.doData(data)
+                                rsp = self.doData(rawdata)
                             except IOError:
                                 self.endsession(
                                     421, "Could not write to temp file")
@@ -217,9 +233,9 @@ class ESMTPPassthroughSession(object):
                                 self.logger.debug('incoming message finished')
                                 return True
 
-                        self.socket.send(rsp + "\r\n")
+                        self.socket.send(force_bString(rsp + "\r\n"))
                         if keep == 0:
-                            self.socket.close()
+                            self.closeconn()
                             return False
                 else:
                     # EOF
@@ -227,17 +243,28 @@ class ESMTPPassthroughSession(object):
         return False
 
     def forwardCommand(self, command):
-        """forward a esmtp command to outgoing postfix instance"""
+        """forward a esmtp command to outgoing postfix instance
+
+        Args:
+            command (): command in unicode
+
+        Returns:
+        """
+
         command = command.strip()
         if self.forwardconn is None:
             targethost = self.config.get('main', 'outgoinghost')
             if targethost == '${injecthost}':
                 targethost = self.socket.getpeername()[0]
             self.forwardconn = smtplib.SMTP(
-                targethost, self.config.getint('main', 'outgoingport'))
+                force_uString(targethost), self.config.getint('main', 'outgoingport'))
         self.logger.debug("""SEND: "%s" """ % command)
+
+        # docmd seems to have a normal string as input, so
+        # I guess unicode will work for python 3
         code, ans = self.forwardconn.docmd(command)
         ret = "%s %s" % (code, ans)
+        ret = force_uString(ret)
         if ret.find('\n'):
             temprv = []
             parts = ret.split('\n')
@@ -265,7 +292,7 @@ class ESMTPPassthroughSession(object):
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = string.upper(cmd)
+        cmd = cmd.upper()
         keep = 1
         rv = None
 
@@ -312,7 +339,7 @@ class ESMTPPassthroughSession(object):
             if self.state != ESMTPPassthroughSession.ST_RCPT:
                 return "503 Bad command sequence", 1
             self.state = ESMTPPassthroughSession.ST_DATA
-            self.dataAccum = ""
+            self.dataAccum = b""
             try:
                 (handle, tempfilename) = tempfile.mkstemp(
                     prefix='fuglu', dir=self.config.get('main', 'tempdir'))
@@ -358,6 +385,14 @@ class ESMTPPassthroughSession(object):
                 continue
 
     def doData(self, data):
+        """
+
+        Args:
+            data (str or bytes): byte string
+
+        Returns:
+
+        """
         data = self.unquoteData(data)
         # store the last few bytes in memory to keep track when the msg is
         # finished
@@ -366,7 +401,7 @@ class ESMTPPassthroughSession(object):
         if len(self.dataAccum) > 4:
             self.dataAccum = self.dataAccum[-5:]
 
-        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
+        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == b'\r\n.\r\n':
             # check if there is more data to write to the file
             if len(data) > 4:
                 self.tempfile.write(data[0:-5])
@@ -381,7 +416,7 @@ class ESMTPPassthroughSession(object):
 
     def unquoteData(self, data):
         """two leading dots at the beginning of a line must be unquoted to a single dot"""
-        return re.sub(r'(?m)^\.\.', '.', data)
+        return re.sub(b'(?m)^\.\.', b'.', data)
 
     def stripAddress(self, address):
         """
@@ -393,7 +428,7 @@ class ESMTPPassthroughSession(object):
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = string.find(address, '>')
+        end = address.find('>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]

@@ -36,8 +36,8 @@ class ProcManager(object):
         self.numprocs = numprocs
         self.workers = []
         self.queuesize = queuesize
-        self.tasks = multiprocessing.queues.Queue(queuesize)
-        self.child_to_server_messages = multiprocessing.queues.Queue()
+        self.tasks = multiprocessing.Queue(queuesize)
+        self.child_to_server_messages = multiprocessing.Queue()
 
         self.logger = logging.getLogger('%s.procpool' % __package__)
         self._stayalive = True

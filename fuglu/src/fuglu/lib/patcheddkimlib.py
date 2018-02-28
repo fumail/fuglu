@@ -21,6 +21,7 @@ import base64
 import hashlib
 import re
 import time
+from fuglu.localStringEncoding import force_bString, force_uString, forceBytesFromChar, forceCharFromBytes
 
 __all__ = [
     "Simple",
@@ -342,6 +343,8 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         raise KeyFormatError("Private key not found")
     try:
         pkdata = base64.b64decode(m.group(1))
+        pkdata = forceCharFromBytes(pkdata)
+
     except TypeError as e:
         raise KeyFormatError(str(e))
     if debuglog is not None:
@@ -373,8 +376,9 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     body = canonicalize[1].canonicalize_body(body)
 
     h = hashlib.sha256()
-    h.update(body)
+    h.update(force_bString(body))
     bodyhash = base64.b64encode(h.digest())
+    bodyhash = forceCharFromBytes(bodyhash)
 
     sigfields = [x for x in [
         ('v', "1"),
@@ -400,11 +404,13 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
                                                   x for x in sigfields))], file=debuglog)
     h = hashlib.sha256()
     for x in sign_headers:
-        h.update(x[0])
-        h.update(":")
-        h.update(x[1])
-    h.update(sig)
+        h.update(force_bString(x[0]))
+        h.update(b":")
+        h.update(force_bString(x[1]))
+    h.update(force_bString(sig))
     d = h.digest()
+    d = forceCharFromBytes(d)
+
     if debuglog is not None:
         print("sign digest:", " ".join("%02x" % ord(x)
                                        for x in d), file=debuglog)
@@ -421,9 +427,11 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     modlen = len(int2str(pk['modulus']))
     if len(dinfo) + 3 > modlen:
         raise ParameterError("Hash too large for modulus")
-    sig2 = int2str(pow(str2int("\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) +
-                               "\x00" + dinfo), pk['privateExponent'], pk['modulus']), modlen)
-    sig += base64.b64encode(''.join(sig2))
+    signature = "\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) +"\x00" + dinfo
+    sig2 = int2str(pow(str2int(signature), pk['privateExponent'], pk['modulus']), modlen)
+    sigEncoded = base64.b64encode(forceBytesFromChar(''.join(sig2)))
+    sigEncoded = forceCharFromBytes(sigEncoded)
+    sig += sigEncoded
 
     return sig + "\r\n"
 
@@ -582,7 +590,7 @@ def verify(message, debuglog=None):
         body = body[:int(sig['l'])]
 
     h = hasher()
-    h.update(body)
+    h.update(force_bString(body))
     bodyhash = h.digest()
     if debuglog is not None:
         print("bh:", base64.b64encode(bodyhash), file=debuglog)
@@ -605,7 +613,10 @@ def verify(message, debuglog=None):
             if debuglog is not None:
                 print("invalid format in _domainkey txt record", file=debuglog)
             return False
-    x = asn1_parse(ASN1_Object, base64.b64decode(pub['p']))
+    pkey = base64.b64decode(pub['p'])
+    pkey = forceCharFromBytes(pkey)
+
+    x = asn1_parse(ASN1_Object, pkey)
     # Not sure why the [1:] is necessary to skip a byte.
     pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
     pk = {
@@ -638,13 +649,16 @@ def verify(message, debuglog=None):
 
     h = hasher()
     for x in sign_headers:
-        h.update(x[0])
-        h.update(":")
-        h.update(x[1])
+        h.update(force_bString(x[0]))
+        h.update(force_bString(":"))
+        h.update(force_bString(x[1]))
     d = h.digest()
+    d = forceCharFromBytes(d)
+
     if debuglog is not None:
         print("verify digest:", " ".join(
             "%02x" % ord(x) for x in d), file=debuglog)
+
 
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -663,12 +677,18 @@ def verify(message, debuglog=None):
             print("Hash too large for modulus", file=debuglog)
         return False
     sig2 = "\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) + "\x00" + dinfo
+    sig2 = forceCharFromBytes(sig2)
     if debuglog is not None:
         print("sig2:", " ".join("%02x" % ord(x) for x in sig2), file=debuglog)
         print(sig['b'], file=debuglog)
         print(re.sub(r"\s+", "", sig['b']), file=debuglog)
-    v = int2str(pow(str2int(base64.b64decode(
-        re.sub(r"\s+", "", sig['b']))), pk['publicExponent'], pk['modulus']), modlen)
+
+
+    sigEncoded = base64.b64decode(forceBytesFromChar(re.sub(r"\s+", "", sig['b'])))
+    sigEncoded = forceCharFromBytes((sigEncoded))
+
+    v = int2str(pow(str2int(sigEncoded), pk['publicExponent'], pk['modulus']), modlen)
+
     if debuglog is not None:
         print("v:", " ".join("%02x" % ord(x) for x in v), file=debuglog)
     assert len(v) == len(sig2)

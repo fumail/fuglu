@@ -71,7 +71,7 @@ class ArchiveTestcase(unittest.TestCase):
 
         self.tempfiles.append(filename)
 
-        archivedmessage = open(filename, 'r').read()
+        archivedmessage = open(filename, 'rb').read()
 
         self.assertEqual(
             origmessage.strip(), archivedmessage.strip()), 'Archived message has been altered'

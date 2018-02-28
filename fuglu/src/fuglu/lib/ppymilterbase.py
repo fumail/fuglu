@@ -29,42 +29,43 @@ __author__ = 'Eric DeFriez'
 import binascii
 import logging
 import struct
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 MILTER_VERSION = 2  # Milter version we claim to speak (from pmilter)
 
 # Potential milter command codes and their corresponding PpyMilter callbacks.
 # From sendmail's include/libmilter/mfdef.h
-SMFIC_ABORT = 'A'  # "Abort"
-SMFIC_BODY = 'B'  # "Body chunk"
-SMFIC_CONNECT = 'C'  # "Connection information"
-SMFIC_MACRO = 'D'  # "Define macro"
-SMFIC_BODYEOB = 'E'  # "final body chunk (End)"
-SMFIC_HELO = 'H'  # "HELO/EHLO"
-SMFIC_HEADER = 'L'  # "Header"
-SMFIC_MAIL = 'M'  # "MAIL from"
-SMFIC_EOH = 'N'  # "EOH"
-SMFIC_OPTNEG = 'O'  # "Option negotation"
-SMFIC_RCPT = 'R'  # "RCPT to"
-SMFIC_QUIT = 'Q'  # "QUIT"
-SMFIC_DATA = 'T'  # "DATA"
-SMFIC_UNKNOWN = 'U'  # "Any unknown command"
+SMFIC_ABORT = b'A'  # "Abort"
+SMFIC_BODY = b'B'  # "Body chunk"
+SMFIC_CONNECT = b'C'  # "Connection information"
+SMFIC_MACRO = b'D'  # "Define macro"
+SMFIC_BODYEOB = b'E'  # "final body chunk (End)"
+SMFIC_HELO = b'H'  # "HELO/EHLO"
+SMFIC_HEADER = b'L'  # "Header"
+SMFIC_MAIL = b'M'  # "MAIL from"
+SMFIC_EOH = b'N'  # "EOH"
+SMFIC_OPTNEG = b'O'  # "Option negotation"
+SMFIC_RCPT = b'R'  # "RCPT to"
+SMFIC_QUIT = b'Q'  # "QUIT"
+SMFIC_DATA = b'T'  # "DATA"
+SMFIC_UNKNOWN = b'U'  # "Any unknown command"
 
 COMMANDS = {
-    SMFIC_ABORT: 'Abort',
-    SMFIC_BODY: 'Body',
-    SMFIC_CONNECT: 'Connect',
-    SMFIC_MACRO: 'Macro',
-    SMFIC_BODYEOB: 'EndBody',
-    SMFIC_HELO: 'Helo',
-    SMFIC_HEADER: 'Header',
-    SMFIC_MAIL: 'MailFrom',
-    SMFIC_EOH: 'EndHeaders',
-    SMFIC_OPTNEG: 'OptNeg',
-    SMFIC_RCPT: 'RcptTo',
-    SMFIC_QUIT: 'Quit',
-    SMFIC_DATA: 'Data',
-    SMFIC_UNKNOWN: 'Unknown',
+    SMFIC_ABORT: b'Abort',
+    SMFIC_BODY: b'Body',
+    SMFIC_CONNECT: b'Connect',
+    SMFIC_MACRO: b'Macro',
+    SMFIC_BODYEOB: b'EndBody',
+    SMFIC_HELO: b'Helo',
+    SMFIC_HEADER: b'Header',
+    SMFIC_MAIL: b'MailFrom',
+    SMFIC_EOH: b'EndHeaders',
+    SMFIC_OPTNEG: b'OptNeg',
+    SMFIC_RCPT: b'RcptTo',
+    SMFIC_QUIT: b'Quit',
+    SMFIC_DATA: b'Data',
+    SMFIC_UNKNOWN: b'Unknown',
 }
 
 # To register/mask callbacks during milter protocol negotiation with sendmail.
@@ -191,19 +192,19 @@ class PpyMilterDispatcher(object):
         cmd, data = data[0], data[1:]
         try:
             if cmd not in COMMANDS:
-                logging.warn('Unknown command code: "%s" ("%s")', cmd, data)
+                logging.warn('Unknown command code: "%s" ("%s")', force_uString(cmd), force_uString(data))
                 return RESPONSE['CONTINUE']
-            command = COMMANDS[cmd]
-            parser_callback_name = '_Parse%s' % command
-            handler_callback_name = 'On%s' % command
+            u_command = force_uString(COMMANDS[cmd])  # (unicode)
+            parser_callback_name = '_Parse%s' % u_command
+            handler_callback_name = 'On%s' % u_command
 
             if not hasattr(self, parser_callback_name):
-                logging.error('No parser implemented for "%s"', command)
+                logging.error('No parser implemented for "%s"', u_command)
                 return RESPONSE['CONTINUE']
 
             if not hasattr(self.__milter, handler_callback_name):
                 logging.warn('Unimplemented command in milter %s: "%s" ("%s")' % (
-                    self.__milter, command, data))
+                    self.__milter, u_command, data))
                 return RESPONSE['CONTINUE']
 
             parser = getattr(self, parser_callback_name)

@@ -212,7 +212,8 @@ Note: The first rule to match in a message is the only rule that will be applied
         if self.config.getboolean(self.section, 'storeoriginal'):
             shutil.copy(suspect.tempfile, requested_path)
         else:
-            with open(requested_path, 'w') as fp:
+            with open(requested_path, 'wb') as fp:
+                # write bytes
                 fp.write(suspect.get_source())
 
         chmod = self.config.get(self.section, 'chmod')

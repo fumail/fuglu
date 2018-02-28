@@ -27,6 +27,7 @@ import fuglu
 from fuglu.lib.patcheddkimlib import verify, sign
 from fuglu.core import MainController
 from fuglu.scansession import SessionHandler
+from fuglu.localStringEncoding import force_uString
 
 
 class AllpluginTestCase(unittest.TestCase):
@@ -290,7 +291,7 @@ class SMIMETestCase(unittest.TestCase):
             status == 0, "Testdata S/MIME verification failed: \n%s" % output)
         msgstring = open(inputfile, 'r').read()
         smtpclient.sendmail(
-            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', msgstring)
+            'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', force_uString(msgstring))
 
         smtpclient.quit()
 

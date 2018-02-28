@@ -24,7 +24,7 @@ did=$(docker create -w /fuglu-src -v $srcdir:/fuglu-src:ro -t -i $image /bin/bas
 echo "Starting docker instance ID: $did"
 docker start $did
 echo "Starting services (clamav, SA)..."
-docker exec -d $did sh /usr/local/bin/start-services.sh
+docker exec -d $did sh /usr/local/bin/start-services.sh nolog
 
 echo "Installing current fuglu source"
 docker exec -i $did python setup.py build_py -d /tmp/build install

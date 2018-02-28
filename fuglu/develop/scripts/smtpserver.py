@@ -4,6 +4,7 @@ import os
 import socket
 import string
 import tempfile
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 class SMTPServer:
@@ -61,23 +62,24 @@ class SMTPSession:
 
     def _send(self, content):
         print("> %s" % content.strip())
-        self.socket.send(content)
+        self.socket.send(force_bString(content))
 
     def endsession(self, code, message):
         self._send("%s %s\r\n" % (code, message))
+        rawdata = b''
         data = ''
         completeLine = 0
         while not completeLine:
             lump = self.socket.recv(1024)
             if len(lump):
-                data += lump
-                if (len(data) >= 2) and data[-2:] == '\r\n':
+                rawdata += lump
+                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                     completeLine = 1
-                    cmd = data[0:4]
-                    cmd = string.upper(cmd)
+                    cmd = rawdata[0:4]
+                    cmd = cmd.upper()
                     keep = 1
                     rv = None
-                    if cmd == "QUIT":
+                    if cmd == b"QUIT":
                         self._send("%s %s\r\n" % (220, "BYE"))
                         self.closeconn()
                         return
@@ -97,20 +99,22 @@ class SMTPSession:
         """return true if mail got in, false on error Session will be kept open"""
         self._send("220 dummy server ready \r\n")
         while 1:
+            rawdata = b''
             data = ''
             completeLine = 0
             while not completeLine:
                 lump = self.socket.recv(1024)
                 if len(lump):
-                    data += lump
-                    if (len(data) >= 2) and data[-2:] == '\r\n':
+                    rawdata += lump
+                    if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
                         completeLine = 1
                         print("< %s" % data)
                         if self.state != SMTPSession.ST_DATA:
+                            data = force_uString(rawdata)
                             rsp, keep = self.doCommand(data)
                         else:
                             try:
-                                rsp = self.doData(data)
+                                rsp = self.doData(rawdata)
                             except IOError:
                                 self.endsession(
                                     421, "Could not write to temp file")
@@ -135,7 +139,7 @@ class SMTPSession:
     def doCommand(self, data):
         """Process a single SMTP Command"""
         cmd = data[0:4]
-        cmd = string.upper(cmd)
+        cmd = cmd.upper()
         keep = 1
         rv = None
         if cmd == "HELO" or cmd == "EHLO":
@@ -191,7 +195,7 @@ class SMTPSession:
         if len(self.dataAccum) > 4:
             self.dataAccum = self.dataAccum[-5:]
 
-        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == '\r\n.\r\n':
+        if len(self.dataAccum) > 4 and self.dataAccum[-5:] == b'\r\n.\r\n':
             if len(data) > 5:
                 self.tempfile.write(data[0:-6])
             self.tempfile.close()
@@ -213,7 +217,7 @@ class SMTPSession:
             start = address.find(':') + 1
         if start < 1:
             raise ValueError("Could not parse address %s" % address)
-        end = string.find(address, '>')
+        end = address.find('>')
         if end < 0:
             end = len(address)
         retaddr = address[start:end]
