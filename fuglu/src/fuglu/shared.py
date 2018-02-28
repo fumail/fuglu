@@ -130,7 +130,7 @@ def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
     if valuesfunction is not None:
         values = valuesfunction(values)
 
-    template = Template(templatecontent)
+    template = Template(force_uString(templatecontent))
 
     message = template.safe_substitute(values)
     return message
