@@ -105,8 +105,7 @@ Note: The first rule to match in a message is the only rule that will be applied
 
     def check_deprecated(self):
         if self.config.has_option(self.section, 'makedomainsubdir'):
-            print(
-                "the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' ")
+            print("the config option 'makedomainsubdir' has been replaced with 'subdirtemplate' ")
             print("please update your config")
             print("makedomainsubdir=1 -> subdirtemplate=${to_domain}")
             print("makedomainsubdir=0 -> subdirtemplate=")
@@ -115,8 +114,8 @@ Note: The first rule to match in a message is the only rule that will be applied
 
     def lint_filter(self):
         filterfile = self.config.get(self.section, 'archiverules')
-        filter = SuspectFilter(filterfile)
-        return filter.lint()
+        sfilter = SuspectFilter(filterfile)
+        return sfilter.lint()
 
     def lint_dirs(self):
         archivedir = self.config.get(self.section, 'archivedir')
@@ -125,15 +124,14 @@ Note: The first rule to match in a message is the only rule that will be applied
             return False
 
         if not os.path.isdir(archivedir):
-            print("Archivedir '%s' does not exist or is not a directory" %
-                  (archivedir))
+            print("Archivedir '%s' does not exist or is not a directory" % archivedir)
             return False
 
         return True
 
     def examine(self, suspect):
         archiverules = self.config.get(self.section, 'archiverules')
-        if archiverules == None or archiverules == "":
+        if archiverules is None or archiverules == "":
             return DUNNO
 
         if not os.path.exists(archiverules):
@@ -141,28 +139,24 @@ Note: The first rule to match in a message is the only rule that will be applied
                 'Archive Rules file does not exist : %s' % archiverules)
             return DUNNO
 
-        if self.filter == None:
+        if self.filter is None:
             self.filter = SuspectFilter(archiverules)
 
         (match, arg) = self.filter.matches(suspect)
         if match:
-            if arg != None and arg.lower() == 'no':
+            if arg is not  None and arg.lower() == 'no':
                 suspect.debug("Suspect matches archive exception rule")
-                self.logger.debug(
-                    """Header matches archive exception rule - not archiving""")
+                self.logger.debug("""Header matches archive exception rule - not archiving""")
             else:
-                if arg != None and arg.lower() != 'yes':
-                    self.logger.warning(
-                        "Unknown archive action '%s' assuming 'yes'" % arg)
+                if arg is not None and arg.lower() != 'yes':
+                    self.logger.warning("Unknown archive action '%s' assuming 'yes'" % arg)
                 self.logger.debug("""Header matches archive rule""")
                 if suspect.get_tag('debug'):
-                    suspect.debug(
-                        "Suspect matches archiving rule (i would  archive it if we weren't in debug mode)")
+                    suspect.debug("Suspect matches archiving rule (i would  archive it if we weren't in debug mode)")
                 else:
                     self.archive(suspect)
         else:
-            suspect.debug(
-                "No archive rule/exception rule applies to this message")
+            suspect.debug("No archive rule/exception rule applies to this message")
 
     def archive(self, suspect):
         archivedir = self.config.get(self.section, 'archivedir')
@@ -173,8 +167,7 @@ Note: The first rule to match in a message is the only rule that will be applied
         subdirtemplate = self.config.get(self.section, 'subdirtemplate')
 
         if self.config.has_option(self.section, 'makedomainsubdir') and subdirtemplate == self.requiredvars['subdirtemplate']['default']:
-            self.logger.warning(
-                "Archive config is using deprecated 'makedomainsubdir' config option. Emulating old behaviour. Update your config(subdirtemplate)")
+            self.logger.warning("Archive config is using deprecated 'makedomainsubdir' config option. Emulating old behaviour. Update your config(subdirtemplate)")
             if self.config.getboolean(self.section, 'makedomainsubdir'):
                 subdirtemplate = "${to_domain}"
             else:
@@ -201,8 +194,7 @@ Note: The first rule to match in a message is the only rule that will be applied
         requested_path = os.path.abspath("%s/%s" % (startdir, fpath))
 
         if not os.path.commonprefix([requested_path, startdir]).startswith(startdir):
-            self.logger.error(
-                "file path '%s' seems to be outside archivedir '%s' - storing to archivedir" % (requested_path, startdir))
+            self.logger.error("file path '%s' seems to be outside archivedir '%s' - storing to archivedir" % (requested_path, startdir))
             requested_path = "%s/%s" % (startdir, filename)
 
         finaldir = os.path.dirname(requested_path)
@@ -239,9 +231,8 @@ Note: The first rule to match in a message is the only rule that will be applied
             perm = int(chmod, 8)
             try:
                 os.chmod(filename, perm)
-            except:
-                self.logger.error(
-                    'could not set permission on file %s' % filename)
+            except Exception:
+                self.logger.error('could not set permission on file %s' % filename)
 
         # chgrp
         changetogroup = -1
@@ -259,7 +250,7 @@ Note: The first rule to match in a message is the only rule that will be applied
             except ValueError:
                 pass
 
-            if group != None:
+            if group is not None:
                 changetogroup = group.gr_gid
             else:
                 self.logger.warn("Group %s not found" % chgrp)
@@ -280,7 +271,7 @@ Note: The first rule to match in a message is the only rule that will be applied
             except ValueError:
                 pass
 
-            if user != None:
+            if user is not None:
                 changetouser = user.pw_uid
             else:
                 self.logger.warn("User %s not found" % chown)
@@ -289,5 +280,4 @@ Note: The first rule to match in a message is the only rule that will be applied
             try:
                 os.chown(filename, changetouser, changetogroup)
             except Exception as e:
-                self.logger.error(
-                    "Could not change user/group of file %s : %s" % (filename, str(e)))
+                self.logger.error("Could not change user/group of file %s : %s" % (filename, str(e)))
