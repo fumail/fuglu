@@ -25,7 +25,7 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
-if len(sys.argv) < 2:
+def printUsage():
     print("")
     print(
         "Usage fuglu_debug <messagefile> [ <envelope_from> [ <envelope_to ] ]")
@@ -34,6 +34,9 @@ if len(sys.argv) < 2:
     print("<envelope_to> : Envelope To Address, default recipient@fuglu.local")
     print("")
 
+
+if len(sys.argv) < 2:
+    printUsage()
     sys.exit(1)
 
 # what port is fuglu debugging?
@@ -52,8 +55,15 @@ smtpServer.set_debuglevel(1)
 smtpServer.helo('fuglu.debug.local')
 
 # read message
-fh = open(sys.argv[1])
-message = fh.read()
+try:
+   fh = open(sys.argv[1])
+   message = fh.read()
+except FileNotFoundError:
+    print("")
+    print("File '%s' not found" % str(sys.argv[1]))
+    printUsage()
+    smtpServer.quit()
+    sys.exit(1)
 
 # envelope sender/recipient
 fromaddr = 'sender@fuglu.local'
