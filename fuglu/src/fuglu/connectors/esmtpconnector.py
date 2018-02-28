@@ -231,6 +231,7 @@ class ESMTPPassthroughSession(object):
                         self.socket.send(force_bString(rsp + "\r\n"))
                         if keep == 0:
                             self.closeconn()
+                            self.finish_outgoing_connection()
                             return False
                 else:
                     # EOF
