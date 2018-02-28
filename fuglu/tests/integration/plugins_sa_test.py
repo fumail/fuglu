@@ -33,6 +33,7 @@ class SAPluginTestCase(unittest.TestCase):
         config.set('SAPlugin', 'forwardoriginal', 'False')
         config.set('SAPlugin', 'scanoriginal', 'False')
         config.set('SAPlugin', 'rejectmessage', '')
+        config.set('SAPlugin', 'strip_oversize', '0')
 
         # sql blacklist
         testfile = "/tmp/sa_test.db"
@@ -128,10 +129,10 @@ This is a test mailing """
         self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), REJECT), 'sender should be blacklisted'
 
-        fuglu.extensions.sql.ENABLED = False
+        fuglu.extensions.sql.SQL_EXTENSION_ENABLED = False  # disable sql (backup is in ENABLED)
         self.assertEqual(self.candidate.check_sql_blacklist(
             suspect), DUNNO), 'problem if sqlalchemy is not available'
-        fuglu.extensions.sql.ENABLED = True
+        fuglu.extensions.sql.SQL_EXTENSION_ENABLED = fuglu.extensions.sql.ENABLED   # set value back
 
         self.candidate.config.set(
             'SAPlugin', 'sql_blacklist_sql', 'this is a buggy sql statement')

@@ -21,6 +21,7 @@ import datetime
 import traceback
 import string
 import os
+from fuglu.localStringEncoding import force_bString, force_uString
 
 
 class ControlServer(object):
@@ -117,7 +118,7 @@ class ControlSession(object):
         self.logger = logging.getLogger('fuglu.controlsession')
 
     def handlesession(self):
-        line = self.socket.recv(4096).lower().strip()
+        line = force_uString(self.socket.recv(4096)).lower().strip()
         if line == '':
             self.socket.close()
             return
@@ -125,12 +126,12 @@ class ControlSession(object):
         self.logger.debug('Control Socket command: %s' % line)
         parts = line.split()
         answer = self.handle_command(parts[0], parts[1:])
-        self.socket.sendall(answer)
+        self.socket.sendall(force_bString(answer))
         self.socket.close()
 
     def handle_command(self, command, args):
         if command not in self.commands:
-            return "ERR no such command"
+            return "ERR no such command: "+str(command)
 
         res = self.commands[command](args)
         return res
