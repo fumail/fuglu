@@ -18,7 +18,6 @@ import logging
 import socket
 import tempfile
 import os
-import sys
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.shared import Suspect, apply_template
 from fuglu.localStringEncoding import force_bString, force_uString
@@ -65,8 +64,7 @@ class ESMTPHandler(ProtocolHandler):
             # client
             return 250, 'OK'
         if suspect.get_tag('reinjectoriginal'):
-            self.logger.info(
-                'Injecting original message source without modifications')
+            self.logger.info('Injecting original message source without modifications')
             msgcontent = suspect.get_original_source()
         else:
             msgcontent = buildmsgsource(suspect)
@@ -104,8 +102,8 @@ class ESMTPHandler(ProtocolHandler):
         suspect.set_tag("injectanswer", injectanswer)
 
         values = dict(injectanswer=injectanswer)
-        message = apply_template(
-            self.config.get('esmtpconnector', 'queuetemplate'), suspect, values)
+        message = apply_template(self.config.get('esmtpconnector', 'queuetemplate'), suspect, values)
+        message = force_uString(message)
 
         if injectcode >= 200 and injectcode < 300:
             self.sess.endsession(250, message)
@@ -171,8 +169,6 @@ class ESMTPPassthroughSession(object):
                     completeLine = 1
                     cmd = data[0:4]
                     cmd = cmd.upper()
-                    keep = 1
-                    rv = None
                     if cmd == b"QUIT":
                         self.socket.send(force_bString("%s %s\r\n" % (220, "BYE")))
                         self.closeconn()
@@ -204,7 +200,6 @@ class ESMTPPassthroughSession(object):
 
         while True:
             rawdata = b''
-            data = ''
             completeLine = 0
             while not completeLine:
                 lump = self.socket.recv(1024)
@@ -232,7 +227,7 @@ class ESMTPPassthroughSession(object):
                                 # data finished.. keep connection open though
                                 self.logger.debug('incoming message finished')
                                 return True
-
+                        
                         self.socket.send(force_bString(rsp + "\r\n"))
                         if keep == 0:
                             self.closeconn()
@@ -240,7 +235,6 @@ class ESMTPPassthroughSession(object):
                 else:
                     # EOF
                     return False
-        return False
 
     def forwardCommand(self, command):
         """forward a esmtp command to outgoing postfix instance
@@ -256,14 +250,13 @@ class ESMTPPassthroughSession(object):
             targethost = self.config.get('main', 'outgoinghost')
             if targethost == '${injecthost}':
                 targethost = self.socket.getpeername()[0]
-            self.forwardconn = smtplib.SMTP(
-                force_uString(targethost), self.config.getint('main', 'outgoingport'))
+            self.forwardconn = smtplib.SMTP(force_uString(targethost), self.config.getint('main', 'outgoingport'))
         self.logger.debug("""SEND: "%s" """ % command)
 
         # docmd seems to have a normal string as input, so
         # I guess unicode will work for python 3
         code, ans = self.forwardconn.docmd(command)
-        ret = "%s %s" % (code, ans)
+        ret = "%s %s" % (code, force_uString(ans))
         ret = force_uString(ret)
         if ret.find('\n'):
             temprv = []
@@ -294,7 +287,6 @@ class ESMTPPassthroughSession(object):
         cmd = data[0:4]
         cmd = cmd.upper()
         keep = 1
-        rv = None
 
         if cmd in["EHLO", 'HELO']:
             self.state = ESMTPPassthroughSession.ST_HELO
