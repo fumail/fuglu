@@ -103,7 +103,6 @@ class ESMTPHandler(ProtocolHandler):
 
         values = dict(injectanswer=injectanswer)
         message = apply_template(self.config.get('esmtpconnector', 'queuetemplate'), suspect, values)
-        message = force_uString(message)
 
         if injectcode >= 200 and injectcode < 300:
             self.sess.endsession(250, message)
