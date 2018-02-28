@@ -43,12 +43,12 @@ class ActionOverridePlugin(ScannerPlugin):
 
     def lint_filter(self):
         filterfile = self.config.get(self.section, 'actionrules')
-        filter = SuspectFilter(filterfile)
-        return filter.lint()
+        sfilter = SuspectFilter(filterfile)
+        return sfilter.lint()
 
     def examine(self, suspect):
         actionrules = self.config.get(self.section, 'actionrules')
-        if actionrules == None or actionrules == "":
+        if actionrules is None or actionrules == "":
             return DUNNO
 
         if not os.path.exists(actionrules):
@@ -56,12 +56,12 @@ class ActionOverridePlugin(ScannerPlugin):
                 'Action Rules file does not exist : %s' % actionrules)
             return DUNNO
 
-        if self.filter == None:
+        if self.filter is None:
             self.filter = SuspectFilter(actionrules)
 
         (match, arg) = self.filter.matches(suspect)
         if match:
-            if arg == None or arg.strip() == '':
+            if arg is None or arg.strip() == '':
                 self.logger.error("Rule match but no action defined.")
                 return DUNNO
 
@@ -75,7 +75,7 @@ class ActionOverridePlugin(ScannerPlugin):
                 "%s: Rule match! Action override: %s" % (suspect.id, arg.upper()))
 
             actioncode = string_to_actioncode(actionstring, self.config)
-            if actioncode != None:
+            if actioncode is not None:
                 return actioncode, message
 
             elif actionstring.upper() == 'REDIRECT':
