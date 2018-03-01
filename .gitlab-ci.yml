@@ -21,6 +21,7 @@ unittests_py3:
     - cd fuglu
     - nosetests-3.4 --rednose tests/unit
   only:
+    - master
     - python3
 
 integrationtests:
@@ -44,6 +45,7 @@ integrationtests_py3:
     - cd fuglu
     - nosetests-3.4 --rednose tests/integration
   only:
+    - master
     - python3
 
 
@@ -70,4 +72,5 @@ buildfuglu_py3:
     - mkdir -p /var/log/fuglu
     - chown nobody /var/log/fuglu
   only:
+    - master
     - python3
