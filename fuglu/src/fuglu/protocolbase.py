@@ -70,8 +70,7 @@ class BasicTCPServer(object):
             self._socket.bind((address, port))
             self._socket.listen(5)
         except Exception as e:
-            self.logger.error(
-                'Could not start incoming Server on port %s: %s' % (port, e))
+            self.logger.error('Could not start incoming Server on port %s: %s' % (port, e))
             self.stayalive = False
 
     def shutdown(self):
@@ -120,8 +119,7 @@ class BasicTCPServer(object):
                     engine.handlesession()
             except Exception as e:
                 exc = traceback.format_exc()
-                self.logger.error(
-                    'Exception in serve(): %s - %s' % (str(e), exc))
+                self.logger.error('Exception in serve(): %s - %s' % (str(e), exc))
 
 
 def forking_dumps(obj):
