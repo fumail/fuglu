@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,7 +70,8 @@ class ESMTPHandler(ProtocolHandler):
         else:
             msgcontent = buildmsgsource(suspect)
 
-        (code, answer) = self.sess.forwardconn.data(force_bString(msgcontent))
+        code, answer = self.sess.forwardconn.data(force_bString(msgcontent))
+        answer = force_uString(answer)
         return code, answer
 
     def get_suspect(self):
@@ -159,13 +161,11 @@ class ESMTPPassthroughSession(object):
         self.socket.send(force_bString("%s %s\r\n" % (code, message)))
         rawdata = b''
         data = ''
-        completeLine = 0
-        while not completeLine:
+        while True:
             lump = self.socket.recv(1024)
             if len(lump):
                 rawdata += lump
-                if (len(rawdata) >= 2) and rawdata[-2:] == '\r\n'.encode("utf-8","strict"):
-                    completeLine = 1
+                if (len(rawdata) >= 2) and rawdata[-2:] == b'\r\n':
                     cmd = data[0:4]
                     cmd = cmd.upper()
                     if cmd == b"QUIT":
@@ -178,7 +178,6 @@ class ESMTPPassthroughSession(object):
             else:
                 self.closeconn()
                 return
-        return
 
     def closeconn(self):
         """clocke socket to incoming postfix"""
@@ -215,8 +214,7 @@ class ESMTPPassthroughSession(object):
                             try:
                                 rsp = self.doData(rawdata)
                             except IOError:
-                                self.endsession(
-                                    421, "Could not write to temp file")
+                                self.endsession(421, "Could not write to temp file")
                                 self._close_tempfile()
                                 return False
 
@@ -238,13 +236,13 @@ class ESMTPPassthroughSession(object):
 
     def forwardCommand(self, command):
         """forward a esmtp command to outgoing postfix instance
-
+        
         Args:
-            command (): command in unicode
-
-        Returns:
+            command (str): command in unicode
+        
+        Returns (str): reply from outgoing server
         """
-
+        
         command = command.strip()
         if self.forwardconn is None:
             targethost = self.config.get('main', 'outgoinghost')
@@ -257,7 +255,6 @@ class ESMTPPassthroughSession(object):
         # I guess unicode will work for python 3
         code, ans = self.forwardconn.docmd(command)
         ret = "%s %s" % (code, force_uString(ans))
-        ret = force_uString(ret)
         if ret.find('\n'):
             temprv = []
             parts = ret.split('\n')
@@ -278,7 +275,7 @@ class ESMTPPassthroughSession(object):
         """Try to gracefully end the connection to the outgoing postfix"""
         try:
             self.forwardconn.quit()
-        except:
+        except Exception:
             self.logger.info("Quit failed")
         self.forwardconn = None
 
@@ -333,8 +330,7 @@ class ESMTPPassthroughSession(object):
             self.state = ESMTPPassthroughSession.ST_DATA
             self.dataAccum = b""
             try:
-                (handle, tempfilename) = tempfile.mkstemp(
-                    prefix='fuglu', dir=self.config.get('main', 'tempdir'))
+                handle, tempfilename = tempfile.mkstemp(prefix='fuglu', dir=self.config.get('main', 'tempdir'))
                 self.tempfilename = tempfilename
                 self.tempfile = os.fdopen(handle, 'w+b')
             except Exception as e:
@@ -373,7 +369,7 @@ class ESMTPPassthroughSession(object):
                     if value.upper() == '[UNAVAILABLE]':
                         continue
                     self.xforward_helo = value
-            except:
+            except Exception:
                 continue
 
     def doData(self, data):

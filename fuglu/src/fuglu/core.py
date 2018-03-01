@@ -38,7 +38,7 @@ from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncconnector import NCServer
 from fuglu.connectors.esmtpconnector import ESMTPServer
-
+from fuglu.localStringEncoding import force_uString, force_bString
 from fuglu.stats import StatsThread
 from fuglu.debug import ControlServer, CrashStore
 from fuglu import FUGLU_VERSION
@@ -74,8 +74,7 @@ def check_version_status(lint=False):
     if 'commitid' not in parts or parts['commitid'] is None:
         parts['commitid'] = 'release'
 
-    lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(
-        **parts)
+    lookup = "{commitid}.{patch}.{minor}.{major}.versioncheck.fuglu.org".format(**parts)
     result = None
     try:
         result = socket.gethostbyname(lookup)
@@ -448,7 +447,7 @@ class MainController(object):
         protocol = 'smtp'
 
         if port.find(':') > 0:
-            (protocol, port) = port.split(':')
+            protocol, port = port.split(':')
 
         self.logger.info("starting connector %s/%s" % (protocol, port))
         try:
@@ -491,8 +490,7 @@ class MainController(object):
     def _start_stats_thread(self):
         self.logger.info("Init Stat Engine")
         statsthread = StatsThread(self.config)
-        mrtg_stats_thread = threading.Thread(
-            name='MRTG-Statswriter', target=statsthread.writestats, args=())
+        mrtg_stats_thread = threading.Thread(name='MRTG-Statswriter', target=statsthread.writestats, args=())
         mrtg_stats_thread.daemon = True
         mrtg_stats_thread.start()
         return statsthread
@@ -503,8 +501,7 @@ class MainController(object):
             minthreads = self.config.getint('performance', 'minthreads')
             maxthreads = self.config.getint('performance', 'maxthreads')
         except configparser.NoSectionError:
-            self.logger.warning(
-                'Performance section not configured, using default thread numbers')
+            self.logger.warning('Performance section not configured, using default thread numbers')
             minthreads = 1
             maxthreads = 3
 
@@ -602,10 +599,9 @@ class MainController(object):
         serversocket.bind((address, port))
         serversocket.listen(1)
         clientsocket, _ = serversocket.accept()  # client socket
-        self.logger.info("Interactive python connection from %s/%2" % (address, address))
+        self.logger.info("Interactive python connection from %s/%s" % (address, address))
 
-        class sw:  # socket wrapper
-
+        class sw(object):  # socket wrapper
             def __init__(self, s):
                 self.s = s
 
@@ -624,25 +620,21 @@ class MainController(object):
         mc = self
         terp = code.InteractiveConsole(locals())
         try:
-            terp.interact(
-                "Fuglu Python Shell - MainController available as 'mc'")
-        except:
+            terp.interact("Fuglu Python Shell - MainController available as 'mc'")
+        except Exception:
             pass
-        self.logger.info(
-            "done talking to %s - closing interactive shell on %s/%s" % (address, address, port))
+        self.logger.info("done talking to %s - closing interactive shell on %s/%s" % (address, address, port))
         sys.stdin = old_stdin
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         try:
             clientsocket.close()
         except Exception as e:
-            self.logger.warning(
-                "Failed to close shell client socket: %s" % str(e))
+            self.logger.warning("Failed to close shell client socket: %s" % str(e))
         try:
             serversocket.close()
         except Exception as e:
-            self.logger.warning(
-                "Failed to close shell server socket: %s" % str(e))
+            self.logger.warning("Failed to close shell server socket: %s" % str(e))
 
     def reload(self):
         """apply config changes"""
@@ -654,8 +646,7 @@ class MainController(object):
             maxthreads = self.config.getint('performance', 'maxthreads')
 
             if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
-                self.logger.info(
-                    'Threadpool config changed, initialising new threadpool')
+                self.logger.info('Threadpool config changed, initialising new threadpool')
                 queuesize = maxthreads * 10
                 currentthreadpool = self.threadpool
                 self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
@@ -685,8 +676,7 @@ class MainController(object):
         servercopy = self.servers[:]
         for serv in servercopy:
             if serv.port not in portlist:
-                self.logger.info(
-                    'Closing server socket on port %s' % serv.port)
+                self.logger.info('Closing server socket on port %s' % serv.port)
                 serv.shutdown()
                 self.servers.remove(serv)
 
@@ -771,14 +761,12 @@ class MainController(object):
 
         trashdir = self.config.get('main', 'trashdir').strip()
         if trashdir != "" and not os.path.isdir(trashdir):
-            print(
-                fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
+            print(fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
 
         # sql config override
-        sqlconfigdbconnectstring = self.config.get(
-            'databaseconfig', 'dbconnectstring')
+        sqlconfigdbconnectstring = self.config.get('databaseconfig', 'dbconnectstring')
         if sqlconfigdbconnectstring.strip() != '':
-            print("")
+            print()
             print("Linting ", fc.strcolor("sql configuration", 'cyan'))
             try:
                 from fuglu.extensions.sql import get_session
@@ -847,8 +835,7 @@ class MainController(object):
             if hasattr(plug, 'requiredvars'):
                 requiredvars = getattr(plug, 'requiredvars')
                 if type(requiredvars) == dict:
-                    self.propagate_defaults(
-                        requiredvars, self.config, plug.section)
+                    self.propagate_defaults(requiredvars, self.config, plug.section)
 
     def checkConfig(self):
         """Check if all requred options are in the config file
@@ -861,17 +848,14 @@ class MainController(object):
                 var = self.config.get(section, config)
 
                 if 'validator' in infodic and not infodic["validator"](var):
-                    print(
-                        "Validation failed for [%s] :: %s" % (section, config))
+                    print("Validation failed for [%s] :: %s" % (section, config))
                     allOK = False
 
             except configparser.NoSectionError:
-                print(
-                    "Missing configuration section [%s] :: %s" % (section, config))
+                print("Missing configuration section [%s] :: %s" % (section, config))
                 allOK = False
             except configparser.NoOptionError:
-                print(
-                    "Missing configuration value [%s] :: %s" % (section, config))
+                print("Missing configuration value [%s] :: %s" % (section, config))
                 allOK = False
         return allOK
 
@@ -907,8 +891,7 @@ class MainController(object):
             self._logger().warning('Plugin directory %s not found' % plugdir)
 
         if plugdir != "":
-            self._logger().debug(
-                'Searching for additional plugins in %s' % plugdir)
+            self._logger().debug('Searching for additional plugins in %s' % plugdir)
             if plugdir not in sys.path:
                 sys.path.insert(0, plugdir)
 
@@ -959,8 +942,7 @@ class MainController(object):
                 pluglist.append(plugininstance)
             except (configparser.NoSectionError, configparser.NoOptionError):
                 CrashStore.store_exception()
-                self._logger().error(
-                    "The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
+                self._logger().error("The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
             except Exception as e:
                 CrashStore.store_exception()
                 self._logger().error('Could not load plugin %s : %s' %

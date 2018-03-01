@@ -19,7 +19,6 @@ import socket
 import tempfile
 import os
 import re
-import sys
 
 from fuglu.shared import Suspect, apply_template
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
@@ -63,8 +62,7 @@ class SMTPHandler(ProtocolHandler):
             return 'message not re-injected by plugin request'
 
         if suspect.get_tag('reinjectoriginal'):
-            self.logger.info(
-                '%s: Injecting original message source without modifications' % suspect.id)
+            self.logger.info('%s: Injecting original message source without modifications' % suspect.id)
             msgcontent = suspect.get_original_source()
         else:
             msgcontent = buildmsgsource(suspect)
@@ -72,8 +70,7 @@ class SMTPHandler(ProtocolHandler):
         targethost = self.config.get('main', 'outgoinghost')
         if targethost == '${injecthost}':
             targethost = self.socket.getpeername()[0]
-        client = FUSMTPClient(
-            targethost, self.config.getint('main', 'outgoingport'))
+        client = FUSMTPClient(targethost, self.config.getint('main', 'outgoingport'))
         helo = self.config.get('main', 'outgoinghelo')
         if helo.strip() == '':
             helo = socket.gethostname()
@@ -87,8 +84,7 @@ class SMTPHandler(ProtocolHandler):
         try:
             client.quit()
         except Exception as e:
-            self.logger.warning(
-                'Exception while quitting re-inject session: %s' % str(e))
+            self.logger.warning('Exception while quitting re-inject session: %s' % str(e))
 
         if serveranswer is None:
             self.logger.warning('Re-inject: could not get server answer.')
@@ -181,31 +177,26 @@ class SMTPSession(object):
         self.socket.send(force_bString("%s %s\r\n" % (code, message)))
 
         rawdata = b''
-        completeLine = 0
-        while not completeLine:
+        while True:
             lump = self.socket.recv(1024)
 
             if len(lump):
 
                 rawdata += lump
                 if (len(rawdata) >= 2) and rawdata[-2:] == force_bString('\r\n'):
-                    completeLine = 1
                     cmd = rawdata[0:4]
                     cmd = cmd.upper()
-                    keep = 1
-                    rv = None
                     if cmd == force_bString("QUIT"):
                         self.socket.send(force_bString("%s %s\r\n" % (220, "BYE")))
                         self.closeconn()
                         return
 
-                    self.socket.send( force_bString("%s %s\r\n" % (421, "Cannot accept further commands")))
+                    self.socket.send(force_bString("%s %s\r\n" % (421, "Cannot accept further commands")))
                     self.closeconn()
                     return
             else:
                 self.closeconn()
                 return
-        return
 
     def closeconn(self):
         try:
@@ -268,7 +259,6 @@ class SMTPSession(object):
                 else:
                     # EOF
                     return False
-        return False
 
     def doCommand(self, data):
         """Process a single SMTP Command"""
