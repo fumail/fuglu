@@ -49,7 +49,7 @@ class SATestCase(unittest.TestCase):
         for headercontent, expectedspamstatus, expectedscore in headertests:
             msgrep = Message()
             msgrep[headername] = Header(headercontent).encode()
-            spamstatus, score = candidate._extract_spamstatus(
+            spamstatus, score, report = candidate._extract_spamstatus(
                 msgrep, headername, suspect)
             self.assertEqual(spamstatus, expectedspamstatus, "spamstatus should be %s from %s" % (
                 expectedspamstatus, headercontent))
