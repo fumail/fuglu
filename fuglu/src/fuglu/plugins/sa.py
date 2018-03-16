@@ -53,7 +53,6 @@ Tags:
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
  * sets ``SAPlugin.report``, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting
- 
 """
 
     def __init__(self, config, section=None):
@@ -480,7 +479,7 @@ Tags:
             else:
                 # Python 2.x
                 newmsgrep = email.message_from_string(content)
-            suspect.setMessageRep(newmsgrep)
+            suspect.set_source(content)
             if stripped:
                 self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
