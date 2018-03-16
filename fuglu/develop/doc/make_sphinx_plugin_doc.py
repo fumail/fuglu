@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # deploy:
-#./make_sphinx_plugin_doc.py > /home/gryphius/gitspace/fuglu.gh-pages/source/includedplugins-autogen.txt
-# cd /home/gryphius/gitspace/fuglu.gh-pages/
+#./make_sphinx_plugin_doc.py > /path/to/fuglu.gh-pages/source/includedplugins-autogen.txt
+# cd /path/to/fuglu.gh-pages/
 # make html
 # firefox index.html
 # check for errors, update docstring in plugin if necessary!
