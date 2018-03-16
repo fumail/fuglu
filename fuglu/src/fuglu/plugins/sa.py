@@ -53,6 +53,7 @@ Tags:
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
  * sets ``SAPlugin.report``, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting
+ 
 """
 
     def __init__(self, config, section=None):
@@ -417,6 +418,8 @@ Tags:
         stripped = False
         if spamsize > maxsize:
             stripped = True
+            # keep copy of original content before mangling
+            content_orig = content
             content = self._strip_attachments(content, maxsize)
 
         # stick to bytes
@@ -445,6 +448,8 @@ Tags:
 
         else:
             filtered = self.safilter(content, suspect.to_address)
+            # create msgrep of filtered msg
+            msgrep_filtered = email.message_from_string(filtered)
             if filtered is None:
                 suspect.debug('SA Scan failed - please check error log')
                 self.logger.error('%s SA scan FAILED' % suspect.id)
@@ -452,8 +457,19 @@ Tags:
                 suspect.set_tag('SAPlugin.skipreason', 'scan failed')
                 return self._problemcode()
             else:
-                content = filtered
-
+                header = ''
+                # prepend msg headers to header variable
+                for h,v in msgrep_filtered.items():
+                    header = h + ': ' + v + '\r\n' + header
+                # add X-Spam header content to msg
+                for i in re.findall('(^X-Spam-[^:]+):', header, re.M):
+                    # in case of stripped msg add header to original content
+                    if stripped:
+                        content_orig = i + ': ' + force_bString(msgrep_filtered(i)) + '\r\n' + content_orig
+                    else:
+                        content = i + ': ' + force_bString(msgrep_filtered.get(i)) + '\r\n' + content
+                if stripped is True:
+                    content = content_orig
             if sys.version_info > (3,):
                 # Python 3 and larger
                 # the basic "str" type is unicode
@@ -464,9 +480,7 @@ Tags:
             else:
                 # Python 2.x
                 newmsgrep = email.message_from_string(content)
-
-
-            suspect.set_source(content)
+            suspect.setMessageRep(newmsgrep)
             if stripped:
                 self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
@@ -700,4 +714,5 @@ if __name__ == '__main__':
     print("--------------")
     plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
+
 
