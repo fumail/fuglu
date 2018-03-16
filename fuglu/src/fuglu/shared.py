@@ -115,7 +115,7 @@ def string_to_actioncode(actionstring, config=None):
 
 
 def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
-    """Replace templatecontent variables as defined in http://gryphius.github.io/fuglu/plugins-index.html#template-variables
+    """Replace templatecontent variables as defined in http://fumail.github.io/fuglu/plugins-index.html#template-variables
     with actual values from suspect
     the calling function can pass additional values by passing a values dict
 

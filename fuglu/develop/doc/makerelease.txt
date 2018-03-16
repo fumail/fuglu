@@ -9,10 +9,11 @@ sphinx setup: pip2.7 install sphinx cloud_sptheme
 
  * update changelog
  * Update plugin doc, make sure new plugins are added in make_sphinx_plugin_doc.py
+ * check out the fuglu.gh-pages branch in its own directory
 
 cd fuglu/develop/doc
-./make_sphinx_plugin_doc.py > ~/gitspace/fuglu.gh-pages/source/includedplugins-autogen.txt
-cd /home/gryphius/gitspace/fuglu.gh-pages/
+./make_sphinx_plugin_doc.py > ~/path/to/fuglu.gh-pages/source/includedplugins-autogen.txt
+cd /path/to/fuglu.gh-pages/
 make html
 
 (check index.html, push to git if ok)
