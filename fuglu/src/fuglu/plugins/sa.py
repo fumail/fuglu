@@ -52,6 +52,7 @@ Tags:
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
+ * sets ``SAPlugin.report``, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting
 """
 
     def __init__(self, config, section=None):
