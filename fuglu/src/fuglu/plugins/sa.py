@@ -412,7 +412,7 @@ Tags:
         stripped = False
         if spamsize > maxsize:
             stripped = True
-            # keep copy of original content before mangling
+            # keep copy of original content before stripping
             content_orig = content
             content = self._strip_attachments(content, maxsize)
 
