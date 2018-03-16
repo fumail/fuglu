@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# $Id: archive.py 180 2011-06-16 09:21:16Z gryphius $
-#
+
 from fuglu.shared import ScannerPlugin, DELETE
 
 
