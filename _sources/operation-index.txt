@@ -8,12 +8,12 @@ Operation
 Monitoring
 ----------
 
-Fuglu has various places where you can see what it is is currently doing (eg. for debugging purposes) or what it has done (for statistical analysis) 
+Fuglu has various places where you can see what it is is currently doing (eg. for debugging purposes) or what it has done (for statistical analysis)
 
 Command Line Interface
 ......................
 
-The ``fuglu_control`` command offers various options to get real-time information on fuglu internals 
+The ``fuglu_control`` command offers various options to get real-time information on fuglu internals
 
 
 **statistics:**
@@ -60,12 +60,12 @@ The ``fuglu_control`` command offers various options to get real-time informatio
 	[107]: waiting for task
 
 
-Run fuglu_control without arguments to get a list of all supported commands. 
+Run fuglu_control without arguments to get a list of all supported commands.
 
 Logs
 ....
 
-Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed.. 
+Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed..
 
 
 Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, ...)
@@ -110,7 +110,7 @@ After reloading fuglu, the spamassassin plugin should be very verbose:
 
 
 
-There should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this. 
+There should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this.
 
 
 **Qualnames for new loggers** :
@@ -119,18 +119,18 @@ Plugins usually use ``fuglu.plugin.<classname>``
 
 fuglu internal qualnames:
 
- * ``fuglu.SessionHandler`` - What plugins are being run, what are the results, ... 
+ * ``fuglu.SessionHandler`` - What plugins are being run, what are the results, ...
  * ``fuglu.smtp.incoming`` - Incoming smtp connections
  * ``fuglu.smtp.incoming.<portnumber>`` - Incoming smtp sessions on port <portnumber>
- * ``fuglu.smtpsession`` - information on the incoming smtp transaction 
- * ``fuglu.threadpool`` - information when threads are created / destroyed 
- * ``fuglu.suspectfilter`` - debug info on parsing/applying the special header filter config files 
- 
- 
-**Additional handlers** 
- 
+ * ``fuglu.smtpsession`` - information on the incoming smtp transaction
+ * ``fuglu.threadpool`` - information when threads are created / destroyed
+ * ``fuglu.suspectfilter`` - debug info on parsing/applying the special header filter config files
+
+
+**Additional handlers**
+
 In addition to python's `builtin handlers <https://docs.python.org/2/library/logging.handlers.html>`_ , fuglu supports:
- 
+
  * ``custom_handlers.GroupReadableRotatingFileHandler`` - Like python's `RotatingFileHandler <https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler>`_ , but the file is readable by fuglu's group
  * ``custom_handlers.GroupWritableRotatingFileHandler`` - Like python's `RotatingFileHandler <https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler>`_ , but the file is readable/writable by fuglu's group
  * ``custom_handlers.GroupReadableTimedRotatingFileHandler`` - Like python's `TimedRotatingFileHandler <https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler>`_ , but the file is readable by fuglu's group
@@ -139,14 +139,14 @@ In addition to python's `builtin handlers <https://docs.python.org/2/library/log
 MRTG
 ....
 
-Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg ``/usr/local/fuglu/mrtg``) and set this in ``fuglu.conf``: 
+Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg ``/usr/local/fuglu/mrtg``) and set this in ``fuglu.conf``:
 
 ::
 
 	#Statistics
 	mrtgdir=/usr/local/fuglu/mrtg
 
-You'll need *mrtg* and a *webserver* for this to work... create a file called ``/etc/fuglu/fuglu_mrtg.cfg``  like this: 
+You'll need *mrtg* and a *webserver* for this to work... create a file called ``/etc/fuglu/fuglu_mrtg.cfg``  like this:
 
 
 ::
@@ -229,7 +229,7 @@ You'll need *mrtg* and a *webserver* for this to work... create a file called ``
 
 Make sure, the path in WorkDir exists.
 
-Then create a script ``/usr/local/bin/fuglu_mrtg.sh`` 
+Then create a script ``/usr/local/bin/fuglu_mrtg.sh``
 
 ::
 
@@ -238,16 +238,16 @@ Then create a script ``/usr/local/bin/fuglu_mrtg.sh``
 	/usr/bin/env LANG=C /usr/bin/mrtg /etc/fuglu/fuglu_mrtg.cfg
 
 
-run ``fuglu_mrtg.sh`` to check for errors. 
+run ``fuglu_mrtg.sh`` to check for errors.
 
-If all went well, add it to your crontab: 
+If all went well, add it to your crontab:
 
 ::
 
 	*/5 * * * * /usr/local/bin/fuglu_mrtg.sh >/dev/null 2>&1
 
 
-install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path to fuglu_mrtg.cfg correctly: 
+install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path to fuglu_mrtg.cfg correctly:
 
 
 ::
@@ -256,7 +256,7 @@ install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path 
 	BEGIN { @config_files = qw(/etc/fuglu/fuglu_mrtg.cfg); }
 
 
-after pointing your browser to ``http://yourfuglubox.example.com/cgi-bin/fuglu.cgi`` you should see nice graphs. 
+after pointing your browser to ``http://yourfuglubox.example.com/cgi-bin/fuglu.cgi`` you should see nice graphs.
 
 
 ---------------------------
@@ -281,10 +281,10 @@ Fuglu runs but you want to know what exactly would happen to a single email mess
 Make sure message debugging is enabled (it is by default, but if you screwed up your config...) :
 
  * ``prependers=`` should start with ``debug`` to make sure the debugger plugin is loaded
- * ``incomingport`` option should contain port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port 
- * in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information 
- * ``nobounce`` should be set to True, so debugged messages can not be bounced 
- * ``noreinject`` shoud be set to True, so debugged messages are not re-injected to postfix for further processing 
+ * ``incomingport`` option should contain port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port
+ * in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information
+ * ``nobounce`` should be set to True, so debugged messages can not be bounced
+ * ``noreinject`` shoud be set to True, so debugged messages are not re-injected to postfix for further processing
  * ``noappender`` should be set to True, so appenders are not run for debugged messages
 
 Save the message on the server (rfc822 format), and run
@@ -315,7 +315,7 @@ fuglu_suspectfilter to the rescue! just pass a rule file and a message eml file 
 ::
 
   fuglu_suspectfilter /etc/fuglu/myfilterfile.regex /tmp/testmessage.eml
-  INFO:fuglu.suspectfilter:Reloading Rulefile /home/gryphius/Documents/skipreviewfilter.regex
+  INFO:fuglu.suspectfilter:Reloading Rulefile /etc/fuglu/myfilterfile.regex
   INFO:root:194 valid rules found
   INFO:root:1 matches found
 
@@ -351,8 +351,4 @@ on your host:
 
 	$ nc 192.168.1.40 9999
 	Fuglu Python Shell - MainController available as 'mc'
-	>>> 
-	
-
-
-
+	>>>

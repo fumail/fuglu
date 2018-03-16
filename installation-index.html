@@ -1,41 +1,30 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Installation &#8212; fuglu  documentation</title>
-    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration" href="configuration-index.html" />
     <link rel="prev" title="Overview" href="overview-index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body role="document">
+  </head><body>
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -86,8 +75,8 @@
 <blockquote>
 <div><ul class="simple">
 <li><strong>python-file/libmagic</strong> (the file magic bindings) - Without this the attachment checker will only be able to block based on content type/attachment name but not based on the real file content.</li>
-<li><strong>Spamassassin daemon (spamd)</strong> ( if you don&#8217;t have/want this, you need to disable it in the configuration, see below)</li>
-<li><strong>Clam antivirus daemon (clamd)</strong> ( if you don&#8217;t have/want this, you need to disable it in the configuration, see below)</li>
+<li><strong>Spamassassin daemon (spamd)</strong> ( if you don’t have/want this, you need to disable it in the configuration, see below)</li>
+<li><strong>Clam antivirus daemon (clamd)</strong> ( if you don’t have/want this, you need to disable it in the configuration, see below)</li>
 <li><strong>python-BeautifulSoup</strong> (optional, used to improve html tag stripping from body searches if available)</li>
 </ul>
 </div></blockquote>
@@ -97,7 +86,7 @@
 <h2>Getting and installing Fuglu<a class="headerlink" href="#getting-and-installing-fuglu" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="cloning-source-from-github">
 <h3>cloning source from github<a class="headerlink" href="#cloning-source-from-github" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">gryphius</span><span class="o">/</span><span class="n">fuglu</span><span class="o">.</span><span class="n">git</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">fumail</span><span class="o">/</span><span class="n">fuglu</span><span class="o">.</span><span class="n">git</span>
 <span class="n">cd</span> <span class="n">fuglu</span><span class="o">/</span><span class="n">fuglu</span>
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
@@ -105,22 +94,22 @@
 </div>
 <div class="section" id="latest-source-package-from-github">
 <h3>latest source package from github<a class="headerlink" href="#latest-source-package-from-github" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">gryphius</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">tarball</span><span class="o">/</span><span class="n">master</span> <span class="o">-</span><span class="n">O</span> <span class="n">fuglu</span><span class="o">-</span><span class="n">latest</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">fumail</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">tarball</span><span class="o">/</span><span class="n">master</span> <span class="o">-</span><span class="n">O</span> <span class="n">fuglu</span><span class="o">-</span><span class="n">latest</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
 <span class="n">tar</span> <span class="o">-</span><span class="n">xvzf</span> <span class="n">fuglu</span><span class="o">-</span><span class="n">latest</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
-<span class="n">cd</span> <span class="n">cd</span> <span class="n">gryphius</span><span class="o">-</span><span class="n">fuglu</span><span class="o">-*</span>
+<span class="n">cd</span> <span class="n">fuglu</span><span class="o">-*</span>
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="latest-released-package-from-pypi">
 <h3>latest released package from pypi<a class="headerlink" href="#latest-released-package-from-pypi" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">fuglu</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">fuglu</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="install-on-freebsd">
 <h3>Install on FreeBSD<a class="headerlink" href="#install-on-freebsd" title="Permalink to this headline">¶</a></h3>
-<p>FuGlu can be found in the FreeBSD ports repository as <code class="docutils literal"><span class="pre">mail/py-fuglu</span></code>.</p>
+<p>FuGlu can be found in the FreeBSD ports repository as <code class="docutils literal notranslate"><span class="pre">mail/py-fuglu</span></code>.</p>
 </div>
 </div>
 </div>
@@ -170,12 +159,14 @@
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -223,8 +214,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
+        &#169; Copyright 2012-2018, gryphius.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

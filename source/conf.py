@@ -19,7 +19,7 @@ import cloud_sptheme as csp
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.expanduser('~/workspace/fuglu/fuglu/src/'))
+sys.path.insert(0, os.path.expanduser('../fuglu/fuglu/src/'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -44,14 +44,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'fuglu'
-copyright = u'2012, gryphius'
+copyright = u'2012-2018, gryphius'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '0.6.1'
+version = '0.7.0'
 # The full version, including alpha/beta/rc tags.
 release = ''
 

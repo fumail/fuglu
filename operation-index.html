@@ -1,41 +1,30 @@
 
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Operation &#8212; fuglu  documentation</title>
-    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Plugins" href="plugins-index.html" />
     <link rel="prev" title="Configuration" href="configuration-index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body role="document">
+  </head><body>
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -74,9 +63,9 @@
 <p>Fuglu has various places where you can see what it is is currently doing (eg. for debugging purposes) or what it has done (for statistical analysis)</p>
 <div class="section" id="command-line-interface">
 <h3>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">fuglu_control</span></code> command offers various options to get real-time information on fuglu internals</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">fuglu_control</span></code> command offers various options to get real-time information on fuglu internals</p>
 <p><strong>statistics:</strong></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#$ fuglu_control stats</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#$ fuglu_control stats</span>
 <span class="n">Fuglu</span> <span class="n">statistics</span>
 <span class="o">---------------</span>
 <span class="n">Uptime</span><span class="p">:</span>         <span class="mi">19</span><span class="p">:</span><span class="mi">33</span><span class="p">:</span><span class="mf">56.119661</span>
@@ -88,7 +77,7 @@
 </pre></div>
 </div>
 <p><strong>Status of currently running scanner threads:</strong></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#fuglu_control workerlist</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#fuglu_control workerlist</span>
 <span class="n">Total</span> <span class="mi">10</span> <span class="n">Threads</span>
 
 <span class="p">[</span><span class="mi">98</span><span class="p">]:</span> <span class="n">Suspect</span> <span class="mi">8790</span><span class="n">fa16a3733350baf02d5b4e7d98e1</span><span class="p">:</span> <span class="n">from</span><span class="o">=&lt;</span><span class="n">redacted</span><span class="o">&gt;</span> <span class="n">to</span><span class="o">=&lt;</span><span class="n">redacted</span><span class="o">&gt;</span> <span class="n">size</span><span class="o">=</span><span class="mi">1043</span> <span class="p">,</span> <span class="n">spam</span><span class="o">=</span><span class="n">no</span><span class="p">,</span> <span class="n">virus</span><span class="o">=</span><span class="n">no</span> <span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;virus&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;F-Prot&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;ClamAV&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="s1">&#39;FprotPlugin.time&#39;</span><span class="p">:</span> <span class="s1">&#39;0.0080&#39;</span><span class="p">,</span> <span class="s1">&#39;spam&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;incomingport&#39;</span><span class="p">:</span> <span class="mi">10025</span><span class="p">,</span> <span class="s1">&#39;decisions&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="s1">&#39;F-Prot Plugin&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ClamavPlugin&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="s1">&#39;ClamavPlugin.time&#39;</span><span class="p">:</span> <span class="s1">&#39;0.0055&#39;</span><span class="p">}</span> <span class="p">:</span> <span class="n">Running</span> <span class="n">Plugin</span> <span class="n">SAPlugin</span>
@@ -117,24 +106,24 @@
 <div class="section" id="logs">
 <h3>Logs<a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h3>
 <p>Fuglu writes to /var/log/fuglu/fuglu.log by default. A summary of each analyzed message is stored in that file immediately after it has been analyzed..</p>
-<p>Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, ...)</p>
+<p>Fuglu uses the standard python logging framework. This allows you to configure logging for each plugin individually (verbosity, own logfile, …)</p>
 <p>Full documentation on the python logging configuration: <a class="reference external" href="http://docs.python.org/library/logging.html#configuring-logging">http://docs.python.org/library/logging.html#configuring-logging</a></p>
-<p>Logging is configured in <code class="docutils literal"><span class="pre">/etc/fuglu/logging.conf</span></code></p>
-<p>In standard configuration, fuglu logs only INFO messages. Let&#8217;s say you wanted to debug the spamassassin plugin. So you&#8217;d check if there is a section dealing with spamassassin and you&#8217;d find this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">logger_saplugin</span><span class="p">]</span>
+<p>Logging is configured in <code class="docutils literal notranslate"><span class="pre">/etc/fuglu/logging.conf</span></code></p>
+<p>In standard configuration, fuglu logs only INFO messages. Let’s say you wanted to debug the spamassassin plugin. So you’d check if there is a section dealing with spamassassin and you’d find this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">logger_saplugin</span><span class="p">]</span>
 <span class="n">level</span><span class="o">=</span><span class="n">INFO</span>
 <span class="n">handlers</span><span class="o">=</span><span class="n">logfile</span>
 <span class="n">propagate</span><span class="o">=</span><span class="mi">0</span>
 <span class="n">qualname</span><span class="o">=</span><span class="n">fuglu</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">SAPlugin</span>
 </pre></div>
 </div>
-<p>You would change <code class="docutils literal"><span class="pre">level=INFO</span></code> to <code class="docutils literal"><span class="pre">level=DEBUG</span></code>. Also you need to activate this special configuration for spamassassin by adding it to the loggers section at the top of the file:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">loggers</span><span class="p">]</span>
+<p>You would change <code class="docutils literal notranslate"><span class="pre">level=INFO</span></code> to <code class="docutils literal notranslate"><span class="pre">level=DEBUG</span></code>. Also you need to activate this special configuration for spamassassin by adding it to the loggers section at the top of the file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">loggers</span><span class="p">]</span>
 <span class="n">keys</span><span class="o">=</span><span class="n">root</span><span class="p">,</span><span class="n">saplugin</span>
 </pre></div>
 </div>
 <p>After reloading fuglu, the spamassassin plugin should be very verbose:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">2009</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">07</span><span class="p">,</span><span class="mi">693</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">SAPlugin</span><span class="p">:</span> <span class="n">DEBUG</span> <span class="n">Contacting</span> <span class="n">spamd</span> <span class="n">localhost</span> <span class="p">(</span><span class="n">Try</span> <span class="mi">1</span> <span class="n">of</span> <span class="mi">5</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2009</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">07</span><span class="p">,</span><span class="mi">693</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">SAPlugin</span><span class="p">:</span> <span class="n">DEBUG</span> <span class="n">Contacting</span> <span class="n">spamd</span> <span class="n">localhost</span> <span class="p">(</span><span class="n">Try</span> <span class="mi">1</span> <span class="n">of</span> <span class="mi">5</span><span class="p">)</span>
 <span class="mi">2009</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">07</span><span class="p">,</span><span class="mi">701</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">SAPlugin</span><span class="p">:</span> <span class="n">DEBUG</span> <span class="n">Sent</span> <span class="mi">4065</span> <span class="nb">bytes</span> <span class="n">to</span> <span class="n">spamd</span>
 <span class="mi">2009</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span><span class="mi">033</span> <span class="n">fuglu</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">SAPlugin</span><span class="p">:</span> <span class="n">DEBUG</span> <span class="n">SPAMD</span><span class="o">/</span><span class="mf">1.1</span> <span class="mi">0</span> <span class="n">EX_OK</span>
 
@@ -145,38 +134,38 @@
 </div>
 <p>There should be logger sections configured for most tasks / plugins, if not, do not hesitate to open a bug on this.</p>
 <p><strong>Qualnames for new loggers</strong> :</p>
-<p>Plugins usually use <code class="docutils literal"><span class="pre">fuglu.plugin.&lt;classname&gt;</span></code></p>
+<p>Plugins usually use <code class="docutils literal notranslate"><span class="pre">fuglu.plugin.&lt;classname&gt;</span></code></p>
 <p>fuglu internal qualnames:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">fuglu.SessionHandler</span></code> - What plugins are being run, what are the results, ...</li>
-<li><code class="docutils literal"><span class="pre">fuglu.smtp.incoming</span></code> - Incoming smtp connections</li>
-<li><code class="docutils literal"><span class="pre">fuglu.smtp.incoming.&lt;portnumber&gt;</span></code> - Incoming smtp sessions on port &lt;portnumber&gt;</li>
-<li><code class="docutils literal"><span class="pre">fuglu.smtpsession</span></code> - information on the incoming smtp transaction</li>
-<li><code class="docutils literal"><span class="pre">fuglu.threadpool</span></code> - information when threads are created / destroyed</li>
-<li><code class="docutils literal"><span class="pre">fuglu.suspectfilter</span></code> - debug info on parsing/applying the special header filter config files</li>
+<li><code class="docutils literal notranslate"><span class="pre">fuglu.SessionHandler</span></code> - What plugins are being run, what are the results, …</li>
+<li><code class="docutils literal notranslate"><span class="pre">fuglu.smtp.incoming</span></code> - Incoming smtp connections</li>
+<li><code class="docutils literal notranslate"><span class="pre">fuglu.smtp.incoming.&lt;portnumber&gt;</span></code> - Incoming smtp sessions on port &lt;portnumber&gt;</li>
+<li><code class="docutils literal notranslate"><span class="pre">fuglu.smtpsession</span></code> - information on the incoming smtp transaction</li>
+<li><code class="docutils literal notranslate"><span class="pre">fuglu.threadpool</span></code> - information when threads are created / destroyed</li>
+<li><code class="docutils literal notranslate"><span class="pre">fuglu.suspectfilter</span></code> - debug info on parsing/applying the special header filter config files</li>
 </ul>
 </div></blockquote>
 <p><strong>Additional handlers</strong></p>
-<p>In addition to python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html">builtin handlers</a> , fuglu supports:</p>
+<p>In addition to python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html">builtin handlers</a> , fuglu supports:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupReadableRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable by fuglu&#8217;s group</li>
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupWritableRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable/writable by fuglu&#8217;s group</li>
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupReadableTimedRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a> , but the file is readable by fuglu&#8217;s group</li>
-<li><code class="docutils literal"><span class="pre">custom_handlers.GroupWritableTimedRotatingFileHandler</span></code> - Like python&#8217;s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a>, but the file is readable/writable by fuglu&#8217;s group</li>
+<li><code class="docutils literal notranslate"><span class="pre">custom_handlers.GroupReadableRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable by fuglu’s group</li>
+<li><code class="docutils literal notranslate"><span class="pre">custom_handlers.GroupWritableRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler">RotatingFileHandler</a> , but the file is readable/writable by fuglu’s group</li>
+<li><code class="docutils literal notranslate"><span class="pre">custom_handlers.GroupReadableTimedRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a> , but the file is readable by fuglu’s group</li>
+<li><code class="docutils literal notranslate"><span class="pre">custom_handlers.GroupWritableTimedRotatingFileHandler</span></code> - Like python’s <a class="reference external" href="https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler">TimedRotatingFileHandler</a>, but the file is readable/writable by fuglu’s group</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="mrtg">
 <h3>MRTG<a class="headerlink" href="#mrtg" title="Permalink to this headline">¶</a></h3>
-<p>Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg <code class="docutils literal"><span class="pre">/usr/local/fuglu/mrtg</span></code>) and set this in <code class="docutils literal"><span class="pre">fuglu.conf</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#Statistics</span>
+<p>Fuglu can be configured to peridically write status files readable by mrtg. To do this, you only have to create a new directory (eg <code class="docutils literal notranslate"><span class="pre">/usr/local/fuglu/mrtg</span></code>) and set this in <code class="docutils literal notranslate"><span class="pre">fuglu.conf</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#Statistics</span>
 <span class="n">mrtgdir</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">mrtg</span>
 </pre></div>
 </div>
-<p>You&#8217;ll need <em>mrtg</em> and a <em>webserver</em> for this to work... create a file called <code class="docutils literal"><span class="pre">/etc/fuglu/fuglu_mrtg.cfg</span></code>  like this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>Interval: 5
+<p>You’ll need <em>mrtg</em> and a <em>webserver</em> for this to work… create a file called <code class="docutils literal notranslate"><span class="pre">/etc/fuglu/fuglu_mrtg.cfg</span></code>  like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Interval: 5
 WorkDir: /usr/local/fuglu/mrtg/output
 WriteExpires: yes
 Options[_]: growright,nopercent
@@ -253,68 +242,68 @@ AbsMax[virus]: 600000
 </pre></div>
 </div>
 <p>Make sure, the path in WorkDir exists.</p>
-<p>Then create a script <code class="docutils literal"><span class="pre">/usr/local/bin/fuglu_mrtg.sh</span></code></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/bin/sh</span>
+<p>Then create a script <code class="docutils literal notranslate"><span class="pre">/usr/local/bin/fuglu_mrtg.sh</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/sh</span>
 <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">env</span> <span class="n">LANG</span><span class="o">=</span><span class="n">C</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">mrtg</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">fuglu_mrtg</span><span class="o">.</span><span class="n">cfg</span>
 </pre></div>
 </div>
-<p>run <code class="docutils literal"><span class="pre">fuglu_mrtg.sh</span></code> to check for errors.</p>
+<p>run <code class="docutils literal notranslate"><span class="pre">fuglu_mrtg.sh</span></code> to check for errors.</p>
 <p>If all went well, add it to your crontab:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">*/</span><span class="mi">5</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">fuglu_mrtg</span><span class="o">.</span><span class="n">sh</span> <span class="o">&gt;/</span><span class="n">dev</span><span class="o">/</span><span class="n">null</span> <span class="mi">2</span><span class="o">&gt;&amp;</span><span class="mi">1</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*/</span><span class="mi">5</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span> <span class="o">*</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">fuglu_mrtg</span><span class="o">.</span><span class="n">sh</span> <span class="o">&gt;/</span><span class="n">dev</span><span class="o">/</span><span class="n">null</span> <span class="mi">2</span><span class="o">&gt;&amp;</span><span class="mi">1</span>
 </pre></div>
 </div>
 <p>install mrtg-rrd.cgi (probably rename it to fuglu.cgi ), and configure the path to fuglu_mrtg.cfg correctly:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># EDIT THIS to reflect all your MRTG config files</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># EDIT THIS to reflect all your MRTG config files</span>
 <span class="n">BEGIN</span> <span class="p">{</span> <span class="nd">@config_files</span> <span class="o">=</span> <span class="n">qw</span><span class="p">(</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">fuglu_mrtg</span><span class="o">.</span><span class="n">cfg</span><span class="p">);</span> <span class="p">}</span>
 </pre></div>
 </div>
-<p>after pointing your browser to <code class="docutils literal"><span class="pre">http://yourfuglubox.example.com/cgi-bin/fuglu.cgi</span></code> you should see nice graphs.</p>
+<p>after pointing your browser to <code class="docutils literal notranslate"><span class="pre">http://yourfuglubox.example.com/cgi-bin/fuglu.cgi</span></code> you should see nice graphs.</p>
 </div>
 </div>
 <div class="section" id="troubleshooting-debugging">
 <h2>Troubleshooting &amp; Debugging<a class="headerlink" href="#troubleshooting-debugging" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fuglu-doesn-t-even-start">
-<h3>Fuglu doesn&#8217;t even start<a class="headerlink" href="#fuglu-doesn-t-even-start" title="Permalink to this headline">¶</a></h3>
+<h3>Fuglu doesn’t even start<a class="headerlink" href="#fuglu-doesn-t-even-start" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
-<li>run <code class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--lint</span></code> as root. are there any errors?</li>
+<li>run <code class="docutils literal notranslate"><span class="pre">fuglu</span> <span class="pre">--lint</span></code> as root. are there any errors?</li>
 <li>did you create /etc/fuglu/logging.conf (by renaming the logging.conf.dist file) ?</li>
 <li>check if the log directory (/var/log/fuglu/ by default) exists an is writable by the user running fuglu</li>
 <li>check for errors in /var/log/fuglu.log</li>
-<li>run fuglu fuglu in foreground using <code class="docutils literal"><span class="pre">fuglu</span> <span class="pre">--foreground</span></code> or by setting <code class="docutils literal"><span class="pre">daemonize=0</span></code> in fuglu.conf and check for errors</li>
+<li>run fuglu fuglu in foreground using <code class="docutils literal notranslate"><span class="pre">fuglu</span> <span class="pre">--foreground</span></code> or by setting <code class="docutils literal notranslate"><span class="pre">daemonize=0</span></code> in fuglu.conf and check for errors</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="debug-trace-a-single-message">
 <h3>Debug Trace a single message<a class="headerlink" href="#debug-trace-a-single-message" title="Permalink to this headline">¶</a></h3>
 <p>Fuglu runs but you want to know what exactly would happen to a single email message?</p>
-<p>Make sure message debugging is enabled (it is by default, but if you screwed up your config...) :</p>
+<p>Make sure message debugging is enabled (it is by default, but if you screwed up your config…) :</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">prependers=</span></code> should start with <code class="docutils literal"><span class="pre">debug</span></code> to make sure the debugger plugin is loaded</li>
-<li><code class="docutils literal"><span class="pre">incomingport</span></code> option should contain port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port</li>
+<li><code class="docutils literal notranslate"><span class="pre">prependers=</span></code> should start with <code class="docutils literal notranslate"><span class="pre">debug</span></code> to make sure the debugger plugin is loaded</li>
+<li><code class="docutils literal notranslate"><span class="pre">incomingport</span></code> option should contain port 10888 (eg. incomingport=10025,10099,10888 ) , so fuglu listens on the debugging port</li>
 <li>in the [debug] section, set debugport=10888 and debugfile=/tmp/fuglu_debug.log , so the debugger plugin knows what port to treat as debug port and where to store debug information</li>
-<li><code class="docutils literal"><span class="pre">nobounce</span></code> should be set to True, so debugged messages can not be bounced</li>
-<li><code class="docutils literal"><span class="pre">noreinject</span></code> shoud be set to True, so debugged messages are not re-injected to postfix for further processing</li>
-<li><code class="docutils literal"><span class="pre">noappender</span></code> should be set to True, so appenders are not run for debugged messages</li>
+<li><code class="docutils literal notranslate"><span class="pre">nobounce</span></code> should be set to True, so debugged messages can not be bounced</li>
+<li><code class="docutils literal notranslate"><span class="pre">noreinject</span></code> shoud be set to True, so debugged messages are not re-injected to postfix for further processing</li>
+<li><code class="docutils literal notranslate"><span class="pre">noappender</span></code> should be set to True, so appenders are not run for debugged messages</li>
 </ul>
 </div></blockquote>
 <p>Save the message on the server (rfc822 format), and run</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu_debug</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">message</span><span class="o">.</span><span class="n">eml</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fuglu_debug</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">message</span><span class="o">.</span><span class="n">eml</span>
 </pre></div>
 </div>
 <p>you may add envelope sender and recipient if these are relevant for your test, eg:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu_debug</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">message</span><span class="o">.</span><span class="n">eml</span> <span class="n">sender</span><span class="nd">@example</span><span class="o">.</span><span class="n">org</span> <span class="n">recipient</span><span class="nd">@example</span><span class="o">.</span><span class="n">net</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fuglu_debug</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">message</span><span class="o">.</span><span class="n">eml</span> <span class="n">sender</span><span class="nd">@example</span><span class="o">.</span><span class="n">org</span> <span class="n">recipient</span><span class="nd">@example</span><span class="o">.</span><span class="n">net</span>
 </pre></div>
 </div>
-<p>then check <code class="docutils literal"><span class="pre">/tmp/fuglu_debug.log</span></code></p>
+<p>then check <code class="docutils literal notranslate"><span class="pre">/tmp/fuglu_debug.log</span></code></p>
 </div>
 <div class="section" id="debug-a-suspect-filter">
 <span id="debug-suspect-filter"></span><h3>Debug a suspect filter<a class="headerlink" href="#debug-a-suspect-filter" title="Permalink to this headline">¶</a></h3>
-<p>So you have this filter in a plugin with hundreds of rules and you just don&#8217;t know which one matched a specific message?</p>
+<p>So you have this filter in a plugin with hundreds of rules and you just don’t know which one matched a specific message?</p>
 <p>fuglu_suspectfilter to the rescue! just pass a rule file and a message eml file as arguments and it will list all matches.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fuglu_suspectfilter</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">myfilterfile</span><span class="o">.</span><span class="n">regex</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">testmessage</span><span class="o">.</span><span class="n">eml</span>
-<span class="n">INFO</span><span class="p">:</span><span class="n">fuglu</span><span class="o">.</span><span class="n">suspectfilter</span><span class="p">:</span><span class="n">Reloading</span> <span class="n">Rulefile</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gryphius</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">skipreviewfilter</span><span class="o">.</span><span class="n">regex</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fuglu_suspectfilter</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">myfilterfile</span><span class="o">.</span><span class="n">regex</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">testmessage</span><span class="o">.</span><span class="n">eml</span>
+<span class="n">INFO</span><span class="p">:</span><span class="n">fuglu</span><span class="o">.</span><span class="n">suspectfilter</span><span class="p">:</span><span class="n">Reloading</span> <span class="n">Rulefile</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">myfilterfile</span><span class="o">.</span><span class="n">regex</span>
 <span class="n">INFO</span><span class="p">:</span><span class="n">root</span><span class="p">:</span><span class="mi">194</span> <span class="n">valid</span> <span class="n">rules</span> <span class="n">found</span>
 <span class="n">INFO</span><span class="p">:</span><span class="n">root</span><span class="p">:</span><span class="mi">1</span> <span class="n">matches</span> <span class="n">found</span>
 
@@ -329,17 +318,17 @@ AbsMax[virus]: 600000
 </div>
 <div class="section" id="debug-the-fuglu-core">
 <h3>Debug the fuglu core<a class="headerlink" href="#debug-the-fuglu-core" title="Permalink to this headline">¶</a></h3>
-<p>If you are a python developer and would like to inspect fuglu at run-time, add the argument <code class="docutils literal"><span class="pre">--console</span></code> when starting fuglu.
-You will then get an interactive python console where all plugins etc are available from the &#8216;mc&#8217; (MainController) object.</p>
-<p>Starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command <code class="docutils literal"><span class="pre">fuglu_control</span> <span class="pre">netconsole</span> <span class="pre">[&lt;port&gt;</span> <span class="pre">[&lt;bindaddress&gt;]]</span></code></p>
+<p>If you are a python developer and would like to inspect fuglu at run-time, add the argument <code class="docutils literal notranslate"><span class="pre">--console</span></code> when starting fuglu.
+You will then get an interactive python console where all plugins etc are available from the ‘mc’ (MainController) object.</p>
+<p>Starting with fuglu 0.6.1 it is also possible to start a network-enabled python shell using the command <code class="docutils literal notranslate"><span class="pre">fuglu_control</span> <span class="pre">netconsole</span> <span class="pre">[&lt;port&gt;</span> <span class="pre">[&lt;bindaddress&gt;]]</span></code></p>
 <p>Example:
 on the host running fuglu:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># fuglu_control netconsole 9999 0.0.0.0</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># fuglu_control netconsole 9999 0.0.0.0</span>
 <span class="n">Python</span> <span class="n">interactive</span> <span class="n">console</span> <span class="n">starting</span> <span class="n">on</span> <span class="mf">0.0</span><span class="o">.</span><span class="mf">0.0</span> <span class="n">port</span> <span class="mi">9999</span>
 </pre></div>
 </div>
 <p>on your host:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ nc 192.168.1.40 9999
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ nc 192.168.1.40 9999
 Fuglu Python Shell - MainController available as &#39;mc&#39;
 &gt;&gt;&gt;
 </pre></div>
@@ -364,7 +353,7 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
 </ul>
 </li>
 <li><a class="reference internal" href="#troubleshooting-debugging">Troubleshooting &amp; Debugging</a><ul>
-<li><a class="reference internal" href="#fuglu-doesn-t-even-start">Fuglu doesn&#8217;t even start</a></li>
+<li><a class="reference internal" href="#fuglu-doesn-t-even-start">Fuglu doesn’t even start</a></li>
 <li><a class="reference internal" href="#debug-trace-a-single-message">Debug Trace a single message</a></li>
 <li><a class="reference internal" href="#debug-a-suspect-filter">Debug a suspect filter</a></li>
 <li><a class="reference internal" href="#debug-the-fuglu-core">Debug the fuglu core</a></li>
@@ -394,12 +383,14 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -447,8 +438,8 @@ Fuglu Python Shell - MainController available as &#39;mc&#39;
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
+        &#169; Copyright 2012-2018, gryphius.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

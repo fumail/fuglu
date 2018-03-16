@@ -18,9 +18,9 @@ required
 recommended
 -----------
 
- * **python-file/libmagic** (the file magic bindings) - Without this the attachment checker will only be able to block based on content type/attachment name but not based on the real file content. 
- * **Spamassassin daemon (spamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
- * **Clam antivirus daemon (clamd)** ( if you don't have/want this, you need to disable it in the configuration, see below) 
+ * **python-file/libmagic** (the file magic bindings) - Without this the attachment checker will only be able to block based on content type/attachment name but not based on the real file content.
+ * **Spamassassin daemon (spamd)** ( if you don't have/want this, you need to disable it in the configuration, see below)
+ * **Clam antivirus daemon (clamd)** ( if you don't have/want this, you need to disable it in the configuration, see below)
  * **python-BeautifulSoup** (optional, used to improve html tag stripping from body searches if available)
 
 ----------------------------
@@ -32,7 +32,7 @@ cloning source from github
 
 ::
 
-	git clone https://github.com/gryphius/fuglu.git
+	git clone https://github.com/fumail/fuglu.git
 	cd fuglu/fuglu
 	python setup.py install
 
@@ -41,9 +41,9 @@ latest source package from github
 
 ::
 
-	wget https://github.com/gryphius/fuglu/tarball/master -O fuglu-latest.tar.gz
+	wget https://github.com/fumail/fuglu/tarball/master -O fuglu-latest.tar.gz
 	tar -xvzf fuglu-latest.tar.gz
-	cd cd gryphius-fuglu-*
+	cd fuglu-*
 	python setup.py install
 
 latest released package from pypi

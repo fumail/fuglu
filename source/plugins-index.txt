@@ -151,7 +151,7 @@ Plugins included in Fuglu
 Extra plugins
 .............
 
-Note, in addition to the plugins included in the fuglu distribution there are additional contributed plugins available in the fuglu-extra-plugins repository: https://github.com/gryphius/fuglu-extra-plugins/
+Note, in addition to the plugins included in the fuglu distribution there are additional contributed plugins available in the fuglu-extra-plugins repository: https://github.com/fumail/fuglu-extra-plugins/
 
 ------------------------
 Writing your own plugins
