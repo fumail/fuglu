@@ -52,6 +52,7 @@ Tags:
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
+ * sets ``SAPlugin.report`` (string) spamheader (where score if found) or spamreport from spamd depending on forwardoriginal setting
 """
 
     def __init__(self, config, section=None):
@@ -346,6 +347,7 @@ Tags:
             else:
                 self.logger.warning('%s Could not extract spam score from header: %s' % (suspect.id, spamheader))
                 suspect.debug( 'Could not read spam score from header %s' % spamheader)
+            return isspam, spamscore, spamheader
         return isspam, spamscore
 
 
@@ -468,7 +470,8 @@ Tags:
             if stripped:
                 self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
-            isspam, spamscore = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
+            isspam, spamscore, report = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
+            suspect.tags['SAPlugin.report'] = report
 
         action = DUNNO
         message = None
