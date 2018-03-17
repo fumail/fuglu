@@ -464,15 +464,15 @@ Tags:
                     msgrep_orig = email.message_from_string(content)
                 # read all headers from after-scan and before-scan
                 for h,v in msgrep_filtered.items():
-                    header_new.append(h + ': ' + v)
+                    header_new.append(h.strip() + ': ' + v.strip())
                 for h,v in msgrep_orig.items():
-                    header_old.append(h + ': ' + v)
+                    header_old.append(h.strip() + ': ' + v.strip())
                 # create a list of headers added by spamd
                 # header diff between before-scan and after-scan msg
                 header_new = reversed(self.diff(header_new, header_old))
                 # add headers to msg
                 for i in header_new:
-                    if re.match('^Received', i, re.I):
+                    if re.match('^Received: ', i, re.I):
                         continue
                     # in case of stripped msg add header to original content
                     if stripped:
@@ -725,5 +725,3 @@ if __name__ == '__main__':
     print("--------------")
     plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
-
-
