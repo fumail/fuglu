@@ -472,6 +472,8 @@ Tags:
                 header_new = reversed(self.diff(header_new, header_old))
                 # add headers to msg
                 for i in header_new:
+                    if re.match('^Received', i, re.I):
+                        continue
                     # in case of stripped msg add header to original content
                     if stripped:
                         content_orig = i + '\r\n' + content_orig
@@ -723,3 +725,5 @@ if __name__ == '__main__':
     print("--------------")
     plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
+
+
