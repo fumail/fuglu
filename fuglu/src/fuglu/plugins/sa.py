@@ -382,6 +382,10 @@ Tags:
 
         return new_src
 
+    # helper to get diff from two lists/dicts
+    def diff(self, new, old):
+        old = set(old)
+        return [item for item in new if item not in old]
 
     def examine(self, suspect):
         # check if someone wants to skip sa checks
@@ -451,17 +455,28 @@ Tags:
                 suspect.set_tag('SAPlugin.skipreason', 'scan failed')
                 return self._problemcode()
             else:
-                header = ''
-                # prepend msg headers to header variable
+                header_new = []
+                header_old = []
+                # create a msgrep from original msg
+                if stripped:
+                    msgrep_orig = email.message_from_string(content_orig)
+                else:
+                    msgrep_orig = email.message_from_string(content)
+                # read all headers from after-scan and before-scan
                 for h,v in msgrep_filtered.items():
-                    header = h + ': ' + v + '\r\n' + header
-                # add X-Spam header content to msg
-                for i in re.findall('(^X-Spam-[^:]+):', header, re.M):
+                    header_new.append(h + ': ' + v)
+                for h,v in msgrep_orig.items():
+                    header_old.append(h + ': ' + v)
+                # create a list of headers added by spamd
+                # header diff between before-scan and after-scan msg
+                header_new = reversed(self.diff(header_new, header_old))
+                # add headers to msg
+                for i in header_new:
                     # in case of stripped msg add header to original content
                     if stripped:
-                        content_orig = i + ': ' + force_bString(msgrep_filtered(i)) + '\r\n' + content_orig
+                        content_orig = i + '\r\n' + content_orig
                     else:
-                        content = i + ': ' + force_bString(msgrep_filtered.get(i)) + '\r\n' + content
+                        content = i + '\r\n' + content
                 if stripped is True:
                     content = content_orig
             if sys.version_info > (3,):
@@ -708,5 +723,3 @@ if __name__ == '__main__':
     print("--------------")
     plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
-
-
