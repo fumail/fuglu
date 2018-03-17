@@ -11,6 +11,6 @@ Quick links:
     :target: https://pypi.python.org/pypi/fuglu/
     :alt: Latest PyPI version
     
-.. image:: https://travis-ci.org/jahlives/fuglu.svg?branch=master
-    :target: https://travis-ci.org/jahlives/fuglu
+.. image:: https://travis-ci.org/gryphius/fuglu.svg?branch=master
+    :target: https://travis-ci.org/gryphius/fuglu
     :alt: Build status
