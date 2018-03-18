@@ -455,32 +455,28 @@ Tags:
                 suspect.set_tag('SAPlugin.skipreason', 'scan failed')
                 return self._problemcode()
             else:
-                header_new = []
-                header_old = []
-                # create a msgrep from original msg
                 if stripped:
+                    header_new = []
+                    header_old = []
+                    # create a msgrep from original msg
                     msgrep_orig = email.message_from_string(content_orig)
-                else:
-                    msgrep_orig = email.message_from_string(content)
-                # read all headers from after-scan and before-scan
-                for h,v in msgrep_filtered.items():
-                    header_new.append(h.strip() + ': ' + v.strip())
-                for h,v in msgrep_orig.items():
-                    header_old.append(h.strip() + ': ' + v.strip())
-                # create a list of headers added by spamd
-                # header diff between before-scan and after-scan msg
-                header_new = reversed(self.diff(header_new, header_old))
-                # add headers to msg
-                for i in header_new:
-                    if re.match('^Received: ', i, re.I):
-                        continue
-                    # in case of stripped msg add header to original content
-                    if stripped:
+                    # read all headers from after-scan and before-scan
+                    for h,v in msgrep_filtered.items():
+                        header_new.append(h.strip() + ': ' + v.strip())
+                    for h,v in msgrep_orig.items():
+                        header_old.append(h.strip() + ': ' + v.strip())
+                    # create a list of headers added by spamd
+                    # header diff between before-scan and after-scan msg
+                    header_new = reversed(self.diff(header_new, header_old))
+                    # add headers to msg
+                    for i in header_new:
+                        if re.match('^Received: ', i, re.I):
+                            continue
+                        # in case of stripped msg add header to original content
                         content_orig = i + '\r\n' + content_orig
-                    else:
-                        content = i + '\r\n' + content
-                if stripped is True:
                     content = content_orig
+                else:
+                    content = filtered
             if sys.version_info > (3,):
                 # Python 3 and larger
                 # the basic "str" type is unicode
@@ -492,8 +488,6 @@ Tags:
                 # Python 2.x
                 newmsgrep = email.message_from_string(content)
             suspect.set_source(content)
-            if stripped:
-                self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore, report = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
             suspect.tags['SAPlugin.report'] = report
