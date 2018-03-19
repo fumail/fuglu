@@ -15,9 +15,10 @@
 
 from __future__ import print_function
 
-import re
 import os
+import re
 import sys
+
 try:
     import configparser
 except ImportError:
@@ -570,11 +571,9 @@ class MainController(object):
         self.shutdown()
 
     def run_debugconsole(self):
-        from fuglu.shared import DUNNO, ACCEPT, DELETE, REJECT, DEFER, Suspect
 
         # do not import readline at the top, it will cause undesired output, for example when generating the default config
         # http://stackoverflow.com/questions/15760712/python-readline-module-prints-escape-character-during-import
-        import readline
 
         print("Fuglu Interactive Console started")
         print("")
@@ -640,17 +639,51 @@ class MainController(object):
         """apply config changes"""
         self.logger.info('Applying configuration changes...')
 
-        # threadpool changes?
-        if self.config.get('performance','backend') == 'thread' and self.threadpool is not None:
-            minthreads = self.config.getint('performance', 'minthreads')
-            maxthreads = self.config.getint('performance', 'maxthreads')
+        backend = self.config.get('performance','backend')
 
-            if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
-                self.logger.info('Threadpool config changed, initialising new threadpool')
-                queuesize = maxthreads * 10
-                currentthreadpool = self.threadpool
-                self.threadpool = ThreadPool(minthreads, maxthreads, queuesize)
-                currentthreadpool.stayalive = False
+        if backend == 'thread':
+            if self.threadpool is not None:
+                minthreads = self.config.getint('performance', 'minthreads')
+                maxthreads = self.config.getint('performance', 'maxthreads')
+
+                # threadpool changes?
+                if self.threadpool.minthreads != minthreads or self.threadpool.maxthreads != maxthreads:
+                    self.logger.info('Threadpool config changed, initialising new threadpool')
+                    currentthreadpool = self.threadpool
+                    self.threadpool = self._start_threadpool()
+                    currentthreadpool.stayalive = False
+                else:
+                    self.logger.info('Keep existing threadpool')
+            else:
+                self.logger.info('Create new threadpool')
+                self._threadpool = self._start_threadpool()
+
+            # stop existing procpool
+            if self.procpool is not None:
+                self.logger.info('Delete old procpool')
+                self.procpool.shutdown()
+                self.procpool = None
+
+        elif backend == 'process':
+            # start new procpool
+            currentProcPool = self.procpool
+            self.logger.info('Create new processpool')
+            self.procpool = self._start_processpool()
+
+            # stop existing procpool
+            # -> the procpool has to be recreated to take configuration changes
+            #    into account (each worker process has its own controller unlike using threadpool)
+            if currentProcPool is not None:
+                self.logger.info('Delete old processpool')
+                currentProcPool.shutdown()
+
+            # stop existing threadpool
+            if self.threadpool is not None:
+                self.logger.info('Delete old threadpool')
+                self.threadpool.stayalive = False
+                self.threadpool = None
+        else:
+            self.logger.error('backend not detected -> ignoring input!')
 
         # smtp engine changes?
         ports = self.config.get('main', 'incomingport')
@@ -671,6 +704,7 @@ class MainController(object):
                     break
 
             if not alreadyRunning:
+                self.logger.info('start new connector at %s' % str(portspec))
                 self.start_connector(portspec)
 
         servercopy = self.servers[:]

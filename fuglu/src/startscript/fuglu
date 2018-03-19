@@ -51,6 +51,16 @@ logging.custom_handlers = loghandlers
 def reloadconfig():
     """reload configuration file"""
     logger = logging.getLogger('fuglu')
+    if controller:
+        if controller.threadpool is None and controller.procpool is None:
+            logger.error("No process/threadpool -> This is not the main process!\n"
+                         "No changes will be applied...!\nSend SIGHUP to the main process!")
+            return
+    else:
+        logger.error("No controller -> This is not the main process!\n"
+                     "No changes will be applied...!\nSend SIGHUP to the main process!")
+        return
+
     logger.info('Reloading configuration')
     newconfig = configparser.RawConfigParser()
     with open(theconfigfile) as fp:

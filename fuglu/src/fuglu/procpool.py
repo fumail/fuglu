@@ -26,6 +26,14 @@ import importlib
 import pickle
 from fuglu.stats import Statskeeper, StatDelta
 import threading
+import os
+
+def createPIDinfo():
+    infoString = ""
+    if hasattr(os, 'getppid'):  # only available on Unix
+        infoString += 'parent process: %u, ' % os.getppid()
+    infoString += 'process id: %u' % os.getpid()
+    return infoString
 
 class ProcManager(object):
     def __init__(self, numprocs = None, queuesize=100, config = None):
@@ -88,6 +96,9 @@ class ProcManager(object):
     def shutdown(self):
         self.stayalive = False
         self.message_listener.stayalive = False
+        self.tasks.close()
+        self.child_to_server_messages.close()
+        self.manager.shutdown()
 
 class MessageListener(threading.Thread):
     def __init__(self, message_queue):
@@ -115,6 +126,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages):
     logging.basicConfig(level=logging.DEBUG)
     workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
+    logger.debug("New worker: %s" % createPIDinfo())
 
     # load config and plugins
     controller = fuglu.core.MainController(config)
@@ -134,7 +146,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages):
             workerstate.workerstate = 'waiting for task'
             task = queue.get()
             if task is None: # poison pill
-                logger.debug("Child process received poison pill - shut down")
+                logger.debug("%s: Child process received poison pill - shut down" % createPIDinfo())
                 workerstate.workerstate = 'ended'
                 return
             workerstate.workerstate = 'starting scan session'
@@ -151,6 +163,8 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages):
         logger.error("Exception in child process: %s"%trb)
         print(trb)
         workerstate.workerstate = 'crashed'
+    finally:
+        controller.shutdown()
 
 
 class WorkerStateWrapper(object):
