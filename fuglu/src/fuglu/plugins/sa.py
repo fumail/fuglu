@@ -13,17 +13,17 @@
 # limitations under the License.
 #
 #
-from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
+import email
+import os
+import re
+import socket
+import sys
+import time
+from string import Template
+
 from fuglu.extensions.sql import DBConfig, get_session, SQL_EXTENSION_ENABLED
 from fuglu.localStringEncoding import force_bString, force_uString
-from string import Template
-import time
-import socket
-import email
-import re
-import os
-import sys
-
+from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
 
 GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org
@@ -418,10 +418,12 @@ Tags:
             stripped = True
             # keep copy of original content before stripping
             content_orig = content
+            # content now is truncated
             content = self._strip_attachments(content, maxsize)
 
         # stick to bytes
         content = force_bString(content)
+        content_orig = force_bString(content_orig)
 
         # prepend temporary headers set by other plugins
         tempheader = suspect.get_tag('SAPlugin.tempheader')
@@ -447,6 +449,8 @@ Tags:
         else:
             filtered = self.safilter(content, suspect.to_address)
             # create msgrep of filtered msg
+            # needed to access headers added by spamd
+            # and for setting content if msg is not oversize
             msgrep_filtered = email.message_from_string(filtered)
             if filtered is None:
                 suspect.debug('SA Scan failed - please check error log')
@@ -455,27 +459,37 @@ Tags:
                 suspect.set_tag('SAPlugin.skipreason', 'scan failed')
                 return self._problemcode()
             else:
+                # oversize message and forwardoriginal=0
                 if stripped:
+                    # holds the headers after passing spamd
                     header_new = []
+                    # holds the headers before passing spamd
                     header_old = []
                     # create a msgrep from original msg
                     msgrep_orig = email.message_from_string(content_orig)
-                    # read all headers from after-scan and before-scan
+                    # read all headers from after-scan
                     for h,v in msgrep_filtered.items():
                         header_new.append(h.strip() + ': ' + v.strip())
+                    # read all headers from before-scan
                     for h,v in msgrep_orig.items():
                         header_old.append(h.strip() + ': ' + v.strip())
                     # create a list of headers added by spamd
                     # header diff between before-scan and after-scan msg
+                    # and reversed for proper sequence in resulting message
                     header_new = reversed(self.diff(header_new, header_old))
                     # add headers to msg
                     for i in header_new:
+                        # dunno why but without that the last Received header line is appended to spamd headers
+                        # resulting in header duplication of last (and only last) received header in final message
                         if re.match('^Received: ', i, re.I):
                             continue
-                        # in case of stripped msg add header to original content
+                        # header to original content
                         content_orig = i + '\r\n' + content_orig
+                    # set content to content_orig so we do not pick up truncated message
                     content = content_orig
+                # non oversize message and forwardoriginal=0
                 else:
+                    # set content to the return from spamd
                     content = filtered
             if sys.version_info > (3,):
                 # Python 3 and larger
