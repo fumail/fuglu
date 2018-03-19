@@ -13,17 +13,17 @@
 # limitations under the License.
 #
 #
-import email
-import os
-import re
-import socket
-import sys
-import time
-from string import Template
-
+from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
 from fuglu.extensions.sql import DBConfig, get_session, SQL_EXTENSION_ENABLED
 from fuglu.localStringEncoding import force_bString, force_uString
-from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
+from string import Template
+import time
+import socket
+import email
+import re
+import os
+import sys
+
 
 GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org
