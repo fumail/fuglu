@@ -571,9 +571,11 @@ class MainController(object):
         self.shutdown()
 
     def run_debugconsole(self):
+        from fuglu.shared import DUNNO, ACCEPT, DELETE, REJECT, DEFER, Suspect
 
         # do not import readline at the top, it will cause undesired output, for example when generating the default config
         # http://stackoverflow.com/questions/15760712/python-readline-module-prints-escape-character-during-import
+        import readline
 
         print("Fuglu Interactive Console started")
         print("")
