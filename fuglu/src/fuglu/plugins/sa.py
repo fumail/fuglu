@@ -52,7 +52,7 @@ Tags:
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
- * sets ``SAPlugin.report`` (string) spamheader (where score is found) or spamreport from spamd depending on forwardoriginal setting
+ * sets ``SAPlugin.report``, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting
 """
 
     def __init__(self, config, section=None):
@@ -158,11 +158,6 @@ Tags:
 
 
     def lint(self):
-        strip_oversize = self.config.getboolean(self.section, 'strip_oversize')
-        forwardoriginal = self.config.getboolean(self.section, 'forwardoriginal')
-        if strip_oversize and not forwardoriginal:
-            print('WARNING: strip_oversize is enabled but forwardoriginal is not. This will result in broken oversize messages.')
-
         allok = self.check_config() and self.lint_ping() and self.lint_spam() and self.lint_blacklist()
         return allok
 
@@ -387,6 +382,10 @@ Tags:
 
         return new_src
 
+    # helper to get diff from two lists/dicts
+    def diff(self, new, old):
+        old = set(old)
+        return [item for item in new if item not in old]
 
     def examine(self, suspect):
         # check if someone wants to skip sa checks
@@ -417,6 +416,8 @@ Tags:
         stripped = False
         if spamsize > maxsize:
             stripped = True
+            # keep copy of original content before stripping
+            content_orig = content
             content = self._strip_attachments(content, maxsize)
 
         # stick to bytes
@@ -452,8 +453,30 @@ Tags:
                 suspect.set_tag('SAPlugin.skipreason', 'scan failed')
                 return self._problemcode()
             else:
-                content = filtered
-
+                if stripped:
+                    # create msgrep of filtered msg
+                    msgrep_filtered = email.message_from_string(filtered)
+                    header_new = []
+                    header_old = []
+                    # create a msgrep from original msg
+                    msgrep_orig = email.message_from_string(content_orig)
+                    # read all headers from after-scan and before-scan
+                    for h,v in msgrep_filtered.items():
+                        header_new.append(h.strip() + ': ' + v.strip())
+                    for h,v in msgrep_orig.items():
+                        header_old.append(h.strip() + ': ' + v.strip())
+                    # create a list of headers added by spamd
+                    # header diff between before-scan and after-scan msg
+                    header_new = reversed(self.diff(header_new, header_old))
+                    # add headers to msg
+                    for i in header_new:
+                        if re.match('^Received: ', i, re.I):
+                            continue
+                        # in case of stripped msg add header to original content
+                        content_orig = i + '\r\n' + content_orig
+                    content = content_orig
+                else:
+                    content = filtered
             if sys.version_info > (3,):
                 # Python 3 and larger
                 # the basic "str" type is unicode
@@ -464,14 +487,11 @@ Tags:
             else:
                 # Python 2.x
                 newmsgrep = email.message_from_string(content)
-
-
             suspect.set_source(content)
-            if stripped:
-                self.logger.warning('%s forwarding truncated message')
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore, report = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
             suspect.tags['SAPlugin.report'] = report
+            self.logger.debug('suspect %s %s %s %s' % (suspect.id, isspam, spamscore, suspect.get_tag('SAPlugin.report')))
 
         action = DUNNO
         message = None
@@ -700,4 +720,5 @@ if __name__ == '__main__':
     print("--------------")
     plugin.debug_proto(GTUBE, sys.argv[1])
     print("--------------")
+
 
