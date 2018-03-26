@@ -111,7 +111,7 @@ class BasicTCPServer(object):
                 self.logger.debug('Incoming connection from %s' % str(addr))
                 if self.controller.threadpool:
                     # this will block if queue is full
-                    threadpool.add_task(engine)
+                    self.controller.threadpool.add_task(engine)
                 elif self.controller.procpool:
                     # in multi processing, the other process manages configs and plugins itself, we only pass the minimum required information:
                     # a pickled version of the socket (this is no longer required in python 3.4, but in python 2 the multiprocessing queue can not handle sockets
