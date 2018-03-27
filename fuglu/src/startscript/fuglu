@@ -23,6 +23,7 @@ try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
+
 from fuglu import FUGLU_VERSION
 from fuglu.daemon import DaemonStuff
 import logging
@@ -36,6 +37,8 @@ import os
 import pwd
 import grp
 import optparse
+import fuglu.logtools
+import multiprocessing
 
 controller = None
 
@@ -53,8 +56,9 @@ def reloadconfig():
     logger = logging.getLogger('fuglu')
     if controller:
         if controller.threadpool is None and controller.procpool is None:
-            logger.error("No process/threadpool -> This is not the main process!\n"
-                         "No changes will be applied...!\nSend SIGHUP to the main process!")
+            logger.error("""No process/threadpool -> This is not the main process!
+                          \nNo changes will be applied...!\nSend SIGHUP to the main process!
+                          \nCurrent controller object : %s, %s""" % (id(controller),controller.__repr__()))
             return
     else:
         logger.error("No controller -> This is not the main process!\n"
@@ -178,31 +182,42 @@ except:
           (running_user, running_group, str(err)))
 
 
+#--
 # set up logging
+#--
+
+# all threads/processes write to the logQueue which
+# will be handled by a separate process
+logQueue   = multiprocessing.Queue(-1)
+
+# setup a process which handles logging messages
 if lint:
-    # define a Handler which writes INFO messages or higher to the sys.stderr
-    console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
-    # set a format which is simpler for console use
-    formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-    # tell the handler to use this format
-    console.setFormatter(formatter)
-    # add the handler to the root logger
-    logging.getLogger('').addHandler(console)
     fc = fuglu.funkyconsole.FunkyConsole()
     print(fc.strcolor("Fuglu", "yellow"), end=' ')
     print(fc.strcolor(FUGLU_VERSION, "green"))
     print("----------", fc.strcolor("LINT MODE",
                                     (fc.MODE["blink"], fc.FG["magenta"])), "----------")
 
-else:
-    logging.config.fileConfig(theloggingfile)
+    logConfigure = fuglu.logtools.logConfig(lint=True)
 
-baselogger = logging.getLogger('')
+else:
+    logConfigure = fuglu.logtools.logConfig(logConfigFile=theloggingfile)
+
+#--
+# start process handling logging queue
+#--
+logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
+                                     args=(logQueue, logConfigure))
+logProcess.start()
+
+# setup this main thread to send messages to the log queue (which is handled by the logProcess)
+fuglu.logtools.client_configurer(logQueue)
+
+baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
 # instantiate the MainController and load default configuration
-controller = MainController(config)
+controller = MainController(config,logQueue)
 controller.propagate_core_defaults()
 
 
@@ -233,3 +248,13 @@ else:
     if console:
         controller.debugconsole = True
     controller.startup()
+
+
+#---
+# stop logger process
+#---
+try:
+    logQueue.put_nowait(None)
+    logProcess.join()
+except Exception:
+    pass
