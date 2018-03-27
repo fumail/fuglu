@@ -105,7 +105,7 @@ class MainController(object):
     appenders = []
     config = None
 
-    def __init__(self, config,logQueue):
+    def __init__(self, config,logQueue,logProcess=None):
         self.requiredvars = {
             # main section
             'identifier': {
@@ -438,6 +438,19 @@ class MainController(object):
         self.statsthread = None
         self.debugconsole = False
         self._logQueue = logQueue
+        self._logProcess = logProcess
+
+    @property
+    def logQueue(self):
+        return self._logQueue
+
+    @property
+    def logProcess(self):
+        return self._logProcess
+
+    @logProcess.setter
+    def logProcess(self,lProc):
+        self._logProcess = lProc
 
     def _logger(self):
         myclass = self.__class__.__name__

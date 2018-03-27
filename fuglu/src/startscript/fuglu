@@ -39,8 +39,10 @@ import grp
 import optparse
 import fuglu.logtools
 import multiprocessing
+import time
 
 controller = None
+logProcess = None
 
 theconfigfile = '/etc/fuglu/fuglu.conf'
 dconfdir = '/etc/fuglu/conf.d'
@@ -53,6 +55,7 @@ logging.custom_handlers = loghandlers
 
 def reloadconfig():
     """reload configuration file"""
+
     logger = logging.getLogger('fuglu')
     if controller:
         if controller.threadpool is None and controller.procpool is None:
@@ -64,6 +67,46 @@ def reloadconfig():
         logger.error("No controller -> This is not the main process!\n"
                      "No changes will be applied...!\nSend SIGHUP to the main process!")
         return
+
+    if controller.logProcess is None:
+        logger.error("No log process in controller -> This is not the main process!\n"
+                     "No changes will be applied...!\nSend SIGHUP to the main process!")
+        return
+
+    #logger.info('Reloading logging configuration')
+
+    #---
+    # stop logger process
+    #---
+    logQueue = controller.logQueue
+    logProcess = controller.logProcess
+
+    try:
+        newLogConfigure = fuglu.logtools.logConfig(logQueue,logConfigFile=theloggingfile)
+    except Exception as e:
+        logging.exception(e)
+        logging.error("Error in the log file, noe applying any change!")
+        return
+
+    # try to close the old logger
+    try:
+        logQueue.put_nowait(None)
+        logProcess.join(10) # wait 10 seconds max
+    except Exception:
+        logger.error("Could not close old logger!")
+        time.sleep(2)
+        pass
+
+    #--
+    # start new process handling logging queue
+    # this process uses now an updated version of the log file
+    #--
+    logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
+                                         args=(newLogConfigure,))
+    logProcess.start()
+
+    # save logging process back to controller
+    controller.logProcess = logProcess
 
     logger.info('Reloading configuration')
     newconfig = configparser.RawConfigParser()
@@ -198,26 +241,26 @@ if lint:
     print("----------", fc.strcolor("LINT MODE",
                                     (fc.MODE["blink"], fc.FG["magenta"])), "----------")
 
-    logConfigure = fuglu.logtools.logConfig(lint=True)
+    logConfigure = fuglu.logtools.logConfig(logQueue,lint=True)
 
 else:
-    logConfigure = fuglu.logtools.logConfig(logConfigFile=theloggingfile)
+    logConfigure = fuglu.logtools.logConfig(logQueue,logConfigFile=theloggingfile)
 
 #--
 # start process handling logging queue
 #--
 logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
-                                     args=(logQueue, logConfigure))
+                                     args=(logConfigure,))
 logProcess.start()
 
 # setup this main thread to send messages to the log queue (which is handled by the logProcess)
-fuglu.logtools.client_configurer(logQueue)
+fuglu.logtools.client_configurer(logConfigure.queue)
 
 baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
 # instantiate the MainController and load default configuration
-controller = MainController(config,logQueue)
+controller = MainController(config,logConfigure.queue,logProcess)
 controller.propagate_core_defaults()
 
 
@@ -254,7 +297,8 @@ else:
 # stop logger process
 #---
 try:
-    logQueue.put_nowait(None)
-    logProcess.join()
+    controller.logQueue.put_nowait(None)
+    # wait 2 minutes max
+    controller.logProcess.join(120)
 except Exception:
     pass
