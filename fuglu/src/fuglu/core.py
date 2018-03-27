@@ -658,7 +658,7 @@ class MainController(object):
                     self.logger.info('Keep existing threadpool')
             else:
                 self.logger.info('Create new threadpool')
-                self._threadpool = self._start_threadpool()
+                self.threadpool = self._start_threadpool()
 
             # stop existing procpool
             if self.procpool is not None:
