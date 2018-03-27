@@ -105,7 +105,7 @@ class MainController(object):
     appenders = []
     config = None
 
-    def __init__(self, config):
+    def __init__(self, config,logQueue):
         self.requiredvars = {
             # main section
             'identifier': {
@@ -437,6 +437,7 @@ class MainController(object):
         self.started = datetime.datetime.now()
         self.statsthread = None
         self.debugconsole = False
+        self._logQueue = logQueue
 
     def _logger(self):
         myclass = self.__class__.__name__
@@ -514,7 +515,7 @@ class MainController(object):
         if numprocs < 1:
             numprocs = multiprocessing.cpu_count() *2
         self.logger.info("Init process pool with %s worker processes"%(numprocs))
-        pool = fuglu.procpool.ProcManager(numprocs = numprocs, config = self.config)
+        pool = fuglu.procpool.ProcManager(self._logQueue, numprocs = numprocs, config = self.config)
         return pool
 
     def _start_connectors(self):
@@ -708,6 +709,8 @@ class MainController(object):
             if not alreadyRunning:
                 self.logger.info('start new connector at %s' % str(portspec))
                 self.start_connector(portspec)
+            else:
+                self.logger.info('keep connector at %s' % str(portspec))
 
         servercopy = self.servers[:]
         for serv in servercopy:
@@ -715,11 +718,14 @@ class MainController(object):
                 self.logger.info('Closing server socket on port %s' % serv.port)
                 serv.shutdown()
                 self.servers.remove(serv)
+            else:
+                self.logger.info('Keep server socket on port %s' % serv.port)
 
         self.logger.info('Config changes applied')
 
     def shutdown(self):
-        self.statsthread.stayalive = False
+        if self.statsthread:
+            self.statsthread.stayalive = False
         for server in self.servers:
             self.logger.info('Closing server socket on port %s' % server.port)
             server.shutdown()
@@ -924,15 +930,15 @@ class MainController(object):
         allOK = True
         plugdir = self.config.get('main', 'plugindir').strip()
         if plugdir != "" and not os.path.isdir(plugdir):
-            self._logger().warning('Plugin directory %s not found' % plugdir)
+            self.logger.warning('Plugin directory %s not found' % plugdir)
 
         if plugdir != "":
-            self._logger().debug('Searching for additional plugins in %s' % plugdir)
+            self.logger.debug('Searching for additional plugins in %s' % plugdir)
             if plugdir not in sys.path:
                 sys.path.insert(0, plugdir)
 
-        self._logger().debug('Module search path %s' % sys.path)
-        self._logger().debug('Loading scanner plugins')
+        self.logger.debug('Module search path %s' % sys.path)
+        self.logger.debug('Loading scanner plugins')
         newplugins, loadok = self._load_all(self.config.get('main', 'plugins'))
         if not loadok:
             allOK = False
@@ -978,13 +984,13 @@ class MainController(object):
                 pluglist.append(plugininstance)
             except (configparser.NoSectionError, configparser.NoOptionError):
                 CrashStore.store_exception()
-                self._logger().error("The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
+                self.logger.error("The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
             except Exception as e:
                 CrashStore.store_exception()
-                self._logger().error('Could not load plugin %s : %s' %
+                self.logger.error('Could not load plugin %s : %s' %
                                      (structured_name, e))
                 exc = traceback.format_exc()
-                self._logger().error(exc)
+                self.logger.error(exc)
                 allOK = False
 
         return pluglist, allOK

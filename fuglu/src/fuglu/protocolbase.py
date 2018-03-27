@@ -25,6 +25,7 @@ try:
 except ImportError:
     # Python 3
     from io import BytesIO as StringIO
+from fuglu.procpool import createPIDinfo
 
 class ProtocolHandler(object):
     protoname = 'UNDEFINED'
@@ -58,6 +59,8 @@ class BasicTCPServer(object):
         self.logger = logging.getLogger("fuglu.incoming.%s" % port)
         self.logger.debug('Starting incoming Server on Port %s, protocol=%s' % (
             port, self.protohandlerclass.protoname))
+        self.logger.debug('Incoming server process info:  %s' % createPIDinfo())
+        self.logger.debug('(%s) Logger id is %s' % (createPIDinfo(),id(self)))
         self.port = port
         self.controller = controller
         self.stayalive = True
@@ -108,7 +111,7 @@ class BasicTCPServer(object):
                 ph = self.protohandlerclass(sock, self.controller.config)
                 engine = SessionHandler(
                     ph, self.controller.config, self.controller.prependers, self.controller.plugins, self.controller.appenders)
-                self.logger.debug('Incoming connection from %s' % str(addr))
+                self.logger.debug('(%s) Incoming connection  [incoming server port: %s, prot: %s]' % (createPIDinfo(),self.port,self.protohandlerclass.protoname))
                 if self.controller.threadpool:
                     # this will block if queue is full
                     self.controller.threadpool.add_task(engine)
