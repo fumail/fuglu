@@ -439,6 +439,8 @@ class MainController(object):
         self.debugconsole = False
         self._logQueue = logQueue
         self._logProcess = logProcess
+        self.configFileUpdates = None
+        self.logConfigFileUpdates = None
 
     @property
     def logQueue(self):
