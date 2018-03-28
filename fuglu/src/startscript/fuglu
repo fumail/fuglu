@@ -40,6 +40,7 @@ import optparse
 import fuglu.logtools
 import multiprocessing
 import time
+import hashlib
 
 controller = None
 logProcess = None
@@ -73,79 +74,110 @@ def reloadconfig():
                      "No changes will be applied...!\nSend SIGHUP to the main process!")
         return
 
-    #logger.info('Reloading logging configuration')
+    assert controller.logFonfigFileUpdates is not None
+    assert controller.configFileUpdates is not None
 
-    #---
-    # stop logger process
-    #---
-    logQueue = controller.logQueue
-    logProcess = controller.logProcess
+    configFileUpdates    = getConfigFileUpdatesDict(theconfigfile,dconfdir)
+    logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
+    logger.info("Log config has changes: %s" % str(logConfigFileUpdates == controller.logConfigFileUpdates))
+    logger.info("Main config has changes: %s" % str(configFileUpdates == controller.configFileUpdates))
 
-    try:
-        newLogConfigure = fuglu.logtools.logConfig(logQueue,logConfigFile=theloggingfile)
-    except Exception as e:
-        logging.exception(e)
-        logging.error("Error in the log file, noe applying any change!")
-        return
+    if logConfigFileUpdates != controller.logConfigFileUpdates:
+        # save back log config file dict for later use
+        controller.logConfigFileUpdates = logConfigFileUpdates
+        logger.info("Create new log process with new configuration")
 
-    # try to close the old logger
-    try:
-        logQueue.put_nowait(None)
-        logProcess.join(10) # wait 10 seconds max
-    except Exception:
-        logger.error("Could not close old logger!")
-        time.sleep(2)
-        pass
+        #---
+        # stop logger process
+        #---
+        logQueue = controller.logQueue
+        logProcess = controller.logProcess
 
-    #--
-    # start new process handling logging queue
-    # this process uses now an updated version of the log file
-    #--
-    logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
-                                         args=(newLogConfigure,))
-    logProcess.start()
+        try:
+            newLogConfigure = fuglu.logtools.logConfig(logQueue,logConfigFile=theloggingfile)
+        except Exception as e:
+            logging.exception(e)
+            logging.error("Error in the log file, noe applying any change!")
+            return
 
-    # save logging process back to controller
-    controller.logProcess = logProcess
+        # try to close the old logger
+        try:
+            logQueue.put_nowait(None)
+            logProcess.join(10) # wait 10 seconds max
+        except Exception:
+            logger.error("Could not close old logger!")
+            time.sleep(2)
+            pass
 
-    logger.info('Reloading configuration')
-    newconfig = configparser.RawConfigParser()
-    with open(theconfigfile) as fp:
-        newconfig.readfp(fp)
+        #--
+        # start new process handling logging queue
+        # this process uses now an updated version of the log file
+        #--
+        logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
+                                             args=(newLogConfigure,))
+        logProcess.start()
 
-    identifier = "no identifier given"
-    if newconfig.has_option('main', 'identifier'):
-        identifier = newconfig.get('main', 'identifier')
+        # save logging process back to controller
+        controller.logProcess = logProcess
 
-    # load conf.d
-    if os.path.isdir(dconfdir):
-        filelist = os.listdir(dconfdir)
-        configfiles = [
-            dconfdir + '/' + c for c in filelist if c.endswith('.conf')]
-        logger.debug('Conffiles in %s: %s' % (dconfdir, configfiles))
-        readfiles = newconfig.read(configfiles)
-        logger.debug('Read additional files: %s' % (readfiles))
+    if configFileUpdates != controller.configFileUpdates:
+        logger.info('Reloading configuration')
 
-    logger.info('Reload config complete. Current configuration:%s' %
-                identifier)
-    controller.config = newconfig
-    controller.propagate_core_defaults()
+        # save back config file dict for later use
+        controller.configFileUpdates = configFileUpdates
+        newconfig = configparser.RawConfigParser()
+        with open(theconfigfile) as fp:
+            newconfig.readfp(fp)
 
-    logger.info('Reloading plugins...')
-    ok = controller.load_plugins()
-    if ok:
-        logger.info('Plugin reload completed')
-    else:
-        logger.error('Plugin reload failed')
+        identifier = "no identifier given"
+        if newconfig.has_option('main', 'identifier'):
+            identifier = newconfig.get('main', 'identifier')
 
-    controller.propagate_plugin_defaults()
+        # load conf.d
+        if os.path.isdir(dconfdir):
+            filelist = os.listdir(dconfdir)
+            configfiles = [
+                dconfdir + '/' + c for c in filelist if c.endswith('.conf')]
+            logger.debug('Conffiles in %s: %s' % (dconfdir, configfiles))
+            readfiles = newconfig.read(configfiles)
+            logger.debug('Read additional files: %s' % (readfiles))
 
-    controller.reload()
+        logger.info('Reload config complete. Current configuration:%s' %
+                    identifier)
+        controller.config = newconfig
+        controller.propagate_core_defaults()
+
+        logger.info('Reloading plugins...')
+        ok = controller.load_plugins()
+        if ok:
+            logger.info('Plugin reload completed')
+        else:
+            logger.error('Plugin reload failed')
+
+        controller.propagate_plugin_defaults()
+
+        controller.reload()
 
 
 def sighup(signum, frame):
     """handle sighup to reload config"""
     reloadconfig()
+
+def getConfigFileUpdatesDict(configfilename,dconfigFileDir):
+    configFileUpdates = {}
+    configFileUpdates[configfilename] = hashlib.md5(configfilename).hexdigest()
+    # load conf.d
+    if dconfigFileDir and os.path.isdir(dconfigFileDir):
+        filelist = os.listdir(dconfigFileDir)
+        configfiles = [dconfigFileDir + '/' + c for c in filelist if c.endswith('.conf')]
+        for filename in configfiles:
+            configFileUpdates[filename] = hashlib.md5(filename).hexdigest()
+    return configFileUpdates
+
+def getLogConfigFileUpdatesDict(logConfFile):
+    logConfigFileUpdates = {}
+    logConfigFileUpdates[logConfFile] = hashlib.md5(logConfFile).hexdigest()
+    return logConfigFileUpdates
 
 lint = False
 debugmsg = False
@@ -261,6 +293,8 @@ baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
 # instantiate the MainController and load default configuration
 controller = MainController(config,logConfigure.queue,logProcess)
+controller.configFileUpdates = getConfigFileUpdatesDict(theconfigfile,dconfdir)
+controller.logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
 controller.propagate_core_defaults()
 
 
