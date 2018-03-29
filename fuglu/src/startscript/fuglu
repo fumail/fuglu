@@ -74,13 +74,23 @@ def reloadconfig():
                      "No changes will be applied...!\nSend SIGHUP to the main process!")
         return
 
-    assert controller.logFonfigFileUpdates is not None
+    assert controller.logConfigFileUpdates is not None
     assert controller.configFileUpdates is not None
 
     configFileUpdates    = getConfigFileUpdatesDict(theconfigfile,dconfdir)
     logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
-    logger.info("Log config has changes: %s" % str(logConfigFileUpdates == controller.logConfigFileUpdates))
-    logger.info("Main config has changes: %s" % str(configFileUpdates == controller.configFileUpdates))
+    print("logConfigFileUpdatesDict (old)")
+    print(str(controller.logConfigFileUpdates))
+    print("logConfigFileUpdatesDict (new)")
+    print(str(logConfigFileUpdates))
+    print("Log config has changes: %s" % str(logConfigFileUpdates != controller.logConfigFileUpdates))
+    print("configFileUpdatesDict (old)")
+    print(str(controller.configFileUpdates))
+    print("configFileUpdatesDict (new)")
+    print(str(configFileUpdates))
+    print("Main config has changes: %s" % str(configFileUpdates != controller.configFileUpdates))
+    logger.info("Log config has changes: %s" % str(logConfigFileUpdates != controller.logConfigFileUpdates))
+    logger.info("Main config has changes: %s" % str(configFileUpdates != controller.configFileUpdates))
 
     if logConfigFileUpdates != controller.logConfigFileUpdates:
         # save back log config file dict for later use
@@ -164,20 +174,38 @@ def sighup(signum, frame):
     reloadconfig()
 
 def getConfigFileUpdatesDict(configfilename,dconfigFileDir):
-    configFileUpdates = {}
-    configFileUpdates[configfilename] = hashlib.md5(configfilename).hexdigest()
+    configfiles = [configfilename]
     # load conf.d
     if dconfigFileDir and os.path.isdir(dconfigFileDir):
         filelist = os.listdir(dconfigFileDir)
-        configfiles = [dconfigFileDir + '/' + c for c in filelist if c.endswith('.conf')]
-        for filename in configfiles:
-            configFileUpdates[filename] = hashlib.md5(filename).hexdigest()
+        configfiles.extend([dconfigFileDir + '/' + c for c in filelist if c.endswith('.conf')])
+
+    hashlist = createMD5(configfiles)
+    configFileUpdates = dict(zip(configfiles, hashlist))
     return configFileUpdates
 
 def getLogConfigFileUpdatesDict(logConfFile):
     logConfigFileUpdates = {}
-    logConfigFileUpdates[logConfFile] = hashlib.md5(logConfFile).hexdigest()
+    logConfigFileUpdates[logConfFile] = createMD5([logConfFile])[0]
     return logConfigFileUpdates
+
+
+def hash_bytestr_iter(bytesiter, hasher, ashexstr=False):
+    for block in bytesiter:
+        hasher.update(block)
+    return (hasher.hexdigest() if ashexstr else hasher.digest())
+
+def file_as_blockiter(afile, blocksize=65536):
+    with afile:
+        block = afile.read(blocksize)
+        while len(block) > 0:
+            yield block
+            block = afile.read(blocksize)
+
+
+def createMD5(fnamelst):
+    return [(fname, hash_bytestr_iter(file_as_blockiter(open(fname, 'rb')), hashlib.md5()))
+        for fname in fnamelst]
 
 lint = False
 debugmsg = False
