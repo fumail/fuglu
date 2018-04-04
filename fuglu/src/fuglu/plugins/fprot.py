@@ -143,6 +143,7 @@ Tags:
 
     def _parse_result(self, result):
         dr = {}
+        result = force_uString(result)
         for line in result.strip().split('\n'):
             m = self.pattern.match(force_bString(line))
             if m == None:
