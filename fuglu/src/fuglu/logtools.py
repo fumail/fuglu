@@ -2,12 +2,75 @@ import logging
 import logging.handlers
 import logging.config
 import fuglu.procpool
+import multiprocessing
 
-class logConfig(object,):
+def logFactoryProcess(listenerQueue,logQueue):
+    """
+    This process is responsible for creating the logger listener for the given queue.
+    This Listener process is responsible for actually handling all the log messages in the queue.
+
+    You might ask why this is a separate process. This log-implementation satisfies two constraints:
+    - it has to work in multiprocessing mode
+    - it has to work with TimedRotatingFileHandler
+    - it has to at least be possible to change the debug level down to DEBUG
+
+    Even in multiprocessing the subprocess inherits a lot of things from its father process at creation time.
+    Using the logging module this can create quite weird effects. Withoug any change, using a TimedRotatingFileHandler
+    most processes might still write to the old (archived) log file while the process that actually rotated the file
+    and its threads will write to the new one.
+    If the separate log process is created directly as a child of the main process is it not possible to recreate the
+    log process later to take into account a new configuration, even if using a config server listener. The messages
+    received from other processes will not necessarily apply the correct debug level if this has been changed.
+
+    The only "clean" solution found so far is to always create the logging process from a clean process which does not
+    have any logging structure stored yet. Therefore, the logFactoryProcess is created at the very beginning and it
+    can produce new clean logging processes later that will properly setup with all propagation and level changes.
+
+    Args:
+        listenerQueue (multiprocessing.Queue): Queue where the logFactoryProcess will receive a configuration for
+                                               which a new logging process will be created replacint the old one
+        logQueue (multiprocessing.Queue): The queue where log messages will be sent, handled finally by the logging
+                                          process
+
+    """
+    loggerProcess = None
+    while True:
+        try:
+            logConfig = listenerQueue.get()
+
+            # if existing stop last logger process
+            if loggerProcess:
+                # try to close the old logger
+                try:
+                    logQueue.put_nowait(None)
+                    loggerProcess.join(10) # wait 10 seconds max
+                except Exception:
+                    loggerProcess.terminate()
+                finally:
+                    loggerProcess = None
+
+            if logConfig is None:  # We send this as a sentinel to tell the listener to quit.
+                break
+
+            # create new logger process
+            loggerProcess = multiprocessing.Process(target=listener_process, args=(logConfig,logQueue))
+            loggerProcess.daemon = True
+            loggerProcess.start()
+
+        except KeyboardInterrupt:
+            print("Listener process received KeyboardInterrupt")
+            break
+        except Exception:
+            import sys, traceback
+            print('Whoops! Problem:', file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+
+
+class logConfig(object):
     """
     Conig class to easily distinguish logging configuration for lint and production (from file)
     """
-    def __init__(self,logQueue,lint=False,logConfigFile=None):
+    def __init__(self,lint=False,logConfigFile=None):
         """
         Setup in lint mode of using a config file
         Args:
@@ -17,7 +80,6 @@ class logConfig(object,):
         assert (lint or logConfigFile)
         assert not (lint and logConfigFile)
 
-        self._logQueue = logQueue
         self._configFile = logConfigFile
         self._lintOutputLevel = logging.ERROR
 
@@ -28,10 +90,6 @@ class logConfig(object,):
             self.configure = self._configure
         else:
             raise Exception("Not implemented!")
-
-    @property
-    def queue(self):
-        return self._logQueue
 
     def _configure4lint(self):
         """
@@ -53,12 +111,9 @@ class logConfig(object,):
         """
         logging.config.fileConfig(self._configFile)
         root = logging.getLogger()
-        print("Print DEBUG: "+str(root.isEnabledFor(logging.DEBUG)))
-        print("Print INFO: "+str(root.isEnabledFor(logging.INFO)))
-        print("Print ERROR: "+str(root.isEnabledFor(logging.ERROR)))
 
 
-def listener_process(configurer):
+def listener_process(configurer,queue):
     """
     This is the listener process top-level loop: wait for logging events
     (LogRecords) on the queue and handle them, quit when you get a None for a
@@ -66,19 +121,16 @@ def listener_process(configurer):
 
     Args:
         configurer (logConfig): instance lof logConfig class setting up logging on configure call
-
-    Returns:
-
+        queue (multiprocessing.Queue): The queue where log messages will be received and processed by this same process
     """
     configurer.configure()
     root = logging.getLogger()
     root.info("Listener process started")
     while True:
         try:
-            record = configurer.queue.get()
+            record = queue.get()
             if record is None:  # We send this as a sentinel to tell the listener to quit.
                 break
-            #print("listener_process: "+str(record))
             logger = logging.getLogger(record.name)
 
             # check if this record should be logged or not...
@@ -119,4 +171,4 @@ def client_configurer(queue):
         root.info("(%s) Queue handler added to root logger" % name)
     else:
         # on linux config is taken from father process automatically
-        root.info("(%s) Queue handler already present in root logger" % name)
+        root.info("(%s) Root already has a handler -> not adding Queue handler" % name)
