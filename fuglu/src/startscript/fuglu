@@ -43,7 +43,6 @@ import time
 import hashlib
 
 controller = None
-logProcess = None
 
 theconfigfile = '/etc/fuglu/fuglu.conf'
 dconfdir = '/etc/fuglu/conf.d'
@@ -69,7 +68,7 @@ def reloadconfig():
                      "No changes will be applied...!\nSend SIGHUP to the main process!")
         return
 
-    if controller.logProcess is None:
+    if controller.logProcessFacQueue is None:
         logger.error("No log process in controller -> This is not the main process!\n"
                      "No changes will be applied...!\nSend SIGHUP to the main process!")
         return
@@ -79,56 +78,18 @@ def reloadconfig():
 
     configFileUpdates    = getConfigFileUpdatesDict(theconfigfile,dconfdir)
     logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
-    print("logConfigFileUpdatesDict (old)")
-    print(str(controller.logConfigFileUpdates))
-    print("logConfigFileUpdatesDict (new)")
-    print(str(logConfigFileUpdates))
-    print("Log config has changes: %s" % str(logConfigFileUpdates != controller.logConfigFileUpdates))
-    print("configFileUpdatesDict (old)")
-    print(str(controller.configFileUpdates))
-    print("configFileUpdatesDict (new)")
-    print(str(configFileUpdates))
-    print("Main config has changes: %s" % str(configFileUpdates != controller.configFileUpdates))
+
     logger.info("Log config has changes: %s" % str(logConfigFileUpdates != controller.logConfigFileUpdates))
     logger.info("Main config has changes: %s" % str(configFileUpdates != controller.configFileUpdates))
 
     if logConfigFileUpdates != controller.logConfigFileUpdates:
         # save back log config file dict for later use
         controller.logConfigFileUpdates = logConfigFileUpdates
+
         logger.info("Create new log process with new configuration")
-
-        #---
-        # stop logger process
-        #---
-        logQueue = controller.logQueue
-        logProcess = controller.logProcess
-
-        try:
-            newLogConfigure = fuglu.logtools.logConfig(logQueue,logConfigFile=theloggingfile)
-        except Exception as e:
-            logging.exception(e)
-            logging.error("Error in the log file, noe applying any change!")
-            return
-
-        # try to close the old logger
-        try:
-            logQueue.put_nowait(None)
-            logProcess.join(10) # wait 10 seconds max
-        except Exception:
-            logger.error("Could not close old logger!")
-            time.sleep(2)
-            pass
-
-        #--
-        # start new process handling logging queue
-        # this process uses now an updated version of the log file
-        #--
-        logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
-                                             args=(newLogConfigure,))
-        logProcess.start()
-
-        # save logging process back to controller
-        controller.logProcess = logProcess
+        logProcessFacQueue = controller.logProcessFacQueue
+        newLogConfigure = fuglu.logtools.logConfig(logConfigFile=theloggingfile)
+        logProcessFacQueue.put(newLogConfigure)
 
     if configFileUpdates != controller.configFileUpdates:
         logger.info('Reloading configuration')
@@ -292,6 +253,7 @@ except:
 # all threads/processes write to the logQueue which
 # will be handled by a separate process
 logQueue   = multiprocessing.Queue(-1)
+logFactoryQueue = multiprocessing.Queue(-1)
 
 # setup a process which handles logging messages
 if lint:
@@ -301,26 +263,34 @@ if lint:
     print("----------", fc.strcolor("LINT MODE",
                                     (fc.MODE["blink"], fc.FG["magenta"])), "----------")
 
-    logConfigure = fuglu.logtools.logConfig(logQueue,lint=True)
+    logConfigure = fuglu.logtools.logConfig(lint=True)
 
 else:
-    logConfigure = fuglu.logtools.logConfig(logQueue,logConfigFile=theloggingfile)
+    logConfigure = fuglu.logtools.logConfig(logConfigFile=theloggingfile)
 
 #--
 # start process handling logging queue
 #--
-logProcess = multiprocessing.Process(target=fuglu.logtools.listener_process,
-                                     args=(logConfigure,))
-logProcess.start()
+logProcessFactory = multiprocessing.Process(target=fuglu.logtools.logFactoryProcess,
+                                     args=(logFactoryQueue,logQueue))
+#logProcessFactory.daemon = True
+logProcessFactory.start()
 
-# setup this main thread to send messages to the log queue (which is handled by the logProcess)
-fuglu.logtools.client_configurer(logConfigure.queue)
+# now create a log - listener process
+logFactoryQueue.put(logConfigure)
 
+# setup this main thread to send messages to the log queue 
+# (which is handled by the logger process created by the logProcessFactory)
+fuglu.logtools.client_configurer(logQueue)
+
+#===                      ===#
+#= Now logging is available =#
+#===                      ===#
 baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
 # instantiate the MainController and load default configuration
-controller = MainController(config,logConfigure.queue,logProcess)
+controller = MainController(config,logQueue,logFactoryQueue)
 controller.configFileUpdates = getConfigFileUpdatesDict(theconfigfile,dconfdir)
 controller.logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
 controller.propagate_core_defaults()
@@ -356,11 +326,10 @@ else:
 
 
 #---
-# stop logger process
+# stop logger factory & process
 #---
 try:
-    controller.logQueue.put_nowait(None)
-    # wait 2 minutes max
-    controller.logProcess.join(120)
-except Exception:
-    pass
+    logFactoryQueue.put_nowait(None)
+    logProcessFactory.join(120)
+except Exception as e:
+    logProcessFactory.terminate()
