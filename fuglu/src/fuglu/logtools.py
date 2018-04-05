@@ -126,9 +126,24 @@ def listener_process(configurer,queue):
     configurer.configure()
     root = logging.getLogger()
     root.info("Listener process started")
+    logLogger = logging.getLogger("LogListener")
+    if logLogger.propagate:
+        root.info("No special Log-logger")
+        logLogger = None
+    else:
+        root.info("Using special LogLogger")
+
     while True:
         try:
             record = queue.get()
+            if logLogger:
+                logLogger.debug("Approx queue size: %u, received record to process -> %s"%(queue.qsize(),record))
+
+            if queue.full():
+                root.error("QUEUE IS FULL!!!")
+                if logLogger:
+                    logLogger.error("QUEUE IS FULL!!!")
+
             if record is None:  # We send this as a sentinel to tell the listener to quit.
                 break
             logger = logging.getLogger(record.name)
