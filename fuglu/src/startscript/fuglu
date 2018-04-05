@@ -82,6 +82,8 @@ def reloadconfig():
     logger.info("Log config has changes: %s" % str(logConfigFileUpdates != controller.logConfigFileUpdates))
     logger.info("Main config has changes: %s" % str(configFileUpdates != controller.configFileUpdates))
 
+    logger.info('Number of messages in logging queue: %u'%controller.logQueue.qsize())
+
     if logConfigFileUpdates != controller.logConfigFileUpdates:
         # save back log config file dict for later use
         controller.logConfigFileUpdates = logConfigFileUpdates
@@ -90,6 +92,7 @@ def reloadconfig():
         logProcessFacQueue = controller.logProcessFacQueue
         newLogConfigure = fuglu.logtools.logConfig(logConfigFile=theloggingfile)
         logProcessFacQueue.put(newLogConfigure)
+
 
     if configFileUpdates != controller.configFileUpdates:
         logger.info('Reloading configuration')
