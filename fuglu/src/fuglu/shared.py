@@ -1345,9 +1345,41 @@ class Cache(object):
 
 
 
-DEFAULTCACHE=None
+class CacheSingleton(object):
+    """
+    Process singleton to store a default Cache instance
+    Note it is important there is a separate Cache instance for each process
+    since otherwise the Threading.Lock will screw up and block the execution.
+    """
+
+    instance = None
+    procPID = None
+
+    def __init__(self, *args, **kwargs):
+        pid =  os.getpid()
+        if pid == CacheSingleton.procPID and CacheSingleton.instance is not None:
+            pass
+        else:
+            logger = logging.getLogger("%s.CacheSingleton" % __package__)
+            if CacheSingleton.instance is None:
+                logger.info("Create CacheSingleton for process with pid: %u"%pid)
+                pass
+            elif CacheSingleton.procPID != pid:
+                logger.warning("Replace CacheSingleton(created by process %u) for process with pid: %u"%(CacheSingleton.procPID,pid))
+                pass
+
+            CacheSingleton.instance = Cache(*args,**kwargs)
+            CacheSingleton.procPID  = pid
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+
+
+#DEFAULTCACHE=None
+#def get_default_cache():
+#    global DEFAULTCACHE
+#    if DEFAULTCACHE is None:
+#        DEFAULTCACHE=Cache()
+#    return DEFAULTCACHE
 def get_default_cache():
-    global DEFAULTCACHE
-    if DEFAULTCACHE is None:
-        DEFAULTCACHE=Cache()
-    return DEFAULTCACHE
+    return CacheSingleton()
