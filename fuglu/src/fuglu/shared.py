@@ -1345,7 +1345,7 @@ class Cache(object):
 
                 cleancount=0
 
-                for key in self.cache.keys()[:]:
+                for key in set(self.cache.keys()):
                     obj,instime=self.cache[key]
                     if now-instime>self.cachetime:
                         del self.cache[key]
