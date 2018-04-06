@@ -1300,28 +1300,37 @@ class Cache(object):
     
     
     def put_cache(self,key,obj):
-        gotlock=self.lock.acquire(True)
-        if gotlock:
-            self.cache[key]=(obj,time.time())
-            self.lock.release()
+        try:
+            gotlock=self.lock.acquire(True)
+            if gotlock:
+                self.cache[key]=(obj,time.time())
+        except Exception as e:
+            self.logger.exception(e)
+        finally:
+            if gotlock:
+                self.lock.release()
     
     
     def get_cache(self,key):
-        gotlock=self.lock.acquire(True)
-        if not gotlock:
-            return None
+        try:
+            gotlock=self.lock.acquire(True)
+            if not gotlock:
+                return None
         
-        ret=None
-        
-        if key in self.cache:
-            obj,instime=self.cache[key]
-            now=time.time()
-            if now-instime<self.cachetime:
-                ret=obj
-            else:
-                del self.cache[key]
-                
-        self.lock.release()
+            ret=None
+
+            if key in self.cache:
+                obj,instime=self.cache[key]
+                now=time.time()
+                if now-instime<self.cachetime:
+                    ret=obj
+                else:
+                    del self.cache[key]
+
+        except Exception as e:
+            self.logger.exception(e)
+        finally:
+            self.lock.release()
         return ret
     
     
@@ -1329,18 +1338,23 @@ class Cache(object):
         while True:
             time.sleep(self.cleanupinterval)
             now=time.time()
-            gotlock=self.lock.acquire(True)
-            if not gotlock:
-                continue
-            
-            cleancount=0
-            
-            for key in self.cache.keys()[:]:
-                obj,instime=self.cache[key]
-                if now-instime>self.cachetime:
-                    del self.cache[key]
-                    cleancount+=1
-            self.lock.release()
+            try:
+                gotlock=self.lock.acquire(True)
+                if not gotlock:
+                    continue
+
+                cleancount=0
+
+                for key in self.cache.keys()[:]:
+                    obj,instime=self.cache[key]
+                    if now-instime>self.cachetime:
+                        del self.cache[key]
+                        cleancount+=1
+            except Exception as e:
+                self.logger.exception(e)
+            finally:
+                if gotlock:
+                    self.lock.release()
             self.logger.debug("Cleaned %s expired entries."%cleancount)
 
 
@@ -1357,16 +1371,14 @@ class CacheSingleton(object):
 
     def __init__(self, *args, **kwargs):
         pid =  os.getpid()
+        logger = logging.getLogger("%s.CacheSingleton" % __package__)
         if pid == CacheSingleton.procPID and CacheSingleton.instance is not None:
-            pass
+            logger.debug("Return existing Cache Singleton for process with pid: %u"%pid)
         else:
-            logger = logging.getLogger("%s.CacheSingleton" % __package__)
             if CacheSingleton.instance is None:
                 logger.info("Create CacheSingleton for process with pid: %u"%pid)
-                pass
             elif CacheSingleton.procPID != pid:
                 logger.warning("Replace CacheSingleton(created by process %u) for process with pid: %u"%(CacheSingleton.procPID,pid))
-                pass
 
             CacheSingleton.instance = Cache(*args,**kwargs)
             CacheSingleton.procPID  = pid
