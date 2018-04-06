@@ -123,6 +123,9 @@ class ThreadPool(threading.Thread):
             time.sleep(self.checkinterval)
         for worker in self.workers:
             worker.stayalive = False
+        for worker in self.workers:
+            worker.join(120)
+
         del self.workers
         self.logger.info('Threadpool shut down')
 
@@ -131,6 +134,7 @@ class ThreadPool(threading.Thread):
         for bla in range(0, num):
             worker = self.workers[0]
             worker.stayalive = False
+            worker.join(120)
             del self.workers[0]
 
     def _add_worker(self, num=1):
