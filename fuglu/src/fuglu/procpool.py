@@ -74,6 +74,8 @@ class ProcManager(object):
     def _send_poison_pills(self):
         """flood the queue with poison pills to tell all workers to shut down"""
         for _ in range(len(self.workers)):
+            # tasks queue is FIFO queue. As long as nothing is added to the queue
+            # anymore the poison pills will be the last elements taken from the queue
             self.tasks.put_nowait(None)
 
     def add_task(self, session):
@@ -97,9 +99,18 @@ class ProcManager(object):
         self.message_listener.start()
 
     def shutdown(self):
+        # setting stayalive equal to False
+        # will send poison pills to all processors
         self.stayalive = False
+
+        # join the workers
+        for worker in self.workers:
+            worker.join(120)
+
         self.message_listener.stayalive = False
+        self.message_listener.join(120)
         self.tasks.close()
+
         self.child_to_server_messages.close()
         self.manager.shutdown()
 
