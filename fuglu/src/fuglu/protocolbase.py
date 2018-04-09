@@ -25,7 +25,8 @@ try:
 except ImportError:
     # Python 3
     from io import BytesIO as StringIO
-from fuglu.procpool import createPIDinfo
+from fuglu.logtools import createPIDinfo
+
 
 class ProtocolHandler(object):
     protoname = 'UNDEFINED'

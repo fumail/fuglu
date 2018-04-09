@@ -2,7 +2,7 @@ from __future__ import print_function
 import logging
 import logging.handlers
 import logging.config
-import fuglu.procpool
+import os
 import multiprocessing
 
 def logFactoryProcess(listenerQueue,logQueue):
@@ -195,7 +195,7 @@ def client_configurer(queue):
     root = logging.getLogger()
 
     numRootHandlers = len(root.handlers)
-    name = fuglu.procpool.createPIDinfo()
+    name = createPIDinfo()
 
     if numRootHandlers == 0:
         try:
@@ -279,3 +279,11 @@ class QueueHandlerPy3Copy(logging.Handler):
             self.enqueue(self.prepare(record))
         except Exception:
             self.handleError(record)
+
+
+def createPIDinfo():
+    infoString = ""
+    if hasattr(os, 'getppid'):  # only available on Unix
+        infoString += 'parent process: %u, ' % os.getppid()
+    infoString += 'process id: %u' % os.getpid()
+    return infoString

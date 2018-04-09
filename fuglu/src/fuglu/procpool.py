@@ -27,14 +27,6 @@ import pickle
 from fuglu.stats import Statskeeper, StatDelta
 import fuglu.logtools
 import threading
-import os
-
-def createPIDinfo():
-    infoString = ""
-    if hasattr(os, 'getppid'):  # only available on Unix
-        infoString += 'parent process: %u, ' % os.getppid()
-    infoString += 'process id: %u' % os.getpid()
-    return infoString
 
 class ProcManager(object):
     def __init__(self, logQueue, numprocs = None, queuesize=100, config = None):
@@ -142,7 +134,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
     logging.basicConfig(level=logging.DEBUG)
     workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
-    logger.debug("New worker: %s" % createPIDinfo())
+    logger.debug("New worker: %s" % fuglu.logtools.createPIDinfo())
 
     # load config and plugins
     controller = fuglu.core.MainController(config,logQueue)
@@ -157,15 +149,15 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
     stats = Statskeeper()
     stats.stat_listener_callback.append(lambda event: child_to_server_messages.put(event.as_message()))
 
-    logger.debug("%s: Enter service loop..." % createPIDinfo())
+    logger.debug("%s: Enter service loop..." % fuglu.logtools.createPIDinfo())
 
     try:
         while True:
             workerstate.workerstate = 'waiting for task'
-            logger.debug("%s: Child process waiting for task" % createPIDinfo())
+            logger.debug("%s: Child process waiting for task" % fuglu.logtools.createPIDinfo())
             task = queue.get()
             if task is None: # poison pill
-                logger.debug("%s: Child process received poison pill - shut down" % createPIDinfo())
+                logger.debug("%s: Child process received poison pill - shut down" % fuglu.logtools.createPIDinfo())
                 try:
                     # it might be possible it does not work to properly set the workerstate
                     # since this is a shared variable -> prevent exceptions
@@ -175,7 +167,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
                 finally:
                     return
             workerstate.workerstate = 'starting scan session'
-            logger.debug("%s: Child process starting scan session" % createPIDinfo())
+            logger.debug("%s: Child process starting scan session" % fuglu.logtools.createPIDinfo())
             pickled_socket, handler_modulename, handler_classname = task
             sock = pickle.loads(pickled_socket)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
