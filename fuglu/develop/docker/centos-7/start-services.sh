@@ -34,6 +34,9 @@ wait_for_file () {
 
 
 
+echo "update clamd virus definitions"
+freshclam
+
 createlog=1
 if [ "$1" = "nolog" ];  then
    echo "no log file will be created and no wait operation performed"
