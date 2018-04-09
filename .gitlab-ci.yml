@@ -14,6 +14,7 @@ unittests:
   only:
     - master
     - python3
+    - reload
 
 unittests_py3:
   stage: test_py3
@@ -23,6 +24,7 @@ unittests_py3:
   only:
     - master
     - python3
+    - reload
 
 integrationtests:
   stage: test
@@ -35,6 +37,7 @@ integrationtests:
   only:
     - master
     - python3
+    - reload
 
 integrationtests_py3:
   stage: test_py3
@@ -47,6 +50,7 @@ integrationtests_py3:
   only:
     - master
     - python3
+    - reload
 
 
 # define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
@@ -62,6 +66,7 @@ buildfuglu:
   only:
     - master
     - python3
+    - reload
 
 buildfuglu_py3:
   stage: build_py3
@@ -74,3 +79,4 @@ buildfuglu_py3:
   only:
     - master
     - python3
+    - reload
