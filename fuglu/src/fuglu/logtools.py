@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 import logging.handlers
 import logging.config
@@ -70,34 +71,50 @@ class logConfig(object):
     """
     Conig class to easily distinguish logging configuration for lint and production (from file)
     """
-    def __init__(self,lint=False,logConfigFile=None):
+    def __init__(self,lint=False,logConfigFile="none"):
         """
         Setup in lint mode of using a config file
         Args:
             lint (bool): enable lint mode which will print on the screen
             logConfigFile (): load configuration from config file
         """
-        assert (lint or logConfigFile)
-        assert not (lint and logConfigFile)
+        assert (lint or logConfigFile != "none")
+        assert not (lint and logConfigFile != "none")
 
         self._configFile = logConfigFile
         self._lintOutputLevel = logging.ERROR
 
         self._lint = lint
+
+    def configure(self):
+        """
+        Configure for lint mode or from file. We can not set a "pointer" to the function
+        ----
         if self._lint:
             self.configure = self._configure4lint
-        elif self._configFile:
+        elif self._configFile != "none":
             self.configure = self._configure
         else:
             raise Exception("Not implemented!")
+        ----
+        because objects of this type are sent into the logger queue. Python 2.7 can then
+        not pickle the instance.
+        """
+        if self._lint:
+            logConfig._configure4lint(self._lintOutputLevel)
+        elif self._configFile != "none":
+            logConfig._configure(self._configFile)
+        else:
+            raise Exception("Not implemented!")
 
-    def _configure4lint(self):
+    @staticmethod
+    def _configure4lint(lintOutputLevel):
         """
         Configure for lint mode (output is on the screen, level is debug)
         """
         root = logging.getLogger()
         console = logging.StreamHandler()
-        console.setLevel(self._lintOutputLevel)
+        console.setLevel(lintOutputLevel)
         # set a format which is simpler for console use
         formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
         # tell the handler to use this format
@@ -105,11 +122,13 @@ class logConfig(object):
         # add the handler to the root logger
         root.addHandler(console)
 
-    def _configure(self):
+    @staticmethod
+    def _configure(configFile):
         """
         Configure logging using log configuration file
         """
-        logging.config.fileConfig(self._configFile)
+        logging.config.fileConfig(configFile)
+        # get root logger once just to make sure this global configuration exists
         root = logging.getLogger()
 
 
@@ -179,7 +198,12 @@ def client_configurer(queue):
     name = fuglu.procpool.createPIDinfo()
 
     if numRootHandlers == 0:
-        h = logging.handlers.QueueHandler(queue)  # Just the one handler needed
+        try:
+            # Python 3
+            h = logging.handlers.QueueHandler(queue)  # Just the one handler needed
+        except AttributeError:
+            # Python 2
+            h = QueueHandlerPy3Copy(queue)
         root.addHandler(h)
         # send all messages
         root.setLevel(logging.DEBUG)
@@ -187,3 +211,71 @@ def client_configurer(queue):
     else:
         # on linux config is taken from father process automatically
         root.info("(%s) Root already has a handler -> not adding Queue handler" % name)
+
+
+#----------------------------------------#
+#-- Copied from Python 3 - handlers.py --#
+#----------------------------------------#
+class QueueHandlerPy3Copy(logging.Handler):
+    """
+    This handler sends events to a queue. Typically, it would be used together
+    with a multiprocessing Queue to centralise logging to file in one process
+    (in a multi-process application), so as to avoid file write contention
+    between processes.
+
+    This code is new in Python 3.2, but this class can be copy pasted into
+    user code for use with earlier Python versions.
+    """
+
+    def __init__(self, queue):
+        """
+        Initialise an instance, using the passed queue.
+        """
+        logging.Handler.__init__(self)
+        self.queue = queue
+
+    def enqueue(self, record):
+        """
+        Enqueue a record.
+
+        The base implementation uses put_nowait. You may want to override
+        this method if you want to use blocking, timeouts or custom queue
+        implementations.
+        """
+        self.queue.put_nowait(record)
+
+    def prepare(self, record):
+        """
+        Prepares a record for queuing. The object returned by this method is
+        enqueued.
+
+        The base implementation formats the record to merge the message
+        and arguments, and removes unpickleable items from the record
+        in-place.
+
+        You might want to override this method if you want to convert
+        the record to a dict or JSON string, or send a modified copy
+        of the record while leaving the original intact.
+        """
+        # The format operation gets traceback text into record.exc_text
+        # (if there's exception data), and also puts the message into
+        # record.message. We can then use this to replace the original
+        # msg + args, as these might be unpickleable. We also zap the
+        # exc_info attribute, as it's no longer needed and, if not None,
+        # will typically not be pickleable.
+        self.format(record)
+        record.msg = record.message
+        record.args = None
+        record.exc_info = None
+        return record
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        Writes the LogRecord to the queue, preparing it for pickling first.
+        """
+        try:
+            self.enqueue(self.prepare(record))
+        except Exception:
+            self.handleError(record)
