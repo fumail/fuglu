@@ -1387,11 +1387,8 @@ class CacheSingleton(object):
         return getattr(self.instance, name)
 
 
-#DEFAULTCACHE=None
-#def get_default_cache():
-#    global DEFAULTCACHE
-#    if DEFAULTCACHE is None:
-#        DEFAULTCACHE=Cache()
-#    return DEFAULTCACHE
 def get_default_cache():
+    """
+    Function to get processor unique Cache Singleton
+    """
     return CacheSingleton()
