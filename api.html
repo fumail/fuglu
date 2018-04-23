@@ -244,14 +244,9 @@ Warning: setting the source via python email representation seems to break dkim 
 <dt id="fuglu.shared.Suspect.update_subject">
 <code class="descname">update_subject</code><span class="sig-paren">(</span><em>subject_cb</em>, <em>**cb_params</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.update_subject" title="Permalink to this definition">¶</a></dt>
 <dd><p>update/alter the message subject
-Args:</p>
-<blockquote>
-<div>subject_cb: callback function that alters the subject. must accept a string and return a string
-cb_params: additional parameters to be passed to subject_cb</div></blockquote>
-<dl class="docutils">
-<dt>Return:</dt>
-<dd>True if subject was altered, False otherwise</dd>
-</dl>
+:param subject_cb: callback function that alters the subject. must accept a string and return a string
+:param cb_params: additional parameters to be passed to subject_cb
+:return: True if subject was altered, False otherwise</p>
 </dd></dl>
 
 </dd></dl>
@@ -417,7 +412,7 @@ True, (fieldname, matchedvalue, arg, regex)</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2018, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.3.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

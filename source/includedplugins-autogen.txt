@@ -19,6 +19,7 @@ Tags:
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
+ * sets ``SAPlugin.report``, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting
 
 
 Configuration
@@ -35,6 +36,9 @@ Configuration
 
     #reject message template if running in pre-queue mode
     rejectmessage=message identified as spam
+
+    #enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded
+    strip_oversize=0
 
     #forward the original message or replace the content as returned by spamassassin
     #if this is set to True/1/Yes , no spamassassin headers will be visible in the final message.
@@ -117,31 +121,40 @@ Configuration
 ::
 
     [ClamavPlugin]
-    #how often should fuglu retry the connection before giving up
-    retries=3
+    #reject message template if running in pre-queue mode and virusaction=REJECT
+    rejectmessage=threat detected: ${virusname}
+
+    #process timeout
+    clamscantimeout=30
 
     #hostname where clamd runs
     host=localhost
 
-    #reject message template if running in pre-queue mode and virusaction=REJECT
-    rejectmessage=threat detected: ${virusname}
+    #tcp port number or path to clamd.sock for unix domain sockets
+    #example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl 
+    port=3310
 
-    #socket timeout
-    timeout=30
+    #how often should fuglu retry the connection before giving up
+    retries=3
 
     #action if there is a problem (DUNNO, DEFER)
     problemaction=DEFER
 
-    #*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.
-    pipelining=0
+    #*EXPERIMENTAL*: fallback to clamscan if clamd is unavailable. YMMV, each scan can take 5-20 seconds and massively increase load on a busy system.
+    clamscanfallback=0
+
+    #the path to clamscan executable
+    clamscan=/usr/bin/clamscan
 
     #maximum message size, larger messages will not be scanned.  
     #should match the 'StreamMaxLength' config option in clamd.conf 
     maxsize=22000000
 
-    #tcp port number or path to clamd.sock for unix domain sockets
-    #example /var/lib/clamav/clamd.sock or on ubuntu: /var/run/clamav/clamd.ctl 
-    port=3310
+    #socket timeout
+    timeout=30
+
+    #*EXPERIMENTAL*: Perform multiple scans over the same connection. May improve performance on busy systems.
+    pipelining=0
 
     #action if infection is detected (DUNNO, REJECT, DELETE)
     virusaction=DEFAULTVIRUSACTION
@@ -455,7 +468,7 @@ Sophos
 
 Plugin: fuglu.plugins.sssp.SSSPPlugin
 
- This plugin scans the suspect using the sophos SSSP protocol. 
+ This plugin scans the suspect using the sophos SSSP protocol.
 
 Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 
@@ -497,7 +510,7 @@ F-Prot AV
 
 Plugin: fuglu.plugins.fprot.FprotPlugin
 
- This plugin passes suspects to a f-prot scan daemon 
+ This plugin passes suspects to a f-prot scan daemon
 
 Prerequisites: f-protd must be installed and running, not necessarily on the same box as fuglu though.
 
