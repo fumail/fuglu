@@ -362,14 +362,16 @@ the main process will check for changes in the configuration and reload fuglu as
 - Changes in logging.conf will restart the logging configuration
 
 What can be changed at runtime
-------------------------------
+..............................
 - plugins loaded and plugin configuration
 - threading mode : number of threads
 - process mode: number of processes
 - logging configuration, for example
+
  - log-level
  - handlers
  - loggers
+
 - backend process/thread
 
 Please note it is recommended to change backend (process/thread) while the load is low. Changing the backend
