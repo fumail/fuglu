@@ -25,19 +25,13 @@ import traceback
 import importlib
 import pickle
 from fuglu.stats import Statskeeper, StatDelta
+import fuglu.logtools
 import threading
-import os
-
-def createPIDinfo():
-    infoString = ""
-    if hasattr(os, 'getppid'):  # only available on Unix
-        infoString += 'parent process: %u, ' % os.getppid()
-    infoString += 'process id: %u' % os.getpid()
-    return infoString
 
 class ProcManager(object):
-    def __init__(self, numprocs = None, queuesize=100, config = None):
+    def __init__(self, logQueue, numprocs = None, queuesize=100, config = None):
         self._child_id_counter=0
+        self._logQueue = logQueue
         self.manager = multiprocessing.Manager()
         self.shared_state = self._init_shared_state()
         self.config = config
@@ -72,6 +66,8 @@ class ProcManager(object):
     def _send_poison_pills(self):
         """flood the queue with poison pills to tell all workers to shut down"""
         for _ in range(len(self.workers)):
+            # tasks queue is FIFO queue. As long as nothing is added to the queue
+            # anymore the poison pills will be the last elements taken from the queue
             self.tasks.put_nowait(None)
 
     def add_task(self, session):
@@ -81,7 +77,8 @@ class ProcManager(object):
     def _create_worker(self):
         self._child_id_counter +=1
         worker_name = "Worker-%s"%self._child_id_counter
-        worker = multiprocessing.Process(target=fuglu_process_worker, name=worker_name, args=(self.tasks, self.config, self.shared_state, self.child_to_server_messages))
+        worker = multiprocessing.Process(target=fuglu_process_worker, name=worker_name,
+                                         args=(self.tasks, self.config, self.shared_state, self.child_to_server_messages, self._logQueue))
         return worker
 
     def start(self):
@@ -94,9 +91,18 @@ class ProcManager(object):
         self.message_listener.start()
 
     def shutdown(self):
+        # setting stayalive equal to False
+        # will send poison pills to all processors
         self.stayalive = False
+
+        # join the workers
+        for worker in self.workers:
+            worker.join(120)
+
         self.message_listener.stayalive = False
+        self.message_listener.join(120)
         self.tasks.close()
+
         self.child_to_server_messages.close()
         self.manager.shutdown()
 
@@ -122,14 +128,16 @@ class MessageListener(threading.Thread):
                     print(traceback.format_exc())
 
 
-def fuglu_process_worker(queue, config, shared_state,child_to_server_messages):
+def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, logQueue):
+
+    fuglu.logtools.client_configurer(logQueue)
     logging.basicConfig(level=logging.DEBUG)
     workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
-    logger.debug("New worker: %s" % createPIDinfo())
+    logger.debug("New worker: %s" % fuglu.logtools.createPIDinfo())
 
     # load config and plugins
-    controller = fuglu.core.MainController(config)
+    controller = fuglu.core.MainController(config,logQueue)
     controller.load_extensions()
     controller.load_plugins()
 
@@ -141,15 +149,25 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages):
     stats = Statskeeper()
     stats.stat_listener_callback.append(lambda event: child_to_server_messages.put(event.as_message()))
 
+    logger.debug("%s: Enter service loop..." % fuglu.logtools.createPIDinfo())
+
     try:
         while True:
             workerstate.workerstate = 'waiting for task'
+            logger.debug("%s: Child process waiting for task" % fuglu.logtools.createPIDinfo())
             task = queue.get()
             if task is None: # poison pill
-                logger.debug("%s: Child process received poison pill - shut down" % createPIDinfo())
-                workerstate.workerstate = 'ended'
-                return
+                logger.debug("%s: Child process received poison pill - shut down" % fuglu.logtools.createPIDinfo())
+                try:
+                    # it might be possible it does not work to properly set the workerstate
+                    # since this is a shared variable -> prevent exceptions
+                    workerstate.workerstate = 'ended'
+                except Exception as e:
+                    pass
+                finally:
+                    return
             workerstate.workerstate = 'starting scan session'
+            logger.debug("%s: Child process starting scan session" % fuglu.logtools.createPIDinfo())
             pickled_socket, handler_modulename, handler_classname = task
             sock = pickle.loads(pickled_socket)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)

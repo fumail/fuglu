@@ -1300,28 +1300,37 @@ class Cache(object):
     
     
     def put_cache(self,key,obj):
-        gotlock=self.lock.acquire(True)
-        if gotlock:
-            self.cache[key]=(obj,time.time())
-            self.lock.release()
+        try:
+            gotlock=self.lock.acquire(True)
+            if gotlock:
+                self.cache[key]=(obj,time.time())
+        except Exception as e:
+            self.logger.exception(e)
+        finally:
+            if gotlock:
+                self.lock.release()
     
     
     def get_cache(self,key):
-        gotlock=self.lock.acquire(True)
-        if not gotlock:
-            return None
+        try:
+            gotlock=self.lock.acquire(True)
+            if not gotlock:
+                return None
         
-        ret=None
-        
-        if key in self.cache:
-            obj,instime=self.cache[key]
-            now=time.time()
-            if now-instime<self.cachetime:
-                ret=obj
-            else:
-                del self.cache[key]
-                
-        self.lock.release()
+            ret=None
+
+            if key in self.cache:
+                obj,instime=self.cache[key]
+                now=time.time()
+                if now-instime<self.cachetime:
+                    ret=obj
+                else:
+                    del self.cache[key]
+
+        except Exception as e:
+            self.logger.exception(e)
+        finally:
+            self.lock.release()
         return ret
     
     
@@ -1329,25 +1338,57 @@ class Cache(object):
         while True:
             time.sleep(self.cleanupinterval)
             now=time.time()
-            gotlock=self.lock.acquire(True)
-            if not gotlock:
-                continue
-            
-            cleancount=0
-            
-            for key in self.cache.keys()[:]:
-                obj,instime=self.cache[key]
-                if now-instime>self.cachetime:
-                    del self.cache[key]
-                    cleancount+=1
-            self.lock.release()
+            try:
+                gotlock=self.lock.acquire(True)
+                if not gotlock:
+                    continue
+
+                cleancount=0
+
+                for key in set(self.cache.keys()):
+                    obj,instime=self.cache[key]
+                    if now-instime>self.cachetime:
+                        del self.cache[key]
+                        cleancount+=1
+            except Exception as e:
+                self.logger.exception(e)
+            finally:
+                if gotlock:
+                    self.lock.release()
             self.logger.debug("Cleaned %s expired entries."%cleancount)
 
 
 
-DEFAULTCACHE=None
+class CacheSingleton(object):
+    """
+    Process singleton to store a default Cache instance
+    Note it is important there is a separate Cache instance for each process
+    since otherwise the Threading.Lock will screw up and block the execution.
+    """
+
+    instance = None
+    procPID = None
+
+    def __init__(self, *args, **kwargs):
+        pid =  os.getpid()
+        logger = logging.getLogger("%s.CacheSingleton" % __package__)
+        if pid == CacheSingleton.procPID and CacheSingleton.instance is not None:
+            logger.debug("Return existing Cache Singleton for process with pid: %u"%pid)
+        else:
+            if CacheSingleton.instance is None:
+                logger.info("Create CacheSingleton for process with pid: %u"%pid)
+            elif CacheSingleton.procPID != pid:
+                logger.warning("Replace CacheSingleton(created by process %u) for process with pid: %u"%(CacheSingleton.procPID,pid))
+
+            CacheSingleton.instance = Cache(*args,**kwargs)
+            CacheSingleton.procPID  = pid
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+
+
 def get_default_cache():
-    global DEFAULTCACHE
-    if DEFAULTCACHE is None:
-        DEFAULTCACHE=Cache()
-    return DEFAULTCACHE
+    """
+    Function to get processor unique Cache Singleton
+    """
+    return CacheSingleton()

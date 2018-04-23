@@ -143,8 +143,9 @@ Tags:
 
     def _parse_result(self, result):
         dr = {}
-        for line in result.strip().split(b'\n'):
-            m = self.pattern.match(line)
+        result = force_uString(result)
+        for line in result.strip().split('\n'):
+            m = self.pattern.match(force_bString(line))
             if m == None:
                 self._logger().error(
                     'Could not parse line from f-prot: %s' % line)

@@ -40,7 +40,7 @@ class AllpluginTestCase(unittest.TestCase):
         config.set('main', 'disablebounces', '1')
         guess_clamav_socket(config)
 
-        self.mc = MainController(config)
+        self.mc = MainController(config,None)
         self.tempfiles = []
 
     def tearDown(self):
@@ -94,7 +94,7 @@ class EndtoEndTestTestCase(unittest.TestCase):
             'main', 'controlport', str(EndtoEndTestTestCase.FUGLUCONTROL_PORT))
         guess_clamav_socket(self.config)
         # init core
-        self.mc = MainController(self.config)
+        self.mc = MainController(self.config,None)
 
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
@@ -180,7 +180,7 @@ class DKIMTestCase(unittest.TestCase):
         guess_clamav_socket(self.config)
 
         # init core
-        self.mc = MainController(self.config)
+        self.mc = MainController(self.config, None)
 
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(self.config, self.config.getint(
@@ -257,7 +257,7 @@ class SMIMETestCase(unittest.TestCase):
         guess_clamav_socket(self.config)
 
         # init core
-        self.mc = MainController(self.config)
+        self.mc = MainController(self.config,None)
 
         # start listening smtp dummy server to get fuglus answer
         self.smtp = DummySMTPServer(
