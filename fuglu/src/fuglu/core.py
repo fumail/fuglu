@@ -134,7 +134,7 @@ class MainController(object):
 
             'plugindir': {
                 'section': 'main',
-                'description': "where should fuglu search for additional plugins",
+                'description': "comma separated list of directories in which fuglu searches for additional plugins and their dependencies",
                 'default': "",
             },
 
@@ -943,14 +943,14 @@ class MainController(object):
     def load_plugins(self):
         """load plugins defined in config"""
         allOK = True
-        plugdir = self.config.get('main', 'plugindir').strip()
-        if plugdir != "" and not os.path.isdir(plugdir):
-            self.logger.warning('Plugin directory %s not found' % plugdir)
-
-        if plugdir != "":
-            self.logger.debug('Searching for additional plugins in %s' % plugdir)
-            if plugdir not in sys.path:
-                sys.path.insert(0, plugdir)
+        plugindirs = self.config.get('main', 'plugindir').strip().split(',')
+        for plugindir in plugindirs:
+            if os.path.isdir(plugindir):
+                self._logger().debug('Searching for additional plugins in %s' % plugindir)
+                if plugindir not in sys.path:
+                    sys.path.insert(0, plugindir)
+            else:
+                self._logger().warning('Plugin directory %s not found' % plugindir)
 
         self.logger.debug('Module search path %s' % sys.path)
         self.logger.debug('Loading scanner plugins')
