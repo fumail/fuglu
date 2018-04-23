@@ -352,3 +352,76 @@ on your host:
 	$ nc 192.168.1.40 9999
 	Fuglu Python Shell - MainController available as 'mc'
 	>>>
+
+---------------
+Runtime control
+---------------
+It is possible to change some core parameters at runtime and tell fuglu to reload the configuration. Sending ``SIGHUP`` to
+the main process will check for changes in the configuration and reload fuglu as needed to apply the changes:
+- Changes in configuration files (fuglu.conf or plugin configuration files) will restart the threads/process pool.
+- Changes in logging.conf will restart the logging configuration
+
+What can be changed at runtime
+------------------------------
+- plugins loaded and plugin configuration
+- threading mode : number of threads
+- process mode: number of processes
+- logging configuration, for example
+ - log-level
+ - handlers
+ - loggers
+- backend process/thread
+
+Please note it is recommended to change backend (process/thread) while the load is low. Changing the backend
+or the number of processes (initialprocs in process mode) will create a new processor pool. Changing the number
+of processes this creates a new pool which will take over for new messages. The old pool exist until all the tasks
+(messages) are processed. Therefore, the number of processes is the sum of the old processes plus the new processes
+until the old pool is closed.
+
+Send SIGHUP to the main process
+...............................
+
+First one has to know the process id of the main fuglu process. If fuglu has been started as daemon using ``systemctl``
+check the status, for example:
+
+::
+
+    $ systemctl status fuglu
+
+    ● fuglu.service - fuglu mail filter
+       Loaded: loaded (/usr/lib/systemd/system/fuglu.service; enabled; vendor preset: disabled)
+       Active: active (running)
+      Process: 27199 ExecStart=/usr/bin/fuglu --pidfile=/run/fuglu.pid (code=exited, status=0/SUCCESS)
+     Main PID: 27205 (fuglu)
+       CGroup: /system.slice/fuglu.service
+               ├─27205 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+               ├─27206 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+               ├─27209 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+               ├─27211 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+               ├─27215 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+               ├─27216 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+               └─27217 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+
+In this example the main PID is ``27205``. To send SIGHUP to the process run:
+
+::
+
+    $ kill -1 27205
+
+Or find the main process ID by a simple Linux os command and filter it
+
+::
+
+    $ ps -ef | grep -i "fuglu"
+    nobody   27205     1  0 09:00 ?        00:01:35 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+    nobody   27206 27205  0 09:00 ?        00:00:00 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+    nobody   27209 27206  0 09:00 ?        00:00:00 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+    nobody   27211 27205  0 09:00 ?        00:00:00 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+    nobody   27215 27205  0 09:00 ?        00:00:00 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+    nobody   27216 27205  0 09:00 ?        00:00:00 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+    nobody   27217 27205  0 09:00 ?        00:00:00 /usr/bin/python /usr/bin/fuglu --pidfile=/run/fuglu.pid
+
+This command will show all fuglu processes, including the subprocesses. The main process is the one that has
+no parent, so its the one in the second line of the output with ``1`` as the parent in the 3rd column, so again
+the process with id ``27205`` as in the previous example.
+
