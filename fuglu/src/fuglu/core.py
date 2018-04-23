@@ -946,11 +946,11 @@ class MainController(object):
         plugindirs = self.config.get('main', 'plugindir').strip().split(',')
         for plugindir in plugindirs:
             if os.path.isdir(plugindir):
-                self._logger().debug('Searching for additional plugins in %s' % plugindir)
+                self.logger.debug('Searching for additional plugins in %s' % plugindir)
                 if plugindir not in sys.path:
                     sys.path.insert(0, plugindir)
             else:
-                self._logger().warning('Plugin directory %s not found' % plugindir)
+                self.logger.warning('Plugin directory %s not found' % plugindir)
 
         self.logger.debug('Module search path %s' % sys.path)
         self.logger.debug('Loading scanner plugins')
