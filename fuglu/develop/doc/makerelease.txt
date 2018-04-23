@@ -15,8 +15,8 @@ git clone git@github.com:fumail/fuglu.git fuglu-gh-pages
 cd fuglu-gh-pages/
 git checkout -b gh-pages origin/gh-pages
 cd ../fuglu/fuglu/develop/doc
-./make_sphinx_plugin_doc.py > ~/path/to/fuglu.gh-pages/source/includedplugins-autogen.txt
-cd ../../../../fuglu.gh-pages/
+./make_sphinx_plugin_doc.py > ~/path/to/fuglu-gh-pages/source/includedplugins-autogen.txt
+cd ../../../../fuglu-gh-pages/
 make html
 
 (check index.html, push to git if ok)
