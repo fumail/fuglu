@@ -53,5 +53,6 @@ python setup.py sdist
 * pypi upload
 twine upload dist/fuglu-<new-version>.tar.gz
 
+* github release on https://github.com/fumail/fuglu/releases
 
 * mailing list announcement
