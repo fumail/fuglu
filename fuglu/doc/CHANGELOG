@@ -1,3 +1,19 @@
+-- Fuglu 0.8.0, 2018-04-23
+ * Significant improvements of Python 3 support
+ * Logging rewrite, log level can now be changed at runtime
+ * Multiprocessing improvements
+ * Toggle between multithreading and multiprocessing run modes at runtime
+ * Better IPv6 support
+ * Allow multiple plugin directories
+ * SpamAssassin plugin: option to strip attachments for big mails
+ * ClamAV plugin: option to fallback to clamscan if clamd fails
+
+Developers:
+ * New dnsquery extension to faciliate dns lookups
+ * convenience function is_ham in shared.Suspect
+ * gitlab CI tests
+
+
 -- Fuglu 0.7.0, 2018-01-14
  * Attachment Plugin:
   * support more archive types ( tar.gz, tgz, tar.bz2, .7z)
