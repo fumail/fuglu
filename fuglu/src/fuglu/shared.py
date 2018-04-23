@@ -352,11 +352,9 @@ class Suspect(object):
     def update_subject(self, subject_cb, **cb_params):
         """
         update/alter the message subject
-        Args:
-            subject_cb: callback function that alters the subject. must accept a string and return a string
-            cb_params: additional parameters to be passed to subject_cb
-        Return:
-            True if subject was altered, False otherwise
+        :param subject_cb: callback function that alters the subject. must accept a string and return a string
+        :param cb_params: additional parameters to be passed to subject_cb
+        :return: True if subject was altered, False otherwise
         """
         msgrep = self.get_message_rep()
         oldsubj = msgrep.get("subject","")
