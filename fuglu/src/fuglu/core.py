@@ -105,7 +105,19 @@ class MainController(object):
     appenders = []
     config = None
 
-    def __init__(self, config, logQueue, logProcessFacQueue=None):
+    def __init__(self, config, logQueue=None, logProcessFacQueue=None):
+        """
+        Main controller instance
+        Note: The logQueue and logProcessFacQueue keyword args are only needed in the fuglu main process when logging
+              to files. For default logging to the screen there is not logQueue needed.
+
+        Args:
+            config (configparser.RawConfigParser()): Config file parser (file already read)
+
+        Keyword Args:
+            logQueue (multiprocessing.queue or None): Queue where to put log messages (not directly used, only by loggers as defined in logtools.client_configurer)
+            logProcessFacQueue (multiprocessing.queue or None): Queue where to put new logging configurations (logtools.logConfig objects)
+        """
         self.requiredvars = {
             # main section
             'identifier': {
