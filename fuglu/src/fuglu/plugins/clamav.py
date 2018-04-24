@@ -310,7 +310,7 @@ Tags:
             return dr
     
     
-    def _read_until_delimiter(self, sock, suspectID):
+    def _read_until_delimiter(self, sock, suspectID = "(NA)"):
         data = b''
         maxFailedAttempts = 40
         failedAttempt = 0
