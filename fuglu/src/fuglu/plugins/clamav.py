@@ -333,7 +333,7 @@ Tags:
                 # maximum of 1 second by 40*0.025 [s] if this helps to avoid a complete rescan of the message
                 time.sleep(0.025)
                 failedAttempt += 1
-                self.logger.debug("Failed receive attempt %u/%u"%(failedAttempt,maxFailedAttempts))
+                self.logger.warning("Failed receive attempt %u/%u"%(failedAttempt,maxFailedAttempts))
                 if failedAttempt == maxFailedAttempts:
                     raise
         return data[:-1]  # remove \0 at the end
