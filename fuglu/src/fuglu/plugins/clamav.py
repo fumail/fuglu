@@ -157,7 +157,7 @@ Tags:
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
-                viruses = self.scan_stream(content)
+                viruses = self.scan_stream(content, suspect.id)
                 actioncode, message = self._virusreport(suspect, viruses)
                 return actioncode, message
             except socket.error as e:
@@ -228,7 +228,7 @@ Tags:
             return dr
     
 
-    def scan_stream(self, buff):
+    def scan_stream(self, buff, suspectID = "(NA)"):
         """
         Scan byte buffer
 
@@ -246,7 +246,7 @@ Tags:
         numChunksToSend = math.ceil(len(remainingbytes)/default_chunk_size)
         iChunk = 0
         chunklength = 0
-        self.logger.debug('sending message in %u chunks of size %u bytes' % (numChunksToSend,default_chunk_size))
+        self.logger.debug('%s: sending message in %u chunks of size %u bytes' % (suspectID,numChunksToSend,default_chunk_size))
 
         while len(remainingbytes) > 0:
             iChunk = iChunk + 1
@@ -257,19 +257,19 @@ Tags:
             remainingbytes = remainingbytes[chunklength:]
             s.sendall(struct.pack(b'!L', chunklength))
             s.sendall(chunkdata)
-        self.logger.debug('sent chunk %u/%u, last number of bytes sent was %u' % (iChunk,numChunksToSend,chunklength))
-        self.logger.debug('All chunks send, send 0 - size to tell ClamAV the whole message has been sent')
+        self.logger.debug('%s: sent chunk %u/%u, last number of bytes sent was %u' % (suspectID,iChunk,numChunksToSend,chunklength))
+        self.logger.debug('%s: All chunks send, send 0 - size to tell ClamAV the whole message has been sent'%suspectID)
         s.sendall(struct.pack(b'!L', 0))
         dr = {}
 
 
-        result = force_uString(self._read_until_delimiter(s)).strip()
+        result = force_uString(self._read_until_delimiter(s, suspectID)).strip()
 
         if result.startswith('INSTREAM size limit exceeded'):
             raise Exception(
-                "Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
+                "%s: Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength"%suspectID)
         if result.startswith('UNKNOWN'):
-            raise Exception("Clamd doesn't understand INSTREAM command. very old version?")
+            raise Exception("%s: Clamd doesn't understand INSTREAM command. very old version?"%suspectID)
 
         if pipelining:
             try:
@@ -277,7 +277,7 @@ Tags:
                 filename = force_uString(filename.strip())  # use unicode for filename
                 virusinfo = force_uString(virusinfo.strip())  # lets use unicode for the info
             except:
-                raise Exception("Protocol error, could not parse result: %s" % result)
+                raise Exception("%s: Protocol error, could not parse result: %s" % (suspectID,result))
 
             threadLocal.expectedID += 1
             if threadLocal.expectedID != int(ans_id):
@@ -310,7 +310,7 @@ Tags:
             return dr
     
     
-    def _read_until_delimiter(self, sock):
+    def _read_until_delimiter(self, sock, suspectID = "(NA)"):
         data = b''
         maxFailedAttempts = 40
         failedAttempt = 0
@@ -323,7 +323,7 @@ Tags:
                 if chunk.endswith(b'\0'):
                     break
                 if b'\0' in chunk:
-                    raise Exception("Protocol error: got unexpected additional data after delimiter")
+                    raise Exception("%s: Protocol error: got unexpected additional data after delimiter"%suspectID)
             except socket.error:
                 # looks like there can be a socket error when we try to connect too quickly after sending, so
                 # better retry several times
@@ -333,7 +333,7 @@ Tags:
                 # maximum of 1 second by 40*0.025 [s] if this helps to avoid a complete rescan of the message
                 time.sleep(0.025)
                 failedAttempt += 1
-                self.logger.debug("Failed receive attempt %u/%u"%(failedAttempt,maxFailedAttempts))
+                self.logger.warning("%s: Failed receive attempt %u/%u"%(suspectID,failedAttempt,maxFailedAttempts))
                 if failedAttempt == maxFailedAttempts:
                     raise
         return data[:-1]  # remove \0 at the end
@@ -465,7 +465,7 @@ AAEAAQA3AAAAbQAAAAAA
 ------=_MIME_BOUNDARY_000_12140--"""
         
         if mode=='stream':
-            result = self.scan_stream(stream)
+            result = self.scan_stream(stream, "(NA)")
         elif mode=='shell':
             result = self.scan_shell(stream)
         else:
