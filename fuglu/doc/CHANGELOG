@@ -1,3 +1,9 @@
+-- Fuglu x.x.x, 20XX-XX-XX
+ * ClamAV plugin: Fix sending large files to ClamAV which caused timeouts
+
+Developers:
+ * ???
+
 -- Fuglu 0.8.0, 2018-04-23
  * Significant improvements of Python 3 support fixing many issues.
  * Logging rewrite, log level can now be changed at runtime. Logging will spawn a dedicated process.

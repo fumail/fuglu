@@ -22,6 +22,7 @@ import threading
 import errno
 import subprocess
 import time
+import math
 
 threadLocal = threading.local()
 # it's probably a good idea to re-establish the connection every now and then
@@ -167,7 +168,10 @@ Tags:
                 if not (i == 0 and e.errno == errno.EPIPE):
                     self.logger.warning("%s Error encountered while contacting clamd (try %s of %s): %s" % (
                         suspect.id, i + 1, self.config.getint(self.section, 'retries'), str(e)))
-            except Exception:
+                else:
+                    self.logger.exception(e)
+            except Exception as e:
+                self.logger.exception(e)
                 self.__invalidate_socket()
 
         self.logger.error("%s Clamdscan failed after %s retries" %
@@ -223,7 +227,7 @@ Tags:
         else:
             return dr
     
-    
+
     def scan_stream(self, buff):
         """
         Scan byte buffer
@@ -239,27 +243,37 @@ Tags:
         default_chunk_size = 2048
         remainingbytes = force_bString(buff)
 
+        numChunksToSend = math.ceil(len(remainingbytes)/default_chunk_size)
+        iChunk = 0
+        chunklength = 0
+        self.logger.debug('sending message in %u chunks of size %u bytes' % (numChunksToSend,default_chunk_size))
+
         while len(remainingbytes) > 0:
+            iChunk = iChunk + 1
             chunklength = min(default_chunk_size, len(remainingbytes))
+            #self.logger.debug('sending chunk %u/%u' % (iChunk,numChunksToSend))
             #self.logger.debug('sending %s byte chunk' % chunklength)
             chunkdata = remainingbytes[:chunklength]
             remainingbytes = remainingbytes[chunklength:]
-            s.sendall(struct.pack('!L', chunklength))
+            s.sendall(struct.pack(b'!L', chunklength))
             s.sendall(chunkdata)
-        s.sendall(struct.pack('!L', 0))
+        self.logger.debug('sent chunk %u/%u, last number of bytes sent was %u' % (iChunk,numChunksToSend,chunklength))
+        self.logger.debug('All chunks send, send 0 - size to tell ClamAV the whole message has been sent')
+        s.sendall(struct.pack(b'!L', 0))
         dr = {}
 
-        result = self._read_until_delimiter(s).strip()
 
-        if result.startswith(b'INSTREAM size limit exceeded'):
+        result = force_uString(self._read_until_delimiter(s)).strip()
+
+        if result.startswith('INSTREAM size limit exceeded'):
             raise Exception(
                 "Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
-        if result.startswith(b'UNKNOWN'):
+        if result.startswith('UNKNOWN'):
             raise Exception("Clamd doesn't understand INSTREAM command. very old version?")
 
         if pipelining:
             try:
-                ans_id, filename, virusinfo = result.split(b':', 2)
+                ans_id, filename, virusinfo = result.split(':', 2)
                 filename = force_uString(filename.strip())  # use unicode for filename
                 virusinfo = force_uString(virusinfo.strip())  # lets use unicode for the info
             except:
@@ -281,7 +295,7 @@ Tags:
                 finally:
                     self.__invalidate_socket()
         else:
-            filename, virusinfo = result.split(b':', 1)
+            filename, virusinfo = result.split(':', 1)
             filename = force_uString(filename.strip())  # use unicode for filename
             virusinfo = force_uString(virusinfo.strip())  # use unicode for virus info
             if virusinfo[-5:] == 'ERROR':
@@ -298,15 +312,30 @@ Tags:
     
     def _read_until_delimiter(self, sock):
         data = b''
+        maxFailedAttempts = 40
+        failedAttempt = 0
         while True:
-            chunk = sock.recv(4096)
-            if len(chunk) == 0:
-                continue
-            data += chunk
-            if chunk.endswith(b'\0'):
-                break
-            if b'\0' in chunk:
-                raise Exception("Protocol error: got unexpected additional data after delimiter")
+            try:
+                chunk = sock.recv(4096)
+                if len(chunk) == 0:
+                    continue
+                data += chunk
+                if chunk.endswith(b'\0'):
+                    break
+                if b'\0' in chunk:
+                    raise Exception("Protocol error: got unexpected additional data after delimiter")
+            except socket.error:
+                # looks like there can be a socket error when we try to connect too quickly after sending, so
+                # better retry several times
+                # Got this idea from pyclamd, see:
+                # https://bitbucket.org/xael/pyclamd/src/2089daa540e1343cf414c4728f1322c96a615898/pyclamd/pyclamd.py?at=default&fileviewer=file-view-default#pyclamd.py-614
+                # There the sleep for 0.01 [s] for 5 tries, so 0.05 [s] in total to wait. But I'm happy to set a
+                # maximum of 1 second by 40*0.025 [s] if this helps to avoid a complete rescan of the message
+                time.sleep(0.025)
+                failedAttempt += 1
+                self.logger.debug("Failed receive attempt %u/%u"%(failedAttempt,maxFailedAttempts))
+                if failedAttempt == maxFailedAttempts:
+                    raise
         return data[:-1]  # remove \0 at the end
     
     
