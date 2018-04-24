@@ -702,7 +702,13 @@ The other common template variables are available as well.
                 if ct in MIMETYPE_EXT_OVERRIDES:
                     ext = MIMETYPE_EXT_OVERRIDES[ct]
                 else:
-                    ext = mimetypes.guess_extension(ct)
+                    exts = mimetypes.guess_all_extensions(ct)
+                    # reply is randomly sorted list, get consistent result
+                    if len(exts)>0:
+                        exts.sort()
+                        ext = exts[0]
+                    else:
+                        ext = None
 
                 if ext is None:
                     ext = ''
