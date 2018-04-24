@@ -1,5 +1,6 @@
 -- Fuglu x.x.x, 20XX-XX-XX
  * ClamAV plugin: Fix sending large files to ClamAV which caused timeouts
+ * Attachment plugin: Improve file type detection of unnamed attachments
 
 Developers:
  * ???

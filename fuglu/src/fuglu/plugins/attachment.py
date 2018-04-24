@@ -97,6 +97,17 @@ except (ImportError, OSError):
 
 
 
+# workarounds for mimetypes
+# - always takes .ksh for text/plain
+# - python3 takes .exe for application/octet-stream which is often used for content types
+#   unknwon to the creating MUA (e.g. pdf files are often octet-stream)
+MIMETYPE_EXT_OVERRIDES = {
+    'text/plain': 'txt',
+    'application/octet-stream': None,
+}
+
+
+
 class ThreadLocalMagic(threading.local):
     magic = None
 
@@ -687,11 +698,17 @@ The other common template variables are available as well.
                 except Exception:
                     pass
             else:
-                # workaround for mimetypes, it always takes .ksh for text/plain
-                if part.get_content_type() == 'text/plain':
-                    ext = '.txt'
+                ct = part.get_content_type()
+                if ct in MIMETYPE_EXT_OVERRIDES:
+                    ext = MIMETYPE_EXT_OVERRIDES[ct]
                 else:
-                    ext = mimetypes.guess_extension(part.get_content_type())
+                    exts = mimetypes.guess_all_extensions(ct)
+                    # reply is randomly sorted list, get consistent result
+                    if len(exts)>0:
+                        exts.sort()
+                        ext = exts[0]
+                    else:
+                        ext = None
 
                 if ext is None:
                     ext = ''
