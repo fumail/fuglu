@@ -228,7 +228,7 @@ Tags:
             return dr
     
 
-    def scan_stream(self, buff, suspectID):
+    def scan_stream(self, buff, suspectID = "(NA)"):
         """
         Scan byte buffer
 
@@ -236,9 +236,6 @@ Tags:
           - (dict) : {filename1: "virusname"}
           - None if no virus found
           - raises Exception if something went wrong
-
-        Args:
-            suspectID ():
         """
         pipelining = self.config.getboolean(self.section, 'pipelining')
         s = self.__init_socket__(oneshot=not pipelining)
