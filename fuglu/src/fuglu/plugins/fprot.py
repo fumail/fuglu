@@ -16,7 +16,6 @@
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 from fuglu.localStringEncoding import force_bString, force_uString
 import socket
-import time
 import re
 import os
 
@@ -38,6 +37,7 @@ Tags:
 
     def __init__(self, config, section=None):
         ScannerPlugin.__init__(self, config, section)
+        self.logger = self._logger()
 
         self.requiredvars = {
             'host': {
@@ -84,21 +84,21 @@ Tags:
         }
 
         self.pattern = re.compile(b'^(\d)+ <(.+)> (.+)$')
-
+    
+    
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
-        if retcode != None:
+        if retcode is not None:
             return retcode
         else:
             # in case of invalid problem action
             return DEFER
-
+    
+    
     def examine(self, suspect):
-        starttime = time.time()
-
         if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self._logger().info('Not scanning - message too big (message %s  bytes > config %s bytes )' %
+            self.logger.info('Not scanning - message too big (message %s  bytes > config %s bytes )' %
                                 (suspect.size, self.config.getint(self.section, 'maxsize')))
             return DUNNO
 
@@ -110,11 +110,11 @@ Tags:
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
                 if self.config.getboolean(self.section, 'networkmode'):
-                    viruses = self.scan_stream(content)
+                    viruses = self.scan_stream(content, suspect.id)
                 else:
                     viruses = self.scan_file(suspect.tempfile)
-                if viruses != None:
-                    self._logger().info("Virus found in message from %s : %s" %
+                if viruses is not None:
+                    self.logger.info("Virus found in message from %s : %s" %
                                         (suspect.from_address, viruses))
                     suspect.tags['virus']['F-Prot'] = True
                     suspect.tags['FprotPlugin.virus'] = viruses
@@ -122,7 +122,7 @@ Tags:
                 else:
                     suspect.tags['virus']['F-Prot'] = False
 
-                if viruses != None:
+                if viruses is not None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
                     firstinfected, firstvirusname = list(viruses.items())[0]
@@ -134,20 +134,21 @@ Tags:
                 else:
                     return DUNNO
             except Exception as e:
-                self._logger().warning("Error encountered while contacting fpscand (try %s of %s): %s" %
-                                       (i + 1, self.config.getint(self.section, 'retries'), str(e)))
-        self._logger().error("fpscand failed after %s retries" %
+                self.logger.warning("%s Error encountered while contacting fpscand (try %s of %s): %s" %
+                                       (suspect.id, i + 1, self.config.getint(self.section, 'retries'), str(e)))
+        self.logger.error("fpscand failed after %s retries" %
                              self.config.getint(self.section, 'retries'))
-        content = None
+        
         return self._problemcode()
-
+    
+    
     def _parse_result(self, result):
         dr = {}
         result = force_uString(result)
         for line in result.strip().split('\n'):
             m = self.pattern.match(force_bString(line))
-            if m == None:
-                self._logger().error(
+            if m is None:
+                self.logger.error(
                     'Could not parse line from f-prot: %s' % line)
                 raise Exception('f-prot: Unparseable answer: %s' % result)
             status = force_uString(m.group(1))
@@ -155,13 +156,13 @@ Tags:
             details = force_uString(m.group(3))
 
             status = int(status)
-            self._logger().debug("f-prot scan status: %s" % status)
-            self._logger().debug("f-prot scan text: %s" % text)
+            self.logger.debug("f-prot scan status: %s" % status)
+            self.logger.debug("f-prot scan text: %s" % text)
             if status == 0:
                 continue
 
             if status > 3:
-                self._logger().warning(
+                self.logger.warning(
                     "f-prot: got unusual status %s" % status)
 
             # http://www.f-prot.com/support/helpfiles/unix/appendix_c.html
@@ -172,7 +173,7 @@ Tags:
                 elif text[0:27] == "contains infected objects: ":
                     text = text[27:]
                 else:
-                    self._logger().warn(
+                    self.logger.warn(
                         "Unexpected reply from f-prot: %s" % text)
                     continue
                 dr[details] = text
@@ -181,7 +182,8 @@ Tags:
             return None
         else:
             return dr
-
+    
+    
     def scan_file(self, filename):
         filename = os.path.abspath(filename)
         s = self.__init_socket__()
@@ -191,16 +193,17 @@ Tags:
 
         result = s.recv(20000)
         if len(result) < 1:
-            self._logger().error('Got no reply from fpscand')
+            self.logger.error('Got no reply from fpscand')
         s.close()
 
         return self._parse_result(result)
-
-    def scan_stream(self, buffer):
+    
+    
+    def scan_stream(self, content, suspectid='(NA)'):
         """
         Scan a buffer
 
-        buffer (string) : buffer to scan
+        content (string) : buffer to scan
 
         return either :
           - (dict) : {filename1: "virusname"}
@@ -208,24 +211,25 @@ Tags:
         """
 
         s = self.__init_socket__()
-        buffer = force_bString(buffer)
-        buflen = len(buffer)
+        content = force_bString(content)
+        buflen = len(content)
         s.sendall(force_bString('SCAN %s STREAM fu_stream SIZE %s' %
                   (self.config.get(self.section, 'scanoptions'), buflen)))
         s.sendall(b'\n')
-        self._logger().debug(
-            'Sending buffer (length=%s) to fpscand...' % buflen)
-        s.sendall(buffer)
-        self._logger().debug(
-            'Sent %s bytes to fpscand, waiting for scan result' % buflen)
+        self.logger.debug(
+            '%s Sending buffer (length=%s) to fpscand...' % (suspectid, buflen))
+        s.sendall(content)
+        self.logger.debug(
+            '%s Sent %s bytes to fpscand, waiting for scan result' % (suspectid, buflen))
 
         result = force_uString(s.recv(20000))
         if len(result) < 1:
-            self._logger().error('Got no reply from fpscand')
+            self.logger.error('Got no reply from fpscand')
         s.close()
 
         return self._parse_result(result)
-
+    
+    
     def __init_socket__(self):
         host = self.config.get(self.section, 'host')
         port = self.config.getint(self.section, 'port')
@@ -237,14 +241,17 @@ Tags:
                 self.config.get(self.section, 'host'), self.config.getint(self.section, 'port')))
 
         return s
-
+    
+    
     def __str__(self):
         return 'F-Prot AV'
-
+    
+    
     def lint(self):
         allok = self.check_config() and self.lint_eicar()
         return allok
-
+    
+    
     def lint_eicar(self):
         stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org
@@ -271,7 +278,7 @@ AAEAAQA3AAAAbQAAAAAA
 ------=_MIME_BOUNDARY_000_12140--"""
 
         result = self.scan_stream(force_bString(stream))
-        if result == None:
+        if result is None:
             print("EICAR Test virus not found!")
             return False
         print("F-Prot found virus", result)

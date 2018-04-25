@@ -228,7 +228,7 @@ Tags:
             return dr
     
 
-    def scan_stream(self, buff, suspectID = "(NA)"):
+    def scan_stream(self, buff, suspectid ="(NA)"):
         """
         Scan byte buffer
 
@@ -246,7 +246,7 @@ Tags:
         numChunksToSend = math.ceil(len(remainingbytes)/default_chunk_size)
         iChunk = 0
         chunklength = 0
-        self.logger.debug('%s: sending message in %u chunks of size %u bytes' % (suspectID,numChunksToSend,default_chunk_size))
+        self.logger.debug('%s: sending message in %u chunks of size %u bytes' % (suspectid, numChunksToSend, default_chunk_size))
 
         while len(remainingbytes) > 0:
             iChunk = iChunk + 1
@@ -257,19 +257,19 @@ Tags:
             remainingbytes = remainingbytes[chunklength:]
             s.sendall(struct.pack(b'!L', chunklength))
             s.sendall(chunkdata)
-        self.logger.debug('%s: sent chunk %u/%u, last number of bytes sent was %u' % (suspectID,iChunk,numChunksToSend,chunklength))
-        self.logger.debug('%s: All chunks send, send 0 - size to tell ClamAV the whole message has been sent'%suspectID)
+        self.logger.debug('%s: sent chunk %u/%u, last number of bytes sent was %u' % (suspectid, iChunk, numChunksToSend, chunklength))
+        self.logger.debug('%s: All chunks send, send 0 - size to tell ClamAV the whole message has been sent' % suspectid)
         s.sendall(struct.pack(b'!L', 0))
         dr = {}
 
 
-        result = force_uString(self._read_until_delimiter(s, suspectID)).strip()
+        result = force_uString(self._read_until_delimiter(s, suspectid)).strip()
 
         if result.startswith('INSTREAM size limit exceeded'):
             raise Exception(
-                "%s: Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength"%suspectID)
+                "%s: Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength" % suspectid)
         if result.startswith('UNKNOWN'):
-            raise Exception("%s: Clamd doesn't understand INSTREAM command. very old version?"%suspectID)
+            raise Exception("%s: Clamd doesn't understand INSTREAM command. very old version?" % suspectid)
 
         if pipelining:
             try:
@@ -277,7 +277,7 @@ Tags:
                 filename = force_uString(filename.strip())  # use unicode for filename
                 virusinfo = force_uString(virusinfo.strip())  # lets use unicode for the info
             except:
-                raise Exception("%s: Protocol error, could not parse result: %s" % (suspectID,result))
+                raise Exception("%s: Protocol error, could not parse result: %s" % (suspectid, result))
 
             threadLocal.expectedID += 1
             if threadLocal.expectedID != int(ans_id):
