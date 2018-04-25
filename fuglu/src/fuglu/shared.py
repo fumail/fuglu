@@ -742,7 +742,7 @@ class AVScannerPlugin(ScannerPlugin):
         :param suspectid: suspect.id of currently processed suspect
         :return: None if no virus is found, else a dict filename -> virusname
         """
-        self._logger().warning('Unimplemented scan_sream() method')
+        self._logger().warning('Unimplemented scan_stream() method')
         
         
     def _check_too_big(self, suspect):
