@@ -159,11 +159,11 @@ Tags:
         else:
             return dr
 
-    def scan_stream(self, buffer):
+    def scan_stream(self, content, suspectid='(NA)'):
         """
         Scan a buffer
 
-        buffer (string) : buffer to scan
+        content (string) : buffer to scan
 
         return either :
           - (dict) : {filename: "virusname"}
@@ -171,7 +171,7 @@ Tags:
         """
 
         s = self.__init_socket__()
-        buflen = len(buffer)
+        buflen = len(content)
 
         self._sendint(s, DRWEBD_SCAN_CMD)
 
@@ -183,7 +183,7 @@ Tags:
         self._sendint(s, DRWEBD_RETURN_REPORT)
         self._sendint(s, 0)  # not sure what this is for - but it's required.
         self._sendint(s, buflen)  # send the buffer length
-        s.sendall(buffer)  # send the buffer
+        s.sendall(content)  # send the buffer
         retcode = self._readint(s)  # get return code
         # print "result=%s"%retcode
         numlines = self._readint(s)
@@ -197,7 +197,8 @@ Tags:
             return self._parse_result(lines)
         else:
             return None
-
+    
+    
     def __init_socket__(self):
         host = self.config.get(self.section, 'host')
         port = self.config.getint(self.section, 'port')

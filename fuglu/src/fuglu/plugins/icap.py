@@ -85,19 +85,22 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             },
         }
         self.logger = self._logger()
-
+    
+    
     def __str__(self):
         return "ICAP AV"
-
+    
+    
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
-        if retcode != None:
+        if retcode is not None:
             return retcode
         else:
             # in case of invalid problem action
             return DEFER
-
+    
+    
     def examine(self, suspect):
 
         enginename = self.config.get(self.section, 'enginename')
@@ -110,8 +113,8 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
-                viruses = self.scan_stream(content)
-                if viruses != None:
+                viruses = self.scan_stream(content, suspect.id)
+                if viruses is not None:
                     self.logger.info(
                         "Virus found in message from %s : %s" % (suspect.from_address, viruses))
                     suspect.tags['virus'][enginename] = True
@@ -120,7 +123,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                 else:
                     suspect.tags['virus'][enginename] = False
 
-                if viruses != None:
+                if viruses is not None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
                     firstinfected, firstvirusname = list(viruses.items())[0]
@@ -135,14 +138,15 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("ICAP scan failed after %s retries" %
                           self.config.getint(self.section, 'retries'))
-        content = None
+        
         return self._problemcode()
-
-    def scan_stream(self, buf):
+    
+    
+    def scan_stream(self, content, suspectid='(NA)'):
         """
         Scan a buffer
 
-        buffer (string) : buffer to scan
+        content (string) : buffer to scan
 
         return either :
           - (dict) : {filename1: "virusname"}
@@ -156,7 +160,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
         host = self.config.get(self.section, 'host')
         port = self.config.get(self.section, 'port')
         service = self.config.get(self.section, 'service')
-        buflen = len(buf)
+        buflen = len(content)
 
         # in theory, these fake headers are optional according to the ICAP errata
         # and sophos docs
@@ -175,7 +179,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
 
         bodyparthexlen = hex(buflen)[2:]
         bodypart = bodyparthexlen + CRLF
-        bodypart += buf + CRLF
+        bodypart += content + CRLF
         bodypart += "0" + CRLF
 
         hdrstart = 0
@@ -220,7 +224,8 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             return None
         else:
             return dr
-
+    
+    
     def __init_socket__(self):
         unixsocket = False
 
@@ -251,14 +256,16 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
                     'Could not reach ICAP server using network (%s, %s)' % (host, port))
 
         return s
-
+    
+    
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
         allok = self.check_config() and self.lint_eicar()
         return allok
-
+    
+    
     def lint_eicar(self):
         stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org
@@ -285,7 +292,7 @@ AAEAAQA3AAAAbQAAAAAA
 ------=_MIME_BOUNDARY_000_12140--"""
 
         result = self.scan_stream(stream)
-        if result == None:
+        if result is None:
             print("EICAR Test virus not found!")
             return False
         print("ICAP server found virus", result)

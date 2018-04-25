@@ -180,10 +180,12 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             },
         }
         self.logger = self._logger()
-
+    
+    
     def __str__(self):
-        return "Sophos"
-
+        return "Sophos AV"
+    
+    
     def _problemcode(self):
         retcode = string_to_actioncode(
             self.config.get(self.section, 'problemaction'), self.config)
@@ -192,7 +194,8 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
         else:
             # in case of invalid problem action
             return DEFER
-
+    
+    
     def examine(self, suspect):
         enginename = 'sophos'
 
@@ -231,12 +234,13 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                           self.config.getint(self.section, 'retries'))
 
         return self._problemcode()
-
-    def scan_stream(self, buf):
+    
+    
+    def scan_stream(self, content, suspectid='(NA)'):
         """
         Scan a buffer
 
-        buffer (string) : buffer to scan
+        content (string) : buffer to scan
 
         return either :
           - (dict) : {filename1: "virusname"}
@@ -304,11 +308,11 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 
         # Send the SCAN request
 
-        s.send(force_bString('SCANDATA ' + str(len(buf)) + '\n'))
+        s.send(force_bString('SCANDATA ' + str(len(content)) + '\n'))
         if not accepted(s):
             raise Exception("SSSP Scan rejected")
 
-        s.sendall(force_bString(buf))
+        s.sendall(force_bString(content))
 
         # and read the result
         events = receivemsg(s)
@@ -324,7 +328,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             sayGoodbye(s)
             s.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
-            self.logger.warning('Error terminating connection: %s', str(e))
+            self.logger.warning('%s Error terminating connection: %s', (suspectid, str(e)))
         finally:
             s.close()
 
@@ -332,7 +336,8 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             return None
         else:
             return dr
-
+    
+    
     def __init_socket__(self):
         unixsocket = False
 
@@ -363,14 +368,16 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                     'Could not reach SSSP server using network (%s, %s)' % (host, port))
 
         return s
-
+    
+    
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
         allok = self.check_config() and self.lint_eicar()
         return allok
-
+    
+    
     def lint_eicar(self):
         stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
 To: oli@unittests.fuglu.org

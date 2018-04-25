@@ -3,7 +3,8 @@
  * Attachment plugin: Improve file type detection of unnamed attachments
 
 Developers:
- * ???
+ * extended signature of scan_stream function in AV plugins
+
 
 -- Fuglu 0.8.0, 2018-04-23
  * Significant improvements of Python 3 support fixing many issues.
