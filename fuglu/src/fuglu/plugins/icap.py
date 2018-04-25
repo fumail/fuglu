@@ -17,12 +17,12 @@
 
 # http://vaibhavkulkarni.wordpress.com/2007/11/19/a-icap-client-code-in-c-to-virus-scan-a-file-using-symantec-scan-server/
 
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
 import socket
 import os
 
 
-class ICAPPlugin(ScannerPlugin):
+class ICAPPlugin(AVScannerPlugin):
 
     """ICAP Antivirus Plugin
 This plugin allows Antivirus Scanning over the ICAP Protocol (http://tools.ietf.org/html/rfc3507 )
@@ -32,7 +32,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.requiredvars = {
             'host': {
                 'default': 'localhost',
@@ -85,54 +85,25 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             },
         }
         self.logger = self._logger()
+        self.enginename = 'icap-generic'
     
     
     def __str__(self):
         return "ICAP AV"
     
     
-    def _problemcode(self):
-        retcode = string_to_actioncode(
-            self.config.get(self.section, 'problemaction'), self.config)
-        if retcode is not None:
-            return retcode
-        else:
-            # in case of invalid problem action
-            return DEFER
-    
-    
     def examine(self, suspect):
-
-        enginename = self.config.get(self.section, 'enginename')
-
-        if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self.logger.info('Not scanning - message too big')
-            return
+        if self._check_too_big(suspect):
+            return DUNNO
+        self.enginename = self.config.get(self.section, 'enginename')
 
         content = suspect.get_source()
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
                 viruses = self.scan_stream(content, suspect.id)
-                if viruses is not None:
-                    self.logger.info(
-                        "Virus found in message from %s : %s" % (suspect.from_address, viruses))
-                    suspect.tags['virus'][enginename] = True
-                    suspect.tags['%s.virus' % enginename] = viruses
-                    suspect.debug('viruses found in message : %s' % viruses)
-                else:
-                    suspect.tags['virus'][enginename] = False
-
-                if viruses is not None:
-                    virusaction = self.config.get(self.section, 'virusaction')
-                    actioncode = string_to_actioncode(virusaction, self.config)
-                    firstinfected, firstvirusname = list(viruses.items())[0]
-                    values = dict(
-                        infectedfile=firstinfected, virusname=firstvirusname)
-                    message = apply_template(
-                        self.config.get(self.section, 'rejectmessage'), suspect, values)
-                    return actioncode, message
-                return DUNNO
+                actioncode, message = self._virusreport(suspect, viruses)
+                return actioncode, message
             except Exception as e:
                 self.logger.warning("Error encountered while contacting ICAP server (try %s of %s): %s" % (
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
@@ -264,37 +235,4 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
             string_to_actioncode(viract, self.config)))
         allok = self.check_config() and self.lint_eicar()
         return allok
-    
-    
-    def lint_eicar(self):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test eicar attachment
-X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
-
-------=_MIME_BOUNDARY_000_12140
-Content-Type: text/plain
-
-Eicar test
-------=_MIME_BOUNDARY_000_12140
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: BASE64
-Content-Disposition: attachment
-
-UEsDBAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAZWljYXIuY29tWDVPIVAlQEFQWzRcUFpYNTQo
-UF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCoNClBLAQIU
-AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
-AAEAAQA3AAAAbQAAAAAA
-
-------=_MIME_BOUNDARY_000_12140--"""
-
-        result = self.scan_stream(stream)
-        if result is None:
-            print("EICAR Test virus not found!")
-            return False
-        print("ICAP server found virus", result)
-        return True
 
