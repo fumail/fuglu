@@ -84,22 +84,11 @@ Tags:
         }
 
         self.pattern = re.compile(b'^(\d)+ <(.+)> (.+)$')
-    
-    
-    def _problemcode(self):
-        retcode = string_to_actioncode(
-            self.config.get(self.section, 'problemaction'), self.config)
-        if retcode is not None:
-            return retcode
-        else:
-            # in case of invalid problem action
-            return DEFER
+        self.enginename = 'F-Prot'
     
     
     def examine(self, suspect):
-        if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self.logger.info('Not scanning - message too big (message %s  bytes > config %s bytes )' %
-                                (suspect.size, self.config.getint(self.section, 'maxsize')))
+        if self._check_too_big(suspect):
             return DUNNO
 
         try:
@@ -113,26 +102,8 @@ Tags:
                     viruses = self.scan_stream(content, suspect.id)
                 else:
                     viruses = self.scan_file(suspect.tempfile)
-                if viruses is not None:
-                    self.logger.info("Virus found in message from %s : %s" %
-                                        (suspect.from_address, viruses))
-                    suspect.tags['virus']['F-Prot'] = True
-                    suspect.tags['FprotPlugin.virus'] = viruses
-                    suspect.debug('Viruses found in message : %s' % viruses)
-                else:
-                    suspect.tags['virus']['F-Prot'] = False
-
-                if viruses is not None:
-                    virusaction = self.config.get(self.section, 'virusaction')
-                    actioncode = string_to_actioncode(virusaction, self.config)
-                    firstinfected, firstvirusname = list(viruses.items())[0]
-                    values = dict(
-                        infectedfile=firstinfected, virusname=firstvirusname)
-                    message = apply_template(
-                        self.config.get(self.section, 'rejectmessage'), suspect, values)
-                    return actioncode, message
-                else:
-                    return DUNNO
+                actioncode, message = self._virusreport(suspect, viruses)
+                return actioncode, message
             except Exception as e:
                 self.logger.warning("%s Error encountered while contacting fpscand (try %s of %s): %s" %
                                        (suspect.id, i + 1, self.config.getint(self.section, 'retries'), str(e)))
@@ -250,37 +221,4 @@ Tags:
     def lint(self):
         allok = self.check_config() and self.lint_eicar()
         return allok
-    
-    
-    def lint_eicar(self):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test eicar attachment
-X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
-
-------=_MIME_BOUNDARY_000_12140
-Content-Type: text/plain
-
-Eicar test
-------=_MIME_BOUNDARY_000_12140
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: BASE64
-Content-Disposition: attachment
-
-UEsDBAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAZWljYXIuY29tWDVPIVAlQEFQWzRcUFpYNTQo
-UF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCoNClBLAQIU
-AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
-AAEAAQA3AAAAbQAAAAAA
-
-------=_MIME_BOUNDARY_000_12140--"""
-
-        result = self.scan_stream(force_bString(stream))
-        if result is None:
-            print("EICAR Test virus not found!")
-            return False
-        print("F-Prot found virus", result)
-        return True
 

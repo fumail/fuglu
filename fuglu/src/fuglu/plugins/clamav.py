@@ -109,49 +109,16 @@ Tags:
             },
         }
         self.logger = self._logger()
+        self.enginename = 'ClamAV'
     
     
     def __str__(self):
         return "Clam AV"
     
     
-    def _problemcode(self):
-        retcode = string_to_actioncode(
-            self.config.get(self.section, 'problemaction'), self.config)
-        if retcode is not None:
-            return retcode
-        else:
-            # in case of invalid problem action
-            return DEFER
-        
-        
-    def _virusreport(self, suspect, viruses):
-        actioncode = DUNNO
-        message = None
-        if viruses is not None:
-            self.logger.info("%s Virus found in message from %s : %s" % (suspect.id, suspect.from_address, viruses))
-            suspect.tags['virus']['ClamAV'] = True
-            suspect.tags['ClamavPlugin.virus'] = viruses
-            suspect.debug('viruses found in message : %s' % viruses)
-        else:
-            suspect.tags['virus']['ClamAV'] = False
-    
-        if viruses is not None:
-            virusaction = self.config.get(self.section, 'virusaction')
-            actioncode = string_to_actioncode(virusaction, self.config)
-            firstinfected, firstvirusname = list(viruses.items())[0]
-            values = dict(
-                infectedfile=firstinfected, virusname=firstvirusname)
-            message = apply_template(
-                self.config.get(self.section, 'rejectmessage'), suspect, values)
-        return actioncode, message
-    
-    
     def examine(self, suspect):
-
-        if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self.logger.info('%s Not scanning - message too big', suspect.id)
-            return
+        if self._check_too_big(suspect):
+            return DUNNO
 
         content = suspect.get_source()
 
@@ -406,7 +373,7 @@ Tags:
         if self.config.getboolean(self.section, 'clamscanfallback'):
             print('WARNING: Fallback to clamscan enabled')
             starttime = time.time()
-            allok = self.lint_eicar('shell')
+            allok = self.lint_eicar('scan_shell')
             if allok:
                 runtime = time.time()-starttime
                 print('clamscan scan time: %.2fs' % runtime)
@@ -436,43 +403,4 @@ Tags:
         s.sendall(b'VERSION')
         result = s.recv(20000)
         print("Got Version: %s" % force_uString(result))
-        return True
-    
-    
-    def lint_eicar(self, mode='stream'):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test eicar attachment
-X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
-
-------=_MIME_BOUNDARY_000_12140
-Content-Type: text/plain
-
-Eicar test
-------=_MIME_BOUNDARY_000_12140
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: BASE64
-Content-Disposition: attachment
-
-UEsDBAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAZWljYXIuY29tWDVPIVAlQEFQWzRcUFpYNTQo
-UF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCoNClBLAQIU
-AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
-AAEAAQA3AAAAbQAAAAAA
-
-------=_MIME_BOUNDARY_000_12140--"""
-        
-        if mode=='stream':
-            result = self.scan_stream(stream, "(NA)")
-        elif mode=='shell':
-            result = self.scan_shell(stream)
-        else:
-            result = None
-            
-        if result is None:
-            print("EICAR Test virus not found!")
-            return False
-        print("Clamav found virus", result)
         return True
