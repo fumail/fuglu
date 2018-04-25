@@ -729,6 +729,13 @@ class ScannerPlugin(BasicPlugin):
 
     def examine(self, suspect):
         self._logger().warning('Unimplemented examine() method')
+        
+        
+class AVScannerPlugin(ScannerPlugin):
+    """AV Scanner Plugin Base Class - Scanner Plugins that communicate with external AV scanners"""
+    
+    def scan_stream(self, content, suspectid='(N/A)'):
+        self._logger().warning('Unimplemented scan_sream() method')
 
 
 class PrependerPlugin(BasicPlugin):

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
 from fuglu.localStringEncoding import force_bString, force_uString
 import socket
 import os
@@ -29,7 +29,7 @@ threadLocal = threading.local()
 MAX_SCANS_PER_SOCKET = 5000
 
 
-class ClamavPlugin(ScannerPlugin):
+class ClamavPlugin(AVScannerPlugin):
 
     """This plugin passes suspects to a clam daemon. 
 
@@ -47,7 +47,7 @@ Tags:
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.requiredvars = {
             'host': {
                 'default': 'localhost',
@@ -228,7 +228,7 @@ Tags:
             return dr
     
 
-    def scan_stream(self, buff, suspectid ="(NA)"):
+    def scan_stream(self, content, suspectid ="(NA)"):
         """
         Scan byte buffer
 
@@ -241,7 +241,7 @@ Tags:
         s = self.__init_socket__(oneshot=not pipelining)
         s.sendall(b'zINSTREAM\0')
         default_chunk_size = 2048
-        remainingbytes = force_bString(buff)
+        remainingbytes = force_bString(content)
 
         numChunksToSend = math.ceil(len(remainingbytes)/default_chunk_size)
         iChunk = 0

@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
+from fuglu.shared import AVScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 import socket
 import struct
 import re
@@ -36,7 +36,7 @@ DERR_SPAM_MESSAGE = 0x20000
 DERR_VIRUS = DERR_KNOWN_VIRUS | DERR_UNKNOWN_VIRUS | DERR_VIRUS_MODIFICATION
 
 
-class DrWebPlugin(ScannerPlugin):
+class DrWebPlugin(AVScannerPlugin):
 
     """ This plugin passes suspects to a DrWeb scan daemon
 
@@ -53,7 +53,7 @@ Tags:
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
 
         self.requiredvars = {
             'host': {
@@ -113,7 +113,7 @@ Tags:
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
                 viruses = self.scan_stream(content)
-                if viruses != None:
+                if viruses is not None:
                     self.logger.info("Virus found in message from %s : %s" %
                                      (suspect.from_address, viruses))
                     suspect.tags['virus']['drweb'] = True
@@ -122,7 +122,7 @@ Tags:
                 else:
                     suspect.tags['virus']['drweb'] = False
 
-                if viruses != None:
+                if viruses is not None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
                     firstinfected, firstvirusname = list(viruses.items())[0]
@@ -138,7 +138,7 @@ Tags:
                                     (i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("drweb scan failed after %s retries" %
                           self.config.getint(self.section, 'retries'))
-        content = None
+        
         return self._problemcode()
 
     def _parse_result(self, lines):

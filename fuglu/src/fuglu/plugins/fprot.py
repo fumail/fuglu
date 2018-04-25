@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
+from fuglu.shared import AVScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 from fuglu.localStringEncoding import force_bString, force_uString
 import socket
 import re
 import os
 
 
-class FprotPlugin(ScannerPlugin):
+class FprotPlugin(AVScannerPlugin):
 
     """ This plugin passes suspects to a f-prot scan daemon
 
@@ -36,7 +36,7 @@ Tags:
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.logger = self._logger()
 
         self.requiredvars = {

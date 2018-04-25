@@ -14,25 +14,19 @@
 # limitations under the License.
 #
 #
-
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
-from fuglu.localStringEncoding import force_bString, force_uString
-import socket
-import os
-
-
 #
 # sssp_utils.py Some utility functions used by the SSSP python sampl apps.
 #
 # Copyright (c) 2006 Sophos Plc, www.sophos.com.
 #
 
-
+from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.localStringEncoding import force_bString, force_uString
+import socket
+import os
 import re
 
-
 # Regular Expressions defining some messages from the server.
-
 acceptsyntax = re.compile(b"^ACC\s+(.*?)\s*$")
 optionsyntax = re.compile(b"^(\w+):\s*(.*?)\s*$")
 virussyntax = re.compile(b"^VIRUS\s+(\S+)\s+(.*)")
@@ -129,7 +123,7 @@ def sayGoodbye(s):
     receiveline(s)
 
 
-class SSSPPlugin(ScannerPlugin):
+class SSSPPlugin(AVScannerPlugin):
 
     """ This plugin scans the suspect using the sophos SSSP protocol.
 
@@ -137,7 +131,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.requiredvars = {
             'host': {
                 'default': 'localhost',

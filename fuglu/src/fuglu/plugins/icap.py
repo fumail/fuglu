@@ -17,12 +17,12 @@
 
 # http://vaibhavkulkarni.wordpress.com/2007/11/19/a-icap-client-code-in-c-to-virus-scan-a-file-using-symantec-scan-server/
 
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
 import socket
 import os
 
 
-class ICAPPlugin(ScannerPlugin):
+class ICAPPlugin(AVScannerPlugin):
 
     """ICAP Antivirus Plugin
 This plugin allows Antivirus Scanning over the ICAP Protocol (http://tools.ietf.org/html/rfc3507 )
@@ -32,7 +32,7 @@ Prerequisites: requires an ICAP capable antivirus engine somewhere in your netwo
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.requiredvars = {
             'host': {
                 'default': 'localhost',
