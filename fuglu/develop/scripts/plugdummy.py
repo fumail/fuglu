@@ -1,17 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # run a plugin with a dummy suspect without a running fuglu daemon
 
 import optparse
 import sys
 import logging
-import tempfile
 import os
 import email
 
 try:
-    from configparser import ConfigParser
+    import configparser as ConfigParser
 except ImportError:
-    from ConfigParser import ConfigParser
+    import ConfigParser
 
 try:
     from email.message import Message
@@ -98,7 +97,7 @@ if __name__ == '__main__':
                 sys.path.insert(0, plugindir)
 
     # prepare config
-    config = ConfigParser()
+    config = ConfigParser.ConfigParser()
     config.add_section('main')
 
     prependers = []
@@ -144,7 +143,7 @@ if __name__ == '__main__':
         try:
             for opt, val in config.items(sec):
                 print("%s:%s" % (opt, val))
-        except NoSectionError:
+        except ConfigParser.NoSectionError:
             print("Plugin does not provide default options")
         sys.exit(0)
 
