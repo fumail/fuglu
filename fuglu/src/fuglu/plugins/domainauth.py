@@ -189,6 +189,7 @@ known issues:
 
     def __init__(self, config, section=None):
         ScannerPlugin.__init__(self, config, section)
+        self.logger = self._logger()
         self.requiredvars = {
             'privatekeyfile': {
                 'description': "Location of the private key file. supports standard template variables plus additional ${header_from_domain} which extracts the domain name from the From: -Header",
@@ -227,8 +228,7 @@ known issues:
     def examine(self, suspect):
         if not DKIMPY_AVAILABLE:
             suspect.debug("dkimpy not available, can not check")
-            self._logger().error(
-                "DKIM signing skipped - missing dkimpy library")
+            self.logger.error("DKIM signing skipped - missing dkimpy library")
             return DUNNO
 
         message = suspect.get_source()
@@ -238,14 +238,14 @@ known issues:
             self.config.get(self.section, 'selector'), suspect, addvalues)
 
         if domain is None:
-            self._logger().error(
+            self.logger.error(
                 "%s: Failed to extract From-header domain for DKIM signing" % suspect.id)
             return DUNNO
 
         privkeyfile = apply_template(
             self.config.get(self.section, 'privatekeyfile'), suspect, addvalues)
         if not os.path.isfile(privkeyfile):
-            self._logger().error("%s: DKIM signing failed for domain %s, private key not found: %s" %
+            self.logger.error("%s: DKIM signing failed for domain %s, private key not found: %s" %
                                  (suspect.id, domain, privkeyfile))
             return DUNNO
         privkeycontent = open(privkeyfile, 'r').read()
@@ -312,7 +312,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
     def examine(self, suspect):
         if not PYSPF_AVAILABLE:
             suspect.debug("pyspf not available, can not check")
-            self._logger().warning(
+            self.logger.warning(
                 "%s: SPF Check skipped, pyspf unavailable" % (suspect.id))
             suspect.set_tag('SPF.status', 'skipped')
             suspect.set_tag("SPF.explanation", 'missing dependency')
@@ -321,7 +321,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
         clientinfo = suspect.get_client_info(self.config)
         if clientinfo is None:
             suspect.debug("client info not available for SPF check")
-            self._logger().warning(
+            self.logger.warning(
                 "%s: SPF Check skipped, could not get client info" % (suspect.id))
             suspect.set_tag('SPF.status', 'skipped')
             suspect.set_tag(
