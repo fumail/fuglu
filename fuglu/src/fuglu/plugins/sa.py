@@ -23,6 +23,7 @@ import email
 import re
 import os
 import sys
+from email.mime.multipart import MIMEMultipart
 
 
 GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
@@ -79,7 +80,7 @@ Tags:
             },
 
             'strip_oversize':{
-                'default': '0',
+                'default': '1',
                 'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated.",
             },
 
@@ -360,18 +361,16 @@ Tags:
         """
 
         msgrep = email.message_from_string(content)
-
+        
         if msgrep.is_multipart():
-            new_src = ''
+            new_msg = MIMEMultipart()
             for hdr, val in msgrep.items():
-                headerline = '%s: %s\r\n' % (hdr, val)
-                new_src += headerline
-            new_src += '\r\n'
+                new_msg.add_header(hdr, val)
             for part in msgrep.walk():
                 # only plaintext and html parts but no text attachments
                 if part.get_content_maintype() == 'text' and part.get_filename() is None:
-                    new_src += part.as_string()
-                    new_src += '\r\n\r\n'
+                    new_msg.attach(part)
+            new_src = new_msg.as_string()
         else:
             # text only mail - keep full content and truncate later
             new_src = content
@@ -379,14 +378,16 @@ Tags:
         if len(new_src) > maxsize:
             # truncate to maxsize
             new_src = new_src[:maxsize-1]
-
+        
         return new_src
-
+    
+    
     # helper to get diff from two lists/dicts
     def diff(self, new, old):
         old = set(old)
         return [item for item in new if item not in old]
-
+    
+    
     def examine(self, suspect):
         # check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip') is True:
@@ -419,7 +420,7 @@ Tags:
             # keep copy of original content before stripping
             content_orig = content
             content = self._strip_attachments(content, maxsize)
-
+            self.logger.info('%s stripped attachments, body size reduced from %s to %s bytes' % (suspect.id, len(content_orig), len(content)))
         # stick to bytes
         content = force_bString(content)
 
