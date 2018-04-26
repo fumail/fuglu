@@ -370,7 +370,8 @@ Tags:
         if msgrep.is_multipart():
             new_msg = MIMEMultipart()
             for hdr, val in msgrep.items():
-                new_msg.add_header(hdr, val)
+                # convert "val" to "str" since in Py3 it might be of type email.header.Header
+                new_msg.add_header(hdr, str(val))
             for part in msgrep.walk():
                 # only plaintext and html parts but no text attachments
                 if part.get_content_maintype() == 'text' and part.get_filename() is None:
