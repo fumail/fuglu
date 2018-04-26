@@ -17,6 +17,7 @@
 from __future__ import print_function
 import multiprocessing
 import multiprocessing.queues
+import signal
 
 from fuglu.scansession import SessionHandler
 import fuglu.core
@@ -129,6 +130,13 @@ class MessageListener(threading.Thread):
 
 
 def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, logQueue):
+
+    # the workers should not directly react on singals,
+    # singals will be handled by the controller and appropriate
+    # acctions will be passed to the workers using the queue
+    signal.signal(signal.SIGTERM, lambda signum, frame : None )
+    signal.signal(signal.SIGINT, lambda signum, frame : None )
+    signal.signal(signal.SIGHUP, lambda signum, frame : None)
 
     fuglu.logtools.client_configurer(logQueue)
     logging.basicConfig(level=logging.DEBUG)
