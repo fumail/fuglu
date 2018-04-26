@@ -4,6 +4,7 @@ import logging.handlers
 import logging.config
 import os
 import multiprocessing
+import signal
 
 def logFactoryProcess(listenerQueue,logQueue):
     """
@@ -34,6 +35,10 @@ def logFactoryProcess(listenerQueue,logQueue):
                                           process
 
     """
+    signal.signal(signal.SIGTERM, lambda signum, frame : None)
+    signal.signal(signal.SIGINT, lambda signum, frame : None)
+    signal.signal(signal.SIGHUP, lambda signum, frame : None)
+
     loggerProcess = None
     while True:
         try:
@@ -60,10 +65,22 @@ def logFactoryProcess(listenerQueue,logQueue):
 
         except KeyboardInterrupt:
             print("Listener process received KeyboardInterrupt")
-            break
+            #break
         except Exception:
             import sys, traceback
-            print('Whoops! Problem:', file=sys.stderr)
+            print('LogFactoryProcess: Problem:', file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+
+    # if existing stop last logger process
+    if loggerProcess:
+        # try to close the old logger
+        try:
+            logQueue.put_nowait(None)
+            loggerProcess.join(10) # wait 10 seconds max
+        except Exception:
+            import sys, traceback
+            loggerProcess.terminate()
+            print('LogFactoryProcess: Problem:', file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
 
 
@@ -142,6 +159,13 @@ def listener_process(configurer,queue):
         configurer (logConfig): instance lof logConfig class setting up logging on configure call
         queue (multiprocessing.Queue): The queue where log messages will be received and processed by this same process
     """
+
+    signal.signal(signal.SIGTERM, lambda signum, frame : None)
+    # SIGINT will be sent to the process if SIGTERM does not work,
+    # could also be set to None but might end up with processes not
+    # terminating properly
+    signal.signal(signal.SIGHUP, lambda signum, frame : None)
+
     configurer.configure()
     root = logging.getLogger()
     root.info("Listener process started")
@@ -174,11 +198,11 @@ def listener_process(configurer,queue):
                 logger.handle(record)
         except KeyboardInterrupt:
             print("Listener process received KeyboardInterrupt")
-            break
-        except Exception:
-            import sys, traceback
-            print('Whoops! Problem:', file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
+            root.warning("Listener received exception")
+            #break
+        except Exception as e:
+            root.warning("Listener received exception")
+            root.exception(e)
     root.info("Listener process stopped")
 
 

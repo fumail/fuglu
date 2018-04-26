@@ -133,6 +133,19 @@ def reloadconfig():
         controller.reload()
 
 
+def sigterm(signum, frame):
+    """handle sigterm"""
+    logger = logging.getLogger('sigterm')
+    logger.debug("Process received SIGTERM (signal=%s)!"%signum)
+    if controller:
+        if controller.threadpool is None and controller.procpool is None:
+            return
+    else:
+        return
+
+    logger.info("Main Controller process received SIGTERM\nGoodbye!")
+    controller.stayalive = False
+
 def sighup(signum, frame):
     """handle sighup to reload config"""
     reloadconfig()
@@ -322,6 +335,8 @@ if lint:
         print("(problems in the logging configuration could prevent the fuglu daemon from starting up)")
 
 else:
+    signal.signal(signal.SIGTERM, sigterm)
+    signal.signal(signal.SIGINT, sigterm)
     signal.signal(signal.SIGHUP, sighup)
     if console:
         controller.debugconsole = True
@@ -331,6 +346,7 @@ else:
 #---
 # stop logger factory & process
 #---
+baselogger.info("Stop logging framework -> Goodbye")
 try:
     logFactoryQueue.put_nowait(None)
     logProcessFactory.join(120)

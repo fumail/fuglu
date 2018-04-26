@@ -574,6 +574,11 @@ class MainController(object):
                     time.sleep(1)
                 except KeyboardInterrupt:
                     self.stayalive = False
+                except Exception as e:
+                    self.logger.error("Catched exception in main loop!")
+                    self.logger.exception(e)
+                    self.logger.error("Stopping!")
+                    self.stayalive = False
 
     def startup(self):
         self.load_extensions()
