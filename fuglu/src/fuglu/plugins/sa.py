@@ -360,7 +360,12 @@ Tags:
 
         """
 
-        msgrep = email.message_from_string(content)
+        # Content is str or bytes (Py3), so try both
+        try:
+            msgrep = email.message_from_string(content)
+        except TypeError:
+            msgrep = email.message_from_bytes(content)
+
         
         if msgrep.is_multipart():
             new_msg = MIMEMultipart()
