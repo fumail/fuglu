@@ -96,6 +96,24 @@ class ProcManager(object):
         # will send poison pills to all processors
         self.stayalive = False
 
+        # add another poison pill for the ProcManager
+        self.tasks.put_nowait(None)
+
+        returnMessage = "Temporarily unavailable... Please try again"
+        markDeferCounter = 0
+        while True:
+            task = self.tasks.get()
+            if task is None: # poison pill
+                self.logger.info("Marked %s messages as '%s' to close queue" % (markDeferCounter,returnMessage))
+                break
+            sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
+            handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
+            handler_instance = handler_class(sock, self.config)
+            handler_instance.defer(returnMessage)
+            markDeferCounter += 0
+            #handler = SessionHandler(handler_instance, self.config,None, None, None)
+            #handler._defer("temporarily not available")
+
         # join the workers
         for worker in self.workers:
             worker.join(120)
@@ -128,6 +146,11 @@ class MessageListener(threading.Thread):
                 except:
                     print(traceback.format_exc())
 
+
+def fuglu_process_unpack(pickledTask):
+    pickled_socket, handler_modulename, handler_classname = pickledTask
+    sock = pickle.loads(pickled_socket)
+    return sock,handler_modulename,handler_classname
 
 def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, logQueue):
 
@@ -176,8 +199,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
                     return
             workerstate.workerstate = 'starting scan session'
             logger.debug("%s: Child process starting scan session" % fuglu.logtools.createPIDinfo())
-            pickled_socket, handler_modulename, handler_classname = task
-            sock = pickle.loads(pickled_socket)
+            sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
             handler_instance = handler_class(sock, config)
             handler = SessionHandler(handler_instance, config,prependers, plugins, appenders)
