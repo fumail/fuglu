@@ -94,9 +94,10 @@ class ProcManager(object):
     def shutdown(self):
         # setting stayalive equal to False
         # will send poison pills to all processors
+        self.logger.debug("Shutdown procpool -> send poison pills")
         self.stayalive = False
 
-        # add another poison pill for the ProcManager
+        # add another poison pill for the ProcManager itself removing tasks...
         self.tasks.put_nowait(None)
 
         returnMessage = "Temporarily unavailable... Please try again"
@@ -104,26 +105,35 @@ class ProcManager(object):
         while True:
             task = self.tasks.get()
             if task is None: # poison pill
-                self.logger.info("Marked %s messages as '%s' to close queue" % (markDeferCounter,returnMessage))
                 break
+            markDeferCounter += 1
+            self.logger.debug("Remove message # %s from queue"%markDeferCounter)
             sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
             handler_instance = handler_class(sock, self.config)
             handler_instance.defer(returnMessage)
-            markDeferCounter += 0
             #handler = SessionHandler(handler_instance, self.config,None, None, None)
             #handler._defer("temporarily not available")
+        self.logger.info("Marked %s messages as '%s' to close queue" % (markDeferCounter,returnMessage))
 
         # join the workers
+        self.logger.debug("Join workers")
         for worker in self.workers:
             worker.join(120)
 
+        self.logger.debug("Join message listener")
         self.message_listener.stayalive = False
+        # put poison pill into queue otherwise the process will not stop
+        # since "stayalive" is only checked after receiving a message from the queue
+        self.child_to_server_messages.put_nowait(None)
         self.message_listener.join(120)
+        self.logger.debug("Close tasks queue")
         self.tasks.close()
 
         self.child_to_server_messages.close()
+        self.logger.debug("Shutdown multiprocessing manager")
         self.manager.shutdown()
+        self.logger.debug("done...")
 
 class MessageListener(threading.Thread):
     def __init__(self, message_queue):
@@ -138,6 +148,8 @@ class MessageListener(threading.Thread):
     def run(self):
         while self.stayalive:
             message = self.message_queue.get()
+            if message is None:
+                break
             event_type = message['event_type']
             if event_type == 'statsdelta': # increase statistics counters
                 try:

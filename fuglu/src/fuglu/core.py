@@ -601,6 +601,7 @@ class MainController(object):
 
         self.logger.info('Startup complete')
         self._run_main_loop()
+        self.logger.info('Shutdown...')
         self.shutdown()
 
     def run_debugconsole(self):
@@ -765,10 +766,16 @@ class MainController(object):
         if self.controlserver is not None:
             self.controlserver.shutdown()
 
-        if self.threadpool:
+        # stop existing procpool
+        if self.procpool is not None:
+            self.logger.info('Delete procpool')
+            self.procpool.shutdown()
+            self.procpool = None
+        # stop existing threadpool
+        if self.threadpool is not None:
+            self.logger.info('Delete threadpool')
             self.threadpool.stayalive = False
-        if self.procpool:
-            self.procpool.stayalive = False
+            self.threadpool = None
 
         self.stayalive = False
         self.logger.info('Shutdown complete')
