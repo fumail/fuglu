@@ -687,7 +687,7 @@ class MainController(object):
                     self.logger.info('Threadpool config changed, initialising new threadpool')
                     currentthreadpool = self.threadpool
                     self.threadpool = self._start_threadpool()
-                    currentthreadpool.stayalive = False
+                    currentthreadpool.shutdown()
                 else:
                     self.logger.info('Keep existing threadpool')
             else:
@@ -716,7 +716,7 @@ class MainController(object):
             # stop existing threadpool
             if self.threadpool is not None:
                 self.logger.info('Delete old threadpool')
-                self.threadpool.stayalive = False
+                self.threadpool.shutdown()
                 self.threadpool = None
         else:
             self.logger.error('backend not detected -> ignoring input!')
@@ -774,7 +774,7 @@ class MainController(object):
         # stop existing threadpool
         if self.threadpool is not None:
             self.logger.info('Delete threadpool')
-            self.threadpool.stayalive = False
+            self.threadpool.shutdown()
             self.threadpool = None
 
         self.stayalive = False

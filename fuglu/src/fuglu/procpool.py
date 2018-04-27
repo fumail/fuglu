@@ -100,14 +100,13 @@ class ProcManager(object):
         # add another poison pill for the ProcManager itself removing tasks...
         self.tasks.put_nowait(None)
 
-        returnMessage = "Temporarily unavailable... Please try again"
+        returnMessage = "Temporarily unavailable... Please try again later."
         markDeferCounter = 0
         while True:
             task = self.tasks.get()
             if task is None: # poison pill
                 break
             markDeferCounter += 1
-            self.logger.debug("Remove message # %s from queue"%markDeferCounter)
             sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
             handler_instance = handler_class(sock, self.config)
@@ -166,12 +165,7 @@ def fuglu_process_unpack(pickledTask):
 
 def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, logQueue):
 
-    # the workers should not directly react on singals,
-    # singals will be handled by the controller and appropriate
-    # acctions will be passed to the workers using the queue
-    signal.signal(signal.SIGTERM, lambda signum, frame : None )
-    signal.signal(signal.SIGINT, lambda signum, frame : None )
-    signal.signal(signal.SIGHUP, lambda signum, frame : None)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     fuglu.logtools.client_configurer(logQueue)
     logging.basicConfig(level=logging.DEBUG)

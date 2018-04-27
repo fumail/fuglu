@@ -289,7 +289,6 @@ else:
 #--
 logProcessFactory = multiprocessing.Process(target=fuglu.logtools.logFactoryProcess,
                                      args=(logFactoryQueue,logQueue))
-#logProcessFactory.daemon = True
 logProcessFactory.start()
 
 # now create a log - listener process
@@ -335,8 +334,6 @@ if lint:
         print("(problems in the logging configuration could prevent the fuglu daemon from starting up)")
 
 else:
-    signal.signal(signal.SIGTERM, sigterm)
-    signal.signal(signal.SIGINT, sigterm)
     signal.signal(signal.SIGHUP, sighup)
     if console:
         controller.debugconsole = True
@@ -348,6 +345,7 @@ else:
 #---
 baselogger.info("Stop logging framework -> Goodbye")
 try:
+    baselogger.debug("Send Poison pill to logFactoryQueue")
     logFactoryQueue.put_nowait(None)
     logProcessFactory.join(120)
 except Exception as e:
