@@ -5,7 +5,11 @@
 # chkconfig: 2345 65 38
 # description: Mail Content Scanner Interface
 # processname: fuglu
+# pidfile: /var/run/fuglud.pid
+#
+# the old pid file written by fuglu
 # pidfile: /var/run/fuglu.pid
+# is not in use anymore for CentOS-6
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -17,7 +21,7 @@
 case "$1" in
   start)
         echo -n "Starting FuGlu Mail Content Scanner: "
-        daemon /usr/bin/fuglu
+        daemon /usr/bin/fuglu --pidfile=/var/run/fuglud.pid
         RETVAL=$?
         echo
         ;;
