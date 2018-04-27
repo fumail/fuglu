@@ -5,6 +5,7 @@
 
 Developers:
  * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin
+ * Fix for CentOS-6 system script to correctly stop all processes
 
 
 -- Fuglu 0.8.0, 2018-04-23
