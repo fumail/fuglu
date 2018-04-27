@@ -35,9 +35,7 @@ def logFactoryProcess(listenerQueue,logQueue):
                                           process
 
     """
-    signal.signal(signal.SIGTERM, lambda signum, frame : None)
-    signal.signal(signal.SIGINT, lambda signum, frame : None)
-    signal.signal(signal.SIGHUP, lambda signum, frame : None)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     loggerProcess = None
     while True:
@@ -160,11 +158,7 @@ def listener_process(configurer,queue):
         queue (multiprocessing.Queue): The queue where log messages will be received and processed by this same process
     """
 
-    signal.signal(signal.SIGTERM, lambda signum, frame : None)
-    # SIGINT will be sent to the process if SIGTERM does not work,
-    # could also be set to None but might end up with processes not
-    # terminating properly
-    signal.signal(signal.SIGHUP, lambda signum, frame : None)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     configurer.configure()
     root = logging.getLogger()
