@@ -179,6 +179,10 @@ def listener_process(configurer,queue):
     while True:
         try:
             record = queue.get()
+            if record is None:  # We send this as a sentinel to tell the listener to quit.
+                root.info("Listener process received poison pill")
+                break
+
             if logLogger:
                 logLogger.debug("Approx queue size: %u, received record to process -> %s"%(queue.qsize(),record))
 
@@ -187,8 +191,6 @@ def listener_process(configurer,queue):
                 if logLogger:
                     logLogger.error("QUEUE IS FULL!!!")
 
-            if record is None:  # We send this as a sentinel to tell the listener to quit.
-                break
             logger = logging.getLogger(record.name)
 
             # check if this record should be logged or not...
