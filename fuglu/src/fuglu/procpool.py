@@ -17,6 +17,7 @@
 from __future__ import print_function
 import multiprocessing
 import multiprocessing.queues
+import signal
 
 from fuglu.scansession import SessionHandler
 import fuglu.core
@@ -93,18 +94,45 @@ class ProcManager(object):
     def shutdown(self):
         # setting stayalive equal to False
         # will send poison pills to all processors
+        self.logger.debug("Shutdown procpool -> send poison pills")
         self.stayalive = False
 
+        # add another poison pill for the ProcManager itself removing tasks...
+        self.tasks.put_nowait(None)
+
+        returnMessage = "Temporarily unavailable... Please try again later."
+        markDeferCounter = 0
+        while True:
+            task = self.tasks.get()
+            if task is None: # poison pill
+                break
+            markDeferCounter += 1
+            sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
+            handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
+            handler_instance = handler_class(sock, self.config)
+            handler_instance.defer(returnMessage)
+            #handler = SessionHandler(handler_instance, self.config,None, None, None)
+            #handler._defer("temporarily not available")
+        self.logger.info("Marked %s messages as '%s' to close queue" % (markDeferCounter,returnMessage))
+
         # join the workers
+        self.logger.debug("Join workers")
         for worker in self.workers:
             worker.join(120)
 
+        self.logger.debug("Join message listener")
         self.message_listener.stayalive = False
+        # put poison pill into queue otherwise the process will not stop
+        # since "stayalive" is only checked after receiving a message from the queue
+        self.child_to_server_messages.put_nowait(None)
         self.message_listener.join(120)
+        self.logger.debug("Close tasks queue")
         self.tasks.close()
 
         self.child_to_server_messages.close()
+        self.logger.debug("Shutdown multiprocessing manager")
         self.manager.shutdown()
+        self.logger.debug("done...")
 
 class MessageListener(threading.Thread):
     def __init__(self, message_queue):
@@ -119,6 +147,8 @@ class MessageListener(threading.Thread):
     def run(self):
         while self.stayalive:
             message = self.message_queue.get()
+            if message is None:
+                break
             event_type = message['event_type']
             if event_type == 'statsdelta': # increase statistics counters
                 try:
@@ -128,7 +158,14 @@ class MessageListener(threading.Thread):
                     print(traceback.format_exc())
 
 
+def fuglu_process_unpack(pickledTask):
+    pickled_socket, handler_modulename, handler_classname = pickledTask
+    sock = pickle.loads(pickled_socket)
+    return sock,handler_modulename,handler_classname
+
 def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, logQueue):
+
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     fuglu.logtools.client_configurer(logQueue)
     logging.basicConfig(level=logging.DEBUG)
@@ -168,8 +205,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
                     return
             workerstate.workerstate = 'starting scan session'
             logger.debug("%s: Child process starting scan session" % fuglu.logtools.createPIDinfo())
-            pickled_socket, handler_modulename, handler_classname = task
-            sock = pickle.loads(pickled_socket)
+            sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
             handler_instance = handler_class(sock, config)
             handler = SessionHandler(handler_instance, config,prependers, plugins, appenders)

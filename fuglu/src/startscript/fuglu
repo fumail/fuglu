@@ -276,7 +276,6 @@ else:
 #--
 logProcessFactory = multiprocessing.Process(target=fuglu.logtools.logFactoryProcess,
                                      args=(logFactoryQueue,logQueue))
-#logProcessFactory.daemon = True
 logProcessFactory.start()
 
 # now create a log - listener process
@@ -331,7 +330,9 @@ else:
 #---
 # stop logger factory & process
 #---
+baselogger.info("Stop logging framework -> Goodbye")
 try:
+    baselogger.debug("Send Poison pill to logFactoryQueue")
     logFactoryQueue.put_nowait(None)
     logProcessFactory.join(120)
 except Exception as e:
