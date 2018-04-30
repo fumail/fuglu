@@ -574,6 +574,11 @@ class MainController(object):
                     time.sleep(1)
                 except KeyboardInterrupt:
                     self.stayalive = False
+                except Exception as e:
+                    self.logger.error("Catched exception in main loop!")
+                    self.logger.exception(e)
+                    self.logger.error("Stopping!")
+                    self.stayalive = False
 
     def startup(self):
         self.load_extensions()
@@ -596,6 +601,7 @@ class MainController(object):
 
         self.logger.info('Startup complete')
         self._run_main_loop()
+        self.logger.info('Shutdown...')
         self.shutdown()
 
     def run_debugconsole(self):
@@ -681,7 +687,7 @@ class MainController(object):
                     self.logger.info('Threadpool config changed, initialising new threadpool')
                     currentthreadpool = self.threadpool
                     self.threadpool = self._start_threadpool()
-                    currentthreadpool.stayalive = False
+                    currentthreadpool.shutdown()
                 else:
                     self.logger.info('Keep existing threadpool')
             else:
@@ -710,7 +716,7 @@ class MainController(object):
             # stop existing threadpool
             if self.threadpool is not None:
                 self.logger.info('Delete old threadpool')
-                self.threadpool.stayalive = False
+                self.threadpool.shutdown()
                 self.threadpool = None
         else:
             self.logger.error('backend not detected -> ignoring input!')
@@ -760,10 +766,16 @@ class MainController(object):
         if self.controlserver is not None:
             self.controlserver.shutdown()
 
-        if self.threadpool:
-            self.threadpool.stayalive = False
-        if self.procpool:
-            self.procpool.stayalive = False
+        # stop existing procpool
+        if self.procpool is not None:
+            self.logger.info('Delete procpool')
+            self.procpool.shutdown()
+            self.procpool = None
+        # stop existing threadpool
+        if self.threadpool is not None:
+            self.logger.info('Delete threadpool')
+            self.threadpool.shutdown()
+            self.threadpool = None
 
         self.stayalive = False
         self.logger.info('Shutdown complete')

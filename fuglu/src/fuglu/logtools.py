@@ -4,6 +4,7 @@ import logging.handlers
 import logging.config
 import os
 import multiprocessing
+import signal
 
 def logFactoryProcess(listenerQueue,logQueue):
     """
@@ -34,6 +35,8 @@ def logFactoryProcess(listenerQueue,logQueue):
                                           process
 
     """
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
     loggerProcess = None
     while True:
         try:
@@ -60,10 +63,22 @@ def logFactoryProcess(listenerQueue,logQueue):
 
         except KeyboardInterrupt:
             print("Listener process received KeyboardInterrupt")
-            break
+            #break
         except Exception:
             import sys, traceback
-            print('Whoops! Problem:', file=sys.stderr)
+            print('LogFactoryProcess: Problem:', file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+
+    # if existing stop last logger process
+    if loggerProcess:
+        # try to close the old logger
+        try:
+            logQueue.put_nowait(None)
+            loggerProcess.join(10) # wait 10 seconds max
+        except Exception:
+            import sys, traceback
+            loggerProcess.terminate()
+            print('LogFactoryProcess: Problem:', file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
 
 
@@ -142,6 +157,9 @@ def listener_process(configurer,queue):
         configurer (logConfig): instance lof logConfig class setting up logging on configure call
         queue (multiprocessing.Queue): The queue where log messages will be received and processed by this same process
     """
+
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
     configurer.configure()
     root = logging.getLogger()
     root.info("Listener process started")
@@ -155,6 +173,10 @@ def listener_process(configurer,queue):
     while True:
         try:
             record = queue.get()
+            if record is None:  # We send this as a sentinel to tell the listener to quit.
+                root.info("Listener process received poison pill")
+                break
+
             if logLogger:
                 logLogger.debug("Approx queue size: %u, received record to process -> %s"%(queue.qsize(),record))
 
@@ -163,8 +185,6 @@ def listener_process(configurer,queue):
                 if logLogger:
                     logLogger.error("QUEUE IS FULL!!!")
 
-            if record is None:  # We send this as a sentinel to tell the listener to quit.
-                break
             logger = logging.getLogger(record.name)
 
             # check if this record should be logged or not...
@@ -174,11 +194,11 @@ def listener_process(configurer,queue):
                 logger.handle(record)
         except KeyboardInterrupt:
             print("Listener process received KeyboardInterrupt")
-            break
-        except Exception:
-            import sys, traceback
-            print('Whoops! Problem:', file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
+            root.warning("Listener received exception")
+            #break
+        except Exception as e:
+            root.warning("Listener received exception")
+            root.exception(e)
     root.info("Listener process stopped")
 
 
