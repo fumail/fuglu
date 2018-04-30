@@ -133,19 +133,6 @@ def reloadconfig():
         controller.reload()
 
 
-def sigterm(signum, frame):
-    """handle sigterm"""
-    logger = logging.getLogger('sigterm')
-    logger.debug("Process received SIGTERM (signal=%s)!"%signum)
-    if controller:
-        if controller.threadpool is None and controller.procpool is None:
-            return
-    else:
-        return
-
-    logger.info("Main Controller process received SIGTERM\nGoodbye!")
-    controller.stayalive = False
-
 def sighup(signum, frame):
     """handle sighup to reload config"""
     reloadconfig()
