@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +15,22 @@
 #
 #
 #
-from __future__ import print_function
+import core
+import logtools
+from scansession import SessionHandler
+from stats import Statskeeper, StatDelta
+
 import multiprocessing
 import multiprocessing.queues
 import signal
-
-from fuglu.scansession import SessionHandler
-import fuglu.core
 import logging
 import traceback
-import importlib
 import pickle
-from fuglu.stats import Statskeeper, StatDelta
-import fuglu.logtools
 import threading
+
+import importlib
+
+
 
 class ProcManager(object):
     def __init__(self, logQueue, numprocs = None, queuesize=100, config = None):
@@ -167,14 +170,14 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
 
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
-    fuglu.logtools.client_configurer(logQueue)
+    logtools.client_configurer(logQueue)
     logging.basicConfig(level=logging.DEBUG)
     workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
-    logger.debug("New worker: %s" % fuglu.logtools.createPIDinfo())
+    logger.debug("New worker: %s" % logtools.createPIDinfo())
 
     # load config and plugins
-    controller = fuglu.core.MainController(config,logQueue)
+    controller = core.MainController(config,logQueue)
     controller.load_extensions()
     controller.load_plugins()
 
@@ -186,15 +189,15 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
     stats = Statskeeper()
     stats.stat_listener_callback.append(lambda event: child_to_server_messages.put(event.as_message()))
 
-    logger.debug("%s: Enter service loop..." % fuglu.logtools.createPIDinfo())
+    logger.debug("%s: Enter service loop..." % logtools.createPIDinfo())
 
     try:
         while True:
             workerstate.workerstate = 'waiting for task'
-            logger.debug("%s: Child process waiting for task" % fuglu.logtools.createPIDinfo())
+            logger.debug("%s: Child process waiting for task" % logtools.createPIDinfo())
             task = queue.get()
             if task is None: # poison pill
-                logger.debug("%s: Child process received poison pill - shut down" % fuglu.logtools.createPIDinfo())
+                logger.debug("%s: Child process received poison pill - shut down" % logtools.createPIDinfo())
                 try:
                     # it might be possible it does not work to properly set the workerstate
                     # since this is a shared variable -> prevent exceptions
@@ -204,7 +207,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
                 finally:
                     return
             workerstate.workerstate = 'starting scan session'
-            logger.debug("%s: Child process starting scan session" % fuglu.logtools.createPIDinfo())
+            logger.debug("%s: Child process starting scan session" % logtools.createPIDinfo())
             sock, handler_modulename, handler_classname = fuglu_process_unpack(task)
             handler_class = getattr(importlib.import_module(handler_modulename), handler_classname)
             handler_instance = handler_class(sock, config)
