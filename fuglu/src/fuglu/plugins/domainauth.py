@@ -629,6 +629,19 @@ class SpearPhishPlugin(ScannerPlugin):
 
 
 class SenderRewriteScheme(ScannerPlugin):
+    """
+    SRS (Sender Rewriting Scheme) Plugin
+    This plugin encrypts envelope sender and decrypts bounce recpient addresses with SRS
+    As opposed to postsrsd it decides by RECIPIENT address whether sender address should be rewritten.
+    This plugin only works in after queue mode
+    
+    Required dependencies:
+        - pysrs
+    Recommended dependencies:
+        - sqlalchemy
+    """
+    
+    
     def __init__(self, section=None):
         ScannerPlugin.__init__(self, section)
         self.logger = self._logger()
