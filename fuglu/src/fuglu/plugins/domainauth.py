@@ -787,7 +787,7 @@ class SenderRewriteScheme(ScannerPlugin):
             try:
                 recipient = srs.reverse(orig_rcpt)
                 suspect.to_address = recipient
-                suspect.to_localpart, suspect.to_domain = recipient.split('@', 1)
+                suspect.to_localpart, suspect.to_domain = recipient.rsplit('@', 1)
                 new_rcpts = [recipient if x == orig_rcpt else x for x in suspect.recipients]
                 suspect.recipients = new_rcpts
                 if self.config.getboolean(self.section, 'rewrite_header_to'):
@@ -800,7 +800,7 @@ class SenderRewriteScheme(ScannerPlugin):
             try:
                 sender = srs.forward(orig_sender, forward_domain)
                 suspect.from_address = sender
-                suspect.from_localpart, suspect.from_domain = sender.split('@', 1)
+                suspect.from_localpart, suspect.from_domain = sender.rsplit('@', 1)
                 self.logger.info('SRS: signed %s to %s' % (orig_sender, sender))
             except Exception as e:
                 self.logger.error('SRS: Failed to sign %s reason: %s' % (orig_sender, str(e)))
