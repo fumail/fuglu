@@ -15,7 +15,8 @@
 #
 #
 
-from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE
+from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE, Suspect
+from fuglu.MailAddrLegitimateChecker import Default, LazyQuotedLocalPart
 from fuglu.debug import CrashStore
 import logging
 from fuglu.stats import Statskeeper, StatDelta
@@ -49,6 +50,21 @@ class SessionHandler(object):
 
     def handlesession(self, worker=None):
         self.worker = worker
+
+        #--
+        # setup compliance checker if not already set up
+        #--
+        #
+        # Mail Address compliance check is global
+        if Suspect.addrIsLegitimate is None:
+            addComCheck = self.config.get('main','address_compliance_checker')
+            if addComCheck == "Default":
+                Suspect.addrIsLegitimate = Default()
+            elif addComCheck == "LazyQuotedLocalPart":
+                Suspect.addrIsLegitimate = LazyQuotedLocalPart()
+            else:
+                self.logger.error('Address Compliance Checker not recognized -> use Default')
+                Suspect.addrIsLegitimate = Default()
 
         prependheader = self.config.get('main', 'prependaddedheaders')
         try:
@@ -160,7 +176,15 @@ class SessionHandler(object):
         except KeyboardInterrupt:
             sys.exit(0)
         except ValueError:
-            self._defer()
+            # Error in envelope send/receive address
+            address_compliance_fail_action = self.config.get('main','address_compliance_fail_action').lower()
+            message = "invalid send or receive address"
+            if address_compliance_fail_action == "defer":
+                self._defer(message)
+            elif address_compliance_fail_action == "reject":
+                self.protohandler.reject(message)
+            else:
+                self._defer(message)
         except Exception as e:
             exc = traceback.format_exc()
             self.logger.error('Exception %s: %s' % (e, exc))

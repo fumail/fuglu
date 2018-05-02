@@ -270,6 +270,17 @@ class MainController(object):
                 'default': '1',
             },
 
+            'address_compliance_checker': {
+                'section': 'main',
+                'description': "Class implementing MailAddrLegCheckerInterface to perform a quick internal check to determine if mail addres is legitimate",
+                'default': "Default",
+            },
+            'address_compliance_fail_action': {
+                'section': 'main',
+                'description': "Action to perform if address compliance check fails (\"defer\",\"reject\",\"drop\")",
+                'default': "defer",
+            },
+
             # performance section
             'minthreads': {
                 'default': "2",
