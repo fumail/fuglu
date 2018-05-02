@@ -205,7 +205,9 @@ class Suspect(object):
         for rec in self.recipients:
             if rec is None:
                 raise ValueError("Recipient address can not be None")
-            if not re.match(r"[\x00-\x7f]+@[^@]+$", rec):
+            if not (re.match(r"[^@]+@[^@]+$", rec)
+                    or re.match(r"^\"[\x00-\x7f]+\"@[^@]+$", rec)
+                    or re.match(r"^\'[\x00-\x7f]+\'@[^@]+$", rec) ):
                 raise ValueError("Invalid recipient address: %s"%rec)
 
 
@@ -219,7 +221,9 @@ class Suspect(object):
         if self.from_address is None:
             self.from_address = ''
 
-        if self.from_address!='' and  not re.match(r"[\x00-\x7f]+@[^@]+$", self.from_address):
+        if self.from_address!='' and  not (re.match(r"[^@]+@[^@]+$", self.from_address)
+                                           or re.match(r"^\"[\x00-\x7f]+\"@[^@]+$", self.from_address)
+                                           or re.match(r"^\'[\x00-\x7f]+\'@[^@]+$", self.from_address) ):
             raise ValueError("invalid sender address: %s"%self.from_address)
 
         self.clientinfo = None
