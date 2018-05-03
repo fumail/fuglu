@@ -609,7 +609,7 @@ Tags:
             except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
             except Exception as e:
-                self.logger.error(str(e))
+                self.logger.error('SPAMD communication error: %s' % str(e))
 
             time.sleep(1)
         return None
@@ -688,6 +688,8 @@ Tags:
                 self.logger.error('SPAMD gaierror encountered: %s' % str(g))
             except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
+            except Exception as e:
+                self.logger.error('SPAMD communication error: %s' % str(e))
 
             time.sleep(1)
         return None
