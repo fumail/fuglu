@@ -56,7 +56,12 @@ class SessionHandler(object):
         #--
         #
         # Mail Address compliance check is global, make sure it is updated when config is changed
-        addComCheck = self.config.get('main','address_compliance_checker')
+        try:
+            addComCheck = self.config.get('main','address_compliance_checker')
+        except Exception as e:
+            # might happen for some tests which do not propagate defaults
+            addComCheck = Default
+
         if addComCheck == "Default" and not isinstance(Suspect.addrIsLegitimate,Default):
             Suspect.addrIsLegitimate = Default()
         elif addComCheck == "LazyQuotedLocalPart" and not isinstance(Suspect.addrIsLegitimate,LazyQuotedLocalPart):
@@ -179,9 +184,15 @@ class SessionHandler(object):
             sys.exit(0)
         except ValueError:
             # Error in envelope send/receive address
-            address_compliance_fail_action = self.config.get('main','address_compliance_fail_action').lower()
+            try:
+                address_compliance_fail_action = self.config.get('main','address_compliance_fail_action').lower()
+            except Exception as e:
+                address_compliance_fail_action = "defer"
 
-            message = self.config.get('main','address_compliance_fail_message')
+            try:
+                message = self.config.get('main','address_compliance_fail_message')
+            except Exception as e:
+                address_compliance_fail_action = "invalid send or receive address"
 
             if address_compliance_fail_action   == "defer":
                 self._defer(message)
