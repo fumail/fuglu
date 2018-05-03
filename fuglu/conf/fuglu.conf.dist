@@ -107,36 +107,22 @@ remove_tmpfiles_on_error = True
 [PluginAlias]
 
 debug=fuglu.plugins.p_debug.MessageDebugger
-
 skip=fuglu.plugins.p_skipper.PluginSkipper
-
 fraction=fuglu.plugins.p_fraction.PluginFraction
-
 archive=fuglu.plugins.archive.ArchivePlugin
-
 attachment=fuglu.plugins.attachment.FiletypePlugin
-
 clamav=fuglu.plugins.clamav.ClamavPlugin
-
 spamassassin=fuglu.plugins.sa.SAPlugin
-
 vacation=fuglu.plugins.vacation.VacationPlugin
-
 actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
-
 icap=fuglu.plugins.icap.ICAPPlugin
-
 sssp=fuglu.plugins.sssp.SSSPPlugin
-
 fprot=fuglu.plugins.fprot.FprotPlugin
-
 scriptfilter=fuglu.plugins.script.ScriptFilter
-
 dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
-
 dkimverify=fuglu.plugins.domainauth.DKIMVerifyPlugin
-
 spf=fuglu.plugins.domainauth.SPFPlugin
+srs=fuglu.plugins.domainauth.SenderRewriteScheme
 
 [databaseconfig]
 
