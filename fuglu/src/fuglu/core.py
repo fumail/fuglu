@@ -272,13 +272,23 @@ class MainController(object):
 
             'address_compliance_checker': {
                 'section': 'main',
-                'description': "Class implementing MailAddrLegCheckerInterface to perform a quick internal check to determine if mail addres is legitimate",
+                'description': "Method to check mail address validity (\"Default\",\"LazyLocalPart\")",
                 'default': "Default",
             },
             'address_compliance_fail_action': {
                 'section': 'main',
-                'description': "Action to perform if address compliance check fails (\"defer\",\"reject\",\"drop\")",
+                'description': "Action to perform if address validity check fails (\"defer\",\"reject\",\"discard\")",
                 'default': "defer",
+            },
+            'address_compliance_fail_message': {
+                'section': 'main',
+                'description': "Reply message if address validity check fails",
+                'default': "invalid send or receive address",
+            },
+            'remove_tmpfiles_on_error': {
+                'section': 'main',
+                'description': "Remove temporary message file from disk for receive or address compliance errors",
+                'default': True,
             },
 
             # performance section

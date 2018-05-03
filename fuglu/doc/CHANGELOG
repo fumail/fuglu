@@ -2,6 +2,8 @@
  * ClamAV plugin: Fix sending large files to ClamAV which caused timeouts
  * Attachment plugin: Improve file type detection of unnamed attachments
  * Spamassassin plugin: strip attachment function now generates proper mail format
+ * Configurable check for mail address validity, fail action and message
+ * Configuration option to remove (default) or keep temporary message files on internal errors (receive,address,unknown)
 
 Developers:
  * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin
