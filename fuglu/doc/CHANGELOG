@@ -9,6 +9,7 @@
 
 Developers:
  * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin
+ * tighter integration of dnsquery extension
 
 
 -- Fuglu 0.8.0, 2018-04-23
