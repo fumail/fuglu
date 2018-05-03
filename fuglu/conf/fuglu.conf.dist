@@ -92,6 +92,18 @@ logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spa
 #Disable this if you consider the DNS lookup an unwanted information leak.
 versioncheck=1
 
+# Method to check mail address validity (Default/LazyLocalPart)
+address_compliance_checker = Default
+
+# Action to perform if address validity check fails (defer/reject/discard)
+address_compliance_fail_action = defer
+
+# Reply message if address validity check fails
+address_compliance_fail_message = invalid send or receive address
+
+# Remove temporary message file from disk for receive or address compliance errors
+remove_tmpfiles_on_error = True
+
 [PluginAlias]
 
 debug=fuglu.plugins.p_debug.MessageDebugger

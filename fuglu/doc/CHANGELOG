@@ -4,6 +4,8 @@
  * Spamassassin plugin: strip attachment function now generates proper mail format
  * New Plugin: Sender Rewrite Scheme in module domainauth (imported from fuglu-extra-plugins)
  * Fix for CentOS-6 system script to correctly stop all processes
+ * Configurable check for mail address validity, fail action and message
+ * Configuration option to remove (default) or keep temporary message files on internal errors (receive,address,unknown)
 
 Developers:
  * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin
