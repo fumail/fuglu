@@ -13,8 +13,7 @@ unittests:
     - nosetests --rednose tests/unit
   only:
     - master
-    - python3
-    - reload
+    - develop
 
 unittests_py3:
   stage: test_py3
@@ -23,8 +22,7 @@ unittests_py3:
     - nosetests-3.4 --rednose tests/unit
   only:
     - master
-    - python3
-    - reload
+    - develop
 
 integrationtests:
   stage: test
@@ -36,8 +34,7 @@ integrationtests:
     - nosetests --rednose tests/integration
   only:
     - master
-    - python3
-    - reload
+    - develop
 
 integrationtests_py3:
   stage: test_py3
@@ -49,8 +46,7 @@ integrationtests_py3:
     - nosetests-3.4 --rednose tests/integration
   only:
     - master
-    - python3
-    - reload
+    - develop
 
 
 # define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
@@ -65,8 +61,7 @@ buildfuglu:
     - chown nobody /var/log/fuglu
   only:
     - master
-    - python3
-    - reload
+    - develop
 
 buildfuglu_py3:
   stage: build_py3
@@ -78,5 +73,4 @@ buildfuglu_py3:
     - chown nobody /var/log/fuglu
   only:
     - master
-    - python3
-    - reload
+    - develop
