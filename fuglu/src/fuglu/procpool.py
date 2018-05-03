@@ -15,10 +15,10 @@
 #
 #
 #
-import core
-import logtools
-from scansession import SessionHandler
-from stats import Statskeeper, StatDelta
+import fuglu.core
+import fuglu.logtools as logtools
+from fuglu.scansession import SessionHandler
+from fuglu.stats import Statskeeper, StatDelta
 
 import multiprocessing
 import multiprocessing.queues
@@ -177,7 +177,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
     logger.debug("New worker: %s" % logtools.createPIDinfo())
 
     # load config and plugins
-    controller = core.MainController(config,logQueue)
+    controller = fuglu.core.MainController(config,logQueue)
     controller.load_extensions()
     controller.load_plugins()
 
