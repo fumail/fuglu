@@ -20,6 +20,7 @@ import threading
 from fuglu.scansession import SessionHandler
 import traceback
 from multiprocessing.reduction import ForkingPickler
+import os
 try:
     from StringIO import StringIO
 except ImportError:
@@ -35,6 +36,23 @@ class ProtocolHandler(object):
         self.socket = socket
         self.config = config
         self.logger = logging.getLogger('fuglu.%s' % self.__class__.__name__)
+        self.sess = None
+
+    def remove_tmpfile(self):
+        tmpfile = self.get_tmpfile()
+        if tmpfile is not None:
+            try:
+                os.remove(tmpfile)
+            except OSError:
+                pass
+
+    def get_tmpfile(self):
+        if self.sess is not None:
+            try:
+                tmpfilename = self.sess.tempfilename
+            except AttributeError:
+                tmpfilename = None
+        return tmpfilename
 
     def get_suspect(self):
         return None

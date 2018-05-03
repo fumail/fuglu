@@ -22,6 +22,7 @@ import time
 import socket
 import uuid
 import threading
+import fuglu.MailAddrLegitimateChecker
 from fuglu.localStringEncoding import force_uString, force_bString
 try:
     from html.parser import HTMLParser
@@ -171,6 +172,7 @@ class Suspect(object):
     The suspect represents the message to be scanned. Each scannerplugin will be presented
     with a suspect and may modify the tags or even the message content itself.
     """
+    addrIsLegitimate = None
 
     def __init__(self, from_address, recipients, tempfile):
         self.source = None
@@ -201,11 +203,15 @@ class Suspect(object):
         else:
             self.recipients = [recipients, ]
 
+        # setup checker for email validation if not already set
+        if Suspect.addrIsLegitimate is None:
+            Suspect.addrIsLegitimate = fuglu.MailAddrLegitimateChecker.Default()
+
         # basic email validitiy check - nothing more than necessary for our internal assumptions
         for rec in self.recipients:
             if rec is None:
                 raise ValueError("Recipient address can not be None")
-            if not re.match(r"[^@]+@[^@]+$", rec):
+            if not Suspect.addrIsLegitimate(rec):
                 raise ValueError("Invalid recipient address: %s"%rec)
 
 
@@ -219,7 +225,7 @@ class Suspect(object):
         if self.from_address is None:
             self.from_address = ''
 
-        if self.from_address!='' and  not re.match(r"[^@]+@[^@]+$", self.from_address):
+        if self.from_address != '' and not Suspect.addrIsLegitimate(self.from_address):
             raise ValueError("invalid sender address: %s"%self.from_address)
 
         self.clientinfo = None
