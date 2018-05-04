@@ -186,13 +186,13 @@ class SessionHandler(object):
             # Error in envelope send/receive address
             try:
                 address_compliance_fail_action = self.config.get('main','address_compliance_fail_action').lower()
-            except Exception as e:
+            except Exception:
                 address_compliance_fail_action = "defer"
 
             try:
                 message = self.config.get('main','address_compliance_fail_message')
-            except Exception as e:
-                address_compliance_fail_action = "invalid send or receive address"
+            except Exception:
+                message = "invalid sender or recipient address"
 
             if address_compliance_fail_action   == "defer":
                 self._defer(message)
