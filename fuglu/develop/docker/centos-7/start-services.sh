@@ -34,6 +34,9 @@ wait_for_file () {
 
 
 
+echo "update clamd virus definitions"
+freshclam
+
 createlog=1
 if [ "$1" = "nolog" ];  then
    echo "no log file will be created and no wait operation performed"
@@ -62,7 +65,7 @@ if [ -z "$(ps -ef | grep -i 'spamd' | tail -n +2)" ]; then
       spamd  > spamd.log 2>&1 &
       # wait for something to apper in the log file
       # args: filename, number of tries, time to wait between tries
-      wait_for_file clamd.log 12 5
+      wait_for_file spamd.log 12 5
    else
       spamd  > /dev/null 2>&1 &
    fi

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
 from fuglu.localStringEncoding import force_bString, force_uString
 import socket
 import os
@@ -22,13 +22,14 @@ import threading
 import errno
 import subprocess
 import time
+import math
 
 threadLocal = threading.local()
 # it's probably a good idea to re-establish the connection every now and then
 MAX_SCANS_PER_SOCKET = 5000
 
 
-class ClamavPlugin(ScannerPlugin):
+class ClamavPlugin(AVScannerPlugin):
 
     """This plugin passes suspects to a clam daemon. 
 
@@ -46,7 +47,7 @@ Tags:
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.requiredvars = {
             'host': {
                 'default': 'localhost',
@@ -108,55 +109,22 @@ Tags:
             },
         }
         self.logger = self._logger()
+        self.enginename = 'ClamAV'
     
     
     def __str__(self):
         return "Clam AV"
     
     
-    def _problemcode(self):
-        retcode = string_to_actioncode(
-            self.config.get(self.section, 'problemaction'), self.config)
-        if retcode is not None:
-            return retcode
-        else:
-            # in case of invalid problem action
-            return DEFER
-        
-        
-    def _virusreport(self, suspect, viruses):
-        actioncode = DUNNO
-        message = None
-        if viruses is not None:
-            self.logger.info("%s Virus found in message from %s : %s" % (suspect.id, suspect.from_address, viruses))
-            suspect.tags['virus']['ClamAV'] = True
-            suspect.tags['ClamavPlugin.virus'] = viruses
-            suspect.debug('viruses found in message : %s' % viruses)
-        else:
-            suspect.tags['virus']['ClamAV'] = False
-    
-        if viruses is not None:
-            virusaction = self.config.get(self.section, 'virusaction')
-            actioncode = string_to_actioncode(virusaction, self.config)
-            firstinfected, firstvirusname = list(viruses.items())[0]
-            values = dict(
-                infectedfile=firstinfected, virusname=firstvirusname)
-            message = apply_template(
-                self.config.get(self.section, 'rejectmessage'), suspect, values)
-        return actioncode, message
-    
-    
     def examine(self, suspect):
-
-        if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self.logger.info('%s Not scanning - message too big', suspect.id)
-            return
+        if self._check_too_big(suspect):
+            return DUNNO
 
         content = suspect.get_source()
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
-                viruses = self.scan_stream(content)
+                viruses = self.scan_stream(content, suspect.id)
                 actioncode, message = self._virusreport(suspect, viruses)
                 return actioncode, message
             except socket.error as e:
@@ -167,7 +135,10 @@ Tags:
                 if not (i == 0 and e.errno == errno.EPIPE):
                     self.logger.warning("%s Error encountered while contacting clamd (try %s of %s): %s" % (
                         suspect.id, i + 1, self.config.getint(self.section, 'retries'), str(e)))
-            except Exception:
+                else:
+                    self.logger.exception(e)
+            except Exception as e:
+                self.logger.exception(e)
                 self.__invalidate_socket()
 
         self.logger.error("%s Clamdscan failed after %s retries" %
@@ -223,8 +194,8 @@ Tags:
         else:
             return dr
     
-    
-    def scan_stream(self, buff):
+
+    def scan_stream(self, content, suspectid ="(NA)"):
         """
         Scan byte buffer
 
@@ -237,33 +208,43 @@ Tags:
         s = self.__init_socket__(oneshot=not pipelining)
         s.sendall(b'zINSTREAM\0')
         default_chunk_size = 2048
-        remainingbytes = force_bString(buff)
+        remainingbytes = force_bString(content)
+
+        numChunksToSend = math.ceil(len(remainingbytes)/default_chunk_size)
+        iChunk = 0
+        chunklength = 0
+        self.logger.debug('%s: sending message in %u chunks of size %u bytes' % (suspectid, numChunksToSend, default_chunk_size))
 
         while len(remainingbytes) > 0:
+            iChunk = iChunk + 1
             chunklength = min(default_chunk_size, len(remainingbytes))
+            #self.logger.debug('sending chunk %u/%u' % (iChunk,numChunksToSend))
             #self.logger.debug('sending %s byte chunk' % chunklength)
             chunkdata = remainingbytes[:chunklength]
             remainingbytes = remainingbytes[chunklength:]
-            s.sendall(struct.pack('!L', chunklength))
+            s.sendall(struct.pack(b'!L', chunklength))
             s.sendall(chunkdata)
-        s.sendall(struct.pack('!L', 0))
+        self.logger.debug('%s: sent chunk %u/%u, last number of bytes sent was %u' % (suspectid, iChunk, numChunksToSend, chunklength))
+        self.logger.debug('%s: All chunks send, send 0 - size to tell ClamAV the whole message has been sent' % suspectid)
+        s.sendall(struct.pack(b'!L', 0))
         dr = {}
 
-        result = self._read_until_delimiter(s).strip()
 
-        if result.startswith(b'INSTREAM size limit exceeded'):
+        result = force_uString(self._read_until_delimiter(s, suspectid)).strip()
+
+        if result.startswith('INSTREAM size limit exceeded'):
             raise Exception(
-                "Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength")
-        if result.startswith(b'UNKNOWN'):
-            raise Exception("Clamd doesn't understand INSTREAM command. very old version?")
+                "%s: Clamd size limit exeeded. Make sure fuglu's clamd maxsize config is not larger than clamd's StreamMaxLength" % suspectid)
+        if result.startswith('UNKNOWN'):
+            raise Exception("%s: Clamd doesn't understand INSTREAM command. very old version?" % suspectid)
 
         if pipelining:
             try:
-                ans_id, filename, virusinfo = result.split(b':', 2)
+                ans_id, filename, virusinfo = result.split(':', 2)
                 filename = force_uString(filename.strip())  # use unicode for filename
                 virusinfo = force_uString(virusinfo.strip())  # lets use unicode for the info
             except:
-                raise Exception("Protocol error, could not parse result: %s" % result)
+                raise Exception("%s: Protocol error, could not parse result: %s" % (suspectid, result))
 
             threadLocal.expectedID += 1
             if threadLocal.expectedID != int(ans_id):
@@ -281,7 +262,7 @@ Tags:
                 finally:
                     self.__invalidate_socket()
         else:
-            filename, virusinfo = result.split(b':', 1)
+            filename, virusinfo = result.split(':', 1)
             filename = force_uString(filename.strip())  # use unicode for filename
             virusinfo = force_uString(virusinfo.strip())  # use unicode for virus info
             if virusinfo[-5:] == 'ERROR':
@@ -296,17 +277,32 @@ Tags:
             return dr
     
     
-    def _read_until_delimiter(self, sock):
+    def _read_until_delimiter(self, sock, suspectID = "(NA)"):
         data = b''
+        maxFailedAttempts = 40
+        failedAttempt = 0
         while True:
-            chunk = sock.recv(4096)
-            if len(chunk) == 0:
-                continue
-            data += chunk
-            if chunk.endswith(b'\0'):
-                break
-            if b'\0' in chunk:
-                raise Exception("Protocol error: got unexpected additional data after delimiter")
+            try:
+                chunk = sock.recv(4096)
+                if len(chunk) == 0:
+                    continue
+                data += chunk
+                if chunk.endswith(b'\0'):
+                    break
+                if b'\0' in chunk:
+                    raise Exception("%s: Protocol error: got unexpected additional data after delimiter"%suspectID)
+            except socket.error:
+                # looks like there can be a socket error when we try to connect too quickly after sending, so
+                # better retry several times
+                # Got this idea from pyclamd, see:
+                # https://bitbucket.org/xael/pyclamd/src/2089daa540e1343cf414c4728f1322c96a615898/pyclamd/pyclamd.py?at=default&fileviewer=file-view-default#pyclamd.py-614
+                # There the sleep for 0.01 [s] for 5 tries, so 0.05 [s] in total to wait. But I'm happy to set a
+                # maximum of 1 second by 40*0.025 [s] if this helps to avoid a complete rescan of the message
+                time.sleep(0.025)
+                failedAttempt += 1
+                self.logger.warning("%s: Failed receive attempt %u/%u"%(suspectID,failedAttempt,maxFailedAttempts))
+                if failedAttempt == maxFailedAttempts:
+                    raise
         return data[:-1]  # remove \0 at the end
     
     
@@ -377,7 +373,7 @@ Tags:
         if self.config.getboolean(self.section, 'clamscanfallback'):
             print('WARNING: Fallback to clamscan enabled')
             starttime = time.time()
-            allok = self.lint_eicar('shell')
+            allok = self.lint_eicar('scan_shell')
             if allok:
                 runtime = time.time()-starttime
                 print('clamscan scan time: %.2fs' % runtime)
@@ -407,43 +403,4 @@ Tags:
         s.sendall(b'VERSION')
         result = s.recv(20000)
         print("Got Version: %s" % force_uString(result))
-        return True
-    
-    
-    def lint_eicar(self, mode='stream'):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test eicar attachment
-X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
-
-------=_MIME_BOUNDARY_000_12140
-Content-Type: text/plain
-
-Eicar test
-------=_MIME_BOUNDARY_000_12140
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: BASE64
-Content-Disposition: attachment
-
-UEsDBAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAZWljYXIuY29tWDVPIVAlQEFQWzRcUFpYNTQo
-UF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCoNClBLAQIU
-AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
-AAEAAQA3AAAAbQAAAAAA
-
-------=_MIME_BOUNDARY_000_12140--"""
-        
-        if mode=='stream':
-            result = self.scan_stream(stream)
-        elif mode=='shell':
-            result = self.scan_shell(stream)
-        else:
-            result = None
-            
-        if result is None:
-            print("EICAR Test virus not found!")
-            return False
-        print("Clamav found virus", result)
         return True

@@ -23,6 +23,7 @@ import email
 import re
 import os
 import sys
+from email.mime.multipart import MIMEMultipart
 
 
 GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
@@ -79,8 +80,8 @@ Tags:
             },
 
             'strip_oversize':{
-                'default': '0',
-                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded",
+                'default': '1',
+                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated.",
             },
 
             'retries': {
@@ -362,19 +363,23 @@ Tags:
 
         """
 
-        msgrep = email.message_from_string(content)
+        # Content is str or bytes (Py3), so try both
+        try:
+            msgrep = email.message_from_string(content)
+        except TypeError:
+            msgrep = email.message_from_bytes(content)
 
+        
         if msgrep.is_multipart():
-            new_src = ''
+            new_msg = MIMEMultipart()
             for hdr, val in msgrep.items():
-                headerline = '%s: %s\r\n' % (hdr, val)
-                new_src += headerline
-            new_src += '\r\n'
+                # convert "val" to "str" since in Py3 it might be of type email.header.Header
+                new_msg.add_header(hdr, str(val))
             for part in msgrep.walk():
                 # only plaintext and html parts but no text attachments
                 if part.get_content_maintype() == 'text' and part.get_filename() is None:
-                    new_src += part.as_string()
-                    new_src += '\r\n\r\n'
+                    new_msg.attach(part)
+            new_src = new_msg.as_string()
         else:
             # text only mail - keep full content and truncate later
             new_src = content
@@ -382,7 +387,7 @@ Tags:
         if len(new_src) > maxsize:
             # truncate to maxsize
             new_src = new_src[:maxsize-1]
-
+        
         return new_src
 
     def examine(self, suspect):
@@ -417,7 +422,7 @@ Tags:
             # keep copy of original content before stripping
             content_orig = content
             content = self._strip_attachments(content, maxsize)
-
+            self.logger.info('%s stripped attachments, body size reduced from %s to %s bytes' % (suspect.id, len(content_orig), len(content)))
         # stick to bytes
         content = force_bString(content)
 
@@ -595,7 +600,7 @@ Tags:
             except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
             except Exception as e:
-                self.logger.error(str(e))
+                self.logger.error('SPAMD communication error: %s' % str(e))
 
             time.sleep(1)
         return None
@@ -674,6 +679,8 @@ Tags:
                 self.logger.error('SPAMD gaierror encountered: %s' % str(g))
             except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
+            except Exception as e:
+                self.logger.error('SPAMD communication error: %s' % str(e))
 
             time.sleep(1)
         return None

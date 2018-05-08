@@ -13,7 +13,8 @@
 # limitations under the License.
 #
 #
-__all__ = ['bounce', 'core', 'daemon', 'funkyconsole',
+__all__ = ['bounce', 'core', 'daemon', 'debug', 'funkyconsole',
+           'localStringEncoding', 'loghandlers', 'logtools', 'procpool',
            'protocolbase', 'scansession', 'shared', 'stats', 'threadpool']
 
-FUGLU_VERSION = "0.7.0"
+FUGLU_VERSION = "0.8.0"

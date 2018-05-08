@@ -15,7 +15,8 @@
 #
 #
 
-from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE
+from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE, Suspect
+from fuglu.MailAddrLegitimateChecker import Default, LazyQuotedLocalPart
 from fuglu.debug import CrashStore
 import logging
 from fuglu.stats import Statskeeper, StatDelta
@@ -50,13 +51,34 @@ class SessionHandler(object):
     def handlesession(self, worker=None):
         self.worker = worker
 
+        #--
+        # setup compliance checker if not already set up
+        #--
+        #
+        # Mail Address compliance check is global, make sure it is updated when config is changed
+        try:
+            addComCheck = self.config.get('main','address_compliance_checker')
+        except Exception as e:
+            # might happen for some tests which do not propagate defaults
+            addComCheck = Default
+
+        if addComCheck == "Default" and not isinstance(Suspect.addrIsLegitimate,Default):
+            Suspect.addrIsLegitimate = Default()
+        elif addComCheck == "LazyQuotedLocalPart" and not isinstance(Suspect.addrIsLegitimate,LazyQuotedLocalPart):
+            Suspect.addrIsLegitimate = LazyQuotedLocalPart()
+        else:
+            self.logger.error('Address Compliance Checker not recognized -> use Default')
+            Suspect.addrIsLegitimate = Default()
+
         prependheader = self.config.get('main', 'prependaddedheaders')
         try:
+            suspect = None
             self.set_workerstate('receiving message')
             suspect = self.protohandler.get_suspect()
             if suspect is None:
                 self.logger.error('No Suspect retrieved, ending session')
                 return
+
             self.stats.increase_counter_values(StatDelta(in_=1))
 
             if len(suspect.recipients) != 1:
@@ -155,19 +177,87 @@ class SessionHandler(object):
             try:
                 os.remove(suspect.tempfile)
                 self.logger.debug('Removed tempfile %s' % suspect.tempfile)
+                suspect.tempfile = None
             except OSError:
                 self.logger.warning('Could not remove tempfile %s' % suspect.tempfile)
         except KeyboardInterrupt:
             sys.exit(0)
         except ValueError:
-            self._defer()
+            # Error in envelope send/receive address
+            try:
+                address_compliance_fail_action = self.config.get('main','address_compliance_fail_action').lower()
+            except Exception:
+                address_compliance_fail_action = "defer"
+
+            try:
+                message = self.config.get('main','address_compliance_fail_message')
+            except Exception:
+                message = "invalid sender or recipient address"
+
+            if address_compliance_fail_action   == "defer":
+                self._defer(message)
+            elif address_compliance_fail_action == "reject":
+                self._reject(message)
+            elif address_compliance_fail_action == "discard":
+                self._discard(message)
+            else:
+                self._defer(message)
+
         except Exception as e:
             exc = traceback.format_exc()
             self.logger.error('Exception %s: %s' % (e, exc))
             self._defer()
 
+        finally:
+            # finally is also executed if there's a return statement somewhere in try-except
+
+            if suspect is None:
+                # if there was an error creating the suspect, check if the filename can be
+                # extracted from the protohandler
+                tmpfilename = self.protohandler.get_tmpfile()
+                if tmpfilename is None:
+                    tmpfilename = ""
+                if self.config.getboolean('main', 'remove_tmpfiles_on_error'):
+                    self.logger.debug('Remove tmpfile: %s for failed message' % tmpfilename)
+                    self.protohandler.remove_tmpfile()
+                else:
+                    self.logger.warning('Keep tmpfile: %s for failed message' % tmpfilename)
+
+            elif suspect.tempfile is not None:
+                # suspect was created but not stopped cleanly
+                if self.config.getboolean('main', 'remove_tmpfiles_on_error'):
+                    try:
+                        os.remove(suspect.tempfile)
+                        self.logger.debug('Removed tempfile %s' % suspect.tempfile)
+                    except OSError:
+                        self.logger.warning('Could not remove tempfile %s' % suspect.tempfile)
+                else:
+                    self.logger.warning('Keep tempfile %s for failed message' % suspect.tempfile)
+
         self.logger.debug('Session finished')
 
+
+    def _discard(self, message=None):
+        if message is None:
+            message="internal problem - discard"
+
+        # try to end the session gracefully, but this might cause the same exception again,
+        # in case of a broken pipe for example
+        try:
+            self.protohandler.discard(message)
+        except Exception:
+            pass
+
+    def _reject(self, message=None):
+        if message is None:
+            message="internal problem - reject"
+
+        # try to end the session gracefully, but this might cause the same exception again,
+        # in case of a broken pipe for example
+        try:
+            self.protohandler.reject(message)
+        except Exception:
+            pass
 
     def _defer(self, message=None):
         if message is None:

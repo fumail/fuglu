@@ -121,9 +121,7 @@ class ThreadPool(threading.Thread):
                 self.laststats = time.time()
 
             time.sleep(self.checkinterval)
-        for worker in self.workers:
-            worker.stayalive = False
-        del self.workers
+
         self.logger.info('Threadpool shut down')
 
     def _remove_worker(self, num=1):
@@ -131,6 +129,7 @@ class ThreadPool(threading.Thread):
         for bla in range(0, num):
             worker = self.workers[0]
             worker.stayalive = False
+            worker.join(120)
             del self.workers[0]
 
     def _add_worker(self, num=1):
@@ -141,6 +140,33 @@ class ThreadPool(threading.Thread):
             self.workers.append(worker)
             worker.start()
 
+    def shutdown(self):
+
+        # set stayalive to False, this will send
+        # poison pills to the workers
+        self.stayalive = False
+
+
+        # now remove elements from the queue
+        # first, put another poison pill for the Threadpool itself
+        self.tasks.put_nowait(None)
+        returnMessage = "Temporarily unavailable... Please try again later."
+        markDeferCounter = 0
+        while True:
+            # don't use the get_task from Threadpool since this will
+            # not give anything once stayalive is False
+            sesshandler = self.tasks.get(True)
+            if sesshandler == None:  # poison pill -> shut down
+                break
+            markDeferCounter += 1
+            sesshandler.protohandler.defer(returnMessage)
+
+        self.logger.info("Marked %s messages as '%s' to close queue" % (markDeferCounter,returnMessage))
+
+        # remove all the workers (joins them also)
+        for worker in self.workers:
+            worker.stayalive = False
+            worker.join(120) # wait 120 seconds max
 
 class Worker(threading.Thread):
 
