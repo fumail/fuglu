@@ -385,11 +385,6 @@ Tags:
 
         return new_src
 
-    # helper to get diff from two lists/dicts
-    def diff(self, new, old):
-        old = set(old)
-        return [item for item in new if item not in old]
-
     def examine(self, suspect):
         # check if someone wants to skip sa checks
         if suspect.get_tag('SAPlugin.skip') is True:
@@ -460,17 +455,8 @@ Tags:
                     # create msgrep of filtered msg
                     msgrep_filtered = email.message_from_string(filtered)
                     header_new = []
-                    header_old = []
-                    # create a msgrep from original msg
-                    msgrep_orig = email.message_from_string(content_orig)
-                    # read all headers from after-scan and before-scan
                     for h,v in msgrep_filtered.items():
                         header_new.append(h.strip() + ': ' + v.strip())
-                    for h,v in msgrep_orig.items():
-                        header_old.append(h.strip() + ': ' + v.strip())
-                    # create a list of headers added by spamd
-                    # header diff between before-scan and after-scan msg
-                    header_new = reversed(self.diff(header_new, header_old))
                     # add headers to msg
                     sa_prepend = self.config.get(self.section, 'spamheader_prepend')
                     for i in header_new:
