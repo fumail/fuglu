@@ -470,10 +470,11 @@ Tags:
                     header_new = reversed(self.diff(header_new, header_old))
                     # add headers to msg
                     for i in header_new:
-                        if re.match('^Received: ', i, re.I):
+                        if re.match('^X-Spam-[^:]+: ', i, re.I):
+                            # in case of stripped msg add header to original content
+                            content_orig = i + '\r\n' + content_orig
+                        else:
                             continue
-                        # in case of stripped msg add header to original content
-                        content_orig = i + '\r\n' + content_orig
                     content = content_orig
                 else:
                     content = filtered
