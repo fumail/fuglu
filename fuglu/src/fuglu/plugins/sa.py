@@ -102,7 +102,10 @@ Tags:
                 'default': 'X-Spam-Status',
                 'description': """what header does SA set to indicate the spam status\nNote that fuglu requires a standard header template configuration for spamstatus and score extraction\nif 'forwardoriginal' is set to 0\neg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_""",
             },
-
+            'spamheader_prepend': {
+                'default': 'X-Spam-',
+                'description': 'tells fuglu what spamassassin prepends to its headers. Set this according to your spamassassin config especially if you forwardoriginal=0 and strip_oversize=1',
+            },
             'peruserconfig': {
                 'default': '1',
                 'description': 'enable user_prefs in SA. This hands the recipient address over the spamd connection which allows SA to search for configuration overrides',
@@ -469,11 +472,13 @@ Tags:
                     # header diff between before-scan and after-scan msg
                     header_new = reversed(self.diff(header_new, header_old))
                     # add headers to msg
+                    sa_prepend = self.config.get(self.section, 'spamheader_prepend')
                     for i in header_new:
-                        if re.match('^Received: ', i, re.I):
+                        if re.match('^' + sa_prepend + '[^:]+: ', i, re.I):
+                            # in case of stripped msg add header to original content
+                            content_orig = i + '\r\n' + content_orig
+                        else:
                             continue
-                        # in case of stripped msg add header to original content
-                        content_orig = i + '\r\n' + content_orig
                     content = content_orig
                 else:
                     content = filtered
