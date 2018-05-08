@@ -474,6 +474,8 @@ Tags:
                     # add headers to msg
                     sa_prepend = self.config.get(self.section, 'spamheader_prepend')
                     for i in header_new:
+                        if sa_prepend == '' or sa_prepend is None:
+                            break
                         if re.match('^' + sa_prepend + '[^:]+: ', i, re.I):
                             # in case of stripped msg add header to original content
                             content_orig = i + '\r\n' + content_orig
