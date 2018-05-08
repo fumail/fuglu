@@ -288,7 +288,7 @@ class MainController(object):
             'remove_tmpfiles_on_error': {
                 'section': 'main',
                 'description': "Remove temporary message file from disk for receive or address compliance errors",
-                'default': True,
+                'default': '1',
             },
 
             # performance section
