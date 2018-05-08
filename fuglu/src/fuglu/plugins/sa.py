@@ -52,7 +52,7 @@ Tags:
  * sets ``spam['spamassassin']`` (boolean)
  * sets ``SAPlugin.spamscore`` (float) if possible
  * sets ``SAPlugin.skipreason`` (string) if the message was not scanned (fuglu >0.5.0)
- * sets ``SAPlugin.report`` (string) spamheader (where score is found) or spamreport from spamd depending on forwardoriginal setting
+ * sets ``SAPlugin.report``, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting
 """
 
     def __init__(self, config, section=None):
@@ -449,8 +449,6 @@ Tags:
 
         else:
             filtered = self.safilter(content, suspect.to_address)
-            # create msgrep of filtered msg
-            msgrep_filtered = email.message_from_string(filtered)
             if filtered is None:
                 suspect.debug('SA Scan failed - please check error log')
                 self.logger.error('%s SA scan FAILED' % suspect.id)
@@ -459,6 +457,8 @@ Tags:
                 return self._problemcode()
             else:
                 if stripped:
+                    # create msgrep of filtered msg
+                    msgrep_filtered = email.message_from_string(filtered)
                     header_new = []
                     header_old = []
                     # create a msgrep from original msg
@@ -496,6 +496,7 @@ Tags:
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore, report = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
             suspect.tags['SAPlugin.report'] = report
+            self.logger.debug('suspect %s %s %s %s' % (suspect.id, isspam, spamscore, suspect.get_tag('SAPlugin.report')))
 
         action = DUNNO
         message = None
