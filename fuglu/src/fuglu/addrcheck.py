@@ -76,7 +76,7 @@ class LazyLocalPart(Addrcheckint):
     Allows '@' in local part if quoted
     """
     def __init__(self):
-        super(LazyQuotedLocalPart, self).__init__()
+        super(LazyLocalPart, self).__init__()
     def __call__(self,mailAddress):
         leg = ( mailAddress !='' and  (      re.match(r"[^@]+@[^@]+$", mailAddress)
                                           or re.match(r"^\"[\x00-\x7f]+\"@[^@]+$", mailAddress)
