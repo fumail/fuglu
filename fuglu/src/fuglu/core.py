@@ -283,12 +283,12 @@ class MainController(object):
             'address_compliance_fail_message': {
                 'section': 'main',
                 'description': "Reply message if address validity check fails",
-                'default': "invalid send or receive address",
+                'default': "invalid sender or recipient address",
             },
             'remove_tmpfiles_on_error': {
                 'section': 'main',
                 'description': "Remove temporary message file from disk for receive or address compliance errors",
-                'default': True,
+                'default': '1',
             },
 
             # performance section
