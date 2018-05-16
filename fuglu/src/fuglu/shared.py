@@ -22,8 +22,8 @@ import time
 import socket
 import uuid
 import threading
-import fuglu.MailAddrLegitimateChecker
-from fuglu.localStringEncoding import force_uString, force_bString
+import fuglu.addrcheck
+from fuglu.stringencode import force_uString, force_bString
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -205,7 +205,7 @@ class Suspect(object):
 
         # setup checker for email validation if not already set
         if Suspect.addrIsLegitimate is None:
-            Suspect.addrIsLegitimate = fuglu.MailAddrLegitimateChecker.Default()
+            Suspect.addrIsLegitimate = fuglu.addrcheck.Default()
 
         # basic email validitiy check - nothing more than necessary for our internal assumptions
         for rec in self.recipients:

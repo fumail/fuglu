@@ -22,7 +22,7 @@ from email.header import Header
 import socket
 
 from fuglu.shared import apply_template
-from fuglu.localStringEncoding import force_uString
+from fuglu.stringencode import force_uString
 
 
 class Bounce(object):

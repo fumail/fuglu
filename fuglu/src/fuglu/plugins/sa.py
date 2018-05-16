@@ -15,7 +15,7 @@
 #
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
 from fuglu.extensions.sql import DBConfig, get_session, SQL_EXTENSION_ENABLED
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 from string import Template
 import time
 import socket

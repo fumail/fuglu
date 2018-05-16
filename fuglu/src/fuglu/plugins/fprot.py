@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 from fuglu.shared import AVScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 import socket
 import re
 import os

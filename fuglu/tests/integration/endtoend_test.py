@@ -27,7 +27,7 @@ import fuglu
 from fuglu.lib.patcheddkimlib import verify, sign
 from fuglu.core import MainController
 from fuglu.scansession import SessionHandler
-from fuglu.localStringEncoding import force_uString
+from fuglu.stringencode import force_uString
 
 
 class AllpluginTestCase(unittest.TestCase):

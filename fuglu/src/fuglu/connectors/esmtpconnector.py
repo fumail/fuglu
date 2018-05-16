@@ -21,7 +21,7 @@ import tempfile
 import os
 from fuglu.protocolbase import ProtocolHandler, BasicTCPServer
 from fuglu.shared import Suspect, apply_template
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 
 from email.header import Header
 import re

@@ -2,7 +2,7 @@ from unittestsetup import TESTDATADIR
 import unittest
 import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
-from fuglu.MailAddrLegitimateChecker import Default, LazyQuotedLocalPart
+from fuglu.addrcheck import Default, LazyQuotedLocalPart
 import os
 
 try:
