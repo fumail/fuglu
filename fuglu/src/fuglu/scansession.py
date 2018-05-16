@@ -16,7 +16,6 @@
 #
 
 from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE, Suspect
-from fuglu.addrcheck import Default, LazyQuotedLocalPart
 from fuglu.debug import CrashStore
 import logging
 from fuglu.stats import Statskeeper, StatDelta
