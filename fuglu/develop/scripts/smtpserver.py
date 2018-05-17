@@ -4,7 +4,7 @@ import os
 import socket
 import string
 import tempfile
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 
 
 class SMTPServer:

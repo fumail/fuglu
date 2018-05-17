@@ -19,6 +19,7 @@ import fuglu.core
 import fuglu.logtools as logtools
 from fuglu.scansession import SessionHandler
 from fuglu.stats import Statskeeper, StatDelta
+from fuglu.addrcheck import Addrcheck
 
 import multiprocessing
 import multiprocessing.queues
@@ -175,6 +176,18 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
     workerstate = WorkerStateWrapper(shared_state,'loading configuration')
     logger = logging.getLogger('fuglu.process')
     logger.debug("New worker: %s" % logtools.createPIDinfo())
+
+
+    # Setup address compliance checker
+    # -> Due to default linux forking behavior this should already
+    #    have the correct setup but it's better not to rely on this
+    try:
+        address_check = config.get('main','address_compliance_checker')
+    except Exception as e:
+        # might happen for some tests which do not propagate defaults
+        address_check = "Default"
+    Addrcheck().set(address_check)
+
 
     # load config and plugins
     controller = fuglu.core.MainController(config,logQueue)

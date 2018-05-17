@@ -32,6 +32,7 @@ import fuglu.funkyconsole
 from fuglu import loghandlers
 import sys
 from fuglu.core import MainController
+from fuglu.addrcheck import Addrcheck
 import signal
 import os
 import pwd
@@ -102,6 +103,14 @@ def reloadconfig():
         newconfig = configparser.RawConfigParser()
         with open(theconfigfile) as fp:
             newconfig.readfp(fp)
+
+        # Setup address compliance checker
+        try:
+            address_check = newconfig.get('main','address_compliance_checker')
+        except Exception as e:
+            # might happen for some tests which do not propagate defaults
+            address_check = "Default"
+        Addrcheck().set(address_check)
 
         identifier = "no identifier given"
         if newconfig.has_option('main', 'identifier'):
@@ -290,6 +299,14 @@ fuglu.logtools.client_configurer(logQueue)
 #===                      ===#
 baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
+
+# Setup address compliance checker
+try:
+    address_check = config.get('main','address_compliance_checker')
+except Exception as e:
+    # might happen for some tests which do not propagate defaults
+    address_check = "Default"
+Addrcheck().set(address_check)
 
 # instantiate the MainController and load default configuration
 controller = MainController(config,logQueue,logFactoryQueue)

@@ -16,7 +16,6 @@
 #
 
 from fuglu.shared import DUNNO, ACCEPT, REJECT, DEFER, DELETE, Suspect
-from fuglu.MailAddrLegitimateChecker import Default, LazyQuotedLocalPart
 from fuglu.debug import CrashStore
 import logging
 from fuglu.stats import Statskeeper, StatDelta
@@ -50,25 +49,6 @@ class SessionHandler(object):
 
     def handlesession(self, worker=None):
         self.worker = worker
-
-        #--
-        # setup compliance checker if not already set up
-        #--
-        #
-        # Mail Address compliance check is global, make sure it is updated when config is changed
-        try:
-            addComCheck = self.config.get('main','address_compliance_checker')
-        except Exception as e:
-            # might happen for some tests which do not propagate defaults
-            addComCheck = Default
-
-        if addComCheck == "Default" and not isinstance(Suspect.addrIsLegitimate,Default):
-            Suspect.addrIsLegitimate = Default()
-        elif addComCheck == "LazyQuotedLocalPart" and not isinstance(Suspect.addrIsLegitimate,LazyQuotedLocalPart):
-            Suspect.addrIsLegitimate = LazyQuotedLocalPart()
-        else:
-            self.logger.error('Address Compliance Checker not recognized -> use Default')
-            Suspect.addrIsLegitimate = Default()
 
         prependheader = self.config.get('main', 'prependaddedheaders')
         try:

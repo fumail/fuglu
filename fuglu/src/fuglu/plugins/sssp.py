@@ -21,7 +21,7 @@
 #
 
 from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 import socket
 import os
 import re

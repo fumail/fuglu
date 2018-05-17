@@ -2,7 +2,7 @@ from unittestsetup import TESTDATADIR
 import unittest
 import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
-from fuglu.MailAddrLegitimateChecker import Default, LazyQuotedLocalPart
+from fuglu.addrcheck import Addrcheck
 import os
 
 try:
@@ -76,10 +76,10 @@ class SuspectTestCase(unittest.TestCase):
 
     def test_special_local_part(self):
         """Make sure Sender/Receiver with quoted local part are received correctly and can contain '@'"""
-        Suspect.addrIsLegitimate = Default()
+        Addrcheck().set("Default")
         self.assertRaises(ValueError, Suspect, "sender@example.net", "recipient@example.com@example.org", '/dev/null')
 
-        Suspect.addrIsLegitimate = LazyQuotedLocalPart()
+        Addrcheck().set("LazyLocalPart")
         s = Suspect('"bob@remotehost"@localhost', "'root@localhost'@remotehost", '/dev/null')
         self.assertEqual('"bob@remotehost"@localhost', s.from_address)
         self.assertEqual('"bob@remotehost"', s.from_localpart)

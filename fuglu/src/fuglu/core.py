@@ -39,7 +39,7 @@ from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncconnector import NCServer
 from fuglu.connectors.esmtpconnector import ESMTPServer
-from fuglu.localStringEncoding import force_uString, force_bString
+from fuglu.stringencode import force_uString, force_bString
 from fuglu.stats import StatsThread
 from fuglu.debug import ControlServer, CrashStore
 from fuglu import FUGLU_VERSION

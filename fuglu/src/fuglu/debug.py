@@ -21,7 +21,7 @@ import datetime
 import traceback
 import string
 import os
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 
 
 class ControlServer(object):
