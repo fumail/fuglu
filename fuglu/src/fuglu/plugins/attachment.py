@@ -17,6 +17,7 @@
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
+from fuglu.archives import SEVENZIP_AVAILABLE, RARFILE_AVAILABLE, Archivehandle
 import re
 import mimetypes
 import os
@@ -80,20 +81,20 @@ KEY_ARCHIVENAME = u"archive-name"
 KEY_ARCHIVECTYPE = u"archive-ctype"
 
 
-RARFILE_AVAILABLE = 0
-try:
-    import rarfile
-    RARFILE_AVAILABLE = 1
-except (ImportError, OSError):
-    pass
+# RARFILE_AVAILABLE = 0
+# try:
+#     import rarfile
+#     RARFILE_AVAILABLE = 1
+# except (ImportError, OSError):
+#     pass
 
-
-SEVENZIP_AVAILABLE = 0
-try:
-    import py7zlib # installed via pylzma library
-    SEVENZIP_AVAILABLE = 1
-except (ImportError, OSError):
-    pass
+#
+# SEVENZIP_AVAILABLE = 0
+# try:
+#     import py7zlib # installed via pylzma library
+#     SEVENZIP_AVAILABLE = 1
+# except (ImportError, OSError):
+#     pass
 
 
 
@@ -772,11 +773,11 @@ The other common template variables are available as well.
                             archive_type = self.supported_archive_extensions[arext]
                             break
                 if archive_type is not None:
-                    self.logger.debug("Extracting {attname} as {artype}".format(attname=att_name,artype=archive_type))
+                    self.logger.debug("Extracting %s as %s" % (att_name,archive_type))
                     try:
                         pl = BytesIO(part.get_payload(decode=True))
-                        archive_handle = self._archive_handle(archive_type, pl)
-                        namelist = self._archive_namelist(archive_type, archive_handle)
+                        archive_handle = Archivehandle(archive_type, pl)
+                        namelist = archive_handle.namelist()
                         if self.checkarchivenames:
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
@@ -799,7 +800,7 @@ The other common template variables are available as well.
                         if MAGIC_AVAILABLE and self.checkarchivecontent:
                             for name in namelist:
                                 safename = self.asciionly(name)
-                                extracted = self._archive_extract(archive_type, archive_handle, name)
+                                extracted = archive_handle.extract(name, self.config.getint(self.section, 'archivecontentmaxsize'))
                                 if extracted is None:
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
@@ -816,9 +817,8 @@ The other common template variables are available as well.
                                         suspect, "Extracted file %s from archive %s content-type=%s : blocked by mime content type (magic)" % (safename, att_name, contenttype_magic))
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
-                        
-                        if hasattr(archive_handle, 'close'):
-                            archive_handle.close()
+
+                        archive_handle.close()
                         pl.close()
                         
                     except Exception:
@@ -828,7 +828,7 @@ The other common template variables are available as well.
     
     
     def archive_type_from_content_type(self, content_type):
-        """Return the corresponding archive type if the content type matches a regex in self.supported_archvie_ctypes, None otherwise"""
+        """Return the corresponding archive type if the content type matches a regex in self.supported_archive_ctypes, None otherwise"""
         if content_type is None:
             return None
         for regex,atype in self.supported_archive_ctypes.items():
@@ -859,92 +859,6 @@ The other common template variables are available as well.
                 self.logger.info("hidden part extraction failed: %s"%str(e))
 
 
-
-    def _fix_python26_zipfile_bug(self, zipFileContainer):
-        "http://stackoverflow.com/questions/3083235/unzipping-file-results-in-badzipfile-file-is-not-a-zip-file/21996397#21996397"
-        # HACK: See http://bugs.python.org/issue10694
-        # The zip file generated is correct, but because of extra data after the 'central directory' section,
-        # Some version of python (and some zip applications) can't read the file. By removing the extra data,
-        # we ensure that all applications can read the zip without issue.
-        # The ZIP format: http://www.pkware.com/documents/APPNOTE/APPNOTE-6.3.0.TXT
-        # Finding the end of the central directory:
-        #   http://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file
-        #   http://stackoverflow.com/questions/20276105/why-cant-python-execute-a-zip-archive-passed-via-stdin
-        # This second link is only losely related, but echos the first,
-        # "processing a ZIP archive often requires backwards seeking"
-
-        content = zipFileContainer.read()
-        # reverse find: this string of bytes is the end of the zip's central
-        # directory.
-        pos = content.rfind('\x50\x4b\x05\x06')
-        if pos > 0:
-            # +20: see secion V.I in 'ZIP format' link above.
-            zipFileContainer.seek(pos + 20)
-            zipFileContainer.truncate()
-            # Zip file comment length: 0 byte length; tell zip applications to
-            # stop reading.
-            zipFileContainer.write('\x00\x00')
-            zipFileContainer.seek(0)
-        return zipFileContainer
-    
-    
-    def _archive_handle(self, archive_type, payload):
-        """get a handle for this archive type"""
-        archive = None
-        if archive_type == 'zip':
-            if sys.version_info < (2, 7):
-                payload = self._fix_python26_zipfile_bug(payload)
-            archive = zipfile.ZipFile(payload)
-        elif archive_type == 'rar':
-            archive = rarfile.RarFile(payload)
-        elif archive_type == 'tar':
-            archive = tarfile.open(fileobj=payload)
-        elif archive_type == '7z':
-            archive = py7zlib.Archive7z(payload)
-        return archive
-    
-    
-    def _archive_namelist(self, archive_type, handle):
-        """returns a list of file paths within the archive"""
-        # this works for zip and rar. if a future archive uses a different api,
-        # add above
-        names = []
-        if archive_type in ['zip', 'rar']:
-            names = handle.namelist()
-        elif archive_type in ['tar', '7z']:
-            names = handle.getnames()
-        return names
-    
-    
-    def _archive_extract(self, archive_type, handle, path):
-        """extract a file from the archive into memory
-        returns the file content or None if the file would be larger than the setting archivecontentmaxsize
-        """
-        # this works for zip and rar. if a future archive uses a different api,
-        # add above
-        archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
-
-        extracted = None
-        if archive_type in ['zip', 'rar']:
-            arinfo = handle.getinfo(path)
-            if arinfo.file_size > archivecontentmaxsize:
-                return None
-            extracted = handle.read(path)
-        elif archive_type in ['tar']:
-            arinfo = handle.getmember(path)
-            if arinfo.size > archivecontentmaxsize or not arinfo.isfile():
-                return None
-            x = handle.extractfile(path)
-            extracted = x.read()
-            x.close()
-        elif archive_type in ['7z']:
-            arinfo = handle.getmember(path)
-            if arinfo.size > archivecontentmaxsize:
-                return None
-            extracted = arinfo.read()
-        return extracted
-    
-    
     def _debuginfo(self, suspect, message):
         """Debug to log and suspect"""
         suspect.debug(message)
