@@ -10,13 +10,18 @@ except ImportError:
 importMockingMessage = """
 NOTE:
 If the module import tests fails it might be also because of the system running the tests.
-For example running the nosetes in Pycharm the tests fail if run for all unit-tests in
-the farchive_test for the import tests, but succeeds if the farchive_test is run alone. This
-has something to do with the parallel run of the test. For now it seems necessary to add run
-the testing in PcCharm with the isolation flag (--with-isolation) that isolates and resets
-sys.modules for every test. Running the docker tests this seems not be needed.
+For example running the nosetests in Pycharm for all unit tests, it will fail in one of the base
+import tests. If only FileArchiveTests are run, then it will pass.
 
-If your test fails try in FileArchiveTests rerun nosetest with the isolation flag.
+Looks like it has something to do with running tests in parallel and modifying sys.module.
+In Pycharm it is needed to run the nosetests with the isolation flag "--with-isolation".
+
+The basic testing for gitlab using the docker image doesn't seem to have this issue, the isolation
+flag is not needed.
+
+So far only Pycharm and the gitlab runner has been tested and the flag seems to be needed only
+for Pycharm. If the testing fails displaying this message, try to rerun the nosetests with
+the isolation flag.
 """
 
 class FileArchiveTests(unittest.TestCase):
