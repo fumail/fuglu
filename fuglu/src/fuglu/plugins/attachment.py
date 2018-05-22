@@ -18,40 +18,19 @@ from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
 from fuglu.archives import SEVENZIP_AVAILABLE, RARFILE_AVAILABLE, Archivehandle
+from fuglu.filetypemagic import threadLocalMagic
 import re
 import mimetypes
 import os
 import os.path
 import logging
-import threading
 import sys
 from email.header import decode_header
 import email
 
 from threading import Lock
 from io import BytesIO
-import zipfile
-import tarfile
 import traceback
-
-MAGIC_AVAILABLE = 0
-MAGIC_PYTHON_FILE = 1
-MAGIC_PYTHON_MAGIC = 2
-
-try:
-    import magic
-    # try to detect which magic version is installed
-    # python-file/libmagic bindings (http://www.darwinsys.com/file/)
-    if hasattr(magic, 'open'):
-        MAGIC_AVAILABLE = MAGIC_PYTHON_FILE
-    # python-magic (https://github.com/ahupp/python-magic)
-    elif hasattr(magic, 'from_buffer'):
-        MAGIC_AVAILABLE = MAGIC_PYTHON_MAGIC
-    # unsupported version, for example 'filemagic'
-    # https://github.com/aliles/filemagic
-except ImportError:
-    pass
-
 
 FUATT_NAMESCONFENDING = "-filenames.conf"
 FUATT_CTYPESCONFENDING = "-filetypes.conf"
@@ -106,22 +85,6 @@ MIMETYPE_EXT_OVERRIDES = {
     'text/plain': 'txt',
     'application/octet-stream': None,
 }
-
-
-
-class ThreadLocalMagic(threading.local):
-    magic = None
-
-    def __init__(self, **kw):
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = magic.open(magic.MAGIC_MIME)
-            ms.load()
-            self.magic = ms
-        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            self.magic = magic
-
-threadLocalMagic = ThreadLocalMagic()
-
 
 class RulesCache(object):
 
@@ -508,26 +471,6 @@ The other common template variables are available as well.
         return returnaction
     
     
-    def getFiletype(self, path):
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = threadLocalMagic.magic
-            ftype = ms.file(path)
-        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            ftype = magic.from_file(path, mime=True)
-        return ftype
-    
-    
-    def getBuffertype(self, buffercontent):
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = threadLocalMagic.magic
-            btype = ms.buffer(buffercontent)
-        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            btype = magic.from_buffer(buffercontent, mime=True)
-            if isinstance(btype, bytes) and sys.version_info > (3,):
-                btype = btype.decode('UTF-8', 'ignore')
-        return btype
-    
-    
     def asciionly(self, stri):
         """return stri with all non-ascii chars removed"""
         if sys.version_info > (3,):
@@ -743,9 +686,10 @@ The other common template variables are available as well.
                 return blockactioncode, message
 
             contenttype_magic = None
-            if MAGIC_AVAILABLE:
+            if threadLocalMagic.available():
                 pl = part.get_payload(decode=True)
-                contenttype_magic = self.getBuffertype(pl)
+                #contenttype_magic = self.getBuffertype(pl)
+                contenttype_magic = threadLocalMagic.get_buffertype(pl)
                 res = self.matchMultipleSets(
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
                 if res == ATTACHMENT_SILENTDELETE:
@@ -797,15 +741,15 @@ The other common template variables are available as well.
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                        if MAGIC_AVAILABLE and self.checkarchivecontent:
+                        if threadLocalMagic.available() and self.checkarchivecontent:
                             for name in namelist:
                                 safename = self.asciionly(name)
                                 extracted = archive_handle.extract(name, self.config.getint(self.section, 'archivecontentmaxsize'))
                                 if extracted is None:
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
-                                contenttype_magic = self.getBuffertype(
-                                    extracted)
+                                #contenttype_magic = self.getBuffertype( extracted)
+                                contenttype_magic = threadLocalMagic.get_buffertype(extracted)
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -875,21 +819,10 @@ The other common template variables are available as well.
     
     
     def lint_magic(self):
-        if not MAGIC_AVAILABLE:
-            if 'magic' in sys.modules:  # unsupported version
-                print("The installed version of the magic module is not supported. Content type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic")
-            else:
-                print("python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis")
-            if self.config.getboolean(self.section, 'checkarchivecontent'):
-                print("->checkarchivecontent setting ignored")
-            return False
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            print("Found python-file/libmagic bindings (http://www.darwinsys.com/file/)")
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            print("Found python-magic (https://github.com/ahupp/python-magic)")
-        return True
-    
-    
+        # the lint routine for magic is now implemented in "filetypemagic.ThreadLocalMagic.lint" and can
+        # be called using the global object "threadLocalMagic"
+        return threadLocalMagic.lint()
+
     def lint_archivetypes(self):
         if not RARFILE_AVAILABLE:
             print("rarfile library not found, RAR support disabled")

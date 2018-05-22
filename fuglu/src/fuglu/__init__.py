@@ -16,6 +16,6 @@
 __all__ = ['bounce', 'core', 'daemon', 'debug', 'funkyconsole',
            'stringencode.py', 'loghandlers', 'logtools', 'procpool',
            'protocolbase', 'scansession', 'shared', 'stats', 'threadpool',
-           'archives']
+           'archives', 'filetypemagic']
 
 FUGLU_VERSION = "0.8.0"

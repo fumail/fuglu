@@ -1492,7 +1492,7 @@ class CacheSingleton(object):
             CacheSingleton.procPID  = pid
 
     def __getattr__(self, name):
-        return getattr(self.instance, name)
+        return getattr(CacheSingleton.instance, name)
 
 
 def get_default_cache():
