@@ -291,6 +291,9 @@ class Archivehandle(object):
     # "avail_archives_list" is a list of available archives based on available implementations
     _avail_archives_list = None
 
+    # avail_archive_ctypes_list is a list of available ctypes based on available implementations
+    _avail_archive_ctypes_list = None
+
     # avail_archive_ctypes is a dict, set automatically based on available implementations
     # key:   regex matching content type as returned by file magic (see filetypemagic.py)
     # value: archive type
@@ -310,7 +313,7 @@ class Archivehandle(object):
         # first time this list has to be created based on what's available
         if cls._avail_archive_extensions_list is None:
             # sort by length, so tar.gz is checked before .gz
-            newList = sorted(cls._supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True)
+            newList = sorted(cls.avail_archive_extensions.keys(), key=lambda x: len(x), reverse=True)
             cls._avail_archive_extensions_list = newList
         return cls._avail_archive_extensions_list
 
@@ -337,6 +340,17 @@ class Archivehandle(object):
             cls._avail_archive_ctypes = newDict
 
         return cls._avail_archive_ctypes
+
+    @classproperty
+    def avail_archive_ctypes_list(cls):
+        # first time this list has to be created based on what's available
+        if cls._avail_archive_ctypes_list is None:
+            tlist = []
+            for ctype,atype in iter(Archivehandle.avail_archive_ctypes.items()):
+                if Archivehandle.avail(atype):
+                    tlist.append(ctype)
+            cls._avail_archive_ctypes_list = tlist
+        return cls._avail_archive_ctypes_list
 
     @classproperty
     def avail_archive_extensions(cls):
