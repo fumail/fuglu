@@ -17,7 +17,7 @@
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
-from fuglu.archives import Archivehandle
+from fuglu.farchives import Archivehandle
 from fuglu.filetypemagic import threadLocalMagic
 import re
 import mimetypes
