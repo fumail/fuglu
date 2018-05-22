@@ -17,7 +17,7 @@
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
-from fuglu.archives import SEVENZIP_AVAILABLE, RARFILE_AVAILABLE, Archivehandle
+from fuglu.archives import Archivehandle
 from fuglu.filetypemagic import threadLocalMagic
 import re
 import mimetypes
@@ -58,23 +58,6 @@ KEY_NAME = u"name"
 KEY_CTYPE = u"ctype"
 KEY_ARCHIVENAME = u"archive-name"
 KEY_ARCHIVECTYPE = u"archive-ctype"
-
-
-# RARFILE_AVAILABLE = 0
-# try:
-#     import rarfile
-#     RARFILE_AVAILABLE = 1
-# except (ImportError, OSError):
-#     pass
-
-#
-# SEVENZIP_AVAILABLE = 0
-# try:
-#     import py7zlib # installed via pylzma library
-#     SEVENZIP_AVAILABLE = 1
-# except (ImportError, OSError):
-#     pass
-
 
 
 # workarounds for mimetypes
@@ -419,33 +402,22 @@ The other common template variables are available as well.
         self.checkarchivenames = False
         self.checkarchivecontent = False
 
-        # key: regex matching content type as returned by file magic, value: archive type
-        self.supported_archive_ctypes = {
-            '^application\/zip': 'zip',
-            '^application\/x-tar': 'tar',
-            '^application\/x-gzip': 'tar',
-            '^application\/x-bzip2': 'tar',
 
-        }
+        # copy dict with available types from Archivehandle
+        # (deepcopy is not needed here although in general it is a good idea
+        # to use it in case a dict contains another dict)
+        #
+        # key: regex matching content type as returned by file magic, value: archive type
+        self.supported_archive_ctypes = dict(Archivehandle.avail_archive_ctypes)
+
+        # copy dict with available extensions from Archivehandle
+        # (deepcopy is not needed here although in general it is a good idea
+        # to use it in case a dict contains another dict)
+        #
         # key: file ending, value: archive type
-        self.supported_archive_extensions = {
-            'zip': 'zip',
-            'z': 'zip',
-            'tar': 'tar',
-            'tar.gz': 'tar',
-            'tgz': 'tar',
-            'tar.bz2': 'tar',
-        }
-        
-        if RARFILE_AVAILABLE:
-            self.supported_archive_extensions['rar'] = 'rar'
-            self.supported_archive_ctypes['^application\/x-rar'] = 'rar'
-        
-        if SEVENZIP_AVAILABLE:
-            self.supported_archive_extensions['7z'] = '7z'
-            self.supported_archive_ctypes['^application\/x-7z-compressed'] = '7z'
-    
-    
+        self.supported_archive_extensions = dict(Archivehandle.avail_archive_extensions)
+
+
     def examine(self, suspect):
         if self.rulescache is None:
             self.rulescache = RulesCache(
@@ -775,7 +747,7 @@ The other common template variables are available as well.
         """Return the corresponding archive type if the content type matches a regex in self.supported_archive_ctypes, None otherwise"""
         if content_type is None:
             return None
-        for regex,atype in self.supported_archive_ctypes.items():
+        for regex,atype in iter(self.supported_archive_ctypes.items()):
             if re.match(regex, content_type, re.I):
                 return atype
         return None
@@ -824,9 +796,9 @@ The other common template variables are available as well.
         return threadLocalMagic.lint()
 
     def lint_archivetypes(self):
-        if not RARFILE_AVAILABLE:
+        if not Archivehandle.avail('rar'):
             print("rarfile library not found, RAR support disabled")
-        if not SEVENZIP_AVAILABLE:
+        if not Archivehandle.avail('7z'):
             print("pylzma/py7zlip library not found, 7z support disabled")
         print("Archive scan, available file extensions: %s" %
               (self.supported_archive_extensions.keys()))

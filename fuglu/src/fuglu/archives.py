@@ -76,8 +76,8 @@ class Archive_int(object):
 #---------------------------#
 #- Archive implementations -#
 #---------------------------#
-# Dont't forget to add new implementations to the dict "archive_impl"
-# below the implementations
+# Don't forget to add new implementations to the dict "archive_impl" and "archive_avail"
+# below the implementations in class Archivehandle
 
 class Archive_zip(Archive_int):
     def __init__(self,filestream):
@@ -227,26 +227,161 @@ class Archive_7z(Archive_int):
             return None
         return arinfo.read()
 
-#-------------------------------------------------------#
-#- Dict mapping implementations to archive type string -#
-#-------------------------------------------------------#
-# Note this has to be after the actual impelementations of Archive_*
-archive_impl = {"zip": Archive_zip,
-                "rar": Archive_rar,
-                "tar": Archive_tar,
-                "7z" : Archive_7z}
+#--                  --#
+#- use class property -#
+#--                  --#
+# inspired by:
+# https://stackoverflow.com/questions/128573/using-property-on-classmethods
+# Working for static getter implementation in Py2 and Py3
+class classproperty(property):
+    def __get__(self, obj, objtype=None):
+        return super(classproperty, self).__get__(objtype)
 
 #--------------------------------------------------------------------------#
 #- The pubic available factory class to produce the archive handler class -#
 #--------------------------------------------------------------------------#
 class Archivehandle(object):
     """
-    Archivehandle is the actually the factory for the archive handle implementations
+    Archivehandle is the actually the factory for the archive handle implementations.
+    Besides being the factory, Archivehandle provides also dicts and lists of implemented
+    and available archives based on different keys (for example file extension).
     """
+
+    # Dict mapping implementations to archive type string
+    archive_impl = {"zip": Archive_zip,
+                    "rar": Archive_rar,
+                    "tar": Archive_tar,
+                    "7z" : Archive_7z}
+
+    # Dict storing if archive type is available
+    archive_avail= {"zip": True,
+                    "rar": (RARFILE_AVAILABLE > 0),
+                    "tar": True,
+                    "7z" : (SEVENZIP_AVAILABLE > 0)}
+
+
+    # key: regex matching content type as returned by file magic, value: archive type
+    implemented_archive_ctypes = {
+        '^application\/zip': 'zip',
+        '^application\/x-tar': 'tar',
+        '^application\/x-gzip': 'tar',
+        '^application\/x-bzip2': 'tar',
+        '^application\/x-rar': 'rar',         # available only if RARFILE_AVAILABLE > 0
+        '^application\/x-7z-compressed': '7z' # available only if SEVENZIP_AVAILABLE > 0
+    }
+
+
+    # key: file ending, value: archive type
+    implemented_archive_extensions = {
+        'zip': 'zip',
+        'z': 'zip',
+        'tar': 'tar',
+        'tar.gz': 'tar',
+        'tgz': 'tar',
+        'tar.bz2': 'tar',
+        'rar': 'rar', # available only if RARFILE_AVAILABLE > 0
+        '7z': '7z',   # available only if SEVENZIP_AVAILABLE > 0
+    }
+
+    #--
+    # dicts and lists containing information about available
+    # archives are setup automatically (see below in metaclass)
+    #--
+
+    # "avail_archives_list" is a list of available archives based on available implementations
+    _avail_archives_list = None
+
+    # avail_archive_ctypes is a dict, set automatically based on available implementations
+    # key:   regex matching content type as returned by file magic (see filetypemagic.py)
+    # value: archive type
+    _avail_archive_ctypes = None
+
+    # "avail_archive_extensions_list" is a list of available filetype extensions.
+    # sorted by length, so tar.gz is checked before .gz
+    _avail_archive_extensions_list = None
+
+    # "avail_archive_extensions" dict with available archive types for file extensions
+    # key: file ending
+    # value: archive type
+    _avail_archive_extensions = None
+
+    @classproperty
+    def avail_archive_extensions_list(cls):
+        # first time this list has to be created based on what's available
+        if cls._avail_archive_extensions_list is None:
+            # sort by length, so tar.gz is checked before .gz
+            newList = sorted(cls._supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True)
+            cls._avail_archive_extensions_list = newList
+        return cls._avail_archive_extensions_list
+
+    @classproperty
+    def avail_archives_list(cls):
+        # first time this list has to be created based on what's available
+        if cls._avail_archives_list is None:
+            tlist = []
+            for atype,available in iter(Archivehandle.archive_avail.items()):
+                if available:
+                    tlist.append(atype)
+            cls._avail_archives_list = tlist
+        return cls._avail_archives_list
+
+
+    @classproperty
+    def avail_archive_ctypes(cls):
+        # first time this dict has to be created based on what's available
+        if cls._avail_archive_ctypes is None:
+            newDict = {}
+            for regex,atype in iter(Archivehandle.implemented_archive_ctypes.items()):
+                if Archivehandle.avail(atype):
+                    newDict[regex] = atype
+            cls._avail_archive_ctypes = newDict
+
+        return cls._avail_archive_ctypes
+
+    @classproperty
+    def avail_archive_extensions(cls):
+        # first time this dict has to be created based on what's available
+        if cls._avail_archive_extensions is None:
+            newDict = {}
+            for regex,atype in iter(Archivehandle.implemented_archive_extensions.items()):
+                if Archivehandle.avail(atype):
+                    newDict[regex] = atype
+            cls._avail_archive_extensions = newDict
+
+        return cls._avail_archive_extensions
+
+
+    @staticmethod
+    def impl(archive_type):
+        """
+        Checks if archive type is implemented
+        Args:
+            archive_type (Str): Archive type to be checked, for example ('zip','rar','tar','7z')
+
+        Returns:
+            True if there is an implementation
+
+        """
+        return archive_type in Archivehandle.archive_impl
+
+    @staticmethod
+    def avail(archive_type):
+        """
+        Checks if archive type is available
+        Args:
+            archive_type (Str): Archive type to be checked, for example ('zip','rar','tar','7z')
+
+        Returns:
+            True if archive type is available
+
+        """
+        if not Archivehandle.impl(archive_type):
+            return False
+        return Archivehandle.archive_avail[archive_type]
 
     def __new__(cls,archive_type,filestream):
         """
-        Factory method that will prduce and return the correct implementation depending
+        Factory method that will produce and return the correct implementation depending
         on the archive type
 
         Args:
@@ -254,6 +389,8 @@ class Archivehandle(object):
             filestream (bytes): created for example by "open('filename')" or in-memory by io.BytesIO
         """
 
-        assert archive_type in archive_impl, "Archive type %s not in list of supported types: %s" % (archive_type, ",".join(archive_impl.keys()))
+        assert Archivehandle.impl(archive_type), "Archive type %s not in list of supported types: %s" % (archive_type, ",".join(Archivehandle.archive_impl.keys()))
+        assert Archivehandle.avail(archive_type), "Archive type %s not in list of available types: %s" % (archive_type, ",".join(Archivehandle.avail_archives_list))
 
-        return archive_impl[archive_type](filestream)
+        return Archivehandle.archive_impl[archive_type](filestream)
+
