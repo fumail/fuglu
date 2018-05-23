@@ -91,7 +91,14 @@ class Archive_zip(Archive_int):
         super(Archive_zip, self).__init__(filedescriptor)
 
         if sys.version_info < (2, 7):
-            filedescriptor = Archive_zip.fix_python26_zipfile_bug(filedescriptor)
+            try:
+                # As far as I understand this fix is needed for bytes like objects (io.BytesIO).
+                # The routine will fail with AttributeError or IOError or something else for
+                # other inputs. For example in the unittests, a filename is sent in which does
+                # not have read/truncate/... attributes.
+                filedescriptor = Archive_zip.fix_python26_zipfile_bug(filedescriptor)
+            except Exception:
+                pass
         self._handle = zipfile.ZipFile(filedescriptor)
 
     @staticmethod
@@ -112,7 +119,7 @@ class Archive_zip(Archive_int):
         "processing a ZIP archive often requires backwards seeking"
 
         Args:
-            zipFileContainer ():
+            zipFileContainer (file-like object):
 
         Returns:
             modified zip-file bytes content
