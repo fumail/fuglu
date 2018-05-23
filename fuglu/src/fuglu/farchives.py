@@ -15,6 +15,9 @@
 #
 # This content has been extracted from attachment.py and refactored
 #
+# How to use this file:
+# For normal use, just import the class "Archivehandle". Check class description
+# for more information how to use the class.
 
 import sys
 import zipfile
@@ -245,6 +248,29 @@ class Archivehandle(object):
     Archivehandle is the actually the factory for the archive handle implementations.
     Besides being the factory, Archivehandle provides also dicts and lists of implemented
     and available archives based on different keys (for example file extension).
+
+    (1) Using Archivehandle go get information about available archive handles:
+
+    Examples:
+        Archivehandle.avail('tar') # check if tar archives can be handled
+        Archivehandle.avail('zip') # check if zip archives can be handled
+        Archivehandle.avail_archives_list # returns a list of archives that can be handled, for example
+                                          # [ "rar", "zip" ]
+        Archivehandle.avail_archive_extensions_list # returns a list of archive extensions (sorted by extension length)
+                                                    # for example ['tar.bz2', 'tar.gz', 'tar', 'zip', 'tgz']
+        Archivehandle.avail_archive_ctypes_list # returns a list of mnail content type regex expressions,
+                                                # for example ['^application\\/x-tar', '^application\\/zip',
+                                                               '^application\\/x-bzip2', '^application\\/x-gzip']
+
+    (2) Use Archivehandle to create a handle to work with an archive:
+
+    Example:
+        fd = open('test.zip')            # open an existing zip file
+        handle = Archivehandle('zip',fd) # get a handle
+        files = handle.namelist()        # get a list of files contained in archive
+        firstfileContent = handle.extract(files[0],500000) # extract first file if smaller than 0.5 MB
+        print(firstfileContent)          # print content of first file extracted
+        fd.close()                       # close file
     """
 
     # Dict mapping implementations to archive type string
