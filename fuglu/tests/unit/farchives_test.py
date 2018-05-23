@@ -257,18 +257,16 @@ class FileArchiveHandle(unittest.TestCase):
         """Test zip file extraction"""
         from fuglu.farchives import Archivehandle
 
-        fd = open(join(unittestsetup.TESTDATADIR,"test.zip"))
-        try:
-            handle = Archivehandle('zip',fd)
-            archive_flist = handle.namelist()
-            print("file names in archive: %s"%(",".join(archive_flist)))
-            self.assertEqual(["test.txt"],archive_flist)
+        archive_filename = join(unittestsetup.TESTDATADIR,"test.zip")
 
-            # file should not be extracted if maximum size to extract a file is 0
-            extracted = handle.extract(archive_flist[0],0)
-            self.assertEqual(None,extracted)
-            extracted = handle.extract(archive_flist[0],500000)
-            print(extracted)
-            self.assertEqual(u"This is a test\n",force_uString(extracted))
-        finally:
-            fd.close()
+        handle = Archivehandle('zip',archive_filename)
+        archive_flist = handle.namelist()
+        print("file names in archive: %s"%(",".join(archive_flist)))
+        self.assertEqual(["test.txt"],archive_flist)
+
+        # file should not be extracted if maximum size to extract a file is 0
+        extracted = handle.extract(archive_flist[0],0)
+        self.assertEqual(None,extracted)
+        extracted = handle.extract(archive_flist[0],500000)
+        print(extracted)
+        self.assertEqual(u"This is a test\n",force_uString(extracted))

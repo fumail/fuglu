@@ -47,7 +47,7 @@ class Archive_int(object):
     Archive_int is the interface for the archive handle implementations
     """
 
-    def __init__(self, filestream):
+    def __init__(self, filedescriptor):
         self._handle = None
 
     def close(self):
@@ -83,12 +83,12 @@ class Archive_int(object):
 # below the implementations in class Archivehandle
 
 class Archive_zip(Archive_int):
-    def __init__(self,filestream):
-        super(Archive_zip, self).__init__(filestream)
+    def __init__(self,filedescriptor):
+        super(Archive_zip, self).__init__(filedescriptor)
 
         if sys.version_info < (2, 7):
-            filestream = Archive_zip.fix_python26_zipfile_bug(filestream)
-        self._handle = zipfile.ZipFile(filestream)
+            filedescriptor = Archive_zip.fix_python26_zipfile_bug(filedescriptor)
+        self._handle = zipfile.ZipFile(filedescriptor)
 
     @staticmethod
     def fix_python26_zipfile_bug(zipFileContainer):
@@ -153,9 +153,9 @@ class Archive_zip(Archive_int):
         return self._handle.read(path)
 
 class Archive_rar(Archive_int):
-    def __init__(self, filestream):
-        super(Archive_rar, self).__init__(filestream)
-        self._handle = rarfile.RarFile(filestream)
+    def __init__(self, filedescriptor):
+        super(Archive_rar, self).__init__(filedescriptor)
+        self._handle = rarfile.RarFile(filedescriptor)
 
     def namelist(self):
         """ Get archive file list
@@ -181,9 +181,9 @@ class Archive_rar(Archive_int):
         return self._handle.read(path)
 
 class Archive_tar(Archive_int):
-    def __init__(self, filestream):
-        super(Archive_tar, self).__init__(filestream)
-        self._handle = tarfile.open(fileobj=filestream)
+    def __init__(self, filedescriptor):
+        super(Archive_tar, self).__init__(filedescriptor)
+        self._handle = tarfile.open(fileobj=filedescriptor)
 
     def namelist(self):
         """ Get archive file list
@@ -212,9 +212,9 @@ class Archive_tar(Archive_int):
         return extracted
 
 class Archive_7z(Archive_int):
-    def __init__(self, filestream):
-        super(Archive_7z, self).__init__(filestream)
-        self._handle = py7zlib.Archive7z(filestream)
+    def __init__(self, filedescriptor):
+        super(Archive_7z, self).__init__(filedescriptor)
+        self._handle = py7zlib.Archive7z(filedescriptor)
 
     def namelist(self):
         """ Get archive file list
@@ -265,12 +265,10 @@ class Archivehandle(object):
     (2) Use Archivehandle to create a handle to work with an archive:
 
     Example:
-        fd = open('test.zip')            # open an existing zip file
-        handle = Archivehandle('zip',fd) # get a handle
+        handle = Archivehandle('zip','test.zip') # get a handle
         files = handle.namelist()        # get a list of files contained in archive
         firstfileContent = handle.extract(files[0],500000) # extract first file if smaller than 0.5 MB
         print(firstfileContent)          # print content of first file extracted
-        fd.close()                       # close file
     """
 
     # Dict mapping implementations to archive type string
@@ -419,18 +417,18 @@ class Archivehandle(object):
             return False
         return Archivehandle.archive_avail[archive_type]
 
-    def __new__(cls,archive_type,filestream):
+    def __new__(cls,archive_type,filedescriptor):
         """
         Factory method that will produce and return the correct implementation depending
         on the archive type
 
         Args:
             archive_type (str): archive type ('zip','rar','tar','7z')
-            filestream (bytes): created for example by "open('filename')" or in-memory by io.BytesIO
+            filedescriptor (): file-like object (io.BytesIO) or path-like object (str or bytes with filename including path)
         """
 
         assert Archivehandle.impl(archive_type), "Archive type %s not in list of supported types: %s" % (archive_type, ",".join(Archivehandle.archive_impl.keys()))
         assert Archivehandle.avail(archive_type), "Archive type %s not in list of available types: %s" % (archive_type, ",".join(Archivehandle.avail_archives_list))
 
-        return Archivehandle.archive_impl[archive_type](filestream)
+        return Archivehandle.archive_impl[archive_type](filedescriptor)
 
