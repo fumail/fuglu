@@ -23,6 +23,9 @@ MAGIC_AVAILABLE = 0
 MAGIC_PYTHON_FILE = 1
 MAGIC_PYTHON_MAGIC = 2
 
+STATUS = "not loaded"
+ENABLED = False
+
 try:
     import magic
 
@@ -39,6 +42,9 @@ try:
 except ImportError:
     pass
 
+
+STATUS = "available"
+ENABLED = MAGIC_AVAILABLE > 0
 
 class MIME_types_base(object):
     """
@@ -133,22 +139,23 @@ class ThreadLocalMagic(threading.local):
 
     def lint(self):
         """
-        Info about module (lint)
+        Info about module printed on screen(lint)
 
         Returns:
             (bool) True if there's a mime type magic module available to be used
         """
+        lint_string = "not available"
         if MAGIC_AVAILABLE == 0:
             if 'magic' in sys.modules:  # unsupported version
-                print("The installed version of the magic module is not supported. Content type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic")
+                print("The installed version of the magic module is not supported. Content/File type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic")
             else:
-                print("python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis")
-            return False
+                print("Python libmagic bindings (python-file or python-magic) not available. No Content/File type analysis.")
+            return False,lint_string
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
             print("Found python-file/libmagic bindings (http://www.darwinsys.com/file/)")
         elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
             print("Found python-magic (https://github.com/ahupp/python-magic)")
-        return True
+        return True, lint_string
 
-threadLocalMagic = ThreadLocalMagic()
+filetype_handler = ThreadLocalMagic()
 

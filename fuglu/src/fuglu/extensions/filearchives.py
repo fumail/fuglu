@@ -23,10 +23,13 @@ import sys
 import zipfile
 import tarfile
 
+STATUS = "available: zip, tar"
+ENABLED = True
 RARFILE_AVAILABLE = 0
 try:
     import rarfile
     RARFILE_AVAILABLE = 1
+    STATUS += ", rar"
 except (ImportError, OSError):
     pass
 
@@ -35,6 +38,7 @@ SEVENZIP_AVAILABLE = 0
 try:
     import py7zlib # installed via pylzma library
     SEVENZIP_AVAILABLE = 1
+    STATUS += ", 7z"
 except (ImportError, OSError):
     pass
 
@@ -319,7 +323,7 @@ class Archivehandle(object):
     _avail_archive_ctypes_list = None
 
     # avail_archive_ctypes is a dict, set automatically based on available implementations
-    # key:   regex matching content type as returned by file magic (see filetypemagic.py)
+    # key:   regex matching content type as returned by file magic (see filetype.py)
     # value: archive type
     _avail_archive_ctypes = None
 

@@ -17,8 +17,8 @@
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
-from fuglu.farchives import Archivehandle
-from fuglu.filetypemagic import threadLocalMagic
+from fuglu.extensions.filearchives import Archivehandle
+from fuglu.extensions.filetype import filetype_handler
 import re
 import mimetypes
 import os
@@ -658,10 +658,10 @@ The other common template variables are available as well.
                 return blockactioncode, message
 
             contenttype_magic = None
-            if threadLocalMagic.available():
+            if filetype_handler.available():
                 pl = part.get_payload(decode=True)
                 #contenttype_magic = self.getBuffertype(pl)
-                contenttype_magic = threadLocalMagic.get_buffertype(pl)
+                contenttype_magic = filetype_handler.get_buffertype(pl)
                 res = self.matchMultipleSets(
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
                 if res == ATTACHMENT_SILENTDELETE:
@@ -713,7 +713,7 @@ The other common template variables are available as well.
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                        if threadLocalMagic.available() and self.checkarchivecontent:
+                        if filetype_handler.available() and self.checkarchivecontent:
                             for name in namelist:
                                 safename = self.asciionly(name)
                                 extracted = archive_handle.extract(name, self.config.getint(self.section, 'archivecontentmaxsize'))
@@ -721,7 +721,7 @@ The other common template variables are available as well.
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
                                 #contenttype_magic = self.getBuffertype( extracted)
-                                contenttype_magic = threadLocalMagic.get_buffertype(extracted)
+                                contenttype_magic = filetype_handler.get_buffertype(extracted)
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -791,9 +791,9 @@ The other common template variables are available as well.
     
     
     def lint_magic(self):
-        # the lint routine for magic is now implemented in "filetypemagic.ThreadLocalMagic.lint" and can
-        # be called using the global object "threadLocalMagic"
-        return threadLocalMagic.lint()
+        # the lint routine for magic is now implemented in "filetype.ThreadLocalMagic.lint" and can
+        # be called using the global object "filetype_handler"
+        return filetype_handler.lint()
 
     def lint_archivetypes(self):
         if not Archivehandle.avail('rar'):
