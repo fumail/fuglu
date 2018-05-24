@@ -132,7 +132,7 @@ It is currently recommended to leave both header and body canonicalization as 'r
             return DUNNO
 
         source = suspect.get_original_source()
-        if "dkim-signature: " not in suspect.get_headers().lower():
+        if "dkim-signature" not in suspect.get_message_rep():
             suspect.set_tag('DKIMVerify.skipreason', 'not dkim signed')
             suspect.debug("No dkim signature header found")
             return DUNNO
