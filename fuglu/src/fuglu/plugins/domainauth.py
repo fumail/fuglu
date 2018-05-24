@@ -83,7 +83,7 @@ def extract_from_domain(suspect, get_address_part=True):
     if len(from_headers) != 1:
         return None
 
-    from_header = from_headers[0]
+    from_header = str(from_headers[0])
     parts = from_header.rsplit(None, 1)
     check_part = parts[-1]
     if len(parts) == 2 and not get_address_part:
