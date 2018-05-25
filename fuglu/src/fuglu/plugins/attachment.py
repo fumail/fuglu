@@ -17,40 +17,20 @@
 from fuglu.shared import ScannerPlugin, DELETE, DUNNO, string_to_actioncode
 from fuglu.bounce import Bounce
 from fuglu.extensions.sql import SQL_EXTENSION_ENABLED, DBFile, DBConfig
+from fuglu.extensions.filearchives import Archivehandle
+from fuglu.extensions.filetype import filetype_handler
 import re
 import mimetypes
 import os
 import os.path
 import logging
-import threading
 import sys
 from email.header import decode_header
 import email
 
 from threading import Lock
 from io import BytesIO
-import zipfile
-import tarfile
 import traceback
-
-MAGIC_AVAILABLE = 0
-MAGIC_PYTHON_FILE = 1
-MAGIC_PYTHON_MAGIC = 2
-
-try:
-    import magic
-    # try to detect which magic version is installed
-    # python-file/libmagic bindings (http://www.darwinsys.com/file/)
-    if hasattr(magic, 'open'):
-        MAGIC_AVAILABLE = MAGIC_PYTHON_FILE
-    # python-magic (https://github.com/ahupp/python-magic)
-    elif hasattr(magic, 'from_buffer'):
-        MAGIC_AVAILABLE = MAGIC_PYTHON_MAGIC
-    # unsupported version, for example 'filemagic'
-    # https://github.com/aliles/filemagic
-except ImportError:
-    pass
-
 
 FUATT_NAMESCONFENDING = "-filenames.conf"
 FUATT_CTYPESCONFENDING = "-filetypes.conf"
@@ -80,23 +60,6 @@ KEY_ARCHIVENAME = u"archive-name"
 KEY_ARCHIVECTYPE = u"archive-ctype"
 
 
-RARFILE_AVAILABLE = 0
-try:
-    import rarfile
-    RARFILE_AVAILABLE = 1
-except (ImportError, OSError):
-    pass
-
-
-SEVENZIP_AVAILABLE = 0
-try:
-    import py7zlib # installed via pylzma library
-    SEVENZIP_AVAILABLE = 1
-except (ImportError, OSError):
-    pass
-
-
-
 # workarounds for mimetypes
 # - always takes .ksh for text/plain
 # - python3 takes .exe for application/octet-stream which is often used for content types
@@ -105,22 +68,6 @@ MIMETYPE_EXT_OVERRIDES = {
     'text/plain': 'txt',
     'application/octet-stream': None,
 }
-
-
-
-class ThreadLocalMagic(threading.local):
-    magic = None
-
-    def __init__(self, **kw):
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = magic.open(magic.MAGIC_MIME)
-            ms.load()
-            self.magic = ms
-        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            self.magic = magic
-
-threadLocalMagic = ThreadLocalMagic()
-
 
 class RulesCache(object):
 
@@ -455,33 +402,22 @@ The other common template variables are available as well.
         self.checkarchivenames = False
         self.checkarchivecontent = False
 
-        # key: regex matching content type as returned by file magic, value: archive type
-        self.supported_archive_ctypes = {
-            '^application\/zip': 'zip',
-            '^application\/x-tar': 'tar',
-            '^application\/x-gzip': 'tar',
-            '^application\/x-bzip2': 'tar',
 
-        }
+        # copy dict with available types from Archivehandle
+        # (deepcopy is not needed here although in general it is a good idea
+        # to use it in case a dict contains another dict)
+        #
+        # key: regex matching content type as returned by file magic, value: archive type
+        self.supported_archive_ctypes = dict(Archivehandle.avail_archive_ctypes)
+
+        # copy dict with available extensions from Archivehandle
+        # (deepcopy is not needed here although in general it is a good idea
+        # to use it in case a dict contains another dict)
+        #
         # key: file ending, value: archive type
-        self.supported_archive_extensions = {
-            'zip': 'zip',
-            'z': 'zip',
-            'tar': 'tar',
-            'tar.gz': 'tar',
-            'tgz': 'tar',
-            'tar.bz2': 'tar',
-        }
-        
-        if RARFILE_AVAILABLE:
-            self.supported_archive_extensions['rar'] = 'rar'
-            self.supported_archive_ctypes['^application\/x-rar'] = 'rar'
-        
-        if SEVENZIP_AVAILABLE:
-            self.supported_archive_extensions['7z'] = '7z'
-            self.supported_archive_ctypes['^application\/x-7z-compressed'] = '7z'
-    
-    
+        self.supported_archive_extensions = dict(Archivehandle.avail_archive_extensions)
+
+
     def examine(self, suspect):
         if self.rulescache is None:
             self.rulescache = RulesCache(
@@ -505,26 +441,6 @@ The other common template variables are available as well.
 
         returnaction = self.walk(suspect)
         return returnaction
-    
-    
-    def getFiletype(self, path):
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = threadLocalMagic.magic
-            ftype = ms.file(path)
-        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            ftype = magic.from_file(path, mime=True)
-        return ftype
-    
-    
-    def getBuffertype(self, buffercontent):
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            ms = threadLocalMagic.magic
-            btype = ms.buffer(buffercontent)
-        elif MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            btype = magic.from_buffer(buffercontent, mime=True)
-            if isinstance(btype, bytes) and sys.version_info > (3,):
-                btype = btype.decode('UTF-8', 'ignore')
-        return btype
     
     
     def asciionly(self, stri):
@@ -742,9 +658,10 @@ The other common template variables are available as well.
                 return blockactioncode, message
 
             contenttype_magic = None
-            if MAGIC_AVAILABLE:
+            if filetype_handler.available():
                 pl = part.get_payload(decode=True)
-                contenttype_magic = self.getBuffertype(pl)
+                #contenttype_magic = self.getBuffertype(pl)
+                contenttype_magic = filetype_handler.get_buffertype(pl)
                 res = self.matchMultipleSets(
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
                 if res == ATTACHMENT_SILENTDELETE:
@@ -772,11 +689,11 @@ The other common template variables are available as well.
                             archive_type = self.supported_archive_extensions[arext]
                             break
                 if archive_type is not None:
-                    self.logger.debug("Extracting {attname} as {artype}".format(attname=att_name,artype=archive_type))
+                    self.logger.debug("Extracting %s as %s" % (att_name,archive_type))
                     try:
                         pl = BytesIO(part.get_payload(decode=True))
-                        archive_handle = self._archive_handle(archive_type, pl)
-                        namelist = self._archive_namelist(archive_type, archive_handle)
+                        archive_handle = Archivehandle(archive_type, pl)
+                        namelist = archive_handle.namelist()
                         if self.checkarchivenames:
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
@@ -796,15 +713,15 @@ The other common template variables are available as well.
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                        if MAGIC_AVAILABLE and self.checkarchivecontent:
+                        if filetype_handler.available() and self.checkarchivecontent:
                             for name in namelist:
                                 safename = self.asciionly(name)
-                                extracted = self._archive_extract(archive_type, archive_handle, name)
+                                extracted = archive_handle.extract(name, self.config.getint(self.section, 'archivecontentmaxsize'))
                                 if extracted is None:
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
-                                contenttype_magic = self.getBuffertype(
-                                    extracted)
+                                #contenttype_magic = self.getBuffertype( extracted)
+                                contenttype_magic = filetype_handler.get_buffertype(extracted)
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -816,9 +733,8 @@ The other common template variables are available as well.
                                         suspect, "Extracted file %s from archive %s content-type=%s : blocked by mime content type (magic)" % (safename, att_name, contenttype_magic))
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
-                        
-                        if hasattr(archive_handle, 'close'):
-                            archive_handle.close()
+
+                        archive_handle.close()
                         pl.close()
                         
                     except Exception:
@@ -828,10 +744,10 @@ The other common template variables are available as well.
     
     
     def archive_type_from_content_type(self, content_type):
-        """Return the corresponding archive type if the content type matches a regex in self.supported_archvie_ctypes, None otherwise"""
+        """Return the corresponding archive type if the content type matches a regex in self.supported_archive_ctypes, None otherwise"""
         if content_type is None:
             return None
-        for regex,atype in self.supported_archive_ctypes.items():
+        for regex,atype in iter(self.supported_archive_ctypes.items()):
             if re.match(regex, content_type, re.I):
                 return atype
         return None
@@ -859,92 +775,6 @@ The other common template variables are available as well.
                 self.logger.info("hidden part extraction failed: %s"%str(e))
 
 
-
-    def _fix_python26_zipfile_bug(self, zipFileContainer):
-        "http://stackoverflow.com/questions/3083235/unzipping-file-results-in-badzipfile-file-is-not-a-zip-file/21996397#21996397"
-        # HACK: See http://bugs.python.org/issue10694
-        # The zip file generated is correct, but because of extra data after the 'central directory' section,
-        # Some version of python (and some zip applications) can't read the file. By removing the extra data,
-        # we ensure that all applications can read the zip without issue.
-        # The ZIP format: http://www.pkware.com/documents/APPNOTE/APPNOTE-6.3.0.TXT
-        # Finding the end of the central directory:
-        #   http://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file
-        #   http://stackoverflow.com/questions/20276105/why-cant-python-execute-a-zip-archive-passed-via-stdin
-        # This second link is only losely related, but echos the first,
-        # "processing a ZIP archive often requires backwards seeking"
-
-        content = zipFileContainer.read()
-        # reverse find: this string of bytes is the end of the zip's central
-        # directory.
-        pos = content.rfind('\x50\x4b\x05\x06')
-        if pos > 0:
-            # +20: see secion V.I in 'ZIP format' link above.
-            zipFileContainer.seek(pos + 20)
-            zipFileContainer.truncate()
-            # Zip file comment length: 0 byte length; tell zip applications to
-            # stop reading.
-            zipFileContainer.write('\x00\x00')
-            zipFileContainer.seek(0)
-        return zipFileContainer
-    
-    
-    def _archive_handle(self, archive_type, payload):
-        """get a handle for this archive type"""
-        archive = None
-        if archive_type == 'zip':
-            if sys.version_info < (2, 7):
-                payload = self._fix_python26_zipfile_bug(payload)
-            archive = zipfile.ZipFile(payload)
-        elif archive_type == 'rar':
-            archive = rarfile.RarFile(payload)
-        elif archive_type == 'tar':
-            archive = tarfile.open(fileobj=payload)
-        elif archive_type == '7z':
-            archive = py7zlib.Archive7z(payload)
-        return archive
-    
-    
-    def _archive_namelist(self, archive_type, handle):
-        """returns a list of file paths within the archive"""
-        # this works for zip and rar. if a future archive uses a different api,
-        # add above
-        names = []
-        if archive_type in ['zip', 'rar']:
-            names = handle.namelist()
-        elif archive_type in ['tar', '7z']:
-            names = handle.getnames()
-        return names
-    
-    
-    def _archive_extract(self, archive_type, handle, path):
-        """extract a file from the archive into memory
-        returns the file content or None if the file would be larger than the setting archivecontentmaxsize
-        """
-        # this works for zip and rar. if a future archive uses a different api,
-        # add above
-        archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
-
-        extracted = None
-        if archive_type in ['zip', 'rar']:
-            arinfo = handle.getinfo(path)
-            if arinfo.file_size > archivecontentmaxsize:
-                return None
-            extracted = handle.read(path)
-        elif archive_type in ['tar']:
-            arinfo = handle.getmember(path)
-            if arinfo.size > archivecontentmaxsize or not arinfo.isfile():
-                return None
-            x = handle.extractfile(path)
-            extracted = x.read()
-            x.close()
-        elif archive_type in ['7z']:
-            arinfo = handle.getmember(path)
-            if arinfo.size > archivecontentmaxsize:
-                return None
-            extracted = arinfo.read()
-        return extracted
-    
-    
     def _debuginfo(self, suspect, message):
         """Debug to log and suspect"""
         suspect.debug(message)
@@ -961,25 +791,14 @@ The other common template variables are available as well.
     
     
     def lint_magic(self):
-        if not MAGIC_AVAILABLE:
-            if 'magic' in sys.modules:  # unsupported version
-                print("The installed version of the magic module is not supported. Content type analysis only works with python-file from http://www.darwinsys.com/file/ or python-magic from https://github.com/ahupp/python-magic")
-            else:
-                print("python libmagic bindings (python-file or python-magic) not available. Will only do content-type checks, no real file analysis")
-            if self.config.getboolean(self.section, 'checkarchivecontent'):
-                print("->checkarchivecontent setting ignored")
-            return False
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_FILE:
-            print("Found python-file/libmagic bindings (http://www.darwinsys.com/file/)")
-        if MAGIC_AVAILABLE == MAGIC_PYTHON_MAGIC:
-            print("Found python-magic (https://github.com/ahupp/python-magic)")
-        return True
-    
-    
+        # the lint routine for magic is now implemented in "filetype.ThreadLocalMagic.lint" and can
+        # be called using the global object "filetype_handler"
+        return filetype_handler.lint()
+
     def lint_archivetypes(self):
-        if not RARFILE_AVAILABLE:
+        if not Archivehandle.avail('rar'):
             print("rarfile library not found, RAR support disabled")
-        if not SEVENZIP_AVAILABLE:
+        if not Archivehandle.avail('7z'):
             print("pylzma/py7zlip library not found, 7z support disabled")
         print("Archive scan, available file extensions: %s" %
               (self.supported_archive_extensions.keys()))
