@@ -22,6 +22,7 @@
 import sys
 import zipfile
 import tarfile
+import re
 
 STATUS = "available: zip, tar"
 ENABLED = True
@@ -68,7 +69,17 @@ class Archive_int(object):
         """
         return []
 
-    def extract(handle, path, archivecontentmaxsize):
+    def filesize(self, path):
+        """get extracted file size
+
+        Args:
+            path (str): is the filename in the archive as returned by namelist
+        Raises:
+            NotImplemented because this routine has to be implemented by classes deriving
+        """
+        raise NotImplemented
+
+    def extract(self, path, archivecontentmaxsize):
         """extract a file from the archive into memory
 
         Args:
@@ -158,10 +169,19 @@ class Archive_zip(Archive_int):
             (bytes or None) returns the file content or None if the file would be larger than the setting archivecontentmaxsize
 
         """
-        arinfo = self._handle.getinfo(path)
-        if arinfo.file_size > archivecontentmaxsize:
+        if self.filesize(path) > archivecontentmaxsize:
             return None
         return self._handle.read(path)
+
+    def filesize(self, path):
+        """get extracted file size
+
+        Args:
+            path (str): is the filename in the archive as returned by namelist
+        Returns:
+            (int) file size in bytes
+        """
+        return self._handle.getinfo(path).file_size
 
 class Archive_rar(Archive_int):
     def __init__(self, filedescriptor):
@@ -186,10 +206,19 @@ class Archive_rar(Archive_int):
             (bytes or None) returns the file content or None if the file would be larger than the setting archivecontentmaxsize
 
         """
-        arinfo = self._handle.getinfo(path)
-        if arinfo.file_size > archivecontentmaxsize:
+        if self.filesize(path) > archivecontentmaxsize:
             return None
         return self._handle.read(path)
+
+    def filesize(self, path):
+        """get extracted file size
+
+        Args:
+            path (str): is the filename in the archive as returned by namelist
+        Returns:
+            (int) file size in bytes
+        """
+        return self._handle.getinfo(path).file_size
 
 class Archive_tar(Archive_int):
     def __init__(self, filedescriptor):
@@ -214,13 +243,26 @@ class Archive_tar(Archive_int):
             (bytes or None) returns the file content or None if the file would be larger than the setting archivecontentmaxsize
 
         """
+        if self.filesize(path) > archivecontentmaxsize:
+            return None
+
         arinfo = self._handle.getmember(path)
-        if arinfo.size > archivecontentmaxsize or not arinfo.isfile():
+        if not arinfo.isfile():
             return None
         x = self._handle.extractfile(path)
         extracted = x.read()
         x.close()
         return extracted
+
+    def filesize(self, path):
+        """get extracted file size
+
+        Args:
+            path (str): is the filename in the archive as returned by namelist
+        Returns:
+            (int) file size in bytes
+        """
+        return self.arinfo.size
 
 class Archive_7z(Archive_int):
     def __init__(self, filedescriptor):
@@ -236,10 +278,20 @@ class Archive_7z(Archive_int):
         return self._handle.getnames()
 
     def extract(self, path, archivecontentmaxsize):
-        arinfo = self._handle.getmember(path)
-        if arinfo.size > archivecontentmaxsize:
+        if self.filesize(path) > archivecontentmaxsize:
             return None
+        arinfo = self._handle.getmember(path)
         return arinfo.read()
+
+    def filesize(self, path):
+        """get extracted file size
+
+        Args:
+            path (str): is the filename in the archive as returned by namelist
+        Returns:
+            (int) file size in bytes
+        """
+        return self.arinfo.size
 
 #--                  --#
 #- use class property -#
@@ -427,6 +479,75 @@ class Archivehandle(object):
         if not Archivehandle.impl(archive_type):
             return False
         return Archivehandle.archive_avail[archive_type]
+
+    @staticmethod
+    def archive_type_from_content_type(content_type, all_impl = False, custom_ctypes_dict = None):
+        """
+        Return the corresponding archive type if the content type matches a regex , None otherwise
+
+        Args:
+            content_type (str): content type string
+            all_impl (bool): check all implementations, not only the ones available
+            custom_ctypes_dict (dict): dict with custom mapping (key: regex matching content type as returned by file magic, value: archive type)
+
+        Returns:
+            (str or None) archive type
+
+        """
+
+        if content_type is None:
+            return None
+
+        archive_type = None
+        if all_impl:
+            ctypes2check = Archivehandle.implemented_archive_ctypes
+        elif custom_ctypes_dict is not None:
+            ctypes2check = custom_ctypes_dict
+        else:
+            ctypes2check = Archivehandle.avail_archive_ctypes
+
+        for regex, atype in iter(ctypes2check.items()):
+            if re.match(regex, content_type, re.I):
+                archive_type = atype
+                break
+
+        return archive_type
+
+    @staticmethod
+    def archive_type_from_extension(att_name, all_impl = False, custom_extensions_dict = None):
+        """
+        Return the corresponding archive type if the extension matches regex , None otherwise
+
+        Args:
+            att_name (str): filename
+            all_impl (bool): check all implementations, not only the ones available
+            custom_ctypes_dict (dict): dict with custom mapping (key: regex matching content type as returned by file magic, value: archive type)
+
+        Returns:
+            (str or None) archive type
+
+        """
+        if att_name is None:
+            return None
+
+        if all_impl:
+            sorted_ext_dict = Archivehandle.implemented_archive_extensions
+            # sort by length, so tar.gz is checked before .gz
+            sorted_ext_list = sorted(sorted_ext_dict.keys(), key=lambda x: len(x), reverse=True)
+        elif custom_extensions_dict is not None:
+            sorted_ext_dict = custom_extensions_dict
+            # sort by length, so tar.gz is checked before .gz
+            sorted_ext_list = sorted(sorted_ext_dict.keys(), key=lambda x: len(x), reverse=True)
+        else:
+            sorted_ext_dict = Archivehandle.avail_archive_extensions
+            # this list is already sorted
+            sorted_ext_list = Archivehandle.avail_archive_extensions_list
+
+        for arext in sorted_ext_list:
+            if att_name.lower().endswith('.%s' % arext):
+                archive_type = sorted_ext_dict[arext]
+                break
+        return archive_type
 
     def __new__(cls,archive_type,filedescriptor):
         """

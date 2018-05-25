@@ -403,19 +403,12 @@ The other common template variables are available as well.
         self.checkarchivecontent = False
 
 
-        # copy dict with available types from Archivehandle
-        # (deepcopy is not needed here although in general it is a good idea
-        # to use it in case a dict contains another dict)
-        #
-        # key: regex matching content type as returned by file magic, value: archive type
-        self.supported_archive_ctypes = dict(Archivehandle.avail_archive_ctypes)
-
         # copy dict with available extensions from Archivehandle
         # (deepcopy is not needed here although in general it is a good idea
         # to use it in case a dict contains another dict)
         #
         # key: file ending, value: archive type
-        self.supported_archive_extensions = dict(Archivehandle.avail_archive_extensions)
+        self.active_archive_extensions = dict(Archivehandle.avail_archive_extensions)
 
 
     def examine(self, suspect):
@@ -434,10 +427,10 @@ The other common template variables are available as well.
         enabledarchivetypes = runtimeconfig.get(self.section, 'enabledarchivetypes')
         if enabledarchivetypes:
             enabled = [t.strip() for t in enabledarchivetypes.split(',')]
-            archtypes = list(self.supported_archive_extensions.keys())
+            archtypes = list(self.active_archive_extensions.keys())
             for archtype in archtypes:
                 if archtype not in enabled:
-                    del self.supported_archive_extensions[archtype]
+                    del self.active_archive_extensions[archtype]
 
         returnaction = self.walk(suspect)
         return returnaction
@@ -660,7 +653,6 @@ The other common template variables are available as well.
             contenttype_magic = None
             if filetype_handler.available():
                 pl = part.get_payload(decode=True)
-                #contenttype_magic = self.getBuffertype(pl)
                 contenttype_magic = filetype_handler.get_buffertype(pl)
                 res = self.matchMultipleSets(
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
@@ -678,15 +670,14 @@ The other common template variables are available as well.
             if self.checkarchivenames or self.checkarchivecontent:
 
                 # try guessing the archive type based on magic content type first
-                # we don't need to check for MAGIC_AVAILABLE here, if it is available the contenttype_magic is not None
-                archive_type = self.archive_type_from_content_type(contenttype_magic)
+                archive_type = Archivehandle.archive_type_from_content_type(contenttype_magic)
 
                 # if it didn't work, try to guess by the filename extension, if it is enabled
                 if archive_type is None:
                     # sort by length, so tar.gz is checked before .gz
-                    for arext in sorted(self.supported_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
+                    for arext in sorted(self.active_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
                         if att_name.lower().endswith('.%s' % arext):
-                            archive_type = self.supported_archive_extensions[arext]
+                            archive_type = self.active_archive_extensions[arext]
                             break
                 if archive_type is not None:
                     self.logger.debug("Extracting %s as %s" % (att_name,archive_type))
@@ -720,7 +711,6 @@ The other common template variables are available as well.
                                 if extracted is None:
                                     self._debuginfo(
                                         suspect, '%s not extracted - too large' % (safename))
-                                #contenttype_magic = self.getBuffertype( extracted)
                                 contenttype_magic = filetype_handler.get_buffertype(extracted)
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
@@ -741,17 +731,6 @@ The other common template variables are available as well.
                         self.logger.warning(
                             "archive scanning failed in attachment {attname}: {error}".format(attname=att_name, error=traceback.format_exc() ))
         return DUNNO
-    
-    
-    def archive_type_from_content_type(self, content_type):
-        """Return the corresponding archive type if the content type matches a regex in self.supported_archive_ctypes, None otherwise"""
-        if content_type is None:
-            return None
-        for regex,atype in iter(self.supported_archive_ctypes.items()):
-            if re.match(regex, content_type, re.I):
-                return atype
-        return None
-    
     
     def walk_all_parts(self, message):
         """Like email.message.Message's .walk() but also tries to find parts in the message's epilogue"""
@@ -801,7 +780,9 @@ The other common template variables are available as well.
         if not Archivehandle.avail('7z'):
             print("pylzma/py7zlip library not found, 7z support disabled")
         print("Archive scan, available file extensions: %s" %
-              (self.supported_archive_extensions.keys()))
+              (",".join(Archivehandle.avail_archive_extensions_list)))
+        print("Archive scan, active file extensions: %s" %
+              (",".join(self.active_archive_extensions.keys())))
         return True
     
     
