@@ -83,7 +83,7 @@ def extract_from_domain(suspect, get_address_part=True):
     if len(from_headers) != 1:
         return None
 
-    from_header = from_headers[0]
+    from_header = str(from_headers[0])
     parts = from_header.rsplit(None, 1)
     check_part = parts[-1]
     if len(parts) == 2 and not get_address_part:
@@ -132,7 +132,7 @@ It is currently recommended to leave both header and body canonicalization as 'r
             return DUNNO
 
         source = suspect.get_original_source()
-        if "dkim-signature: " not in suspect.get_headers().lower():
+        if "dkim-signature" not in suspect.get_message_rep():
             suspect.set_tag('DKIMVerify.skipreason', 'not dkim signed')
             suspect.debug("No dkim signature header found")
             return DUNNO
