@@ -375,6 +375,11 @@ class Suspect(object):
         if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
         visible to later plugins (eg. for spamassassin rules), otherwise, leave as False which is faster.
         """
+
+        # convert inputs if needed
+        key = force_uString(key)
+        value = force_uString(value)
+
         if immediate:
             # is ignore the right thing to do here?
             value = value.encode('UTF-8', 'ignore')
@@ -521,8 +526,15 @@ class Suspect(object):
         """old name for get_source"""
         return self.get_source(maxbytes)
 
-    def set_source(self, source):
-        self.source = source
+    def set_source(self, source, encoding='utf-8'):
+        """
+        Store message source. This might be modified by plugins later on...
+        Args:
+            source (bytes,str,unicode): new message source
+        Keyword Args:
+            encoding (str): encoding, default is utf-8
+        """
+        self.source = force_bString(source,encoding=encoding)
         self._msgrep = None
 
     def setSource(self, source):
@@ -548,10 +560,15 @@ class Suspect(object):
         return self.get_original_source(maxbytes)
 
     def get_headers(self):
-        """returns the message headers as string"""
+        """
+        Returns the message headers as string
+
+        Returns:
+            (unicode str) unicode for Py2, str for Py3
+        """
         headers = re.split(
             b'(?:\n\n)|(?:\r\n\r\n)', self.get_source(maxbytes=1048576), 1)[0]
-        return headers
+        return force_uString(headers)
 
     def get_client_info(self, config=None):
         """returns information about the client that submitted this message.

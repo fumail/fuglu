@@ -4,6 +4,9 @@ import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
 from fuglu.addrcheck import Addrcheck
 import os
+import shutil
+import tempfile
+from fuglu.stringencode import force_uString, force_bString
 
 try:
     from configparser import ConfigParser
@@ -356,3 +359,68 @@ class FileListTestCase(unittest.TestCase):
                                   lowercase=False, additional_filters=None).get_list(), ['CASE?', 'stripped ?', '', '', '# no comment!'])
         self.assertEqual(FileList(filename=self.filename, strip=True, skip_empty=True, skip_comments=True,
                                   lowercase=True, additional_filters=None).get_list(), ['case?', 'stripped ?'])
+
+class SuspectInterfaces(unittest.TestCase):
+
+    suspect = None
+    suspectTmpfile = None
+
+    # expected return types
+    #
+    # the explicit types for Python 2 and 3 are defined
+    # in the test for stringencode, see "stringencode_test"
+    stringtype = type(force_uString("test"))
+    bytestype = type(force_bString("test"))
+
+    @classmethod
+    def setUpClass(cls):
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+        cls.suspect = suspect
+
+    def test_return_types(self):
+        suspect = SuspectInterfaces.suspect
+
+        headerstring = suspect.get_headers()
+        self.assertEqual(type(headerstring),SuspectInterfaces.stringtype,"Wrong return type for get_headers")
+
+        source = suspect.get_source()
+        self.assertEqual(type(source),SuspectInterfaces.bytestype,"Wrong return type for get_source")
+
+        source = suspect.get_original_source()
+        self.assertEqual(type(source),SuspectInterfaces.bytestype,"Wrong return type for get_original_source")
+
+    def test_set_source(self):
+        suspect = Suspect( 'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
+
+        test_source_binary = SuspectInterfaces.suspect.get_source()
+        test_source_unicode = force_uString(test_source_binary)
+
+        suspect.set_source(test_source_binary)
+        self.assertEqual(type(suspect.get_source()),SuspectInterfaces.bytestype,"Wrong return type for get_source after setting binary source")
+        self.assertEqual(suspect.get_source(),test_source_binary,"Binary source content has to remain the same")
+
+        suspect.set_source(test_source_unicode)
+        self.assertEqual(type(suspect.get_source()),SuspectInterfaces.bytestype,"Wrong return type for get_source after setting unicode source")
+        self.assertEqual(suspect.get_source(),test_source_binary,"Binary source content has to remain the same as the unicode content sent in")
+
+    def test_add_header(self):
+        suspect = Suspect( 'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
+
+        newheader = ("x-new-0","just a test for default string type")
+        newheaderb = (b"x-new-1",b"just a test encoded strings")
+        newheaderu = (u"x-new-2",u"just a test unicode strings")
+
+        # new dummy suspect with a copy of data from helloworld
+        suspect = Suspect( 'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
+        suspect.setSource(SuspectInterfaces.suspect.get_original_source())
+
+        suspect.add_header(*newheader,immediate=True)
+        suspect.add_header(*newheaderb,immediate=True)
+        suspect.add_header(*newheaderu,immediate=True)
+
+        # check headers just set
+        msg = suspect.get_message_rep()
+        self.assertEqual(force_uString( newheader[1]),msg["x-new-0"])
+        self.assertEqual(force_uString(newheaderb[1]),msg["x-new-1"])
+        self.assertEqual(force_uString(newheaderu[1]),msg["x-new-2"])
