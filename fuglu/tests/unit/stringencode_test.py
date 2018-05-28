@@ -19,12 +19,23 @@ class ConversionTest(unittest.TestCase):
 
     def test_decode2unicode(self):
         """Test if strings are correctly decoded to unicode string"""
-        self.assertEqual(ustringtype,type(force_uString("bla")))
-        self.assertEqual(ustringtype,type(force_uString(u"bla")))
-        self.assertEqual(ustringtype,type(force_uString(b"bla")))
+        self.assertEqual(ustringtype,type(force_uString("bla")),"After conversion, type has to be unicode")
+        self.assertEqual(ustringtype,type(force_uString(u"bla")),"After conversion, type has to be unicode")
+        self.assertEqual(ustringtype,type(force_uString(b"bla")),"After conversion, type has to be unicode")
+
+        mixedlist = ["bla",u"bla",b"bla"]
+        for item in force_uString(mixedlist):
+            self.assertEqual(ustringtype,type(item),"After conversion, type has to be unicode")
+            self.assertEqual(u"bla",item,"String has to match the test string u\"bla\"")
+
 
     def test_encode2bytes(self):
         """Test if strings are correctly encoded"""
-        self.assertEqual(bytestype,type(force_bString("bla")))
-        self.assertEqual(bytestype,type(force_bString(u"bla")))
-        self.assertEqual(bytestype,type(force_bString(b"bla")))
+        self.assertEqual(bytestype,type(force_bString("bla")),"After byte conversion, type has to be bytes")
+        self.assertEqual(bytestype,type(force_bString(u"bla")),"After byte conversion, type has to be bytes")
+        self.assertEqual(bytestype,type(force_bString(b"bla")),"After byte conversion, type has to be bytes")
+
+        mixedlist = ["bla",u"bla",b"bla"]
+        for item in force_bString(mixedlist):
+            self.assertEqual(bytestype,type(item),"After byte conversion, type has to be bytes")
+            self.assertEqual(b"bla",item,"String has to match the test string b\"bla\"")
