@@ -64,16 +64,17 @@ buildfuglu:
     - develop
   artifacts:
     paths:
-      - /tmp/build
-      - /etc/fuglu
-      - /var/log/fuglu
+      - /tmp/build/
+      - /etc/fuglu/
+      - /var/log/fuglu/
+      - /usr/bin/fuglu*
 
 
 
 buildfuglu_py3:
   stage: build_py3
   script:
-    - cd fuglu 
+    - cd fuglu
     - python3 setup.py build_py -d /tmp/build install --force
     - rename '.dist' '' /etc/fuglu/*.dist
     - mkdir -p /var/log/fuglu
