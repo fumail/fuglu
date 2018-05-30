@@ -62,6 +62,13 @@ buildfuglu:
   only:
     - master
     - develop
+  artifacts:
+    paths:
+      - /tmp/build
+      - /etc/fuglu
+      - /var/log/fuglu
+
+
 
 buildfuglu_py3:
   stage: build_py3
