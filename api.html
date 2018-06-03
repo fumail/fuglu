@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -244,9 +244,14 @@ Warning: setting the source via python email representation seems to break dkim 
 <dt id="fuglu.shared.Suspect.update_subject">
 <code class="descname">update_subject</code><span class="sig-paren">(</span><em>subject_cb</em>, <em>**cb_params</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.update_subject" title="Permalink to this definition">¶</a></dt>
 <dd><p>update/alter the message subject
-:param subject_cb: callback function that alters the subject. must accept a string and return a string
-:param cb_params: additional parameters to be passed to subject_cb
-:return: True if subject was altered, False otherwise</p>
+Args:</p>
+<blockquote>
+<div>subject_cb: callback function that alters the subject. must accept a string and return a string
+cb_params: additional parameters to be passed to subject_cb</div></blockquote>
+<dl class="docutils">
+<dt>Return:</dt>
+<dd>True if subject was altered, False otherwise</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -412,7 +417,7 @@ True, (fieldname, matchedvalue, arg, regex)</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2018, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>
