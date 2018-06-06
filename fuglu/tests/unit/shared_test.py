@@ -297,7 +297,7 @@ class TemplateTestcase(unittest.TestCase):
 
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
-        suspect.tags['hello'] = ['World','is it me your looking for']
+        suspect.tags['hello'] = ['World', "is it me you're looking for"]
         suspect.tags['SAPlugin.spamscore']=13.37
 
         def valfunc(data):
