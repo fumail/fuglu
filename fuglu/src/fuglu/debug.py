@@ -21,7 +21,7 @@ import datetime
 import traceback
 import string
 import os
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 
 
 class ControlServer(object):
@@ -98,8 +98,12 @@ class ControlServer(object):
                 engine.handlesession()
 
             except Exception:
-                fmt = traceback.format_exc()
-                self.logger.error('Exception in serve(): %s' % fmt)
+                # When shutdown is called, we just close the socket which will
+                # create a socket error that is not a problem and should therefore
+                # not be reported
+                if self.stayalive:
+                    fmt = traceback.format_exc()
+                    self.logger.error('Exception in serve(): %s' % fmt)
 
 
 class ControlSession(object):

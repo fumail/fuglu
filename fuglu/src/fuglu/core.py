@@ -39,7 +39,7 @@ from fuglu.connectors.smtpconnector import SMTPServer
 from fuglu.connectors.milterconnector import MilterServer
 from fuglu.connectors.ncconnector import NCServer
 from fuglu.connectors.esmtpconnector import ESMTPServer
-from fuglu.localStringEncoding import force_uString, force_bString
+from fuglu.stringencode import force_uString, force_bString
 from fuglu.stats import StatsThread
 from fuglu.debug import ControlServer, CrashStore
 from fuglu import FUGLU_VERSION
@@ -105,7 +105,19 @@ class MainController(object):
     appenders = []
     config = None
 
-    def __init__(self, config):
+    def __init__(self, config, logQueue=None, logProcessFacQueue=None):
+        """
+        Main controller instance
+        Note: The logQueue and logProcessFacQueue keyword args are only needed in the fuglu main process when logging
+              to files. For default logging to the screen there is not logQueue needed.
+
+        Args:
+            config (configparser.RawConfigParser()): Config file parser (file already read)
+
+        Keyword Args:
+            logQueue (multiprocessing.queue or None): Queue where to put log messages (not directly used, only by loggers as defined in logtools.client_configurer)
+            logProcessFacQueue (multiprocessing.queue or None): Queue where to put new logging configurations (logtools.logConfig objects)
+        """
         self.requiredvars = {
             # main section
             'identifier': {
@@ -255,6 +267,27 @@ class MainController(object):
             'versioncheck': {
                 'section': 'main',
                 'description': "warn about known severe problems/security issues of current version.\nNote: This performs a DNS lookup of gitrelease.patchlevel.minorversion.majorversion.versioncheck.fuglu.org on startup and fuglu --lint.\nNo other information of any kind is transmitted to outside systems.\nDisable this if you consider the DNS lookup an unwanted information leak.",
+                'default': '1',
+            },
+
+            'address_compliance_checker': {
+                'section': 'main',
+                'description': "Method to check mail address validity (\"Default\",\"LazyLocalPart\")",
+                'default': "Default",
+            },
+            'address_compliance_fail_action': {
+                'section': 'main',
+                'description': "Action to perform if address validity check fails (\"defer\",\"reject\",\"discard\")",
+                'default': "defer",
+            },
+            'address_compliance_fail_message': {
+                'section': 'main',
+                'description': "Reply message if address validity check fails",
+                'default': "invalid sender or recipient address",
+            },
+            'remove_tmpfiles_on_error': {
+                'section': 'main',
+                'description': "Remove temporary message file from disk for receive or address compliance errors",
                 'default': '1',
             },
 
@@ -437,6 +470,22 @@ class MainController(object):
         self.started = datetime.datetime.now()
         self.statsthread = None
         self.debugconsole = False
+        self._logQueue = logQueue
+        self._logProcessFacQueue = logProcessFacQueue
+        self.configFileUpdates = None
+        self.logConfigFileUpdates = None
+
+    @property
+    def logQueue(self):
+        return self._logQueue
+
+    @property
+    def logProcessFacQueue(self):
+        return self._logProcessFacQueue
+
+    @logProcessFacQueue.setter
+    def logProcessFacQueue(self, lProc):
+        self._logProcessFacQueue = lProc
 
     def _logger(self):
         myclass = self.__class__.__name__
@@ -514,7 +563,7 @@ class MainController(object):
         if numprocs < 1:
             numprocs = multiprocessing.cpu_count() *2
         self.logger.info("Init process pool with %s worker processes"%(numprocs))
-        pool = fuglu.procpool.ProcManager(numprocs = numprocs, config = self.config)
+        pool = fuglu.procpool.ProcManager(self._logQueue, numprocs = numprocs, config = self.config)
         return pool
 
     def _start_connectors(self):
@@ -546,6 +595,11 @@ class MainController(object):
                     time.sleep(1)
                 except KeyboardInterrupt:
                     self.stayalive = False
+                except Exception as e:
+                    self.logger.error("Catched exception in main loop!")
+                    self.logger.exception(e)
+                    self.logger.error("Stopping!")
+                    self.stayalive = False
 
     def startup(self):
         self.load_extensions()
@@ -568,6 +622,7 @@ class MainController(object):
 
         self.logger.info('Startup complete')
         self._run_main_loop()
+        self.logger.info('Shutdown...')
         self.shutdown()
 
     def run_debugconsole(self):
@@ -653,12 +708,12 @@ class MainController(object):
                     self.logger.info('Threadpool config changed, initialising new threadpool')
                     currentthreadpool = self.threadpool
                     self.threadpool = self._start_threadpool()
-                    currentthreadpool.stayalive = False
+                    currentthreadpool.shutdown()
                 else:
                     self.logger.info('Keep existing threadpool')
             else:
                 self.logger.info('Create new threadpool')
-                self._threadpool = self._start_threadpool()
+                self.threadpool = self._start_threadpool()
 
             # stop existing procpool
             if self.procpool is not None:
@@ -682,7 +737,7 @@ class MainController(object):
             # stop existing threadpool
             if self.threadpool is not None:
                 self.logger.info('Delete old threadpool')
-                self.threadpool.stayalive = False
+                self.threadpool.shutdown()
                 self.threadpool = None
         else:
             self.logger.error('backend not detected -> ignoring input!')
@@ -708,6 +763,8 @@ class MainController(object):
             if not alreadyRunning:
                 self.logger.info('start new connector at %s' % str(portspec))
                 self.start_connector(portspec)
+            else:
+                self.logger.info('keep connector at %s' % str(portspec))
 
         servercopy = self.servers[:]
         for serv in servercopy:
@@ -715,11 +772,14 @@ class MainController(object):
                 self.logger.info('Closing server socket on port %s' % serv.port)
                 serv.shutdown()
                 self.servers.remove(serv)
+            else:
+                self.logger.info('Keep server socket on port %s' % serv.port)
 
         self.logger.info('Config changes applied')
 
     def shutdown(self):
-        self.statsthread.stayalive = False
+        if self.statsthread:
+            self.statsthread.stayalive = False
         for server in self.servers:
             self.logger.info('Closing server socket on port %s' % server.port)
             server.shutdown()
@@ -727,10 +787,16 @@ class MainController(object):
         if self.controlserver is not None:
             self.controlserver.shutdown()
 
-        if self.threadpool:
-            self.threadpool.stayalive = False
-        if self.procpool:
-            self.procpool.stayalive = False
+        # stop existing procpool
+        if self.procpool is not None:
+            self.logger.info('Delete procpool')
+            self.procpool.shutdown()
+            self.procpool = None
+        # stop existing threadpool
+        if self.threadpool is not None:
+            self.logger.info('Delete threadpool')
+            self.threadpool.shutdown()
+            self.threadpool = None
 
         self.stayalive = False
         self.logger.info('Shutdown complete')
@@ -925,14 +991,14 @@ class MainController(object):
         plugindirs = self.config.get('main', 'plugindir').strip().split(',')
         for plugindir in plugindirs:
             if os.path.isdir(plugindir):
-                self._logger().debug('Searching for additional plugins in %s' % plugindir)
+                self.logger.debug('Searching for additional plugins in %s' % plugindir)
                 if plugindir not in sys.path:
                     sys.path.insert(0, plugindir)
             else:
-                self._logger().warning('Plugin directory %s not found' % plugindir)
+                self.logger.warning('Plugin directory %s not found' % plugindir)
 
-        self._logger().debug('Module search path %s' % sys.path)
-        self._logger().debug('Loading scanner plugins')
+        self.logger.debug('Module search path %s' % sys.path)
+        self.logger.debug('Loading scanner plugins')
         newplugins, loadok = self._load_all(self.config.get('main', 'plugins'))
         if not loadok:
             allOK = False
@@ -978,13 +1044,13 @@ class MainController(object):
                 pluglist.append(plugininstance)
             except (configparser.NoSectionError, configparser.NoOptionError):
                 CrashStore.store_exception()
-                self._logger().error("The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
+                self.logger.error("The plugin %s is accessing the config in __init__ -> can not load default values" % structured_name)
             except Exception as e:
                 CrashStore.store_exception()
-                self._logger().error('Could not load plugin %s : %s' %
+                self.logger.error('Could not load plugin %s : %s' %
                                      (structured_name, e))
                 exc = traceback.format_exc()
-                self._logger().error(exc)
+                self.logger.error(exc)
                 allOK = False
 
         return pluglist, allOK

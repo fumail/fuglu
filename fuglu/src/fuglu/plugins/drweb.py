@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from fuglu.shared import ScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
+from fuglu.shared import AVScannerPlugin, DUNNO, DEFER, string_to_actioncode, apply_template
 import socket
 import struct
 import re
@@ -36,7 +36,7 @@ DERR_SPAM_MESSAGE = 0x20000
 DERR_VIRUS = DERR_KNOWN_VIRUS | DERR_UNKNOWN_VIRUS | DERR_VIRUS_MODIFICATION
 
 
-class DrWebPlugin(ScannerPlugin):
+class DrWebPlugin(AVScannerPlugin):
 
     """ This plugin passes suspects to a DrWeb scan daemon
 
@@ -53,7 +53,7 @@ Tags:
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
 
         self.requiredvars = {
             'host': {
@@ -92,20 +92,11 @@ Tags:
         }
         self.logger = self._logger()
         self.pattern = re.compile(r'(?:DATA\[\d+\])(.+) infected with (.+)$')
-
-    def _problemcode(self):
-        retcode = string_to_actioncode(
-            self.config.get(self.section, 'problemaction'), self.config)
-        if retcode != None:
-            return retcode
-        else:
-            # in case of invalid problem action
-            return DEFER
+        self.enginename = 'drweb'
+        
 
     def examine(self, suspect):
-        if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self.logger.info('Not scanning - message too big (message %s  bytes > config %s bytes )' %
-                             (suspect.size, self.config.getint(self.section, 'maxsize')))
+        if self._check_too_big(suspect):
             return DUNNO
 
         content = suspect.get_message_rep().as_string()
@@ -113,44 +104,27 @@ Tags:
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
                 viruses = self.scan_stream(content)
-                if viruses != None:
-                    self.logger.info("Virus found in message from %s : %s" %
-                                     (suspect.from_address, viruses))
-                    suspect.tags['virus']['drweb'] = True
-                    suspect.tags['DrWebPlugin.virus'] = viruses
-                    suspect.debug('Viruses found in message : %s' % viruses)
-                else:
-                    suspect.tags['virus']['drweb'] = False
-
-                if viruses != None:
-                    virusaction = self.config.get(self.section, 'virusaction')
-                    actioncode = string_to_actioncode(virusaction, self.config)
-                    firstinfected, firstvirusname = list(viruses.items())[0]
-                    values = dict(
-                        infectedfile=firstinfected, virusname=firstvirusname)
-                    message = apply_template(
-                        self.config.get(self.section, 'rejectmessage'), suspect, values)
-                    return actioncode, message
-                else:
-                    return DUNNO
+                actioncode, message = self._virusreport(suspect, viruses)
+                return actioncode, message
             except Exception as e:
                 self.logger.warning("Error encountered while contacting drweb (try %s of %s): %s" %
                                     (i + 1, self.config.getint(self.section, 'retries'), str(e)))
         self.logger.error("drweb scan failed after %s retries" %
                           self.config.getint(self.section, 'retries'))
-        content = None
+        
         return self._problemcode()
-
+    
+    
     def _parse_result(self, lines):
         dr = {}
         for line in lines:
             line = line.strip()
             m = self.pattern.search(line)
-            if m == None:
+            if m is None:
                 continue
-            file = m.group(1)
+            filename = m.group(1)
             virus = m.group(2)
-            dr[file] = virus
+            dr[filename] = virus
 
         if len(dr) == 0:
             self.logger.warn(
@@ -158,12 +132,13 @@ Tags:
             return dict(buffer='infection details unavailable')
         else:
             return dr
-
-    def scan_stream(self, buffer):
+    
+    
+    def scan_stream(self, content, suspectid='(NA)'):
         """
         Scan a buffer
 
-        buffer (string) : buffer to scan
+        content (string) : buffer to scan
 
         return either :
           - (dict) : {filename: "virusname"}
@@ -171,7 +146,7 @@ Tags:
         """
 
         s = self.__init_socket__()
-        buflen = len(buffer)
+        buflen = len(content)
 
         self._sendint(s, DRWEBD_SCAN_CMD)
 
@@ -183,7 +158,7 @@ Tags:
         self._sendint(s, DRWEBD_RETURN_REPORT)
         self._sendint(s, 0)  # not sure what this is for - but it's required.
         self._sendint(s, buflen)  # send the buffer length
-        s.sendall(buffer)  # send the buffer
+        s.sendall(content)  # send the buffer
         retcode = self._readint(s)  # get return code
         # print "result=%s"%retcode
         numlines = self._readint(s)
@@ -197,7 +172,8 @@ Tags:
             return self._parse_result(lines)
         else:
             return None
-
+    
+    
     def __init_socket__(self):
         host = self.config.get(self.section, 'host')
         port = self.config.getint(self.section, 'port')
@@ -208,14 +184,17 @@ Tags:
             raise Exception('Could not reach drweb using network (%s, %s)' % (host, port))
 
         return s
-
+    
+    
     def __str__(self):
         return 'DrWeb AV'
-
+    
+    
     def lint(self):
         allok = self.check_config() and self.lint_info() and self.lint_eicar()
         return allok
-
+    
+    
     def lint_info(self):
         try:
             version = self.get_version()
@@ -226,38 +205,7 @@ Tags:
             print("Could not get DrWeb Version info: %s" % str(e))
             return False
         return True
-
-    def lint_eicar(self):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test eicar attachment
-X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
-
-------=_MIME_BOUNDARY_000_12140
-Content-Type: text/plain
-
-Eicar test
-------=_MIME_BOUNDARY_000_12140
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: BASE64
-Content-Disposition: attachment
-
-UEsDBAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAZWljYXIuY29tWDVPIVAlQEFQWzRcUFpYNTQo
-UF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCoNClBLAQIU
-AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
-AAEAAQA3AAAAbQAAAAAA
-
-------=_MIME_BOUNDARY_000_12140--"""
-
-        result = self.scan_stream(stream)
-        if result == None:
-            print("EICAR Test virus not found!")
-            return False
-        print("DrWeb found ", result)
-        return True
+    
 
     def get_version(self):
         """Return numeric version of the DrWeb daemon"""
@@ -269,7 +217,8 @@ AAEAAQA3AAAAbQAAAAAA
         except Exception as e:
             self.logger.error("Could not get DrWeb Version: %s" % str(e))
         return None
-
+    
+    
     def get_baseinfo(self):
         """return list of tuples (basename,number of virus definitions)"""
         ret = []
@@ -286,21 +235,25 @@ AAEAAQA3AAAAbQAAAAAA
                 "Could not get DrWeb Base Information: %s" % str(e))
             return None
         return ret
-
+    
+    
     def _sendint(self, sock, value):
         sock.sendall(struct.pack('!I', value))
-
+    
+    
     def _readint(self, sock):
         res = sock.recv(4)
         ret = struct.unpack('!I', res)[0]
         return ret
-
+    
+    
     def _readstr(self, sock):
         strlength = self._readint(sock)
         buf = sock.recv(strlength)
         if buf[-1] == '\0':  # chomp null terminated string
             buf = buf[:-1]
         return buf
+
 
 if __name__ == '__main__':
     import logging

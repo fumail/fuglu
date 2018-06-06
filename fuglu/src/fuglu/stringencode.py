@@ -137,10 +137,10 @@ def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
     else:
         return b_outString
 
-def forceBytesFromChar(chars_iteratable):
+def force_bfromc(chars_iteratable):
     """Python 2 like bytes from char for Python 3
 
-    Implemented to have the same char-byte conversion in Python 3 ad in Python 2
+    Implemented to have the same char-byte conversion in Python 3 as in Python 2
     for special applications. In general it is recommended to use the real
     str.encode() function for Python3
 
@@ -158,7 +158,7 @@ def forceBytesFromChar(chars_iteratable):
     else:
         raise AttributeError
 
-def forceCharFromBytes(bytes_iteratable):
+def force_cfromb(bytes_iteratable):
     """Python 2 like chars from bytes for Python 3
 
     Implemented to have the same byte-char conversion in Python 3 as in Python 2

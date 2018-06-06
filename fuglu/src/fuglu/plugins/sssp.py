@@ -14,25 +14,19 @@
 # limitations under the License.
 #
 #
-
-from fuglu.shared import ScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
-from fuglu.localStringEncoding import force_bString, force_uString
-import socket
-import os
-
-
 #
 # sssp_utils.py Some utility functions used by the SSSP python sampl apps.
 #
 # Copyright (c) 2006 Sophos Plc, www.sophos.com.
 #
 
-
+from fuglu.shared import AVScannerPlugin, string_to_actioncode, DEFER, DUNNO, actioncode_to_string, apply_template
+from fuglu.stringencode import force_bString, force_uString
+import socket
+import os
 import re
 
-
 # Regular Expressions defining some messages from the server.
-
 acceptsyntax = re.compile(b"^ACC\s+(.*?)\s*$")
 optionsyntax = re.compile(b"^(\w+):\s*(.*?)\s*$")
 virussyntax = re.compile(b"^VIRUS\s+(\S+)\s+(.*)")
@@ -129,7 +123,7 @@ def sayGoodbye(s):
     receiveline(s)
 
 
-class SSSPPlugin(ScannerPlugin):
+class SSSPPlugin(AVScannerPlugin):
 
     """ This plugin scans the suspect using the sophos SSSP protocol.
 
@@ -137,7 +131,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 """
 
     def __init__(self, config, section=None):
-        ScannerPlugin.__init__(self, config, section)
+        AVScannerPlugin.__init__(self, config, section)
         self.requiredvars = {
             'host': {
                 'default': 'localhost',
@@ -180,50 +174,24 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             },
         }
         self.logger = self._logger()
-
+        self.enginename = 'sophos'
+    
+    
     def __str__(self):
-        return "Sophos"
-
-    def _problemcode(self):
-        retcode = string_to_actioncode(
-            self.config.get(self.section, 'problemaction'), self.config)
-        if retcode is not None:
-            return retcode
-        else:
-            # in case of invalid problem action
-            return DEFER
-
+        return "Sophos AV"
+    
+    
     def examine(self, suspect):
-        enginename = 'sophos'
-
-        if suspect.size > self.config.getint(self.section, 'maxsize'):
-            self.logger.info('Not scanning - message too big')
-            return
+        if self._check_too_big(suspect):
+            return DUNNO
 
         content = suspect.get_source()
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
                 viruses = self.scan_stream(content)
-                if viruses is not None:
-                    self.logger.info(
-                        "Virus found in message from %s : %s" % (suspect.from_address, viruses))
-                    suspect.tags['virus'][enginename] = True
-                    suspect.tags['%s.virus' % enginename] = viruses
-                    suspect.debug('viruses found in message : %s' % viruses)
-                else:
-                    suspect.tags['virus'][enginename] = False
-
-                if viruses is not None:
-                    virusaction = self.config.get(self.section, 'virusaction')
-                    actioncode = string_to_actioncode(virusaction, self.config)
-                    firstinfected, firstvirusname = list(viruses.items())[0]
-                    values = dict(
-                        infectedfile=firstinfected, virusname=firstvirusname)
-                    message = apply_template(
-                        self.config.get(self.section, 'rejectmessage'), suspect, values)
-                    return actioncode, message
-                return DUNNO
+                actioncode, message = self._virusreport(suspect, viruses)
+                return actioncode, message
             except Exception as e:
                 self.logger.warning("Error encountered while contacting SSSP server (try %s of %s): %s" % (
                     i + 1, self.config.getint(self.section, 'retries'), str(e)))
@@ -231,12 +199,13 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                           self.config.getint(self.section, 'retries'))
 
         return self._problemcode()
-
-    def scan_stream(self, buf):
+    
+    
+    def scan_stream(self, content, suspectid='(NA)'):
         """
         Scan a buffer
 
-        buffer (string) : buffer to scan
+        content (string) : buffer to scan
 
         return either :
           - (dict) : {filename1: "virusname"}
@@ -304,11 +273,11 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
 
         # Send the SCAN request
 
-        s.send(force_bString('SCANDATA ' + str(len(buf)) + '\n'))
+        s.send(force_bString('SCANDATA ' + str(len(content)) + '\n'))
         if not accepted(s):
             raise Exception("SSSP Scan rejected")
 
-        s.sendall(force_bString(buf))
+        s.sendall(force_bString(content))
 
         # and read the result
         events = receivemsg(s)
@@ -324,7 +293,7 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             sayGoodbye(s)
             s.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
-            self.logger.warning('Error terminating connection: %s', str(e))
+            self.logger.warning('%s Error terminating connection: %s', (suspectid, str(e)))
         finally:
             s.close()
 
@@ -332,7 +301,8 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
             return None
         else:
             return dr
-
+    
+    
     def __init_socket__(self):
         unixsocket = False
 
@@ -363,43 +333,12 @@ Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)
                     'Could not reach SSSP server using network (%s, %s)' % (host, port))
 
         return s
-
+    
+    
     def lint(self):
         viract = self.config.get(self.section, 'virusaction')
         print("Virusaction: %s" % actioncode_to_string(
             string_to_actioncode(viract, self.config)))
         allok = self.check_config() and self.lint_eicar()
         return allok
-
-    def lint_eicar(self):
-        stream = """Date: Mon, 08 Sep 2008 17:33:54 +0200
-To: oli@unittests.fuglu.org
-From: oli@unittests.fuglu.org
-Subject: test eicar attachment
-X-Mailer: swaks v20061116.0 jetmore.org/john/code/#swaks
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_MIME_BOUNDARY_000_12140"
-
-------=_MIME_BOUNDARY_000_12140
-Content-Type: text/plain
-
-Eicar test
-------=_MIME_BOUNDARY_000_12140
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: BASE64
-Content-Disposition: attachment
-
-UEsDBAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAZWljYXIuY29tWDVPIVAlQEFQWzRcUFpYNTQo
-UF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCoNClBLAQIU
-AAoAAAAAAGQ7WyUjS4psRgAAAEYAAAAJAAAAAAAAAAEAIAD/gQAAAABlaWNhci5jb21QSwUGAAAA
-AAEAAQA3AAAAbQAAAAAA
-
-------=_MIME_BOUNDARY_000_12140--"""
-
-        result = self.scan_stream(force_bString(stream))
-        if result is None:
-            print("EICAR Test virus not found!")
-            return False
-        print("SSSP server found virus", result)
-        return True
 

@@ -1,5 +1,5 @@
 from fuglu.shared import AppenderPlugin, actioncode_to_string
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 import platform
 import socket
 

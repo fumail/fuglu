@@ -14,7 +14,7 @@ user=nobody
 #run as group
 group=nobody
 
-#where should fuglu search for additional plugins
+#comma separated list of directories in which fuglu searches for additional plugins and their dependencies
 plugindir=
 
 #what SCANNER plugins do we load, comma separated
@@ -92,39 +92,37 @@ logtemplate=Suspect ${id} from=${from_address} to=${to_address} size=${size} spa
 #Disable this if you consider the DNS lookup an unwanted information leak.
 versioncheck=1
 
+# Method to check mail address validity (Default/LazyLocalPart)
+address_compliance_checker = Default
+
+# Action to perform if address validity check fails (defer/reject/discard)
+address_compliance_fail_action = defer
+
+# Reply message if address validity check fails
+address_compliance_fail_message = invalid send or receive address
+
+# Remove temporary message file from disk for receive or address compliance errors
+remove_tmpfiles_on_error = True
+
 [PluginAlias]
 
 debug=fuglu.plugins.p_debug.MessageDebugger
-
 skip=fuglu.plugins.p_skipper.PluginSkipper
-
 fraction=fuglu.plugins.p_fraction.PluginFraction
-
 archive=fuglu.plugins.archive.ArchivePlugin
-
 attachment=fuglu.plugins.attachment.FiletypePlugin
-
 clamav=fuglu.plugins.clamav.ClamavPlugin
-
 spamassassin=fuglu.plugins.sa.SAPlugin
-
 vacation=fuglu.plugins.vacation.VacationPlugin
-
 actionoverride=fuglu.plugins.actionoverride.ActionOverridePlugin
-
 icap=fuglu.plugins.icap.ICAPPlugin
-
 sssp=fuglu.plugins.sssp.SSSPPlugin
-
 fprot=fuglu.plugins.fprot.FprotPlugin
-
 scriptfilter=fuglu.plugins.script.ScriptFilter
-
 dkimsign=fuglu.plugins.domainauth.DKIMSignPlugin
-
 dkimverify=fuglu.plugins.domainauth.DKIMVerifyPlugin
-
 spf=fuglu.plugins.domainauth.SPFPlugin
+srs=fuglu.plugins.domainauth.SenderRewriteScheme
 
 [databaseconfig]
 
@@ -291,7 +289,7 @@ problemaction=DEFER
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
 
-#*EXPERIMENTAL*: fallback to clamscan if clamd is unavailable.
+#*EXPERIMENTAL*: fallback to clamscan if clamd is unavailable. YMMV, each scan can take 5-20 seconds and massively increase load on a busy system.
 clamscanfallback=0
 
 #the path to clamscan executable
@@ -313,6 +311,9 @@ timeout=30
 
 #maximum size in bytes. larger messages will be skipped
 maxsize=256000
+
+#enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded
+strip_oversize=0
 
 #how often should fuglu retry the connection before giving up
 retries=3
@@ -363,14 +364,6 @@ sql_blacklist_dbconnectstring=mysql:///localhost/spamassassin
 #SQL query to get the blacklist entries for a suspect
 #you may use template variables: ${from_address} ${from_domain} ${to_address} ${to_domain}
 sql_blacklist_sql=SELECT value FROM userpref WHERE prefid='blacklist_from' AND username in ('$GLOBAL',concat('%',${to_domain}),${to_address})
-
-#enable scanning of messages larger than maxsize.
-#all attachments will be stripped and only headers,
-#plaintext and html part will be scanned. If message
-#is still oversize it will be truncated.
-#Also enable forwardoriginal or truncated version of
-#large messages will be forwarded.
-strip_oversize=0
 
 [debug]
 

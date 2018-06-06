@@ -1,3 +1,34 @@
+-- Fuglu x.x.x, 20XX-XX-XX
+ * ClamAV plugin: Fix sending large files to ClamAV which caused timeouts
+ * Attachment plugin: Improve file type detection of unnamed attachments
+ * Spamassassin plugin: strip attachment function now generates proper mail format
+ * New Plugin: Sender Rewrite Scheme in module domainauth (imported from fuglu-extra-plugins)
+ * Fix for CentOS-6 system script to correctly stop all processes
+ * Configurable check for mail address validity, fail action and message
+ * Configuration option to remove (default) or keep temporary message files on internal errors (receive,address,unknown)
+
+Developers:
+ * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin
+ * tighter integration of dnsquery extension
+
+
+-- Fuglu 0.8.0, 2018-04-23
+ * Significant improvements of Python 3 support fixing many issues.
+ * Logging rewrite, log level can now be changed at runtime. Logging will spawn a dedicated process.
+ * Caching rewrite, caching will spawn a dedicated process.
+ * Multiprocessing improvements improving performance and fixing many issues.
+ * Toggle between multithreading and multiprocessing run modes at runtime
+ * IPv6 support for connections to Postfix and SpamAssassin.
+ * Allow multiple plugin directories
+ * SpamAssassin plugin: option to strip attachments from big mails
+ * ClamAV plugin: option to fallback to clamscan if clamd fails
+
+Developers:
+ * New dnsquery extension to faciliate dns lookups
+ * convenience function is_ham in shared.Suspect
+ * gitlab CI tests
+
+
 -- Fuglu 0.7.0, 2018-01-14
  * Attachment Plugin:
   * support more archive types ( tar.gz, tgz, tar.bz2, .7z)

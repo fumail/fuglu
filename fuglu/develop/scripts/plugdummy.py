@@ -1,17 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # run a plugin with a dummy suspect without a running fuglu daemon
 
 import optparse
 import sys
 import logging
-import tempfile
 import os
 import email
 
 try:
-    from configparser import ConfigParser
+    import configparser as ConfigParser
 except ImportError:
-    from ConfigParser import ConfigParser
+    import ConfigParser
 
 try:
     from email.message import Message
@@ -98,7 +97,7 @@ if __name__ == '__main__':
                 sys.path.insert(0, plugindir)
 
     # prepare config
-    config = ConfigParser()
+    config = ConfigParser.RawConfigParser()
     config.add_section('main')
 
     prependers = []
@@ -144,7 +143,7 @@ if __name__ == '__main__':
         try:
             for opt, val in config.items(sec):
                 print("%s:%s" % (opt, val))
-        except NoSectionError:
+        except ConfigParser.NoSectionError:
             print("Plugin does not provide default options")
         sys.exit(0)
 
@@ -178,7 +177,10 @@ if __name__ == '__main__':
             msgcontent = sys.stdin.read()
         else:
             msgcontent = open(opts.eml, 'rb').read()
-        mailmessage = email.message_from_string(msgcontent)
+        if sys.version_info > (3,):
+            mailmessage = email.message_from_bytes(msgcontent)
+        else:
+            mailmessage = email.message_from_string(msgcontent)
     else:
         if opts.body:
             if opts.body == '-':
@@ -208,7 +210,7 @@ if __name__ == '__main__':
     # create tempfile...
     tmpfile = '/tmp/fuglu_dummy_message_in.eml'
 
-    if sys.version > (3,):
+    if sys.version_info > (3,):
         # Python 3
         open(tmpfile, 'wb').write(mailmessage.as_bytes())
     else:

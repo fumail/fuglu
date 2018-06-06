@@ -15,7 +15,7 @@
 #
 from fuglu.shared import ScannerPlugin, DUNNO, DEFER, Suspect, string_to_actioncode, apply_template
 from fuglu.extensions.sql import DBConfig, get_session, SQL_EXTENSION_ENABLED
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 from string import Template
 import time
 import socket
@@ -23,6 +23,7 @@ import email
 import re
 import os
 import sys
+from email.mime.multipart import MIMEMultipart
 
 
 GTUBE = """Date: Mon, 08 Sep 2008 17:33:54 +0200
@@ -79,8 +80,8 @@ Tags:
             },
 
             'strip_oversize':{
-                'default': '0',
-                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated. Also enable forwardoriginal or truncated version of large messages will be forwarded",
+                'default': '1',
+                'description': "enable scanning of messages larger than maxsize. all attachments will be stripped and only headers, plaintext and html part will be scanned. If message is still oversize it will be truncated.",
             },
 
             'retries': {
@@ -102,7 +103,10 @@ Tags:
                 'default': 'X-Spam-Status',
                 'description': """what header does SA set to indicate the spam status\nNote that fuglu requires a standard header template configuration for spamstatus and score extraction\nif 'forwardoriginal' is set to 0\neg. start with _YESNO_ or _YESNOCAPS_ and contain score=_SCORE_""",
             },
-
+            'spamheader_prepend': {
+                'default': 'X-Spam-',
+                'description': 'tells fuglu what spamassassin prepends to its headers. Set this according to your spamassassin config especially if you forwardoriginal=0 and strip_oversize=1',
+            },
             'peruserconfig': {
                 'default': '1',
                 'description': 'enable user_prefs in SA. This hands the recipient address over the spamd connection which allows SA to search for configuration overrides',
@@ -359,19 +363,23 @@ Tags:
 
         """
 
-        msgrep = email.message_from_string(content)
+        # Content is str or bytes (Py3), so try both
+        try:
+            msgrep = email.message_from_string(content)
+        except TypeError:
+            msgrep = email.message_from_bytes(content)
 
+        
         if msgrep.is_multipart():
-            new_src = ''
+            new_msg = MIMEMultipart()
             for hdr, val in msgrep.items():
-                headerline = '%s: %s\r\n' % (hdr, val)
-                new_src += headerline
-            new_src += '\r\n'
+                # convert "val" to "str" since in Py3 it might be of type email.header.Header
+                new_msg.add_header(hdr, str(val))
             for part in msgrep.walk():
                 # only plaintext and html parts but no text attachments
                 if part.get_content_maintype() == 'text' and part.get_filename() is None:
-                    new_src += part.as_string()
-                    new_src += '\r\n\r\n'
+                    new_msg.attach(part)
+            new_src = new_msg.as_string()
         else:
             # text only mail - keep full content and truncate later
             new_src = content
@@ -379,13 +387,8 @@ Tags:
         if len(new_src) > maxsize:
             # truncate to maxsize
             new_src = new_src[:maxsize-1]
-
+        
         return new_src
-
-    # helper to get diff from two lists/dicts
-    def diff(self, new, old):
-        old = set(old)
-        return [item for item in new if item not in old]
 
     def examine(self, suspect):
         # check if someone wants to skip sa checks
@@ -419,7 +422,7 @@ Tags:
             # keep copy of original content before stripping
             content_orig = content
             content = self._strip_attachments(content, maxsize)
-
+            self.logger.info('%s stripped attachments, body size reduced from %s to %s bytes' % (suspect.id, len(content_orig), len(content)))
         # stick to bytes
         content = force_bString(content)
 
@@ -457,23 +460,18 @@ Tags:
                     # create msgrep of filtered msg
                     msgrep_filtered = email.message_from_string(filtered)
                     header_new = []
-                    header_old = []
-                    # create a msgrep from original msg
-                    msgrep_orig = email.message_from_string(content_orig)
-                    # read all headers from after-scan and before-scan
                     for h,v in msgrep_filtered.items():
                         header_new.append(h.strip() + ': ' + v.strip())
-                    for h,v in msgrep_orig.items():
-                        header_old.append(h.strip() + ': ' + v.strip())
-                    # create a list of headers added by spamd
-                    # header diff between before-scan and after-scan msg
-                    header_new = reversed(self.diff(header_new, header_old))
                     # add headers to msg
+                    sa_prepend = self.config.get(self.section, 'spamheader_prepend')
                     for i in header_new:
-                        if re.match('^Received: ', i, re.I):
+                        if sa_prepend == '' or sa_prepend is None:
+                            break
+                        if re.match('^' + sa_prepend + '[^:]+: ', i, re.I):
+                            # in case of stripped msg add header to original content
+                            content_orig = i + '\r\n' + content_orig
+                        else:
                             continue
-                        # in case of stripped msg add header to original content
-                        content_orig = i + '\r\n' + content_orig
                     content = content_orig
                 else:
                     content = filtered
@@ -602,7 +600,7 @@ Tags:
             except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
             except Exception as e:
-                self.logger.error(str(e))
+                self.logger.error('SPAMD communication error: %s' % str(e))
 
             time.sleep(1)
         return None
@@ -681,6 +679,8 @@ Tags:
                 self.logger.error('SPAMD gaierror encountered: %s' % str(g))
             except socket.error as e:
                 self.logger.error('SPAMD socket error: %s' % str(e))
+            except Exception as e:
+                self.logger.error('SPAMD communication error: %s' % str(e))
 
             time.sleep(1)
         return None

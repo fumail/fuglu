@@ -1,4 +1,5 @@
-from distutils.core import setup, Command
+# -*- coding: UTF-8 -*-
+from distutils.core import setup
 import glob
 import sys
 import os
@@ -9,7 +10,6 @@ sys.path.insert(0, 'src')
 # so we can report the git commit id in fuglu --version
 OLD_VERSFILE_CONTENT = None
 VERSFILE = 'src/fuglu/__init__.py'
-
 
 def git_version():
     from fuglu import FUGLU_VERSION
@@ -34,42 +34,52 @@ def git_version():
         return FUGLU_VERSION
 
 
+
+def requirements():
+    install_requires = []
+    if sys.version_info > (2,7):
+        install_requires.append('importlib')
+    return install_requires
+
+
+
 setup(name="fuglu",
-      version=git_version(),
-      description="Fuglu Mail Content Scanner",
-      author="O. Schacher",
-      url='http://www.fuglu.org',
-      download_url='http://github.com/fumail/fuglu/tarball/master',
-      author_email="oli@fuglu.org",
-      package_dir={'': 'src'},
-      packages=['fuglu', 'fuglu.plugins', 'fuglu.extensions',
-                'fuglu.lib', 'fuglu.connectors'],
-      scripts=["src/startscript/fuglu", "src/tools/fuglu_debug",
-               "src/tools/fuglu_control", "src/tools/fuglu_conf",
-               "src/tools/fuglu_suspectfilter", "src/tools/fuglu_client"],
-      long_description="""Fuglu is  a modular pre/after queue content filter written in python. It can be used to filter spam, viruses, unwanted attachments etc..
+    version=git_version(),
+    description="Fuglu Mail Content Scanner",
+    author="O. Schacher",
+    url='http://www.fuglu.org',
+    download_url='http://github.com/fumail/fuglu/tarball/master',
+    author_email="oli@fuglu.org",
+    package_dir={'': 'src'},
+    packages=['fuglu', 'fuglu.plugins', 'fuglu.extensions', 'fuglu.lib', 'fuglu.connectors', ],
+    scripts=["src/startscript/fuglu", "src/tools/fuglu_debug",
+           "src/tools/fuglu_control", "src/tools/fuglu_conf",
+           "src/tools/fuglu_suspectfilter", "src/tools/fuglu_client",],
+    long_description="""Fuglu is  a modular pre/after queue content filter written in python. It can be used to filter spam, viruses, unwanted attachments etc..
+    
+    see http://fumail.github.com/fuglu/ for more details.""",
+    data_files=[
+        ('/etc/fuglu', glob.glob('conf/*.dist')),
+        ('/etc/fuglu/templates', glob.glob('conf/templates/*.dist')),
+        ('/etc/fuglu/rules', glob.glob('conf/rules/*.dist')),
+    ],
 
-see http://fumail.github.com/fuglu/ for more details.""",
-      data_files=[
-          ('/etc/fuglu', glob.glob('conf/*.dist')),
-          ('/etc/fuglu/templates', glob.glob('conf/templates/*.dist')),
-          ('/etc/fuglu/rules', glob.glob('conf/rules/*.dist')),
-      ],
+    install_requires=requirements(),
 
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Environment :: No Input/Output (Daemon)',
-          'Intended Audience :: Developers',
-          'Intended Audience :: System Administrators',
-          'License :: OSI Approved :: Apache Software License',
-          'Operating System :: POSIX',
-          'Programming Language :: Python',
-          'Topic :: Communications :: Email',
-          'Topic :: Communications :: Email :: Filters',
-          'Topic :: Communications :: Email :: Mail Transport Agents',
-      ],
-      )
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: No Input/Output (Daemon)',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Topic :: Communications :: Email',
+        'Topic :: Communications :: Email :: Filters',
+        'Topic :: Communications :: Email :: Mail Transport Agents',
+    ],
+    )
 
 # cleanup
-if OLD_VERSFILE_CONTENT != None:
+if OLD_VERSFILE_CONTENT is not None:
     open(VERSFILE, 'w').write(OLD_VERSFILE_CONTENT)

@@ -20,11 +20,14 @@ import threading
 from fuglu.scansession import SessionHandler
 import traceback
 from multiprocessing.reduction import ForkingPickler
+import os
 try:
     from StringIO import StringIO
 except ImportError:
     # Python 3
     from io import BytesIO as StringIO
+from fuglu.logtools import createPIDinfo
+
 
 class ProtocolHandler(object):
     protoname = 'UNDEFINED'
@@ -33,6 +36,23 @@ class ProtocolHandler(object):
         self.socket = socket
         self.config = config
         self.logger = logging.getLogger('fuglu.%s' % self.__class__.__name__)
+        self.sess = None
+
+    def remove_tmpfile(self):
+        tmpfile = self.get_tmpfile()
+        if tmpfile is not None:
+            try:
+                os.remove(tmpfile)
+            except OSError:
+                pass
+
+    def get_tmpfile(self):
+        if self.sess is not None:
+            try:
+                tmpfilename = self.sess.tempfilename
+            except AttributeError:
+                tmpfilename = None
+        return tmpfilename
 
     def get_suspect(self):
         return None
@@ -58,6 +78,8 @@ class BasicTCPServer(object):
         self.logger = logging.getLogger("fuglu.incoming.%s" % port)
         self.logger.debug('Starting incoming Server on Port %s, protocol=%s' % (
             port, self.protohandlerclass.protoname))
+        self.logger.debug('Incoming server process info:  %s' % createPIDinfo())
+        self.logger.debug('(%s) Logger id is %s' % (createPIDinfo(),id(self)))
         self.port = port
         self.controller = controller
         self.stayalive = True
@@ -83,9 +105,14 @@ class BasicTCPServer(object):
             pass
 
     def serve(self):
-        controller = self.controller
-        threadpool = self.controller.threadpool
-        procpool = self.controller.procpool
+        # Important:
+        # -> do NOT create local variables which are copies of member variables like
+        # controller = self.controller
+        # threadpool = self.controller.threadpool
+        # procpool = self.controller.procpool
+        # Since thes variables might change while in the stayalive loop the process would get stuck,
+        # example: when sending SIGHUP which might recreate the processor pool or threads pool
+        #          which would then still point to the wrong (old) memory location and is therefore not served anymore
 
         threading.currentThread().name = '%s Server on Port %s' % (
             self.protohandlerclass.protoname, self.port)
@@ -100,21 +127,21 @@ class BasicTCPServer(object):
                 sock,addr = nsd
                 if not self.stayalive:
                     break
-                ph = self.protohandlerclass(sock, controller.config)
+                ph = self.protohandlerclass(sock, self.controller.config)
                 engine = SessionHandler(
-                    ph, controller.config, controller.prependers, controller.plugins, controller.appenders)
-                self.logger.debug('Incoming connection from %s' % str(addr))
-                if threadpool:
+                    ph, self.controller.config, self.controller.prependers, self.controller.plugins, self.controller.appenders)
+                self.logger.debug('(%s) Incoming connection  [incoming server port: %s, prot: %s]' % (createPIDinfo(),self.port,self.protohandlerclass.protoname))
+                if self.controller.threadpool:
                     # this will block if queue is full
-                    threadpool.add_task(engine)
-                elif procpool:
+                    self.controller.threadpool.add_task(engine)
+                elif self.controller.procpool:
                     # in multi processing, the other process manages configs and plugins itself, we only pass the minimum required information:
                     # a pickled version of the socket (this is no longer required in python 3.4, but in python 2 the multiprocessing queue can not handle sockets
                     # see https://stackoverflow.com/questions/36370724/python-passing-a-tcp-socket-object-to-a-multiprocessing-queue
                     handler_classname = self.protohandlerclass.__name__
                     handler_modulename = self.protohandlerclass.__module__
                     task = forking_dumps(sock),handler_modulename, handler_classname
-                    procpool.add_task(task)
+                    self.controller.procpool.add_task(task)
                 else:
                     engine.handlesession()
             except Exception as e:

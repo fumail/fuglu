@@ -21,7 +21,7 @@ import base64
 import hashlib
 import re
 import time
-from fuglu.localStringEncoding import force_bString, force_uString, forceBytesFromChar, forceCharFromBytes
+from fuglu.stringencode import force_bString, force_uString, force_bfromc, force_cfromb
 
 __all__ = [
     "Simple",
@@ -343,7 +343,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         raise KeyFormatError("Private key not found")
     try:
         pkdata = base64.b64decode(m.group(1))
-        pkdata = forceCharFromBytes(pkdata)
+        pkdata = force_cfromb(pkdata)
 
     except TypeError as e:
         raise KeyFormatError(str(e))
@@ -378,7 +378,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     h = hashlib.sha256()
     h.update(force_bString(body))
     bodyhash = base64.b64encode(h.digest())
-    bodyhash = forceCharFromBytes(bodyhash)
+    bodyhash = force_cfromb(bodyhash)
 
     sigfields = [x for x in [
         ('v', "1"),
@@ -409,7 +409,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         h.update(force_bString(x[1]))
     h.update(force_bString(sig))
     d = h.digest()
-    d = forceCharFromBytes(d)
+    d = force_cfromb(d)
 
     if debuglog is not None:
         print("sign digest:", " ".join("%02x" % ord(x)
@@ -429,8 +429,8 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         raise ParameterError("Hash too large for modulus")
     signature = "\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) +"\x00" + dinfo
     sig2 = int2str(pow(str2int(signature), pk['privateExponent'], pk['modulus']), modlen)
-    sigEncoded = base64.b64encode(forceBytesFromChar(''.join(sig2)))
-    sigEncoded = forceCharFromBytes(sigEncoded)
+    sigEncoded = base64.b64encode(force_bfromc(''.join(sig2)))
+    sigEncoded = force_cfromb(sigEncoded)
     sig += sigEncoded
 
     return sig + "\r\n"
@@ -614,7 +614,7 @@ def verify(message, debuglog=None):
                 print("invalid format in _domainkey txt record", file=debuglog)
             return False
     pkey = base64.b64decode(pub['p'])
-    pkey = forceCharFromBytes(pkey)
+    pkey = force_cfromb(pkey)
 
     x = asn1_parse(ASN1_Object, pkey)
     # Not sure why the [1:] is necessary to skip a byte.
@@ -653,7 +653,7 @@ def verify(message, debuglog=None):
         h.update(force_bString(":"))
         h.update(force_bString(x[1]))
     d = h.digest()
-    d = forceCharFromBytes(d)
+    d = force_cfromb(d)
 
     if debuglog is not None:
         print("verify digest:", " ".join(
@@ -677,15 +677,15 @@ def verify(message, debuglog=None):
             print("Hash too large for modulus", file=debuglog)
         return False
     sig2 = "\x00\x01" + "\xff" * (modlen - len(dinfo) - 3) + "\x00" + dinfo
-    sig2 = forceCharFromBytes(sig2)
+    sig2 = force_cfromb(sig2)
     if debuglog is not None:
         print("sig2:", " ".join("%02x" % ord(x) for x in sig2), file=debuglog)
         print(sig['b'], file=debuglog)
         print(re.sub(r"\s+", "", sig['b']), file=debuglog)
 
 
-    sigEncoded = base64.b64decode(forceBytesFromChar(re.sub(r"\s+", "", sig['b'])))
-    sigEncoded = forceCharFromBytes((sigEncoded))
+    sigEncoded = base64.b64decode(force_bfromc(re.sub(r"\s+", "", sig['b'])))
+    sigEncoded = force_cfromb((sigEncoded))
 
     v = int2str(pow(str2int(sigEncoded), pk['publicExponent'], pk['modulus']), modlen)
 

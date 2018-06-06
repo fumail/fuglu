@@ -21,7 +21,7 @@
 import sys
 import socket
 from optparse import OptionParser
-from fuglu.localStringEncoding import force_bString, force_uString
+from fuglu.stringencode import force_bString, force_uString
 
 def usage():
     return """
