@@ -23,6 +23,13 @@ import socket
 import uuid
 import threading
 from fuglu.localStringEncoding import force_uString, force_bString
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
+
+
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -113,6 +120,45 @@ def string_to_actioncode(actionstring, config=None):
         return None
     return ALLCODES[upper]
 
+class SuspectTemplate(Template):
+    delimiter = '$'
+    idpattern = r'@?[a-z][_a-z0-9.]*'
+
+class SuspectDict(Mapping):
+    def __init__(self, suspect, values, valuesfunction):
+        self.values = values
+        self.filter = SuspectFilter(filename=None)
+        self.valuesfunction = valuesfunction
+        self.suspect = suspect
+
+    def _get_raw(self, item):
+        if item in self.values: # always try the passed dict first
+            return self.values[item]
+        # get the value from the filter
+        fieldlist = self.filter.get_field(self.suspect, item)
+        if len(fieldlist):
+            # if there are multiple values , just return the first
+            return force_uString(str(fieldlist[0]))
+        return None
+
+    def __getitem__(self, item):
+        val = self._get_raw(item)
+        if self.valuesfunction:
+            try:
+                # valuesfunction expects a dict (backward compatibility)
+                val = self.valuesfunction({item:val})[item]
+            except KeyError:
+                val = None
+        if val is not None:
+            self.values[item] = val
+            return val
+        return ''
+
+    def __iter__(self):
+        return iter(self.values)
+
+    def __len__(self):
+        return len(self.values)
 
 def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
     """Replace templatecontent variables as defined in http://fumail.github.io/fuglu/plugins-index.html#template-variables
@@ -126,13 +172,9 @@ def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
         values = {}
 
     default_template_values(suspect, values)
-
-    if valuesfunction is not None:
-        values = valuesfunction(values)
-
-    template = Template(force_uString(templatecontent))
-
-    message = template.safe_substitute(values)
+    sdict = SuspectDict(suspect, values, valuesfunction)
+    template = SuspectTemplate(force_uString(templatecontent))
+    message = template.safe_substitute(sdict)
     return message
 
 

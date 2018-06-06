@@ -277,6 +277,37 @@ class TemplateTestcase(unittest.TestCase):
             result, expected), "Got unexpected template result: %s" % result
 
 
+    def test_tag_templates(self):
+        """Test Templates with suspect tag expansion"""
+
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+        suspect.tags['hello'] = ['World','is it me your looking for']
+        suspect.tags['SAPlugin.spamscore']=13.37
+
+        def valfunc(data):
+            if '@removeme' in data:
+                del data['@removeme']
+            if '@changeme' in data:
+                data['@changeme']='elephant'
+            return data
+
+        suspect.tags['removeme']='disappearing rabbit'
+        suspect.tags['changeme']='an uninteresting value'
+        cases=[
+            ('${subject}','Hello world!'),
+            ('${@SAPlugin.spamscore}','13.37'),
+            ('${blubb}',''),
+            ('${@hello}','World'),
+            ('${date}','2018-06-06'), #builtin function with same name as header: builtin should win
+            ('The quick brown ${from_address} received on ${date} jumps over the ${@removeme}. Uh ${@changeme}', 'The quick brown sender@unittests.fuglu.org received on 2018-06-06 jumps over the . Uh elephant'),
+        ]
+        for c in cases:
+            template,expected = c
+            result = apply_template(template, suspect, valuesfunction=valfunc)
+            self.assertEqual(result, expected), "Got unexpected template result: %s. Should be: %s" % (result,expected)
+
+
 class ClientInfoTestCase(unittest.TestCase):
 
     """Test client info detection"""
