@@ -22,13 +22,11 @@ import time
 import socket
 import uuid
 import threading
-from fuglu.localStringEncoding import force_uString, force_bString
 
 try:
     from collections.abc import Mapping
 except ImportError:
     from collections import Mapping
-
 
 from fuglu.addrcheck import Addrcheck
 from fuglu.stringencode import force_uString, force_bString
