@@ -1,4 +1,4 @@
-FROM centos:centos7
+FROM danbla/fuglutestenv
 
 MAINTAINER danBLA <danBLA@users.noreply.github.com>
 
