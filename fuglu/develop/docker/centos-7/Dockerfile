@@ -1,6 +1,6 @@
 FROM danbla/fuglutestenv
 
-MAINTAINER danBLA <danBLA@users.noreply.github.com>
+MAINTAINER O. Schacher <oli.fuglu.org>
 
 # ssdeep -> see http://python-ssdeep.readthedocs.io/en/latest/installation.html#install-on-centos-7
 #        => NOTE: not all versions working...
