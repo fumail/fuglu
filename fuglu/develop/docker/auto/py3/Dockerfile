@@ -1,0 +1,16 @@
+FROM danbla/fuglutestenv
+
+MAINTAINER danBLA <danBLA@users.noreply.github.com>
+
+WORKDIR /fuglu-src
+ADD . /fuglu-src
+RUN cd fuglu && python3 setup.py install --force && cd -
+RUN rename '.dist' '' /etc/fuglu/*.dist && mkdir -p /var/log/fuglu && chown -R nobody /var/log/fuglu && chmod -R u=rwx,g=rwx,o=rwx /var/log/fuglu && mkdir -p /dev/log && chmod -R u=rwx,g=rwx,o=rwx /dev/log
+
+ADD fuglu/develop/docker/auto/start-services.sh /usr/local/bin/start-services.sh 
+CMD ["/bin/bash", "-c", "/usr/local/bin/start-services.sh all"]
+VOLUME /fuglu-src
+
+EXPOSE 25 10025 10026 10888
+
+
