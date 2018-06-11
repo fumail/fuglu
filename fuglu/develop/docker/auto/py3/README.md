@@ -1,8 +1,7 @@
 # Python 3 fuglu docker image
 Dockerfile to create fuglu test environment image
 
-Based on danBLA/fuglutestenv docker image this Dockerfile creates an image
-which :
+Based on danBLA/fuglutestenv docker image this Dockerfile creates an image which :
 
 - contains a working fuglu (Python3) instance with default configuration
 - starts clamd, spamd and fuglu if run without arguments
