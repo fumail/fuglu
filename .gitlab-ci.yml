@@ -27,9 +27,7 @@ unittests_py3:
 integrationtests:
   stage: test
   script:
-    - sh /usr/local/bin/start-services.sh
-    - cat clamd.log
-    - cat spamd.log
+    - /usr/local/bin/start-services.sh
     - cd fuglu
     - nosetests --rednose tests/integration
   only:
@@ -39,9 +37,7 @@ integrationtests:
 integrationtests_py3:
   stage: test_py3
   script:
-    - sh /usr/local/bin/start-services.sh
-    - cat clamd.log
-    - cat spamd.log
+    - /usr/local/bin/start-services.sh
     - cd fuglu
     - nosetests-3.4 --rednose tests/integration
   only:
