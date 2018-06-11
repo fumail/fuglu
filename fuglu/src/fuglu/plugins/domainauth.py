@@ -25,6 +25,7 @@ requires: pysrs
 from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_to_actioncode, get_default_cache
 from fuglu.extensions.sql import get_session, SQL_EXTENSION_ENABLED
 from fuglu.extensions.dnsquery import HAVE_PYDNS, HAVE_DNSPYTHON, DNSQUERY_EXTENSION_ENABLED
+from fuglu.stringencode import force_uString
 import logging
 import os
 import re
@@ -332,6 +333,7 @@ in combination with other factors to take action (for example a "DMARC" plugin c
             return DUNNO
 
         helo, ip, revdns = clientinfo
+        ip = force_uString(ip)
         result, explanation = spf.check2(ip, suspect.from_address, helo)
         suspect.set_tag("SPF.status", result)
         suspect.set_tag("SPF.explanation", explanation)
