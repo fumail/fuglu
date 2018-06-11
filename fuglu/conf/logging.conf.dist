@@ -4,7 +4,7 @@
 keys=root
 
 [handlers]
-keys=sysout,logfile,syslog
+keys=logfile
 
 [formatters]
 keys=sysoutformatter,logfileformatter,syslogformatter
