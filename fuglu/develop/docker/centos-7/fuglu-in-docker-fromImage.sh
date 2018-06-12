@@ -133,7 +133,7 @@ do
    echo "***************************************************************"
    echo "* Running fuglu in docker instance for $folder for Python $job"
    echo "***************************************************************"
-   image="localhost:5000/centos-7-fuglu-testenv"
+   image="danbla/fuglutestenv"
 
    did=$(docker create -w /fuglu-src -v $srcdir:/fuglu-src -t -i $image /bin/bash)
    echo "Starting docker instance ID: $did"
@@ -168,32 +168,7 @@ do
    docker exec -i $did /bin/bash -c "chmod -R u=rwx,g=rwx,o=rwx /dev/log"
    docker exec -i $did fuglu --lint
 
-   # open console
-   if yesno --timeout 3 --default no "Do you want to open an interactive console? (default: no, timeout: 3s)"; then
-      docker exec -ti $did /bin/bash
-   else
-      echo ""
-      echo "timeout..."
-      echo ""
-   fi
-
-   # commit changes (fuglu installation)
-   if yesno --timeout 3 --default yes "Do you want to commit the changes? (default: yes, timeout: 3s)"; then
-      docker commit $did localhost:5000/fuglu-$folder:$job
-   else
-      echo ""
-      echo "timeout..."
-      echo ""
-   fi
-
-   # push
-   if yesno --timeout 3 --default yes "Do you want to push the changes to the repository? (default: yes, timeout: 3s)"; then
-      docker push localhost:5000/fuglu-$folder:$job
-   else
-      echo ""
-      echo "timeout..."
-      echo ""
-   fi
+   docker exec -ti $did /bin/bash
 
    if yesno --timeout 3 --default yes "Do you want to remove the container? (default: yes, timeout: 3s)"; then
       echo ""
