@@ -70,14 +70,15 @@ def force_uString(inputstring):
     """Try to enforce a unicode string
     
     Args:
-        inputstring (str or unicode): input string to be checked
+        inputstring (str, unicode, list): input string or list of strings to be checked
 
-    Returns:
-        unicode string
+    Returns: unicode string (or list with unicode strings)
 
     """
     if inputstring is None:
         return None
+    elif isinstance(inputstring,list):
+        return [force_uString(item) for item in inputstring]
 
     if sys.version_info > (3,):
         # Python 3 and larger
@@ -100,15 +101,17 @@ def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
     """Try to enforce a string of bytes
 
     Args:
-        inputstring (unicode or byte-string): input string
+        inputstring (unicode, str, list): string or list of strings
         encoding (str): encoding type in case of encoding needed
         checkEncoding (bool): if input string is encoded, check type
 
-    Returns: encoded byte string
+    Returns: encoded byte string (or list with endcoded strings)
 
     """
     if inputstring is None:
         return None
+    elif isinstance(inputstring,list):
+        return [force_bString(item) for item in inputstring]
 
     if sys.version_info > (3,):
         # Python 3 and larger
