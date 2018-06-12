@@ -543,6 +543,7 @@ class Archivehandle(object):
             # this list is already sorted
             sorted_ext_list = Archivehandle.avail_archive_extensions_list
 
+        archive_type = None
         for arext in sorted_ext_list:
             if att_name.lower().endswith('.%s' % arext):
                 archive_type = sorted_ext_dict[arext]
