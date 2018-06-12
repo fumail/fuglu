@@ -4,12 +4,21 @@ import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
 from fuglu.addrcheck import Addrcheck
 import os
+import shutil
+import tempfile
+from fuglu.stringencode import force_uString, force_bString
 
 try:
     from configparser import ConfigParser
 except ImportError:
     from ConfigParser import ConfigParser
 
+# expected return types
+#
+# the explicit types for Python 2 and 3 are defined
+# in the test for stringencode, see "stringencode_test"
+stringtype = type(force_uString("test"))
+bytestype = type(force_bString("test"))
 
 class SuspectTestCase(unittest.TestCase):
 
@@ -89,6 +98,60 @@ class SuspectTestCase(unittest.TestCase):
         self.assertEqual("'root@localhost'", s.to_localpart)
         self.assertEqual("remotehost", s.to_domain)
 
+    def test_return_types(self):
+        """Test main routine return types for Python 2/3 consistency"""
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+
+        headerstring = suspect.get_headers()
+        self.assertEqual(type(headerstring),stringtype,"Wrong return type for get_headers")
+
+        source = suspect.get_source()
+        self.assertEqual(type(source),bytestype,"Wrong return type for get_source")
+
+        source = suspect.get_original_source()
+        self.assertEqual(type(source),bytestype,"Wrong return type for get_original_source")
+
+    def test_set_source(self):
+        """Test main set_source for Python 2/3 consistency with different input types"""
+        suspect = Suspect( 'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
+
+        suspectorig = Suspect('sender@unittests.fuglu.org',
+                              'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+        test_source_binary = suspectorig.get_source()
+        test_source_unicode = force_uString(test_source_binary)
+
+        suspect.set_source(test_source_binary)
+        self.assertEqual(type(suspect.get_source()),bytestype,"Wrong return type for get_source after setting binary source")
+        self.assertEqual(suspect.get_source(),test_source_binary,"Binary source content has to remain the same")
+
+        suspect.set_source(test_source_unicode)
+        self.assertEqual(type(suspect.get_source()),bytestype,"Wrong return type for get_source after setting unicode source")
+        self.assertEqual(suspect.get_source(),test_source_binary,"Binary source content has to remain the same as the unicode content sent in")
+
+    def test_add_header(self):
+        """Test add_header for Python 2/3 consistency with different input types"""
+        suspectorig = Suspect('sender@unittests.fuglu.org',
+                              'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+
+        newheader = ("x-new-0","just a test for default string type")
+        newheaderb = (b"x-new-1",b"just a test encoded strings")
+        newheaderu = (u"x-new-2",u"just a test unicode strings")
+
+        # new dummy suspect with a copy of data from helloworld
+        suspect = Suspect( 'sender@unittests.fuglu.org', 'recipient@unittests.fuglu.org', '/dev/null')
+        suspect.setSource(suspectorig.get_original_source())
+
+        suspect.add_header(*newheader,immediate=True)
+        suspect.add_header(*newheaderb,immediate=True)
+        suspect.add_header(*newheaderu,immediate=True)
+
+        # check headers just set
+        msg = suspect.get_message_rep()
+        self.assertEqual(force_uString( newheader[1]),msg["x-new-0"])
+        self.assertEqual(force_uString(newheaderb[1]),msg["x-new-1"])
+        self.assertEqual(force_uString(newheaderu[1]),msg["x-new-2"])
+
 class SuspectFilterTestCase(unittest.TestCase):
 
     """Test Suspectfilter"""
@@ -161,8 +224,92 @@ class SuspectFilterTestCase(unittest.TestCase):
         self.assertEqual(self.candidate.get_field(
             suspect, 'clienthostname')[0], 'rdns1')
 
+        #--------------------------------#
+        #- testing input & return types -#
+        #--------------------------------#
+
+        #--
+        # headers
+        #--
+        get_field_return = self.candidate.get_field( suspect,'Received')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(4,len(get_field_return),"Number of received headers has to match the helloworld.eml example")
+        for item in get_field_return:
+            self.assertEqual(stringtype,type(item),"List element returned by get_field has to be unicode")
+
+        get_field_return_u = self.candidate.get_field( suspect,u'Received')
+        self.assertEqual(get_field_return,get_field_return_u,"Unicode input to get_field should not change output")
+
+        get_field_return_b = self.candidate.get_field( suspect,b'Received')
+        self.assertEqual(get_field_return,get_field_return_b,"Bytes input to get_field should not change output")
+
+        #--
+        # envelope data
+        #--
+        get_field_return = self.candidate.get_field( suspect, 'clienthelo')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(1,len(get_field_return),"get_field on envelope data should return a list containing only 1 element")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+
+        get_field_return = self.candidate.get_field( suspect, b'clienthelo')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(1,len(get_field_return),"get_field on envelope data should return a list containing only 1 element")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+
+        get_field_return = self.candidate.get_field( suspect, u'clienthelo')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(1,len(get_field_return),"get_field on envelope data should return a list containing only 1 element")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+
+        #--
+        # tags
+        #--
+        suspect.tags['testtag' ] = 'testvalue'
+        suspect.tags['testtagb'] = b'testvalue'
+        suspect.tags['testtagu'] = u'testvalue'
+
+        get_field_return = self.candidate.get_field(suspect, '@testtag')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+        self.assertEqual(force_uString(suspect.tags['testtagb']),get_field_return[0])
+
+        get_field_return = self.candidate.get_field(suspect, '@testtagb')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+        self.assertEqual(force_uString(suspect.tags['testtagb']),get_field_return[0])
+
+        get_field_return = self.candidate.get_field(suspect, '@testtagu')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+        self.assertEqual(force_uString(suspect.tags['testtagu']),get_field_return[0])
+
+        #--
+        # body rules
+        #--
+        get_field_return = self.candidate.get_field(suspect, 'body:raw')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(1,len(get_field_return),"get_field for body:raw should return a list containing only 1 element")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+
+        get_field_returnb = self.candidate.get_field(suspect, b'body:raw')
+        self.assertEqual(get_field_return,get_field_returnb,"get_field output has to be the same independent of headername input type")
+        get_field_returnu = self.candidate.get_field(suspect, u'body:raw')
+        self.assertEqual(get_field_return,get_field_returnu,"get_field output has to be the same independent of headername input type")
+
+        get_field_return = self.candidate.get_field(suspect, 'body')
+        self.assertEqual(list,type(get_field_return),"Return type of get_field has to be a list")
+        self.assertEqual(1,len(get_field_return),"get_field for body should return a list containing only 1 element")
+        self.assertEqual(stringtype,type(get_field_return[0]),"List element returned by get_field has to be unicode")
+
+        get_field_returnb = self.candidate.get_field(suspect, b'body')
+        self.assertEqual(get_field_return,get_field_returnb,"get_field output has to be the same independent of headername input type")
+        get_field_returnu = self.candidate.get_field(suspect, u'body')
+        self.assertEqual(get_field_return,get_field_returnu,"get_field output has to be the same independent of headername input type")
+
     def test_strip(self):
         html = """foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
+        htmlu=u"""foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
+        htmlb=b"""foo<a href="bar">bar</a><script language="JavaScript">echo('hello world');</script>baz"""
 
         declarationtest = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -242,6 +389,32 @@ class=3DMsoNormal><o:p> </o:p></p></div></body></html>"""
                 wordhtml, use_bfs=use_bfs)
             self.assertEqual(wordhtmstripped.strip(), '')
 
+        # check input type conversions and return type
+        remove_tagsu = [u'script', u'style']
+        remove_tagsb = [b'script', b'style']
+        stripped = self.candidate.strip_text(htmlu,remove_tags=remove_tagsu)
+        self.assertEqual(stringtype,type(stripped))
+        self.assertEqual('foobarbaz',stripped)
+        stripped = self.candidate.strip_text(htmlu,remove_tags=remove_tagsb)
+        self.assertEqual(stringtype,type(stripped))
+        self.assertEqual('foobarbaz',stripped)
+        stripped = self.candidate.strip_text(htmlb,remove_tags=remove_tagsb)
+        self.assertEqual(stringtype,type(stripped))
+        self.assertEqual('foobarbaz',stripped)
+        stripped = self.candidate.strip_text(htmlb,remove_tags=remove_tagsu)
+        self.assertEqual(stringtype,type(stripped))
+        self.assertEqual('foobarbaz',stripped)
+
+    def test_sf_get_decoded_textparts(self):
+        """Test return type for Python 2/3 consistency (list of unicode strings)"""
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+        msg = suspect.get_message_rep()
+
+        textpartslist = self.candidate.get_decoded_textparts(msg)
+        self.assertEqual(list,type(textpartslist),"return type has to be list of unicode strings, but it's not a list")
+        self.assertEqual(1,len(textpartslist),"for given example there is one text part, therefore list size has to be 1")
+        self.assertEqual(stringtype,type(textpartslist[0]),"return type has to be list of unicode strings, but list doesn't contain a unicode string")
 
 class ActionCodeTestCase(unittest.TestCase):
 
@@ -356,3 +529,4 @@ class FileListTestCase(unittest.TestCase):
                                   lowercase=False, additional_filters=None).get_list(), ['CASE?', 'stripped ?', '', '', '# no comment!'])
         self.assertEqual(FileList(filename=self.filename, strip=True, skip_empty=True, skip_comments=True,
                                   lowercase=True, additional_filters=None).get_list(), ['case?', 'stripped ?'])
+
