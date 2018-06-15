@@ -45,6 +45,15 @@ from fuglu.debug import ControlServer, CrashStore
 from fuglu import FUGLU_VERSION
 from fuglu.funkyconsole import FunkyConsole
 
+#--------------------#
+#- exit error codes -#
+#--------------------#
+EXIT_NOTSET = -1
+EXIT_EXCEPTION = -2
+EXIT_LOGTERMERROR = -3
+EXIT_FATAL = 66
+# other positive ints result from
+# counting errors in the setup
 
 def check_version_status(lint=False):
     """Check our version string in DNS for known issues and warn about them
@@ -608,7 +617,7 @@ class MainController(object):
             sys.stderr.write(
                 "Some plugins failed to load, please check the logs. Aborting.\n")
             self.logger.info('Fuglu shut down after fatal error condition')
-            return 66
+            return EXIT_FATAL
 
         self.statsthread = self._start_stats_thread()
         backend = self.config.get('performance','backend')

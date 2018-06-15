@@ -31,17 +31,15 @@ import logging.config
 import fuglu.funkyconsole
 from fuglu import loghandlers
 import sys
-from fuglu.core import MainController
+from fuglu.core import MainController, EXIT_NOTSET, EXIT_EXCEPTION, EXIT_LOGTERMERROR
 from fuglu.addrcheck import Addrcheck
 import signal
 import os
-import pwd
-import grp
 import optparse
 import fuglu.logtools
 import multiprocessing
-import time
 import hashlib
+
 
 controller = None
 
@@ -300,7 +298,7 @@ fuglu.logtools.client_configurer(logQueue)
 baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
-exitstatus = -1
+exitstatus = EXIT_NOTSET
 try:
     # Setup address compliance checker
     try:
@@ -346,7 +344,7 @@ try:
         exitstatus = controller.startup()
 except Exception as e:
     baselogger.error("Exception catched: %s"%(str(e)))
-    exitstatus = -2
+    exitstatus = EXIT_EXCEPTION
     #baselogger.exception(e)
 finally:
     #---
@@ -359,6 +357,7 @@ finally:
         logProcessFactory.join(120)
     except Exception as e:
         logProcessFactory.terminate()
-        exitstatus = -3
+        exitstatus = EXIT_LOGTERMERROR
     sys.exit(exitstatus)
+
 
