@@ -608,7 +608,7 @@ class MainController(object):
             sys.stderr.write(
                 "Some plugins failed to load, please check the logs. Aborting.\n")
             self.logger.info('Fuglu shut down after fatal error condition')
-            sys.exit(1)
+            return 66
 
         self.statsthread = self._start_stats_thread()
         backend = self.config.get('performance','backend')
@@ -624,13 +624,12 @@ class MainController(object):
         self._run_main_loop()
         self.logger.info('Shutdown...')
         self.shutdown()
+        return 0
 
     def run_debugconsole(self):
-        from fuglu.shared import DUNNO, ACCEPT, DELETE, REJECT, DEFER, Suspect
 
         # do not import readline at the top, it will cause undesired output, for example when generating the default config
         # http://stackoverflow.com/questions/15760712/python-readline-module-prints-escape-character-during-import
-        import readline
 
         print("Fuglu Interactive Console started")
         print("")
@@ -853,17 +852,20 @@ class MainController(object):
         print(fc.strcolor('Loading plugins...', 'magenta'))
         if not self.load_plugins():
             print(fc.strcolor('At least one plugin failed to load', 'red'))
+            errors +=1
         print(fc.strcolor('Plugin loading complete', 'magenta'))
 
         print("Linting ", fc.strcolor("main configuration", 'cyan'))
         if not self.checkConfig():
             print(fc.strcolor("ERROR", "red"))
+            errors +=1
         else:
             print(fc.strcolor("OK", "green"))
 
         trashdir = self.config.get('main', 'trashdir').strip()
         if trashdir != "" and not os.path.isdir(trashdir):
             print(fc.strcolor("Trashdir %s does not exist" % trashdir, 'red'))
+            errors += 1
 
         # sql config override
         sqlconfigdbconnectstring = self.config.get('databaseconfig', 'dbconnectstring')
@@ -883,9 +885,11 @@ class MainController(object):
                 print(fc.strcolor("OK", 'green'))
             except Exception as e:
                 print(fc.strcolor("Failed %s" % str(e), 'red'))
+                errors += 1
 
         allplugins = self.plugins + self.prependers + self.appenders
 
+        perrors = 0
         for plugin in allplugins:
             print()
             print("Linting Plugin ", fc.strcolor(str(plugin), 'cyan'),
@@ -900,12 +904,15 @@ class MainController(object):
             if result:
                 print(fc.strcolor("OK", "green"))
             else:
-                errors = errors + 1
+                perrors += 1
+                errors += 1
                 print(fc.strcolor("ERROR", "red"))
-        print("%s plugins reported errors." % errors)
+        print("%s plugins reported errors." % perrors)
 
         if self.config.getboolean('main', 'versioncheck'):
             check_version_status(lint=True)
+
+        return errors
 
     def propagate_defaults(self, requiredvars, config, defaultsection=None):
         """propagate defaults from requiredvars if they are missing in config"""

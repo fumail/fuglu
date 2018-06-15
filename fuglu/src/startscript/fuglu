@@ -300,6 +300,7 @@ fuglu.logtools.client_configurer(logQueue)
 baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
+exitstatus = -1
 try:
     # Setup address compliance checker
     try:
@@ -317,7 +318,7 @@ try:
 
 
     if lint:
-        controller.lint()
+        exitstatus = controller.lint()
         # the controller doesn't know about the logging.conf, so we lint this here
         print("")
         if priv_drop_ok:
@@ -342,9 +343,10 @@ try:
         signal.signal(signal.SIGHUP, sighup)
         if console:
             controller.debugconsole = True
-        controller.startup()
+        exitstatus = controller.startup()
 except Exception as e:
     baselogger.error("Exception catched: %s"%(str(e)))
+    exitstatus = -2
     #baselogger.exception(e)
 finally:
     #---
@@ -357,3 +359,6 @@ finally:
         logProcessFactory.join(120)
     except Exception as e:
         logProcessFactory.terminate()
+        exitstatus = -3
+    sys.exit(exitstatus)
+
