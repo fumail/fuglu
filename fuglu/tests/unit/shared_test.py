@@ -89,13 +89,15 @@ class SuspectTestCase(unittest.TestCase):
         self.assertRaises(ValueError, Suspect, "sender@example.net", "recipient@example.com@example.org", '/dev/null')
 
         Addrcheck().set("LazyLocalPart")
-        s = Suspect('"bob@remotehost"@localhost', "'root@localhost'@remotehost", '/dev/null')
+        self.assertRaises(ValueError, Suspect, '"bob@remotehost"@localhost', "'root@localhost'@remotehost", '/dev/null')
+
+        s = Suspect('"bob@remotehost"@localhost', '"root@localhost"@remotehost', '/dev/null')
         self.assertEqual('"bob@remotehost"@localhost', s.from_address)
         self.assertEqual('"bob@remotehost"', s.from_localpart)
         self.assertEqual("localhost", s.from_domain)
 
-        self.assertEqual("'root@localhost'@remotehost", s.to_address)
-        self.assertEqual("'root@localhost'", s.to_localpart)
+        self.assertEqual('"root@localhost"@remotehost', s.to_address)
+        self.assertEqual('"root@localhost"', s.to_localpart)
         self.assertEqual("remotehost", s.to_domain)
 
     def test_return_types(self):
