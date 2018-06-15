@@ -988,7 +988,7 @@ class MainController(object):
     def load_plugins(self):
         """load plugins defined in config"""
         allOK = True
-        plugindirs = self.config.get('main', 'plugindir').strip().split(',')
+        plugindirs = [dir for dir in self.config.get('main', 'plugindir').strip().split(',') if dir]
         for plugindir in plugindirs:
             if os.path.isdir(plugindir):
                 self.logger.debug('Searching for additional plugins in %s' % plugindir)
