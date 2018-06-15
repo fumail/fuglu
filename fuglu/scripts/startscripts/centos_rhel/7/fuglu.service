@@ -9,6 +9,7 @@ Description=fuglu mail filter
 Type=forking
 PIDFile=/run/fuglu.pid
 ExecStart=/usr/bin/fuglu --pidfile=/run/fuglu.pid
+ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target

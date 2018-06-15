@@ -300,57 +300,60 @@ fuglu.logtools.client_configurer(logQueue)
 baselogger = logging.getLogger()
 baselogger.info("FuGLU Version %s starting up" % FUGLU_VERSION)
 
-# Setup address compliance checker
 try:
-    address_check = config.get('main','address_compliance_checker')
-except Exception as e:
-    # might happen for some tests which do not propagate defaults
-    address_check = "Default"
-Addrcheck().set(address_check)
+    # Setup address compliance checker
+    try:
+        address_check = config.get('main','address_compliance_checker')
+    except Exception as e:
+        # might happen for some tests which do not propagate defaults
+        address_check = "Default"
+    Addrcheck().set(address_check)
 
-# instantiate the MainController and load default configuration
-controller = MainController(config,logQueue,logFactoryQueue)
-controller.configFileUpdates = getConfigFileUpdatesDict(theconfigfile,dconfdir)
-controller.logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
-controller.propagate_core_defaults()
+    # instantiate the MainController and load default configuration
+    controller = MainController(config,logQueue,logFactoryQueue)
+    controller.configFileUpdates = getConfigFileUpdatesDict(theconfigfile,dconfdir)
+    controller.logConfigFileUpdates = getLogConfigFileUpdatesDict(theloggingfile)
+    controller.propagate_core_defaults()
 
 
-if lint:
-    controller.lint()
-    # the controller doesn't know about the logging.conf, so we lint this here
-    print("")
-    if priv_drop_ok:
-        print("Checking logging configuration....")
-        try:
-            logging.config.fileConfig(theloggingfile)
-            logging.info("fuglu --lint log configuration test")
-            print(fc.strcolor("OK", "green"))
-        except Exception as e:
-            print("Logging configuration check failed: %s " % str(e))
-            print("This may prevent the daemon from starting up.")
-            print(
-                "Make sure the log directory exists and is writable by user '%s' " % running_user)
-            print(fc.strcolor("NOT OK", "red"))
+    if lint:
+        controller.lint()
+        # the controller doesn't know about the logging.conf, so we lint this here
+        print("")
+        if priv_drop_ok:
+            print("Checking logging configuration....")
+            try:
+                logging.config.fileConfig(theloggingfile)
+                logging.info("fuglu --lint log configuration test")
+                print(fc.strcolor("OK", "green"))
+            except Exception as e:
+                print("Logging configuration check failed: %s " % str(e))
+                print("This may prevent the daemon from starting up.")
+                print(
+                    "Make sure the log directory exists and is writable by user '%s' " % running_user)
+                print(fc.strcolor("NOT OK", "red"))
+        else:
+            print(fc.strcolor("WARNING:", "yellow"))
+            print("Skipping logging configuration check because I could not switch to user '%s' earlier." % running_user)
+            print("please re-run fuglu --lint as privileged user")
+            print("(problems in the logging configuration could prevent the fuglu daemon from starting up)")
+
     else:
-        print(fc.strcolor("WARNING:", "yellow"))
-        print("Skipping logging configuration check because I could not switch to user '%s' earlier." % running_user)
-        print("please re-run fuglu --lint as privileged user")
-        print("(problems in the logging configuration could prevent the fuglu daemon from starting up)")
-
-else:
-    signal.signal(signal.SIGHUP, sighup)
-    if console:
-        controller.debugconsole = True
-    controller.startup()
-
-
-#---
-# stop logger factory & process
-#---
-baselogger.info("Stop logging framework -> Goodbye")
-try:
-    baselogger.debug("Send Poison pill to logFactoryQueue")
-    logFactoryQueue.put_nowait(None)
-    logProcessFactory.join(120)
+        signal.signal(signal.SIGHUP, sighup)
+        if console:
+            controller.debugconsole = True
+        controller.startup()
 except Exception as e:
-    logProcessFactory.terminate()
+    baselogger.error("Exception catched: %s"%(str(e)))
+    #baselogger.exception(e)
+finally:
+    #---
+    # stop logger factory & process
+    #---
+    baselogger.info("Stop logging framework -> Goodbye")
+    try:
+        baselogger.debug("Send Poison pill to logFactoryQueue")
+        logFactoryQueue.put_nowait(None)
+        logProcessFactory.join(120)
+    except Exception as e:
+        logProcessFactory.terminate()
