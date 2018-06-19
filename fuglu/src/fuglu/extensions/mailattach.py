@@ -4,7 +4,7 @@ from email.header import decode_header
 import email
 from fuglu.extensions.filearchives import Archivehandle
 from fuglu.extensions.filetype import filetype_handler
-from fuglu.extensions.caching import smart_cached_property
+from fuglu.extensions.caching import smart_cached_property, smart_cached_memberfunc
 from io import BytesIO
 
 # workarounds for mimetypes
@@ -44,23 +44,30 @@ class MailAttachment(threading.local):
                     break
         return archive_type
 
+    @smart_cached_property(inputs=['archive_type'])
     def isArchive(self):
         return self.archive_type is not None
 
-    def files_list(self):
-        if self.isArchive:
-            archive_handle = Archivehandle(self.archive_type, BytesIO(self.buffer))
-            namelist = archive_handle.namelist()
-            return [namelist]
-        else:
-            return [self.filename]
+    #@smart_cached_memberfunc(inputs=['attFileDict'])
+    def get_fileslist(self,levelin, levelmax):
+        if levelin < levelmax:
+            if self.isArchive:
+                return self.get_fileslist_archive()
+
+        return [self.filename]
+
+
+    @smart_cached_memberfunc(inputs=['archive_type','buffer'])
+    def get_fileslist_archive(self):
+        archive_handle = Archivehandle(self.archive_type, BytesIO(self.buffer))
+        namelist = archive_handle.namelist()
+        return namelist
 
 
 class MailAttachMgr(object):
     """Mail attachment manager"""
     def __init__(self,msgrep):
         self._msgrep = msgrep
-        self._attFileDict = dict()
 
     def set(self,msgrep):
         self._msgrep = msgrep
@@ -87,7 +94,9 @@ class MailAttachMgr(object):
                 self.logger.info("hidden part extraction failed: %s"%str(e))
 
     @smart_cached_property(inputs=[])
-    def filenames1stLevel(self):
+    def attFileDict(self):
+        attFileDict = dict()
+
         for part in self.walk_all_parts(self._msgrep):
             if part.is_multipart():
                 continue
@@ -126,16 +135,23 @@ class MailAttachMgr(object):
 
             # dict: filename: list
 
-            fileList = self._attFileDict.get(att_name)
+            fileList = attFileDict.get(att_name)
             if fileList is None:
                 fileList = list()
-                self._attFileDict[att_name] = fileList
+                attFileDict[att_name] = fileList
 
             buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
             att = MailAttachment(buffer,att_name)
             fileList.append(att)
-            print("Attachment filename: %s, isArchive: %s"%(att.filename,att.isArchive()))
-        return [filename for filename in iter(self._attFileDict.keys())]
+        return attFileDict
+
+    @smart_cached_memberfunc(inputs=['attFileDict'])
+    def get_fileslist(self,level):
+        fileList = []
+        for fname,attObjList in iter(self.attFileDict.items()):
+            for attObj in attObjList:
+                fileList.extend(attObj.get_fileslist(0,level))
+        return fileList
 
     def get_attIDs(self,filename):
         return self.attFileDict[filename]

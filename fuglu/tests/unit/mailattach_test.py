@@ -24,6 +24,7 @@ class FileArchiveBase(unittest.TestCase):
             with open(tempfile, 'r') as fh:
                 msgrep = email.message_from_file(fh)
         mAttachMgr = MailAttachMgr(msgrep)
-        print("Filenames, 1st Level: %s"%",".join(mAttachMgr.filenames1stLevel))
+        print("Filenames, base Level: %s"%",".join(mAttachMgr.get_fileslist(0)))
+        print("Filenames, first Level: %s"%",".join(mAttachMgr.get_fileslist(1)))
         #print("Filenames: %s"%",".join(mAttachMgr.files_list))
 
