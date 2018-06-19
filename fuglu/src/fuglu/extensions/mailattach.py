@@ -27,6 +27,16 @@ class MailAttachment(threading.local):
 
     @smart_cached_property(inputs=['buffer'])
     def contenttype(self):
+        """
+        (Cached Property-Getter)
+
+        Stores the content type of the file buffer using filetype_handler.
+
+        Internal member dependencies:
+            - buffer (bytes): File buffer
+        Returns:
+            (str): contenttype of file buffer
+        """
         contenttype_magic = None
         if filetype_handler.available():
             contenttype_magic = filetype_handler.get_buffertype(self.buffer)
@@ -34,6 +44,19 @@ class MailAttachment(threading.local):
 
     @smart_cached_property(inputs=['contenttype','filename'])
     def archive_type(self):
+        """
+        (Cached Property-Getter)
+
+        Stores the archive type stored in this object.
+
+        Internal member dependencies:
+            - contenttype: File content type
+            - filename: Filename (Extension might be used to detect archive type)
+
+        Returns:
+            (str): Archive type if object is an archive, None otherwise
+        """
+
         # try guessing the archive type based on magic content type first
         archive_type = Archivehandle.archive_type_from_content_type(self.contenttype)
 
@@ -49,10 +72,40 @@ class MailAttachment(threading.local):
 
     @smart_cached_property(inputs=['archive_type'])
     def isArchive(self):
+        """
+        (Cached Property-Getter)
+
+        Define if this object is an extractable archive or an ordinary file.
+
+        Internal:
+            - archive_type: Depends on the member variable 'archive_type'
+
+        Returns:
+            (bool): True for an archive that can be extracted
+        """
         return self.archive_type is not None
 
-    #@smart_cached_memberfunc(inputs=['attFileDict'])
     def get_fileslist(self,levelin, levelmax):
+        """
+        Get a list of files contained in this archive (recursively extracting archives)
+        or the current filename if this is not an archive.
+
+        Don't cache here, "fileslist_archive" is only available for
+        archives. If this is put as dependency then there will be a
+        archive handler applied on a non-archive which throws an
+        exception
+
+        IMPORTANT: If this is the maximal recursive level to check then only the filelist is
+                   extracted from the archive but the actual archive files are NOT extracted.
+
+        Args:
+            levelin  (in): Current recursive level
+            levelmax (in): Max recursive archive level up to which archives are extracted
+
+        Returns:
+            (list[str]): List with filenames contained in this object of this object filename itself
+
+        """
         if levelmax is None or levelin < levelmax:
             if self.isArchive:
                 if levelmax is None or levelin + 1 < levelmax:
@@ -63,13 +116,31 @@ class MailAttachment(threading.local):
         return [self.filename]
 
     def get_objectlist(self,levelin, levelmax):
+        """
+        Get a list of file objects contained in this archive (recursively extracting archives)
+        or the current object if this is not an archive.
+
+        Don't cache here, "fileslist_archive" is only available for
+        archives. If this is put as dependency then there will be a
+        archive handler applied on a non-archive which throws an
+        exception
+
+        IMPORTANT: This will extract the objects of (at least) the current recursive level.
+                   Further extraction depends on the input recursion level.
+
+        Args:
+            levelin  (in): Current recursive level
+            levelmax (in): Max recursive archive level up to which archives are extracted
+
+        Returns:
+            (list[MailAttachment]): List with MailAttachment objects contained in this object of this object itself
+        """
         if levelmax is None or levelin < levelmax:
 
             if self.isArchive:
 
                 newlist = []
                 if levelmax is None or levelin + 1 < levelmax:
-                    #return self.get_fileslist_arch(levelin,levelmax)
                     for fname in self.fileslist_archive:
                         attachObj = self.get_archiveObj(fname)
                         newlist.extend(attachObj.get_objectlist(levelin+1,levelmax))
@@ -82,6 +153,16 @@ class MailAttachment(threading.local):
         return [self]
 
     def get_archiveObj(self,fname):
+        """
+        Get cached archive object or create a new one.
+
+        Args:
+            fname (str): filename of file object
+
+        Returns:
+            (MailAttachment): Requested object from archive
+
+        """
         if not self.isArchive:
             return None
         else:
@@ -95,6 +176,21 @@ class MailAttachment(threading.local):
 
     @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle'])
     def get_fileslist_arch(self,levelin,levelmax):
+        """
+        Get a list of filenames contained in this archive (recursively extracting archives)
+        or the current object filename if this is not an archive.
+
+        Internal:
+            - fileslist_archive: The list of archive filenames
+            - archive_handle: The archive handle to work with the archvie
+
+        Args:
+            levelin  (in): Current recursive level
+            levelmax (in): Max recursive archive level up to which archives are extracted
+
+        Returns:
+            (list[str]): List with filenames contained in this object or this object filename itself
+        """
         newlist = []
         for fname in self.fileslist_archive:
             attachObj = self.get_archiveObj(fname)
@@ -103,6 +199,19 @@ class MailAttachment(threading.local):
 
     @smart_cached_property(inputs=['archive_type','buffer'])
     def archive_handle(self):
+        """
+        (Cached Property-Getter)
+
+        Create an archive handle to check, extract, ... files in the buffered archive.
+
+        Internal:
+            - archive_type: The archive type (already detected)
+            - buffer: The file buffer containing the archive
+
+        Returns:
+           (Archivehandle) : The handle to work with the archive
+
+        """
         # make sure there's not buffered archive object when
         # the archive handle is created (or overwritten)
         self._buffer_archObj = {}
@@ -110,10 +219,31 @@ class MailAttachment(threading.local):
 
     @smart_cached_property(inputs=['archive_handle'])
     def fileslist_archive(self):
+        """
+        (Cached Property-Getter)
+
+        Internal:
+            - archive_type: The archive type (already detected)
+            - buffer: The file buffer containing the archive
+
+        Returns:
+           (Archivehandle) : The handle to work with the archive
+
+        """
         return self.archive_handle.namelist()
 
     @smart_cached_property(inputs=[])
     def parentArchives(self):
+        """
+        (Cached Property-Getter)
+
+        The ordered list of parent objects this file was extracted from.
+        First element is the direct parent (if existing).
+
+        Returns:
+           (list[MailAttachment]) : list of parents
+
+        """
         parentsList = []
         upstreamObj = self
         while upstreamObj.inObj is not None:
@@ -123,6 +253,13 @@ class MailAttachment(threading.local):
 
 
     def __str__(self):
+        """
+        String conversion function for object. Creates
+        a string with some basic information
+        Returns:
+            (str): string with object information
+
+        """
         if sys.version_info > (3,):
             elementOf = u" \u2208 "
         else:
@@ -139,14 +276,28 @@ Content type : %s""" % (self.filename,
 
 class MailAttachMgr(object):
     """Mail attachment manager"""
+
     def __init__(self,msgrep):
+        """
+        Constructor, initialised by message.
+
+        Args:
+            msgrep (email.message.Message): Message to work with
+        """
         self._msgrep = msgrep
 
-    def set(self,msgrep):
-        self._msgrep = msgrep
 
     def walk_all_parts(self, message):
-        """Like email.message.Message's .walk() but also tries to find parts in the message's epilogue"""
+        """
+        Like email.message.Message's .walk() but also tries to find parts in the message's epilogue.
+
+        Args:
+            message (email.message.Message):
+
+        Returns:
+            (iterator): to iterate over message parts
+
+        """
         for part in message.walk():
             yield part
 
@@ -166,8 +317,20 @@ class MailAttachMgr(object):
             except Exception as e:
                 self.logger.info("hidden part extraction failed: %s"%str(e))
 
-    @smart_cached_property(inputs=[])
+    @smart_cached_property(inputs=["_msgrep"])
     def attFileDict(self):
+        """
+        (Cached Property-Getter)
+
+        Dictionary storing attachments in mail. Key is filename, value is list of
+        MailAttachment objects for given name.
+
+        Internal member dependencies:
+            - _msgrep (email.message.Message): Email message
+
+        Returns:
+            (dict): Dictionary storing attachments in list
+        """
         attFileDict = dict()
 
         for part in self.walk_all_parts(self._msgrep):
@@ -220,6 +383,21 @@ class MailAttachMgr(object):
 
     @smart_cached_memberfunc(inputs=['attFileDict'])
     def get_fileslist(self,level=None):
+        """
+        (Cached Member Function)
+
+        Get list of all filenames attached to message. For given recursion level attached
+        archives are extracted to get filenames.
+
+        Internal member dependencies:
+            - attFileDict (dict): The internal dictionary storing attached files as MailAttachment objects.
+
+        Keyword Args:
+            level (in): Level up to which archives are opened to get file list (default: None -> extract all)
+
+        Returns:
+            list[str]: list containing attached files with archives extracted to given level
+        """
         fileList = []
         for fname,attObjList in iter(self.attFileDict.items()):
             for attObj in attObjList:
@@ -228,13 +406,24 @@ class MailAttachMgr(object):
 
     @smart_cached_memberfunc(inputs=['attFileDict'])
     def get_objectlist(self,level=None):
+        """
+        (Cached Member Function)
+
+        Get list of all MailAttachment objects attached to message. For given recursion level attached
+        archives are extracted.
+
+        Internal member dependencies:
+            - attFileDict (dict): The internal dictionary storing attached files as MailAttachment objects.
+
+        Keyword Args:
+            level (in): Level up to which archives are opened to get file list (default: None -> extract all)
+
+        Returns:
+            list[MailAttachment]: list containing attached files with archives extracted to given level
+        """
         objList = []
         for fname,attObjList in iter(self.attFileDict.items()):
             for attObj in attObjList:
                 objList.extend(attObj.get_objectlist(0,level))
         return objList
 
-    def get_attIDs(self,filename):
-        return self.attFileDict[filename]
-
-    #def get_filetype(self,attID):
