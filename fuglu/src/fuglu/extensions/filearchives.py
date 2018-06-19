@@ -262,7 +262,8 @@ class Archive_tar(Archive_int):
         Returns:
             (int) file size in bytes
         """
-        return self.arinfo.size
+        arinfo = self._handle.getmember(path)
+        return arinfo.size
 
 class Archive_7z(Archive_int):
     def __init__(self, filedescriptor):
@@ -291,7 +292,8 @@ class Archive_7z(Archive_int):
         Returns:
             (int) file size in bytes
         """
-        return self.arinfo.size
+        arinfo = self._handle.getmember(path)
+        return arinfo.size
 
 #--                  --#
 #- use class property -#
