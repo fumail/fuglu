@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import unittest
 import sys
 import email
@@ -25,9 +26,24 @@ class FileArchiveBase(unittest.TestCase):
             with open(tempfile, 'r') as fh:
                 msgrep = email.message_from_file(fh)
         mAttachMgr = MailAttachMgr(msgrep)
-        print("Filenames, base Level: [%s]"%", ".join(mAttachMgr.get_fileslist(0)))
-        print("Filenames, first Level: [%s]"%", ".join(mAttachMgr.get_fileslist(1)))
-        print("Filenames, second Level: [%s]"%", ".join(mAttachMgr.get_fileslist(2)))
-        print("Filenames, all Levels: [%s]"%", ".join(mAttachMgr.get_fileslist()))
-        #print("Filenames: %s"%",".join(mAttachMgr.files_list))
+        print("Filenames, base   Level : [%s]"%", ".join(mAttachMgr.get_fileslist(0)))
+        print("Filenames, first  Level : [%s]"%", ".join(mAttachMgr.get_fileslist(1)))
+        print("Filenames, second Level : [%s]"%", ".join(mAttachMgr.get_fileslist(2)))
+        print("Filenames, all    Levels: [%s]"%", ".join(mAttachMgr.get_fileslist()))
+
+        print("\n")
+        print("-------------------------------------")
+        print("- Extract objects util second level -")
+        print("-------------------------------------")
+        secAttList = mAttachMgr.get_objectlist(2)
+        for att in secAttList:
+            print(att)
+
+        print("\n")
+        print("--------------------------------------------")
+        print("- Extract objects until there's no archive -")
+        print("--------------------------------------------")
+        fullAttList = mAttachMgr.get_objectlist()
+        for att in fullAttList:
+            print(att)
 

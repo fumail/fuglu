@@ -2,6 +2,7 @@ import mimetypes
 import threading
 from email.header import decode_header
 import email
+import sys
 from fuglu.extensions.filearchives import Archivehandle
 from fuglu.extensions.filetype import filetype_handler
 from fuglu.extensions.caching import smart_cached_property, smart_cached_memberfunc
@@ -18,9 +19,11 @@ MIMETYPE_EXT_OVERRIDES = {
 
 
 class MailAttachment(threading.local):
-    def __init__(self,buffer,filename):
+    def __init__(self,buffer,filename,inObj=None):
         self.filename = filename
         self.buffer = buffer
+        self._buffer_archObj = {}
+        self.inObj = inObj
 
     @smart_cached_property(inputs=['buffer'])
     def contenttype(self):
@@ -59,22 +62,79 @@ class MailAttachment(threading.local):
 
         return [self.filename]
 
+    def get_objectlist(self,levelin, levelmax):
+        if levelmax is None or levelin < levelmax:
+
+            if self.isArchive:
+
+                newlist = []
+                if levelmax is None or levelin + 1 < levelmax:
+                    #return self.get_fileslist_arch(levelin,levelmax)
+                    for fname in self.fileslist_archive:
+                        attachObj = self.get_archiveObj(fname)
+                        newlist.extend(attachObj.get_objectlist(levelin+1,levelmax))
+                else:
+                    for fname in self.fileslist_archive:
+                        attachObj = self.get_archiveObj(fname)
+                        newlist.append(attachObj)
+                return newlist
+
+        return [self]
+
+    def get_archiveObj(self,fname):
+        if not self.isArchive:
+            return None
+        else:
+            try:
+                obj = self._buffer_archObj[fname]
+            except KeyError:
+                buffer = self.archive_handle.extract(fname,500000)
+                obj = MailAttachment(buffer,fname,self)
+                self._buffer_archObj[fname] = obj
+            return obj
+
     @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle'])
     def get_fileslist_arch(self,levelin,levelmax):
         newlist = []
         for fname in self.fileslist_archive:
-            buffer = self.archive_handle.extract(fname,500000)
-            newAttach = MailAttachment(buffer,fname)
-            newlist.extend(newAttach.get_fileslist(levelin+1,levelmax))
+            attachObj = self.get_archiveObj(fname)
+            newlist.extend(attachObj.get_fileslist(levelin+1,levelmax))
         return newlist
 
     @smart_cached_property(inputs=['archive_type','buffer'])
     def archive_handle(self):
+        # make sure there's not buffered archive object when
+        # the archive handle is created (or overwritten)
+        self._buffer_archObj = {}
         return Archivehandle(self.archive_type, BytesIO(self.buffer))
 
     @smart_cached_property(inputs=['archive_handle'])
     def fileslist_archive(self):
         return self.archive_handle.namelist()
+
+    @smart_cached_property(inputs=[])
+    def parentArchives(self):
+        parentsList = []
+        upstreamObj = self
+        while upstreamObj.inObj is not None:
+            parentsList.append(upstreamObj.inObj)
+            upstreamObj = upstreamObj.inObj
+        return parentsList
+
+
+    def __str__(self):
+        if sys.version_info > (3,):
+            elementOf = u" \u2208 "
+        else:
+            elementOf = u" IS_IN "
+        return u"""
+Filename : %s        
+Location : %s        
+Archive type : %s        
+Content type : %s""" % (self.filename,
+                        self.filename + elementOf + elementOf.join([u"{"+obj.filename+u"}" for obj in self.parentArchives]),
+                        self.archive_type,
+                        self.contenttype)
 
 
 class MailAttachMgr(object):
@@ -165,6 +225,14 @@ class MailAttachMgr(object):
             for attObj in attObjList:
                 fileList.extend(attObj.get_fileslist(0,level))
         return fileList
+
+    @smart_cached_memberfunc(inputs=['attFileDict'])
+    def get_objectlist(self,level=None):
+        objList = []
+        for fname,attObjList in iter(self.attFileDict.items()):
+            for attObj in attObjList:
+                objList.extend(attObj.get_objectlist(0,level))
+        return objList
 
     def get_attIDs(self,filename):
         return self.attFileDict[filename]
