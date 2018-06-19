@@ -50,22 +50,31 @@ class MailAttachment(threading.local):
 
     #@smart_cached_memberfunc(inputs=['attFileDict'])
     def get_fileslist(self,levelin, levelmax):
-        if levelin < levelmax:
+        if levelmax is None or levelin < levelmax:
             if self.isArchive:
-                if levelin + 1 < levelmax:
-                    # keep searching
-                    pass
+                if levelmax is None or levelin + 1 < levelmax:
+                    return self.get_fileslist_arch(levelin,levelmax)
                 else:
-                    return self.get_fileslist_archive()
+                    return self.fileslist_archive
 
         return [self.filename]
 
+    @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle'])
+    def get_fileslist_arch(self,levelin,levelmax):
+        newlist = []
+        for fname in self.fileslist_archive:
+            buffer = self.archive_handle.extract(fname,500000)
+            newAttach = MailAttachment(buffer,fname)
+            newlist.extend(newAttach.get_fileslist(levelin+1,levelmax))
+        return newlist
 
-    @smart_cached_memberfunc(inputs=['archive_type','buffer'])
-    def get_fileslist_archive(self):
-        archive_handle = Archivehandle(self.archive_type, BytesIO(self.buffer))
-        namelist = archive_handle.namelist()
-        return namelist
+    @smart_cached_property(inputs=['archive_type','buffer'])
+    def archive_handle(self):
+        return Archivehandle(self.archive_type, BytesIO(self.buffer))
+
+    @smart_cached_property(inputs=['archive_handle'])
+    def fileslist_archive(self):
+        return self.archive_handle.namelist()
 
 
 class MailAttachMgr(object):
@@ -150,7 +159,7 @@ class MailAttachMgr(object):
         return attFileDict
 
     @smart_cached_memberfunc(inputs=['attFileDict'])
-    def get_fileslist(self,level):
+    def get_fileslist(self,level=None):
         fileList = []
         for fname,attObjList in iter(self.attFileDict.items()):
             for attObj in attObjList:
