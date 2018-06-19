@@ -52,7 +52,11 @@ class MailAttachment(threading.local):
     def get_fileslist(self,levelin, levelmax):
         if levelin < levelmax:
             if self.isArchive:
-                return self.get_fileslist_archive()
+                if levelin + 1 < levelmax:
+                    # keep searching
+                    pass
+                else:
+                    return self.get_fileslist_archive()
 
         return [self.filename]
 
