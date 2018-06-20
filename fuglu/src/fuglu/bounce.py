@@ -35,10 +35,7 @@ class Bounce(object):
 
     def _add_required_headers(self, recipient, messagecontent):
         """add headers required for sending automated mail"""
-        msgrep = email.message_from_string(force_uString(messagecontent))
-        msgrep.set_charset("utf-8") # define unicode (otherwise there will be no charset defined
-                                    # and some clients might display special characters since
-                                    # 'messagecontent' is unicode
+        msgrep = email.message_from_string(force_uString(messagecontent).encode('ascii','ignore'))
 
         if not 'to' in msgrep:
             msgrep['To'] = Header("<%s>" % recipient).encode()
