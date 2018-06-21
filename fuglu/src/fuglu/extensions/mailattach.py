@@ -19,11 +19,23 @@ MIMETYPE_EXT_OVERRIDES = {
 
 
 class MailAttachment(threading.local):
-    def __init__(self,buffer,filename,inObj=None):
+    """
+    Mail attachment object or a file contained in the attachment.
+    """
+    def __init__(self,buffer,filename,inObj=None,contenttype_mime=None):
+        """
+        Constructor
+        Args:
+            buffer (bytes): buffer containing attachment source
+            filename (str): filename of current attachment object
+            inObj (MailAttachment): "Father" MailAttachment object (if existing), the archive containing the current object
+            contenttype_mime (str): The contenttype as defined in the mail attachment, only available for direct mail attachments
+        """
         self.filename = filename
         self.buffer = buffer
         self._buffer_archObj = {}
         self.inObj = inObj
+        self.contenttype_mime = contenttype_mime
 
     @smart_cached_property(inputs=['buffer'])
     def contenttype(self):
@@ -377,12 +389,12 @@ class MailAttachMgr(object):
                 attFileDict[att_name] = fileList
 
             buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
-            att = MailAttachment(buffer,att_name)
+            att = MailAttachment(buffer,att_name,contenttype_mime=contenttype_mime)
             fileList.append(att)
         return attFileDict
 
     @smart_cached_memberfunc(inputs=['attFileDict'])
-    def get_fileslist(self,level=None):
+    def get_fileslist(self,level=0):
         """
         (Cached Member Function)
 
@@ -393,7 +405,7 @@ class MailAttachMgr(object):
             - attFileDict (dict): The internal dictionary storing attached files as MailAttachment objects.
 
         Keyword Args:
-            level (in): Level up to which archives are opened to get file list (default: None -> extract all)
+            level (in): Level up to which archives are opened to get file list (default: 0 -> only filenames directly attached)
 
         Returns:
             list[str]: list containing attached files with archives extracted to given level
@@ -405,7 +417,7 @@ class MailAttachMgr(object):
         return fileList
 
     @smart_cached_memberfunc(inputs=['attFileDict'])
-    def get_objectlist(self,level=None):
+    def get_objectlist(self,level=0):
         """
         (Cached Member Function)
 
@@ -416,7 +428,7 @@ class MailAttachMgr(object):
             - attFileDict (dict): The internal dictionary storing attached files as MailAttachment objects.
 
         Keyword Args:
-            level (in): Level up to which archives are opened to get file list (default: None -> extract all)
+            level (in): Level up to which archives are opened to get file list (default: 0 -> direct mail attachments)
 
         Returns:
             list[MailAttachment]: list containing attached files with archives extracted to given level

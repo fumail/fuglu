@@ -26,24 +26,43 @@ class FileArchiveBase(unittest.TestCase):
             with open(tempfile, 'r') as fh:
                 msgrep = email.message_from_file(fh)
         mAttachMgr = MailAttachMgr(msgrep)
-        print("Filenames, base   Level : [%s]"%", ".join(mAttachMgr.get_fileslist(0)))
-        print("Filenames, first  Level : [%s]"%", ".join(mAttachMgr.get_fileslist(1)))
-        print("Filenames, second Level : [%s]"%", ".join(mAttachMgr.get_fileslist(2)))
-        print("Filenames, all    Levels: [%s]"%", ".join(mAttachMgr.get_fileslist()))
+        #self.assertEqual([])Filenames, base   Level : [nestedarchive.tar.gz, unnamed.txt]
+        fnames_base_level   = sorted(["nestedarchive.tar.gz", "unnamed.txt"])
+        fnames_first_level  = sorted(["level1.tar.gz", "level0.txt", "unnamed.txt"])
+        fnames_second_level = sorted(["level2.tar.gz", "level1.txt", "level0.txt", "unnamed.txt"])
+        fnames_all_levels   = sorted(["level6.txt", "level5.txt", "level4.txt", "level3.txt", "level2.txt", "level1.txt", "level0.txt", "unnamed.txt"])
+
+
+        print("Filenames, Level  [0:0] : [%s]"%", ".join(mAttachMgr.get_fileslist()))
+        print("Filenames, Levels [0:1] : [%s]"%", ".join(mAttachMgr.get_fileslist(1)))
+        print("Filenames, Levels [0:2] : [%s]"%", ".join(mAttachMgr.get_fileslist(2)))
+        print("Filenames, Levels [0: ] : [%s]"%", ".join(mAttachMgr.get_fileslist(None)))
+
+        self.assertEqual(fnames_base_level,  sorted(mAttachMgr.get_fileslist()))
+        self.assertEqual(fnames_first_level, sorted(mAttachMgr.get_fileslist(1)))
+        self.assertEqual(fnames_second_level,sorted(mAttachMgr.get_fileslist(2)))
+        self.assertEqual(fnames_all_levels,  sorted(mAttachMgr.get_fileslist(None)))
 
         print("\n")
         print("-------------------------------------")
         print("- Extract objects util second level -")
         print("-------------------------------------")
-        secAttList = mAttachMgr.get_objectlist(2)
-        for att in secAttList:
+        # list has to be sorted according to filename in order to be able to match
+        # target list in Python2 and 3
+        secAttList = sorted(mAttachMgr.get_objectlist(2),key=lambda obj: obj.filename)
+        self.assertEqual(len(fnames_second_level),len(secAttList))
+        for att,afname in zip(secAttList,fnames_second_level):
             print(att)
+            self.assertEqual(afname,att.filename)
 
         print("\n")
         print("--------------------------------------------")
         print("- Extract objects until there's no archive -")
         print("--------------------------------------------")
-        fullAttList = mAttachMgr.get_objectlist()
-        for att in fullAttList:
+        # list has to be sorted according to filename in order to be able to match
+        # target list in Python2 and 3
+        fullAttList = sorted(mAttachMgr.get_objectlist(None),key=lambda obj: obj.filename)
+        for att,afname in zip(fullAttList,fnames_all_levels):
             print(att)
+            self.assertEqual(afname,att.filename)
 
