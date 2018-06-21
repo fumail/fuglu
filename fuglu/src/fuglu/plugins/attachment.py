@@ -658,11 +658,11 @@ The other common template variables are available as well.
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
                 if res == ATTACHMENT_SILENTDELETE:
                     self._debuginfo(
-                        suspect, "Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (magic)" % (att_name, contenttype_mime))
+                        suspect, "Attachment name=%s content-type=%s SILENT DELETE: blocked by mime content type (magic)" % (att_name, contenttype_magic))
                     return DELETE
                 if res == ATTACHMENT_BLOCK:
                     self._debuginfo(
-                        suspect, "Attachment name=%s content-type=%s : blocked by mime content type (magic)" % (att_name, contenttype_mime))
+                        suspect, "Attachment name=%s content-type=%s : blocked by mime content type (magic)" % (att_name, contenttype_magic))
                     message = suspect.tags['FiletypePlugin.errormessage']
                     return blockactioncode, message
 
