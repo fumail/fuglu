@@ -593,35 +593,10 @@ The other common template variables are available as well.
         default_archive_ctypes = self.rulescache.getARCHIVECTYPERules(
             FUATT_DEFAULT)
 
-        m = suspect.get_message_rep()
-        for part in self.walk_all_parts(m):
-            if part.is_multipart():
-                continue
-            contenttype_mime = part.get_content_type()
-            att_name = part.get_filename(None)
-
-            if att_name:
-                # some filenames are encoded, try to decode
-                try:
-                    att_name = ''.join([x[0] for x in decode_header(att_name)])
-                except Exception:
-                    pass
-            else:
-                ct = part.get_content_type()
-                if ct in MIMETYPE_EXT_OVERRIDES:
-                    ext = MIMETYPE_EXT_OVERRIDES[ct]
-                else:
-                    exts = mimetypes.guess_all_extensions(ct)
-                    # reply is randomly sorted list, get consistent result
-                    if len(exts)>0:
-                        exts.sort()
-                        ext = exts[0]
-                    else:
-                        ext = None
-
-                if ext is None:
-                    ext = ''
-                att_name = 'unnamed%s' % ext
+        # get mail attachment objects (only directly attached objects)
+        for attObj in suspect.attMgr.get_objectlist():
+            contenttype_mime = attObj.contenttype_mime
+            att_name = attObj.filename
 
             att_name = self.asciionly(att_name)
 
@@ -650,10 +625,8 @@ The other common template variables are available as well.
                 message = suspect.tags['FiletypePlugin.errormessage']
                 return blockactioncode, message
 
-            contenttype_magic = None
-            if filetype_handler.available():
-                pl = part.get_payload(decode=True)
-                contenttype_magic = filetype_handler.get_buffertype(pl)
+            contenttype_magic = attObj.contenttype
+            if contenttype_magic is not None:
                 res = self.matchMultipleSets(
                     [user_ctypes, domain_ctypes, default_ctypes], contenttype_magic, suspect, att_name)
                 if res == ATTACHMENT_SILENTDELETE:
@@ -669,22 +642,23 @@ The other common template variables are available as well.
             # archives
             if self.checkarchivenames or self.checkarchivecontent:
 
-                # try guessing the archive type based on magic content type first
-                archive_type = Archivehandle.archive_type_from_content_type(contenttype_magic)
+                #if archive_type is not None:
+                if attObj.isArchive:
 
-                # if it didn't work, try to guess by the filename extension, if it is enabled
-                if archive_type is None:
-                    # sort by length, so tar.gz is checked before .gz
-                    for arext in sorted(self.active_archive_extensions.keys(), key=lambda x: len(x), reverse=True):
-                        if att_name.lower().endswith('.%s' % arext):
-                            archive_type = self.active_archive_extensions[arext]
-                            break
-                if archive_type is not None:
-                    self.logger.debug("Extracting %s as %s" % (att_name,archive_type))
+                    # check if extension was used to determine archive type and
+                    # if yes, check if extension is enabled is enabled. This code
+                    # is here to remain backward compatible in the bahavior. It
+                    # is recommended to define inactive archive-types and -extensions
+                    # differently
+                    if attObj.atype_fromext() is not None:
+                        if not attObj.atype_fromext()[1] in self.active_archive_extensions.keys():
+                            # skip if extension is not in active list
+                            continue
+
+
+                    self.logger.debug("Extracting %s as %s" % (att_name,attObj.archive_type))
                     try:
-                        pl = BytesIO(part.get_payload(decode=True))
-                        archive_handle = Archivehandle(archive_type, pl)
-                        namelist = archive_handle.namelist()
+                        namelist = attObj.fileslist_archive
                         if self.checkarchivenames:
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
@@ -705,13 +679,22 @@ The other common template variables are available as well.
                                     return blockactioncode, message
 
                         if filetype_handler.available() and self.checkarchivecontent:
-                            for name in namelist:
-                                safename = self.asciionly(name)
-                                extracted = archive_handle.extract(name, self.config.getint(self.section, 'archivecontentmaxsize'))
-                                if extracted is None:
-                                    self._debuginfo(
-                                        suspect, '%s not extracted - too large' % (safename))
-                                contenttype_magic = filetype_handler.get_buffertype(extracted)
+
+
+                            # limit maximum content size according to previous implementation
+                            # This will not return files larger than limit even if it has already been extracted
+                            archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
+
+                            # list of files that will not be extracted (or returned for now to be backward compatible)
+                            tooLarge = attObj.get_archiveFList(maxsize_extract=archivecontentmaxsize,
+                                                               maxsize_get=archivecontentmaxsize,inverse=True)
+                            self._debuginfo( suspect, 'Files not extracted - too large : [%s]' %
+                                             (", ".join([self.asciionly(fname) for fname in tooLarge ])))
+
+                            for archObj in attObj.get_archiveObjList(maxsize_get=archivecontentmaxsize):
+                                safename = self.asciionly(archObj.filename)
+
+                                contenttype_magic = archObj.contenttype
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
@@ -724,9 +707,6 @@ The other common template variables are available as well.
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
 
-                        archive_handle.close()
-                        pl.close()
-                        
                     except Exception:
                         self.logger.warning(
                             "archive scanning failed in attachment {attname}: {error}".format(attname=att_name, error=traceback.format_exc() ))

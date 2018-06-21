@@ -22,16 +22,18 @@ class MailAttachment(threading.local):
     """
     Mail attachment object or a file contained in the attachment.
     """
-    def __init__(self,buffer,filename,inObj=None,contenttype_mime=None):
+    def __init__(self,buffer,filename,filesize=None,inObj=None,contenttype_mime=None):
         """
         Constructor
         Args:
             buffer (bytes): buffer containing attachment source
             filename (str): filename of current attachment object
+            filesize (size): file size in bytes
             inObj (MailAttachment): "Father" MailAttachment object (if existing), the archive containing the current object
             contenttype_mime (str): The contenttype as defined in the mail attachment, only available for direct mail attachments
         """
         self.filename = filename
+        self.filesize = filesize
         self.buffer = buffer
         self._buffer_archObj = {}
         self.inObj = inObj
@@ -69,6 +71,8 @@ class MailAttachment(threading.local):
             (str): Archive type if object is an archive, None otherwise
         """
 
+        self._arext = None
+
         # try guessing the archive type based on magic content type first
         archive_type = Archivehandle.archive_type_from_content_type(self.contenttype)
 
@@ -79,8 +83,15 @@ class MailAttachment(threading.local):
 
                 if self.filename.lower().endswith('.%s' % arext):
                     archive_type = Archivehandle.avail_archive_extensions[arext]
+                    # store archive extension for internal use
+                    self._arext = arext
                     break
         return archive_type
+
+    @smart_cached_memberfunc(inputs=['archive_type'])
+    def atype_fromext(self):
+        """True if extension was used to determine archive type"""
+        return self._arext
 
     @smart_cached_property(inputs=['archive_type'])
     def isArchive(self):
@@ -164,12 +175,72 @@ class MailAttachment(threading.local):
 
         return [self]
 
-    def get_archiveObj(self,fname):
+    @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle','isArchive'])
+    def get_archiveFList(self,maxsize_extract=None,maxsize_get=None,inverse=False):
+        """
+        Get list of all filenames for objects in archive if within size limits. The list
+        is consistent with the object list that would be returned by 'get_archiveObjList' or
+        the inverse of it.
+        Note: This will extract objects withing the limit if not already extracted!
+
+        Keyword Args:
+            maxsize_extract (int): Maximum size that will be extracted
+            maxsize_get (int): Maximum size to return file
+            inverse (bool): invert list
+
+        Returns:
+
+        """
+        matchlist = []
+        inverselist = []
+        if self.isArchive:
+            for fname in self.fileslist_archive:
+                attachObj = self.get_archiveObj(fname,maxsize_extract)
+                if attachObj is not None:
+                    try:
+                        obj = self._buffer_archObj[fname]
+                        if obj.filesize is None or maxsize_get is None:
+                            matchlist.append(fname)
+                        elif obj.filesize <= maxsize_get:
+                            matchlist.append(fname)
+                        else:
+                            inverselist.append(fname)
+                    except KeyError:
+                        inverselist.append(fname)
+        return inverselist if inverse else matchlist
+
+    @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle','isArchive'])
+    def get_archiveObjList(self,maxsize_extract=None,maxsize_get=None):
+        """
+        Get list of all object in archive (extracts the archive) if within size limits.
+        If the file is already extracted the file will be returned even if the size is
+        larger than 'maxsize_extract' (as long as it is within 'maxsize_get').
+
+        Args:
+            maxsize_extract (int): Maximum size that will be extracted
+            maxsize_get (int): Maximum size to return file
+
+        Returns:
+
+        """
+        newlist = []
+        if self.isArchive:
+            for fname in self.fileslist_archive:
+                attachObj = self.get_archiveObj(fname,maxsize_extract)
+                if attachObj is not None:
+                    if maxsize_get is None or attachObj.filesize is None:
+                        newlist.append(attachObj)
+                    elif attachObj.filesize <= maxsize_get:
+                        newlist.append(attachObj)
+        return newlist
+
+    def get_archiveObj(self,fname,maxsize_extract):
         """
         Get cached archive object or create a new one.
 
         Args:
             fname (str): filename of file object
+            maxsize_extract (int): Maximum size that will be extracted
 
         Returns:
             (MailAttachment): Requested object from archive
@@ -181,8 +252,9 @@ class MailAttachment(threading.local):
             try:
                 obj = self._buffer_archObj[fname]
             except KeyError:
-                buffer = self.archive_handle.extract(fname,500000)
-                obj = MailAttachment(buffer,fname,self)
+                filesize = self.archive_handle.filesize(fname)
+                buffer = self.archive_handle.extract(fname,maxsize_extract)
+                obj = MailAttachment(buffer,fname,inObj=self,filesize=filesize)
                 self._buffer_archObj[fname] = obj
             return obj
 

@@ -24,6 +24,7 @@ import uuid
 import threading
 from fuglu.addrcheck import Addrcheck
 from fuglu.stringencode import force_uString, force_bString
+from fuglu.extensions.mailattach import MailAttachMgr
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -225,6 +226,14 @@ class Suspect(object):
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
+
+        self._attMgr = None
+        """Attachment manager"""
+    @property
+    def attMgr(self):
+        if self._attMgr is None:
+            self._attMgr = MailAttachMgr(self.get_message_rep())
+        return self._attMgr
 
     @property
     def to_address(self):
@@ -536,6 +545,7 @@ class Suspect(object):
         """
         self.source = force_bString(source,encoding=encoding)
         self._msgrep = None
+        self._attMgr = None
 
     def setSource(self, source):
         """old name for set_source"""
