@@ -4,6 +4,7 @@ import sys
 import email
 from os.path import join
 from fuglu.extensions.mailattach import MailAttachMgr
+from fuglu.shared import Suspect
 from unittestsetup import TESTDATADIR, CONFDIR
 
 class FileArchiveBase(unittest.TestCase):
@@ -66,3 +67,31 @@ class FileArchiveBase(unittest.TestCase):
             print(att)
             self.assertEqual(afname,att.filename)
 
+class SuspectTest(unittest.TestCase):
+    def testSuspectintegration(self):
+
+        tempfile = join(TESTDATADIR,"nestedarchive.eml")
+
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', tempfile)
+
+        mAttachMgr = suspect.attMgr
+        fnames_all_levels   = sorted(["level6.txt", "level5.txt", "level4.txt", "level3.txt", "level2.txt", "level1.txt", "level0.txt", "unnamed.txt"])
+
+        print("Filenames, Level  [0:0] : [%s]"%", ".join(mAttachMgr.get_fileslist()))
+        print("Filenames, Levels [0:1] : [%s]"%", ".join(mAttachMgr.get_fileslist(1)))
+        print("Filenames, Levels [0:2] : [%s]"%", ".join(mAttachMgr.get_fileslist(2)))
+        print("Filenames, Levels [0: ] : [%s]"%", ".join(mAttachMgr.get_fileslist(None)))
+
+        self.assertEqual(fnames_all_levels,  sorted(mAttachMgr.get_fileslist(None)))
+
+        print("\n")
+        print("--------------------------------------------")
+        print("- Extract objects until there's no archive -")
+        print("--------------------------------------------")
+        # list has to be sorted according to filename in order to be able to match
+        # target list in Python2 and 3
+        fullAttList = sorted(mAttachMgr.get_objectlist(None),key=lambda obj: obj.filename)
+        for att,afname in zip(fullAttList,fnames_all_levels):
+            print(att)
+            self.assertEqual(afname,att.filename)
