@@ -169,7 +169,7 @@ class Archive_zip(Archive_int):
             (bytes or None) returns the file content or None if the file would be larger than the setting archivecontentmaxsize
 
         """
-        if self.filesize(path) > archivecontentmaxsize:
+        if archivecontentmaxsize is not None and self.filesize(path) > archivecontentmaxsize:
             return None
         return self._handle.read(path)
 
@@ -206,7 +206,7 @@ class Archive_rar(Archive_int):
             (bytes or None) returns the file content or None if the file would be larger than the setting archivecontentmaxsize
 
         """
-        if self.filesize(path) > archivecontentmaxsize:
+        if archivecontentmaxsize is not None and self.filesize(path) > archivecontentmaxsize:
             return None
         return self._handle.read(path)
 
@@ -246,7 +246,7 @@ class Archive_tar(Archive_int):
             (bytes or None) returns the file content or None if the file would be larger than the setting archivecontentmaxsize
 
         """
-        if self.filesize(path) > archivecontentmaxsize:
+        if archivecontentmaxsize is not None and self.filesize(path) > archivecontentmaxsize:
             return None
 
         arinfo = self._handle.getmember(path)
@@ -288,7 +288,7 @@ class Archive_7z(Archive_int):
 
 
     def extract(self, path, archivecontentmaxsize):
-        if self.filesize(path) > archivecontentmaxsize:
+        if archivecontentmaxsize is not None and self.filesize(path) > archivecontentmaxsize:
             return None
         arinfo = self._handle.getmember(path)
         return arinfo.read()
