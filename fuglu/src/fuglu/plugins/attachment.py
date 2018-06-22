@@ -686,15 +686,20 @@ The other common template variables are available as well.
                             archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
 
                             # list of files that will not be extracted (or returned for now to be backward compatible)
-                            tooLarge = attObj.get_archiveFList(maxsize_extract=archivecontentmaxsize,
-                                                               maxsize_get=archivecontentmaxsize,inverse=True)
+                            tooLarge = attObj.get_archiveFList(maxsize_extract=archivecontentmaxsize, inverse=True)
                             self._debuginfo( suspect, 'Files not extracted - too large : [%s]' %
                                              (", ".join([self.asciionly(fname) for fname in tooLarge ])))
 
-                            for archObj in attObj.get_archiveObjList(maxsize_get=archivecontentmaxsize):
+                            for archObj in attObj.get_archiveObjList(maxsize_extract=archivecontentmaxsize):
                                 safename = self.asciionly(archObj.filename)
-
                                 contenttype_magic = archObj.contenttype
+
+                                # Keeping this check for backward compatibility
+                                # This could easily be removed since memory is used anyway
+                                if archObj.filesize > archivecontentmaxsize:
+                                    self._debuginfo( suspect, 'File not checked (but already extracted) - too large : [%s]' % safename)
+                                    continue
+
                                 res = self.matchMultipleSets(
                                     [user_archive_ctypes, domain_archive_ctypes, default_archive_ctypes], contenttype_magic, suspect, name)
                                 if res == ATTACHMENT_SILENTDELETE:
