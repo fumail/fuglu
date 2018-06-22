@@ -1,5 +1,5 @@
 import unittest
-from fuglu.extensions.caching import smart_cached_memberfunc, smart_cached_property
+from fuglu.extensions.caching import smart_cached_memberfunc, smart_cached_property, CacheLimits, CacheStats
 
 class CachingTests(unittest.TestCase):
     def test_cachedProperty(self):
@@ -104,3 +104,68 @@ class CachingTests(unittest.TestCase):
         c.b = 100
         self.assertEqual(c.a+10*c.b+add,c.aPlus10bPlusX(add))
         self.assertEqual(4,c.aPlus10bPlusX_count,"Changing member by decorator should trigger recalculation")
+
+    def test_nocach(self):
+        """
+        Test caching of class property calculation
+        """
+        class CachedTest(CacheStats,CacheLimits):
+            """Dummy test class with property caching"""
+            def __init__(self,a,b):
+                super(CachedTest,self).__init__()
+                self.a = a
+                self.b = b
+                self.depVar_count = 0
+
+                # disable caching for function "depVar"
+                self.set_cachelimit("depVar","nocache",True)
+
+            @smart_cached_property(inputs=['a','b'])
+            def depVar(self):
+                print("Calculating depVar")
+                self.depVar_count += 1
+                return self.a*self.b
+
+        c = CachedTest(2,3)
+        self.assertEqual(c.a*c.b,c.depVar)
+        self.assertEqual(1,c.depVar_count,"First call")
+        self.assertEqual(c.a*c.b,c.depVar)
+        self.assertEqual(2,c.depVar_count,"Now value should not be cached")
+        c.set_cachelimit("depVar","nocache",False)
+        self.assertEqual(2,c.depVar_count,"Now value should be taken from cache")
+
+
+    def test_cachedMemberfunc_limits(self):
+        """
+        Test caching of member function return value.
+        """
+        class CachedTest(CacheStats,CacheLimits):
+            """Text class using caching for member function"""
+            def __init__(self,a,b):
+                super(CachedTest,self).__init__()
+                self.a = a
+                self._b = b
+                self.aPlus10bPlusX_count = 0
+                self.set_cachelimit("aPlus10bPlusX","maxNCached",2)
+            @property
+            def b(self):
+                return self._b
+            @b.setter
+            def b(self,val):
+                self._b = val
+
+            @smart_cached_memberfunc(inputs=['a','b'])
+            def aPlus10bPlusX(self,x):
+                print("Calculating aPlusX")
+                self.aPlus10bPlusX_count += 1
+                return self.a + 10*self.b + x
+
+        c = CachedTest(2,3)
+
+        print("--------------------")
+        print("--- a + 10*b + x ---")
+        print("--------------------")
+        a =c.aPlus10bPlusX(10)
+        a =c.aPlus10bPlusX(11)
+        a =c.aPlus10bPlusX(12)
+        a =c.aPlus10bPlusX(13)
