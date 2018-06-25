@@ -112,8 +112,7 @@ function yesno()
 }
 
 # run current fuglu source in a docker environment
-srcdir=$(cd "$(dirname "$0")/../../../"; pwd)
-folder="centos-7"
+srcdir=$(cd "$(dirname "$0")/../../"; pwd)
 
 if [ "$1" == "py2" ]; then
    alljobs=(py2) 
@@ -131,7 +130,7 @@ for job in "${alljobs[@]}"
 do
    echo ""
    echo "***************************************************************"
-   echo "* Running fuglu in docker instance for $folder for Python $job"
+   echo "* Running fuglu in docker instance for CentOS-7 for Python $job"
    echo "***************************************************************"
    image="danbla/fuglutestenv"
 
