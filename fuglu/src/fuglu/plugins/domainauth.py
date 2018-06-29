@@ -24,7 +24,7 @@ requires: pysrs
 
 from fuglu.shared import ScannerPlugin, apply_template, DUNNO, FileList, string_to_actioncode, get_default_cache
 from fuglu.extensions.sql import get_session, SQL_EXTENSION_ENABLED
-from fuglu.extensions.dnsquery import HAVE_PYDNS, HAVE_DNSPYTHON, DNSQUERY_EXTENSION_ENABLED
+from fuglu.extensions.dnsquery import DNSQUERY_EXTENSION_ENABLED
 import logging
 import os
 import re
@@ -33,6 +33,7 @@ DKIMPY_AVAILABLE = False
 PYSPF_AVAILABLE = False
 IPADDRESS_AVAILABLE = False
 IPADDR_AVAILABLE = False
+SRS_AVAILABLE=False
 
 try:
     import ipaddress
@@ -50,31 +51,25 @@ try:
     import pkg_resources
     pkg_resources.get_distribution("dkimpy")
     from dkim import DKIM, sign, Simple, Relaxed, DKIMException
-
-    if not (DNSQUERY_EXTENSION_ENABLED):
-        raise Exception("no supported dns library available")
-
-    DKIMPY_AVAILABLE = True
+    if DNSQUERY_EXTENSION_ENABLED:
+        DKIMPY_AVAILABLE = True
+except ImportError:
+    pass
 except Exception:
     pass
 
 try:
-    if not DNSQUERY_EXTENSION_ENABLED:
-        raise Exception("pydns not available")
-    if not (IPADDR_AVAILABLE or IPADDRESS_AVAILABLE):
-        raise Exception("ipaddress/ipaddr not available")
     import spf
-    PYSPF_AVAILABLE = True
-except Exception as e:
-    print(e)
+    if DNSQUERY_EXTENSION_ENABLED and (IPADDR_AVAILABLE or IPADDRESS_AVAILABLE):
+        PYSPF_AVAILABLE = True
+except ImportError:
     pass
 
 try:
     import SRS
-    HAVE_SRS=True
+    SRS_AVAILABLE=True
 except ImportError:
     SRS=None
-    HAVE_SRS=False
 
 
 def extract_from_domain(suspect, get_address_part=True):
@@ -277,18 +272,22 @@ known issues:
         suspect.addheader('DKIM-Signature', dkimhdr, immediate=True)
 
     def lint(self):
+        all_ok = self.check_config()
+        
         if not DKIMPY_AVAILABLE:
             print("Missing dependency: dkimpy https://launchpad.net/dkimpy")
-            print("(also requires either dnspython or pydns)")
-            return False
+            all_ok = False
+        if not DNSQUERY_EXTENSION_ENABLED:
+            print("Missing dependency: no supported DNS libary found. pydns or dnspython")
+            all_ok = False
 
         # if privkey is a filename (no placeholders) check if it exists
         privkeytemplate = self.config.get(self.section, 'privatekeyfile')
         if '{' not in privkeytemplate and not os.path.exists(privkeytemplate):
             print("Private key file %s not found" % privkeytemplate)
-            return False
+            all_ok = False
 
-        return self.check_config()
+        return all_ok
 
 
 class SPFPlugin(ScannerPlugin):
@@ -339,12 +338,22 @@ in combination with other factors to take action (for example a "DMARC" plugin c
         return DUNNO
 
     def lint(self):
+        all_ok = self.check_config()
+        
         if not PYSPF_AVAILABLE:
             print("Missing dependency: pyspf")
-            print("(also requires pydns and ipaddress or ipaddr)")
-            return False
+            all_ok = False
+            
+        if not DNSQUERY_EXTENSION_ENABLED:
+            print("Missing dependency: no supported DNS libary found: pydns or dnspython")
+            all_ok = False
+            
+        if not (IPADDR_AVAILABLE or IPADDRESS_AVAILABLE):
+            print("Missing dependency: no supported ip address libary found: ipaddr or ipaddress")
+            all_ok = False
+            
 
-        return self.check_config()
+        return all_ok
 
 
 class DomainAuthPlugin(ScannerPlugin):
@@ -374,8 +383,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
             },
         }
         self.logger = self._logger()
-        self.filelist = FileList(
-            filename=None, strip=True, skip_empty=True, skip_comments=True, lowercase=True)
+        self.filelist = FileList(filename=None, strip=True, skip_empty=True, skip_comments=True, lowercase=True)
 
     def examine(self, suspect):
         self.filelist.filename = self.config.get(self.section, 'domainsfile')
@@ -392,7 +400,7 @@ This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they m
         # TODO: do we need a tag from dkim to check if the verified dkim domain
         # actually matches the header from domain?
         dkimresult = suspect.get_tag('DKIMVerify.sigvalid', False)
-        if dkimresult == True:
+        if dkimresult is True:
             return DUNNO
 
         # DKIM failed, check SPF if envelope senderdomain belongs to header
@@ -771,7 +779,7 @@ class SenderRewriteScheme(ScannerPlugin):
     
     
     def examine(self, suspect):
-        if not HAVE_SRS:
+        if not SRS_AVAILABLE:
             return DUNNO
         
         if not self.should_we_rewrite_this_domain(suspect):
@@ -815,7 +823,7 @@ class SenderRewriteScheme(ScannerPlugin):
     
     def lint(self):
         allok = self.check_config()
-        if not HAVE_SRS:
+        if not SRS_AVAILABLE:
             allok = False
             print('SRS library not found')
         
