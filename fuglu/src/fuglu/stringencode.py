@@ -35,7 +35,8 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
 
     Args:
         b_inputstring (str/bytes): input byte string
-        encodingGuess (str): guess for encoding used
+    Keyword Args:
+        encodingGuess (str): guess for encoding used, default assume unicode
 
     Returns:
         unicode string
@@ -47,8 +48,8 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
     logger = logging.getLogger("fuglu.encoding.try_decoding")
     try:
         u_outputstring = b_inputstring.decode(encodingGuess,"strict")
-    except UnicodeDecodeError:
-        logger.warning("found non %s encoding, try to detect encoding" % encodingGuess)
+    except (UnicodeDecodeError, LookupError):
+        logger.warning("found non %s encoding or encoding not found, try to detect encoding" % encodingGuess)
         if chardetAvailable:
             encoding = chardet.detect(b_inputstring)['encoding']
             logger.warning("encoding estimated as %s" % encoding)
@@ -70,11 +71,13 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
     return u_outputstring
 
 
-def force_uString(inputstring):
+def force_uString(inputstring,encodingGuess="utf-8"):
     """Try to enforce a unicode string
     
     Args:
         inputstring (str, unicode, list): input string or list of strings to be checked
+    Keyword Args:
+        encodingGuess (str): guess for encoding used, default assume unicode
 
     Returns: unicode string (or list with unicode strings)
 
@@ -90,7 +93,7 @@ def force_uString(inputstring):
         if isinstance(inputstring,str):
             return inputstring
         else:
-            return try_decoding(inputstring)
+            return try_decoding(inputstring,encodingGuess)
     else:
         # Python 2.x
         # the basic "str" type is bytes, unicode
@@ -98,7 +101,7 @@ def force_uString(inputstring):
         if isinstance(inputstring,unicode):
             return inputstring
         else:
-            return try_decoding(inputstring)
+            return try_decoding(inputstring,encodingGuess)
 
 
 def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
