@@ -1073,7 +1073,10 @@ class SuspectFilter(object):
 
             # payload can be None even if it was returned from part.get_payload()
             if payload is not None:
-                textparts.append(force_uString(payload))
+                # Try to decode using the given char set
+                charset = part.get_content_charset("utf-8")
+                payload = force_uString(payload,encodingGuess=charset)
+                textparts.append(payload)
         return textparts
 
     def get_field(self, suspect, headername):
