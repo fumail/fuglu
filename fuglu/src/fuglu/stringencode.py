@@ -48,8 +48,8 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
     logger = logging.getLogger("fuglu.encoding.try_decoding")
     try:
         u_outputstring = b_inputstring.decode(encodingGuess,"strict")
-    except UnicodeDecodeError:
-        logger.warning("found non %s encoding, try to detect encoding" % encodingGuess)
+    except (UnicodeDecodeError, LookupError):
+        logger.warning("found non %s encoding or encoding not found, try to detect encoding" % encodingGuess)
         if chardetAvailable:
             encoding = chardet.detect(b_inputstring)['encoding']
             logger.warning("encoding estimated as %s" % encoding)
