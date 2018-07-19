@@ -121,11 +121,13 @@ def string_to_actioncode(actionstring, config=None):
         return None
     return ALLCODES[upper]
 
-class SuspectTemplate(Template):
+class _SuspectTemplate(Template):
     delimiter = '$'
     idpattern = r'@?[a-z][_a-z0-9.]*'
 
-class SuspectDict(Mapping):
+class _SuspectDict(Mapping):
+    """Dictionary-like object which fetches SuspectFilter values dynamically"""
+
     def __init__(self, suspect, values, valuesfunction):
         self.values = values
         self.filter = SuspectFilter(filename=None)
@@ -173,8 +175,8 @@ def apply_template(templatecontent, suspect, values=None, valuesfunction=None):
         values = {}
 
     default_template_values(suspect, values)
-    sdict = SuspectDict(suspect, values, valuesfunction)
-    template = SuspectTemplate(force_uString(templatecontent))
+    sdict = _SuspectDict(suspect, values, valuesfunction)
+    template = _SuspectTemplate(force_uString(templatecontent))
     message = template.safe_substitute(sdict)
     return message
 
