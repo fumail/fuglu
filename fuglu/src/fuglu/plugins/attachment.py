@@ -779,10 +779,8 @@ The other common template variables are available as well.
             print("rarfile library not found, RAR support disabled")
         if not Archivehandle.avail('7z'):
             print("pylzma/py7zlip library not found, 7z support disabled")
-        print("Archive scan, available file extensions: %s" %
-              (",".join(Archivehandle.avail_archive_extensions_list)))
-        print("Archive scan, active file extensions: %s" %
-              (",".join(self.active_archive_extensions.keys())))
+        print("Archive scan, available file extensions: %s" % (",".join(sorted(Archivehandle.avail_archive_extensions_list))))
+        print("Archive scan, active file extensions:    %s" % (",".join(sorted(self.active_archive_extensions.keys()))))
         return True
     
     
