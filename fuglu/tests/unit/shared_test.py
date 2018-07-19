@@ -4,6 +4,7 @@ import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
 from fuglu.addrcheck import Addrcheck
 import os
+import datetime
 
 try:
     from configparser import ConfigParser
@@ -314,7 +315,8 @@ class TemplateTestcase(unittest.TestCase):
             ('${@SAPlugin.spamscore}','13.37'),
             ('${blubb}',''),
             ('${@hello}','World'),
-            ('${date}','2018-06-06'), #builtin function with same name as header: builtin should win
+            ('${date}',str(datetime.date.today())), #builtin function with same name as header: builtin should win
+            ('${header:date}', 'Tue, 12 Nov 2013 01:12:11 +0200'),  # with explicit header: prefix the message header should be available
             ('The quick brown ${from_address} received on ${date} jumps over the ${@removeme}. Uh ${@changeme}', 'The quick brown sender@unittests.fuglu.org received on 2018-06-06 jumps over the . Uh elephant'),
         ]
         for c in cases:
