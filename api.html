@@ -1,29 +1,40 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Plugin API &#8212; fuglu  documentation</title>
+    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
-    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="ISP Config" href="isp-config.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head><body>
+  </head>
+  <body role="document">
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -107,7 +118,7 @@ visible to later plugins (eg. for spamassassin rules), otherwise, leave as False
 <dd><p>returns information about the client that submitted this message.
 (helo,ip,reversedns)</p>
 <p>This information is extracted from the message Received: headers and therefore probably not 100% reliable
-all information is returned as-is, this means for example, that non-fcrdns client will show ‘unknown’ as reverse dns value.</p>
+all information is returned as-is, this means for example, that non-fcrdns client will show &#8216;unknown&#8217; as reverse dns value.</p>
 <p>if ignoreregex is not None, all results which match this regex in either helo,ip or reversedns will be ignored</p>
 <p>By default, this method starts searching at the top Received Header. Set a higher skip value to start searching further down.</p>
 <p>both these arguments can be used to filter received headers from local systems in order to get the information from a boundary MTA</p>
@@ -133,14 +144,18 @@ all information is returned as-is, this means for example, that non-fcrdns clien
 (helo,ip,reversedns)</p>
 <p>In before-queue mode this info is extracted using the XFORWARD SMTP protocol extension.</p>
 <p>In after-queue mode this information is extracted from the message Received: headers and therefore probably not 100% reliable
-all information is returned as-is, this means for example, that non-fcrdns client will show ‘unknown’ as reverse dns value.</p>
+all information is returned as-is, this means for example, that non-fcrdns client will show &#8216;unknown&#8217; as reverse dns value.</p>
 <p>if no config object is passed, the first parseable Received header is used. otherwise, the config is used to determine the correct boundary MTA (trustedhostregex / boundarydistance)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="fuglu.shared.Suspect.get_headers">
 <code class="descname">get_headers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.get_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns the message headers as string</p>
+<dd><p>Returns the message headers as string</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>(unicode str) unicode for Py2, str for Py3</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -211,6 +226,19 @@ Warning: setting the source via python email representation seems to break dkim 
 </dd></dl>
 
 <dl class="method">
+<dt id="fuglu.shared.Suspect.set_source">
+<code class="descname">set_source</code><span class="sig-paren">(</span><em>source</em>, <em>encoding='utf-8'</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.set_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store message source. This might be modified by plugins later on...
+Args:</p>
+<blockquote>
+<div>source (bytes,str,unicode): new message source</div></blockquote>
+<dl class="docutils">
+<dt>Keyword Args:</dt>
+<dd>encoding (str): encoding, default is utf-8</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="fuglu.shared.Suspect.set_tag">
 <code class="descname">set_tag</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.set_tag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a new tag</p>
@@ -244,14 +272,9 @@ Warning: setting the source via python email representation seems to break dkim 
 <dt id="fuglu.shared.Suspect.update_subject">
 <code class="descname">update_subject</code><span class="sig-paren">(</span><em>subject_cb</em>, <em>**cb_params</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.Suspect.update_subject" title="Permalink to this definition">¶</a></dt>
 <dd><p>update/alter the message subject
-Args:</p>
-<blockquote>
-<div>subject_cb: callback function that alters the subject. must accept a string and return a string
-cb_params: additional parameters to be passed to subject_cb</div></blockquote>
-<dl class="docutils">
-<dt>Return:</dt>
-<dd>True if subject was altered, False otherwise</dd>
-</dl>
+:param subject_cb: callback function that alters the subject. must accept a string and return a string
+:param cb_params: additional parameters to be passed to subject_cb
+:return: True if subject was altered, False otherwise</p>
 </dd></dl>
 
 </dd></dl>
@@ -289,7 +312,7 @@ if extended=True:  returns a list of tuples with all available information:
 <dd><p>return a list of mail header values or special values. If the value can not be found, an empty list is returned.</p>
 <dl class="docutils">
 <dt>headers:</dt>
-<dd>just the headername for normal headers
+<dd>just the headername or header:&lt;headername&gt; for standard message headers
 mime:headername for attached mime part headers</dd>
 <dt>envelope data:</dt>
 <dd>envelope_from (or from_address)
@@ -297,13 +320,13 @@ envelope_to (or to_address)
 from_domain
 to_domain
 clientip
-clienthostname (fcrdns or ‘unknown’)
+clienthostname (fcrdns or &#8216;unknown&#8217;)
 clienthelo</dd>
 <dt>tags</dt>
 <dd>&#64;tagname</dd>
 <dt>body source:</dt>
 <dd>body:full -&gt; (full source, encoded)
-body:stripped (or just ‘body’) : -&gt; returns text/* bodyparts with tags and newlines stripped
+body:stripped (or just &#8216;body&#8217;) : -&gt; returns text/* bodyparts with tags and newlines stripped
 body:raw -&gt; decoded raw message body parts</dd>
 </dl>
 </dd></dl>
@@ -326,6 +349,10 @@ True, (fieldname, matchedvalue, arg, regex)</p>
 <dt id="fuglu.shared.SuspectFilter.strip_text">
 <code class="descname">strip_text</code><span class="sig-paren">(</span><em>content</em>, <em>remove_tags=None</em>, <em>replace_nbsp=True</em>, <em>use_bfs=True</em><span class="sig-paren">)</span><a class="headerlink" href="#fuglu.shared.SuspectFilter.strip_text" title="Permalink to this definition">¶</a></dt>
 <dd><p>Strip HTML Tags from content, replace newline with space (like Spamassassin)</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>(unicode/str) Unicode string (Py3 &#8216;str&#8217; is unicode string)</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -364,14 +391,12 @@ True, (fieldname, matchedvalue, arg, regex)</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -417,7 +442,7 @@ True, (fieldname, matchedvalue, arg, regex)</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2018, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

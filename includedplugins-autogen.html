@@ -1,28 +1,39 @@
 
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>SpamAssassin &#8212; fuglu  documentation</title>
+    
     <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
-    <script type="text/javascript" src="_static/cloud.base.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head><body>
+  </head>
+  <body role="document">
     <div class="relbar-top">
         
     <div class="related" role="navigation" aria-label="related navigation">
@@ -56,17 +67,17 @@
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>reads <code class="docutils literal notranslate"><span class="pre">SAPlugin.skip</span></code>, (boolean) skips scanning if this is True</li>
-<li>reads <code class="docutils literal notranslate"><span class="pre">SAPlugin.tempheader</span></code>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">spam['spamassassin']</span></code> (boolean)</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">SAPlugin.spamscore</span></code> (float) if possible</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">SAPlugin.skipreason</span></code> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">SAPlugin.report</span></code>, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting</li>
+<li>reads <code class="docutils literal"><span class="pre">SAPlugin.skip</span></code>, (boolean) skips scanning if this is True</li>
+<li>reads <code class="docutils literal"><span class="pre">SAPlugin.tempheader</span></code>, (text) prepends this text to the scanned message (use this to pass temporary headers to spamassassin which should not be visible in the final message)</li>
+<li>sets <code class="docutils literal"><span class="pre">spam['spamassassin']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.spamscore</span></code> (float) if possible</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.skipreason</span></code> (string) if the message was not scanned (fuglu &gt;0.5.0)</li>
+<li>sets <code class="docutils literal"><span class="pre">SAPlugin.report</span></code>, (string) report from spamd or spamheader (where score was found) depending on forwardoriginal setting</li>
 </ul>
 </div></blockquote>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[SAPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[SAPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -145,13 +156,13 @@ lowspamaction=DEFAULTLOWSPAMACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <code class="docutils literal notranslate"><span class="pre">virus['ClamAV']</span></code> (boolean)</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">ClamavPlugin.virus</span></code> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['ClamAV']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">ClamavPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id1">
 <h2>Configuration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[ClamavPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ClamavPlugin]
 #reject message template if running in pre-queue mode and virusaction=REJECT
 rejectmessage=threat detected: ${virusname}
 
@@ -196,28 +207,28 @@ virusaction=DEFAULTVIRUSACTION
 <div class="section" id="attachment-blocker">
 <h1>Attachment Blocker<a class="headerlink" href="#attachment-blocker" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.attachment.FiletypePlugin</p>
-<p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the ‘’‘file’‘’ library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
+<p>This plugin checks message attachments. You can configure what filetypes or filenames are allowed to pass through fuglu. If a attachment is not allowed, the message is deleted and the sender receives a bounce error message. The plugin uses the &#8216;&#8217;&#8216;file&#8217;&#8216;&#8217; library to identify attachments, so even if a smart sender renames his executable to .txt, fuglu will detect it.</p>
 <p>Attachment rules can be defined globally, per domain or per user.</p>
 <p>Actions: This plugin will delete messages if they contain blocked attachments.</p>
-<p>Prerequisites: You must have the python <code class="docutils literal notranslate"><span class="pre">file</span></code> or <code class="docutils literal notranslate"><span class="pre">magic</span></code> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <code class="docutils literal notranslate"><span class="pre">rarfile</span></code> module.</p>
-<p>The attachment configuration files are in <code class="docutils literal notranslate"><span class="pre">/etc/fuglu/rules</span></code>. You should have two default files there: <code class="docutils literal notranslate"><span class="pre">default-filenames.conf</span></code> which defines what filenames are allowed and <code class="docutils literal notranslate"><span class="pre">default-filetypes.conf</span></code> which defines what content types a attachment may have.</p>
-<p>For domain rules, create a new file <code class="docutils literal notranslate"><span class="pre">&lt;domainname&gt;-filenames.conf</span></code> / <code class="docutils literal notranslate"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></code> , eg. <code class="docutils literal notranslate"><span class="pre">fuglu.org-filenames.conf</span></code> / <code class="docutils literal notranslate"><span class="pre">fuglu.org-filetypes.conf</span></code></p>
-<p>For individual user rules, create a new file <code class="docutils literal notranslate"><span class="pre">&lt;useremail&gt;-filenames.conf</span></code> / <code class="docutils literal notranslate"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></code>, eg. <code class="docutils literal notranslate"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></code> / <code class="docutils literal notranslate"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></code></p>
-<p>To scan filenames or even file contents within archives (zip, rar), use <code class="docutils literal notranslate"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></code>.</p>
+<p>Prerequisites: You must have the python <code class="docutils literal"><span class="pre">file</span></code> or <code class="docutils literal"><span class="pre">magic</span></code> module installed. Additionaly, for scanning filenames within rar archives, fuglu needs the python <code class="docutils literal"><span class="pre">rarfile</span></code> module.</p>
+<p>The attachment configuration files are in <code class="docutils literal"><span class="pre">/etc/fuglu/rules</span></code>. You should have two default files there: <code class="docutils literal"><span class="pre">default-filenames.conf</span></code> which defines what filenames are allowed and <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> which defines what content types a attachment may have.</p>
+<p>For domain rules, create a new file <code class="docutils literal"><span class="pre">&lt;domainname&gt;-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">&lt;domainname&gt;-filetypes.conf</span></code> , eg. <code class="docutils literal"><span class="pre">fuglu.org-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">fuglu.org-filetypes.conf</span></code></p>
+<p>For individual user rules, create a new file <code class="docutils literal"><span class="pre">&lt;useremail&gt;-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">&lt;useremail&gt;-filetypes.conf</span></code>, eg. <code class="docutils literal"><span class="pre">oli&#64;fuglu.org-filenames.conf</span></code> / <code class="docutils literal"><span class="pre">oli&#64;fuglu.org-filetypes.conf</span></code></p>
+<p>To scan filenames or even file contents within archives (zip, rar), use <code class="docutils literal"><span class="pre">&lt;...&gt;-archivefilenames.conf</span></code> and <code class="docutils literal"><span class="pre">&lt;...&gt;-archivefiletypes.conf</span></code>.</p>
 <p>The format of those files is as follows: Each line should have three parts, seperated by tabs (or any whitespace):
-<code class="docutils literal notranslate"><span class="pre">&lt;action&gt;</span></code>    <code class="docutils literal notranslate"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code>   <code class="docutils literal notranslate"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></code></p>
+<code class="docutils literal"><span class="pre">&lt;action&gt;</span></code>    <code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code>   <code class="docutils literal"><span class="pre">&lt;description</span> <span class="pre">or</span> <span class="pre">error</span> <span class="pre">message&gt;</span></code></p>
 <dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">&lt;action&gt;</span></code> can be one of:</dt>
+<dt><code class="docutils literal"><span class="pre">&lt;action&gt;</span></code> can be one of:</dt>
 <dd><ul class="first last simple">
-<li>allow : this file is ok, don’t do further checks (you might use it for safe content types like text). Do not blindly create ‘allow’ rules. It’s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
+<li>allow : this file is ok, don&#8217;t do further checks (you might use it for safe content types like text). Do not blindly create &#8216;allow&#8217; rules. It&#8217;s safer to make no rule at all, if no other rules hit, the file will be accepted</li>
 <li>deny : delete this message and send the error message/description back to the sender</li>
-<li>delete : silently delete the message, no error is sent back, and ‘blockaction’ is ignored</li>
+<li>delete : silently delete the message, no error is sent back, and &#8216;blockaction&#8217; is ignored</li>
 </ul>
 </dd>
 </dl>
-<p><code class="docutils literal notranslate"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code> is a standard python regex. in <code class="docutils literal notranslate"><span class="pre">x-filenames.conf</span></code> this will be applied to the attachment name . in <code class="docutils literal notranslate"><span class="pre">x-filetypes.conf</span></code> this will be applied to the mime type of the file as well as the file type returned by the <code class="docutils literal notranslate"><span class="pre">file</span></code> command.</p>
-<p>Example of <code class="docutils literal notranslate"><span class="pre">default-filetypes.conf</span></code> :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>allow    text        -
+<p><code class="docutils literal"><span class="pre">&lt;regular</span> <span class="pre">expression&gt;</span></code> is a standard python regex. in <code class="docutils literal"><span class="pre">x-filenames.conf</span></code> this will be applied to the attachment name . in <code class="docutils literal"><span class="pre">x-filetypes.conf</span></code> this will be applied to the mime type of the file as well as the file type returned by the <code class="docutils literal"><span class="pre">file</span></code> command.</p>
+<p>Example of <code class="docutils literal"><span class="pre">default-filetypes.conf</span></code> :</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>allow    text        -
 allow    script    -
 allow    archive        -
 allow    postscript    -
@@ -227,8 +238,8 @@ deny    ELF        No programs allowed
 deny    Registry    No Windows Registry files allowed
 </pre></div>
 </div>
-<p>A small extract from <code class="docutils literal notranslate"><span class="pre">default-filenames.conf</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>deny    \.ico$            Windows icon file security vulnerability
+<p>A small extract from <code class="docutils literal"><span class="pre">default-filenames.conf</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>deny    \.ico$            Windows icon file security vulnerability
 deny    \.ani$            Windows animated cursor file security vulnerability
 deny    \.cur$            Windows cursor file security vulnerability
 deny    \.hlp$            Windows help file security vulnerability
@@ -241,7 +252,7 @@ allow    \.gif$            -
 <p>Per domain/user overrides can also be fetched from a database instead of files (see dbconnectstring / query options).
 The query must return the same rule format as a file would. Multiple columns in the resultset will be concatenated.</p>
 <p>The default query assumes the following schema:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE TABLE `attachmentrules` (
+<div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `attachmentrules` (
   `rule_id` int(11) NOT NULL AUTO_INCREMENT,
   `action` varchar(10) NOT NULL,
   `regex` varchar(255) NOT NULL,
@@ -253,15 +264,15 @@ The query must return the same rule format as a file would. Multiple columns in 
 )
 </pre></div>
 </div>
-<p><em>action</em>: <code class="docutils literal notranslate"><span class="pre">allow</span></code>, <code class="docutils literal notranslate"><span class="pre">deny</span></code>, or <code class="docutils literal notranslate"><span class="pre">delete</span></code></p>
+<p><em>action</em>: <code class="docutils literal"><span class="pre">allow</span></code>, <code class="docutils literal"><span class="pre">deny</span></code>, or <code class="docutils literal"><span class="pre">delete</span></code></p>
 <p><em>regex</em>: a regular expression</p>
 <p><em>description</em>: description/explanation of this rule which is optionally sent back to the sender if bounces are enabled</p>
-<p><em>scope</em>: a domain name or a recipient’s email address</p>
-<p><em>checktype</em>: one of <code class="docutils literal notranslate"><span class="pre">filename</span></code>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
+<p><em>scope</em>: a domain name or a recipient&#8217;s email address</p>
+<p><em>checktype</em>: one of <code class="docutils literal"><span class="pre">filename</span></code>,``contenttype``,``archive-filename``,``archive-contenttype``</p>
 <p><em>prio</em>: order in which the rules are run</p>
-<p>The bounce template (eg <code class="docutils literal notranslate"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></code> ) should
+<p>The bounce template (eg <code class="docutils literal"><span class="pre">/etc/fuglu/templates/blockedfile.tmpl</span></code> ) should
 start by defining the headers, followed by a blank line, then the message body for your bounce message. Something like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>To: ${from_address}
+<div class="highlight-default"><div class="highlight"><pre><span></span>To: ${from_address}
 Subject: Blocked attachment
 
 Your message to ${to_address} contains a blocked attachment and has not been delivered.
@@ -269,11 +280,11 @@ Your message to ${to_address} contains a blocked attachment and has not been del
 ${blockinfo}
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">${blockinfo}</span></code> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
+<p><code class="docutils literal"><span class="pre">${blockinfo}</span></code> will be replaced with the text you specified in the third column of the rule that blocked this message.</p>
 <p>The other common template variables are available as well.</p>
 <div class="section" id="id2">
 <h2>Configuration<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">FiletypePlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">FiletypePlugin</span><span class="p">]</span>
 <span class="c1">#inform the sender about blocked attachments.</span>
 <span class="c1">#If a previous plugin tagged the message as spam or infected, no bounce will be sent to prevent backscatter</span>
 <span class="n">sendbounce</span><span class="o">=</span><span class="mi">1</span>
@@ -320,11 +331,11 @@ ${blockinfo}
 <p>This plugins stores a copy of the message if it matches certain criteria (Suspect Filter).
 You can use this if you want message archives for your domains or to debug problems occuring only for certain recipients.</p>
 <p>Examples for the archive.regex filter file:</p>
-<p>Archive messages to domain ‘’test.com’‘:</p>
-<p><code class="docutils literal notranslate"><span class="pre">to_domain</span> <span class="pre">test\.com</span></code></p>
+<p>Archive messages to domain &#8216;&#8217;test.com&#8217;&#8216;:</p>
+<p><code class="docutils literal"><span class="pre">to_domain</span> <span class="pre">test\.com</span></code></p>
 <p>Archive messages from <a class="reference external" href="mailto:oli&#37;&#52;&#48;fuglu&#46;org">oli<span>&#64;</span>fuglu<span>&#46;</span>org</a>:</p>
-<p><code class="docutils literal notranslate"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></code></p>
-<p>you can also append “yes” and “no” to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
+<p><code class="docutils literal"><span class="pre">envelope_from</span> <span class="pre">oli&#64;fuglu\.org</span></code></p>
+<p>you can also append &#8220;yes&#8221; and &#8220;no&#8221; to the rules to create a more advanced configuration. Lets say we want to archive all messages to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> and all regular messages <a class="reference external" href="mailto:support&#37;&#52;&#48;fuglu&#46;org">support<span>&#64;</span>fuglu<span>&#46;</span>org</a> except the ones created by automated scripts like logwatch or daily backup messages etc.</p>
 <p>envelope_from logwatch&#64;.*fuglu.org   no</p>
 <p>envelope_to <a class="reference external" href="mailto:sales&#37;&#52;&#48;fuglu&#46;org">sales<span>&#64;</span>fuglu<span>&#46;</span>org</a> yes</p>
 <p>from <a class="reference external" href="mailto:backups&#37;&#52;&#48;fuglu&#46;org">backups<span>&#64;</span>fuglu<span>&#46;</span>org</a> no</p>
@@ -332,7 +343,7 @@ You can use this if you want message archives for your domains or to debug probl
 <p>Note: The first rule to match in a message is the only rule that will be applied. Exclusion rules should therefore be put above generic/catch-all rules.</p>
 <div class="section" id="id3">
 <h2>Configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[ArchivePlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ArchivePlugin]
 #change owner of saved messages (username or numeric id) - this only works if fuglu is running as root (which is NOT recommended)
 chown=
 
@@ -364,7 +375,7 @@ chgrp=
 <div class="section" id="vacation">
 <h1>Vacation<a class="headerlink" href="#vacation" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.vacation.VacationPlugin</p>
-<p>Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any ‘automated’ messages (Mailingslists, Spams, Bounces etc)</p>
+<p>Sends out-of-office reply messages. Configuration is trough a sql database. Replies are only sent once per day per sender. The plugin will not reply to any &#8216;automated&#8217; messages (Mailingslists, Spams, Bounces etc)</p>
 <p>Requires: SQLAlechemy Extension</p>
 <dl class="docutils">
 <dt>Required DB Tables:</dt>
@@ -392,7 +403,7 @@ chgrp=
 </dd>
 </dl>
 <p>SQL Example for mysql:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE TABLE `vacation` (
+<div class="highlight-default"><div class="highlight"><pre><span></span>CREATE TABLE `vacation` (
   `id` int(11) NOT NULL auto_increment,
   `created` timestamp NOT NULL default now(),
   `start` timestamp NOT NULL,
@@ -420,7 +431,7 @@ CREATE  TABLE `vacationreply` (
 </div>
 <div class="section" id="id4">
 <h2>Configuration<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">VacationPlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">VacationPlugin</span><span class="p">]</span>
 <span class="c1">#sqlalchemy connectstring to load vacations</span>
 <span class="n">dbconnectstring</span><span class="o">=</span>
 </pre></div>
@@ -435,7 +446,7 @@ CREATE  TABLE `vacationreply` (
 <p>Prerequisites: Requires a running sophos daemon with dynamic interface (SAVDI)</p>
 <div class="section" id="id5">
 <h2>Configuration<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[SSSPPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[SSSPPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -473,13 +484,13 @@ virusaction=DEFAULTVIRUSACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <code class="docutils literal notranslate"><span class="pre">virus['F-Prot']</span></code> (boolean)</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">FprotPlugin.virus</span></code> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['F-Prot']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">FprotPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id6">
 <h2>Configuration<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[FprotPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[FprotPlugin]
 #additional scan options  (see `man fpscand` -&gt; SCANNING OPTIONS for possible values)
 scanoptions=
 
@@ -522,7 +533,7 @@ supported by some AV Scanners like Symantec and Sophos. For sophos, however, it 
 <p>Prerequisites: requires an ICAP capable antivirus engine somewhere in your network</p>
 <div class="section" id="id7">
 <h2>Configuration<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[ICAPPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ICAPPlugin]
 #how often should fuglu retry the connection before giving up
 retries=3
 
@@ -567,13 +578,13 @@ virusaction=DEFAULTVIRUSACTION
 <p>Tags:</p>
 <blockquote>
 <div><ul class="simple">
-<li>sets <code class="docutils literal notranslate"><span class="pre">virus['drweb']</span></code> (boolean)</li>
-<li>sets <code class="docutils literal notranslate"><span class="pre">DrWebPlugin.virus</span></code> (list of strings) - virus names found in message</li>
+<li>sets <code class="docutils literal"><span class="pre">virus['drweb']</span></code> (boolean)</li>
+<li>sets <code class="docutils literal"><span class="pre">DrWebPlugin.virus</span></code> (list of strings) - virus names found in message</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id8">
 <h2>Configuration<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[DrWebPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[DrWebPlugin]
 #maximum retries on failed connections
 retries=3
 
@@ -608,7 +619,7 @@ virusaction=DEFAULTVIRUSACTION
 <div>Override actions based on a Suspect Filter file. For example, delete all messages from a specific sender domain.</div></blockquote>
 <div class="section" id="id9">
 <h2>Configuration<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ActionOverridePlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ActionOverridePlugin</span><span class="p">]</span>
 <span class="c1">#Rules file</span>
 <span class="n">actionrules</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">actionrules</span><span class="o">.</span><span class="n">regex</span>
 </pre></div>
@@ -620,22 +631,22 @@ virusaction=DEFAULTVIRUSACTION
 <p>Plugin: fuglu.plugins.script.ScriptFilter</p>
 <p>This plugin executes scripts found in a specified directory.
 This can be used to quickly add a custom filter script without changing the fuglu configuration.</p>
-<p>Filterscripts must be written in standard python but with the file ending <code class="docutils literal notranslate"><span class="pre">.fgf</span></code> (“fuglu filter”)</p>
+<p>Filterscripts must be written in standard python but with the file ending <code class="docutils literal"><span class="pre">.fgf</span></code> (&#8220;fuglu filter&#8221;)</p>
 <p>Scripts are reloaded for every message and executed in alphabetic order. You do not need to restart fuglu to load any changes made to these files.</p>
-<p>The API is basically the same as for normal plugins within the <code class="docutils literal notranslate"><span class="pre">examine()</span></code> method, with a few special cases:</p>
-<p>there is no ‘self’ which means:</p>
+<p>The API is basically the same as for normal plugins within the <code class="docutils literal"><span class="pre">examine()</span></code> method, with a few special cases:</p>
+<p>there is no &#8216;self&#8217; which means:</p>
 <blockquote>
 <div><ul class="simple">
-<li>access the configuration by using <code class="docutils literal notranslate"><span class="pre">config</span></code> directly (instead of <code class="docutils literal notranslate"><span class="pre">self.config</span></code>)</li>
-<li>use <code class="docutils literal notranslate"><span class="pre">debug('hello</span> <span class="pre">world')</span></code> instead of <code class="docutils literal notranslate"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></code>, this will also automatically write to the message debug channel</li>
+<li>access the configuration by using <code class="docutils literal"><span class="pre">config</span></code> directly (instead of <code class="docutils literal"><span class="pre">self.config</span></code>)</li>
+<li>use <code class="docutils literal"><span class="pre">debug('hello</span> <span class="pre">world')</span></code> instead of <code class="docutils literal"><span class="pre">self._logger().debug('hello</span> <span class="pre">world')</span></code>, this will also automatically write to the message debug channel</li>
 </ul>
 </div></blockquote>
-<p>the script should not return anything, but change the available variables <code class="docutils literal notranslate"><span class="pre">action</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code> instead
-(<code class="docutils literal notranslate"><span class="pre">DUNNO</span></code>, <code class="docutils literal notranslate"><span class="pre">REJECT</span></code>, <code class="docutils literal notranslate"><span class="pre">DEFER</span></code>, <code class="docutils literal notranslate"><span class="pre">ACCEPT</span></code>, <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> are already imported)</p>
-<p>use <code class="docutils literal notranslate"><span class="pre">stop(action=DUNNO,</span> <span class="pre">message='')</span></code> to exit the script early</p>
+<p>the script should not return anything, but change the available variables <code class="docutils literal"><span class="pre">action</span></code> and <code class="docutils literal"><span class="pre">message</span></code> instead
+(<code class="docutils literal"><span class="pre">DUNNO</span></code>, <code class="docutils literal"><span class="pre">REJECT</span></code>, <code class="docutils literal"><span class="pre">DEFER</span></code>, <code class="docutils literal"><span class="pre">ACCEPT</span></code>, <code class="docutils literal"><span class="pre">DELETE</span></code> are already imported)</p>
+<p>use <code class="docutils literal"><span class="pre">stop(action=DUNNO,</span> <span class="pre">message='')</span></code> to exit the script early</p>
 <p>Example script:
 (put this in /etc/fuglu/scriptfilter/99_demo.fgf for example)</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#block all messages from evilsender.example.com</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#block all messages from evilsender.example.com</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="o">==</span><span class="s1">&#39;evilsender.example.com&#39;</span><span class="p">:</span>
     <span class="n">suspect</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s2">&quot;x-fuglu-SenderDomain&quot;</span><span class="p">,</span><span class="n">suspect</span><span class="o">.</span><span class="n">from_domain</span><span class="p">,</span><span class="n">immediate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">stop</span><span class="p">()</span>
@@ -646,7 +657,7 @@ This can be used to quickly add a custom filter script without changing the fugl
 </div>
 <div class="section" id="id10">
 <h2>Configuration<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ScriptFilter</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">ScriptFilter</span><span class="p">]</span>
 <span class="c1">#Dir that contains the scripts (*.fgf files)</span>
 <span class="n">scriptdir</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">scriptfilter</span>
 </pre></div>
@@ -659,7 +670,7 @@ This can be used to quickly add a custom filter script without changing the fugl
 <p><strong>EXPERIMENTAL</strong>
 Add DKIM Signature to outgoing mails</p>
 <p>Setting up your keys:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>mkdir -p /etc/fuglu/dkim
+<div class="highlight-default"><div class="highlight"><pre><span></span>mkdir -p /etc/fuglu/dkim
 domain=example.com
 openssl genrsa -out /etc/fuglu/dkim/${domain}.key 1024
 openssl rsa -in /etc/fuglu/dkim/${domain}.key -out /etc/fuglu/dkim/${domain}.pub -pubout -outform PEM
@@ -672,12 +683,12 @@ echo -n &quot;default._domainkey TXT  \&quot;v=DKIM1; k=rsa; p=&quot; ; cat /etc
 <blockquote>
 <div><ul class="simple">
 <li>setting canonicalizeheaders = simple will cause invalid signature.</li>
-<li>signbodylength causes a crash in dkimlib “TypeError: sequence item 1: expected string, int found”</li>
+<li>signbodylength causes a crash in dkimlib &#8220;TypeError: sequence item 1: expected string, int found&#8221;</li>
 </ul>
 </div></blockquote>
 <div class="section" id="id11">
 <h2>Configuration<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[DKIMSignPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[DKIMSignPlugin]
 #comma separated list of headers to sign. empty string=sign all headers
 signheaders=From,Reply-To,Subject,Date,To,CC,Resent-Date,Resent-From,Resent-To,Resent-CC,In-Reply-To,References,List-Id,List-Help,List-Unsubscribe,List-Subscribe,List-Post,List-Owner,List-Archive
 
@@ -703,17 +714,17 @@ canonicalizeheaders=relaxed
 <h1>DKIM Verify<a class="headerlink" href="#dkim-verify" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.domainauth.DKIMVerifyPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
-This plugin checks the DKIM signature of the message and sets tags…
+This plugin checks the DKIM signature of the message and sets tags...
 DKIMVerify.sigvalid : True if there was a valid DKIM signature, False if there was an invalid DKIM signature
 the tag is not set if there was no dkim header at all</p>
 <p>DKIMVerify.skipreason: set if the verification has been skipped</p>
 <p>The plugin does not take any action based on the DKIM test result since a failed DKIM validation by itself
 should not cause a message to be treated any differently. Other plugins might use the DKIM result
-in combination with other factors to take action (for example a “DMARC” plugin could use this information)</p>
-<p>It is currently recommended to leave both header and body canonicalization as ‘relaxed’. Using ‘simple’ can cause the signature to fail.</p>
+in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
+<p>It is currently recommended to leave both header and body canonicalization as &#8216;relaxed&#8217;. Using &#8216;simple&#8217; can cause the signature to fail.</p>
 <div class="section" id="id12">
 <h2>Configuration<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">DKIMVerifyPlugin</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -722,14 +733,14 @@ in combination with other factors to take action (for example a “DMARC” plug
 <h1>SPF Check<a class="headerlink" href="#spf-check" title="Permalink to this headline">¶</a></h1>
 <p>Plugin: fuglu.plugins.domainauth.SPFPlugin</p>
 <p><strong>EXPERIMENTAL</strong>
-This plugin checks the SPF status and sets tag ‘SPF.status’ to one of the official states ‘pass’, ‘fail’, ‘neutral’,
-‘softfail, ‘permerror’, ‘temperror’ or ‘skipped’ if the SPF check could not be peformed.
-Tag ‘SPF.explanation’ contains a human readable explanation of the result</p>
+This plugin checks the SPF status and sets tag &#8216;SPF.status&#8217; to one of the official states &#8216;pass&#8217;, &#8216;fail&#8217;, &#8216;neutral&#8217;,
+&#8216;softfail, &#8216;permerror&#8217;, &#8216;temperror&#8217; or &#8216;skipped&#8217; if the SPF check could not be peformed.
+Tag &#8216;SPF.explanation&#8217; contains a human readable explanation of the result</p>
 <p>The plugin does not take any action based on the SPF test result since. Other plugins might use the SPF result
-in combination with other factors to take action (for example a “DMARC” plugin could use this information)</p>
+in combination with other factors to take action (for example a &#8220;DMARC&#8221; plugin could use this information)</p>
 <div class="section" id="id13">
 <h2>Configuration<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">SPFPlugin</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -743,7 +754,7 @@ This is somewhat similar to DMARC but instead of asking the sender domain for a 
 <p>This plugin depends on tags written by SPFPlugin and DKIMVerifyPlugin, so they must run beforehand.</p>
 <div class="section" id="id14">
 <h2>Configuration<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[DomainAuthPlugin]
+<div class="highlight-default"><div class="highlight"><pre><span></span>[DomainAuthPlugin]
 #action if the message doesn&#39;t pass authentication (DUNNO, REJECT)
 failaction=DUNNO
 
@@ -765,7 +776,7 @@ e.g. put this in /etc/fuglu/skipplugins.regex:</p>
 <p>&#64;incomingport    1099    SAPlugin</p>
 <div class="section" id="id15">
 <h2>Configuration<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginSkipper</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginSkipper</span><span class="p">]</span>
 <span class="n">filterfile</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">skipplugins</span><span class="o">.</span><span class="n">regex</span>
 </pre></div>
 </div>
@@ -780,7 +791,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 <p>&#64;incomingport    1100    SAPlugin,AttachmentPlugin</p>
 <div class="section" id="id16">
 <h2>Configuration<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginFraction</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginFraction</span><span class="p">]</span>
 <span class="n">filterfile</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">fuglu</span><span class="o">/</span><span class="n">pluginfraction</span><span class="o">.</span><span class="n">regex</span>
 </pre></div>
 </div>
@@ -793,7 +804,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 <p>This plugin enables the fuglu_debug functionality. Make sure fuglu listens on the debug port configured here.</p>
 <div class="section" id="id17">
 <h2>Configuration<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageDebugger</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageDebugger</span><span class="p">]</span>
 <span class="c1">#messages incoming on this port will be debugged to a logfile</span>
 <span class="c1">#Make sure the debugport is also set in the incomingport configuration option in the main section</span>
 <span class="n">debugport</span><span class="o">=</span><span class="mi">10888</span>
@@ -819,7 +830,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 <p>EXPERIMENTAL: Send Plugin execution time to a statsd server</p>
 <div class="section" id="id18">
 <h2>Configuration<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginTime</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PluginTime</span><span class="p">]</span>
 <span class="c1">#statsd host</span>
 <span class="n">host</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
 
@@ -835,7 +846,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 <p>EXPERIMENTAL: Send message status to a statsd server</p>
 <div class="section" id="id19">
 <h2>Configuration<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageStatus</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageStatus</span><span class="p">]</span>
 <span class="c1">#statsd host</span>
 <span class="n">host</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
 
@@ -851,7 +862,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 <p>EXPERIMENTAL: Send per recipient stats to a statsd server</p>
 <div class="section" id="id20">
 <h2>Configuration<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageStatusPerRecipient</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">MessageStatusPerRecipient</span><span class="p">]</span>
 <span class="c1">#statsd host</span>
 <span class="n">host</span><span class="o">=</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
 
@@ -969,14 +980,12 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -1019,7 +1028,7 @@ eg. put this in /etc/fuglu/pluginfraction.regex:</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2018, gryphius.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
     </div>
     <!-- cloud_sptheme 1.4 -->
   </body>

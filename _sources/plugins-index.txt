@@ -60,6 +60,7 @@ named like the plugin itself.
 
 For example, the Spamassassin Plugin's Name is ``SAplugin``, so it would search for a ``[SAPlugin]`` config section.
 
+.. _suspect-filter:
 
 Suspect Filters
 ...............
@@ -69,7 +70,7 @@ SuspectFilter are special rule files used by many fuglu plugins. Often they defi
 The format is : ``<property> <regex> <optional argument>``
 
 ``<property>`` can be any of...
- * a email header name, e.g. ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
+ * a email header name or ``header:headername`` , e.g. ``Received``, ``To``, ``From``, ``Subject`` ... also supports '*' as wildcard character
  * ``mime:headername`` to get mime Headers in the message payload  eg: ``mime:Content-Disposition``
  * one of fuglus builtin names to get envelope data:
 
@@ -139,6 +140,7 @@ Some plugins allow you to create templates (errormessages in bounces, reject rea
  * ``${date}``         : Current date
  * ``${time}``         : Current time
  * ``${blockinfo}``    : Reason why this message was blocked (available in the attachment plugin)
+ * As of fuglu 0.8.1, properties as documented in :ref:`suspect-filter` can be used as well
 
 
 -------------------------

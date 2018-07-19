@@ -32,7 +32,7 @@ to
 
 	plugins=archive,attachment
 
-to disable both Antispam and Antivirus. 
+to disable both Antispam and Antivirus.
 
 
 
@@ -101,7 +101,7 @@ example:
 
 
 
-If all went fine, run ``fuglu`` without parameters to start the daemon. 
+If all went fine, run ``fuglu`` without parameters to start the daemon.
 In ``/var/log/fuglu/fuglu.log`` you should then see output similar to this:
 
 ::
@@ -127,7 +127,7 @@ Postfix
 
 Once fuglu is up and running, we need to tell Postfix to use it as an after queue filter.
 
-Detailed documentation is available on the `postfix <http://www.postfix.org/FILTER_README.html>`_ website, but here is a quick example. 
+Detailed documentation is available on the `postfix <http://www.postfix.org/FILTER_README.html>`_ website, but here is a quick example.
 
 Add to ``master.cf`` :
 
@@ -171,10 +171,10 @@ Create a new file ``/etc/postfix/filter_trusted``
 
 ::
 
-	# filter for authenticated users 
+	# filter for authenticated users
 	/./ FILTER fuglu_trusted:[127.0.0.1]:10099
 
-This tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning 
+This tells postfix to send trusted (outgoing) mail to fuglu on port 10099. Fuglu can be configured to treat outgoing mail differently, eg. skip spam scanning but keep antivirus scanning
 
 In ``main.cf`` add
 
@@ -203,7 +203,7 @@ Advanced Config
 Running a plugin multiple times with different config sections
 ..............................................................
 
-By default, plugins search your configfile for a section named like the 
+By default, plugins search your configfile for a section named like the
 plugin itself, for example, the ArchivePlugin looks for a [ArchivePlugin] section. You can pass the plugin definition an argument to override this with a section named to suit your needs.
 This can also allow running a plugin multiple times per scan with different config options:
 
@@ -267,7 +267,7 @@ Enable the esmtp connector on the incoming port (10025) in ``/etc/fuglu/fuglu.co
 
 **rejecting spam**:
 
-In the fuglu configuration set ``DEFAULTHIGHSPAMACTION=REJECT`` (do the same for ``DEFAULTLOWSPAMACTION`` if you want to reject all spam). in the Spamassassin Pluginconfiguration, you can configure a custom reject message which supports various template variables: 
+In the fuglu configuration set ``DEFAULTHIGHSPAMACTION=REJECT`` (do the same for ``DEFAULTLOWSPAMACTION`` if you want to reject all spam). in the Spamassassin Pluginconfiguration, you can configure a custom reject message which supports various template variables:
 
  * *${from_address}* : sender address
  * *${to_address}* : recipient address
@@ -276,7 +276,8 @@ In the fuglu configuration set ``DEFAULTHIGHSPAMACTION=REJECT`` (do the same for
  * *${subject}* : message subject
  * *${spamscore}* : spamassassin score
  * *${date}* : current date
- * *${time}* : current time 
+ * *${time}* : current time
+ * As of fuglu 0.8.1, properties as documented in :ref:`suspect-filter` can be used as well
 
 Example:
 
@@ -293,7 +294,7 @@ This works the same way as rejecting spam, by setting ``DEFAULTVIRUSACTION=REJEC
 
 **Example fuglu configuration**
 
-With this example pre-queue configuration fuglu will scan for spam, virus and blocked attachments. low spam will be tagged, high spam (level>=10) will be rejected. 
+With this example pre-queue configuration fuglu will scan for spam, virus and blocked attachments. low spam will be tagged, high spam (level>=10) will be rejected.
 
 ::
 
@@ -366,7 +367,7 @@ Example procmail filter:
 	:0c
 	| nc localhost 20099
 
-Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value ``unknown@example.org`` for both envelope sender and recipient. 
+Note: in netcat mode fuglu only receives message headers and body, no envelope data. Fuglu will assign the dummy value ``unknown@example.org`` for both envelope sender and recipient.
 
 
 Fetching scan-time configuration values from a database
@@ -393,9 +394,9 @@ The process is very similar to spamassassin's SQL configuration  (http://wiki.ap
  * we require two columns to identify a preference: `section` and `option`
  * username is called `scope`
  * fuglu does not load the full configuration per user, only the actual config options requested by plugins supporting db overrides
- 
+
 Enable configuration lookups by providing a standard sql alchemy connectstring in your configuration (section `databaseconfig` option `dbconnectstring`)
- 
+
 ::
 
 	[databaseconfig]
@@ -404,14 +405,14 @@ Enable configuration lookups by providing a standard sql alchemy connectstring i
 If you use the above table structure in MariaDB / MySQl, the built-in default sql statement should work, but you may use a custom statement (`sql=SELECT ....` in the same section.  ) use `:section`, `:option` and the usual suspect variables like `:to_domain` and `:to_address` as placeholders.
 
 
-Note: only the following plugins currently supports reading database overrides for the listed options: 
+Note: only the following plugins currently supports reading database overrides for the listed options:
  * Spamassassin: `lowspamaction`, `highspamaction`, `highspamlevel`
  * FiletypePlugin: `sendbounce`, `checkarchivenames`, `checkarchivecontent`, `enabledarchivetypes`
 
 multi-processing mode
 .....................
 
-by default, fuglu runs multi-threaded. This is usually a fine choice as many tasks are I/O-bound (waiting on sockets etc). However, for environments running CPU-bound tasks directly in fuglu plugins this can become a bottleneck. Due to the python global interpreter lock, only one operation can run at a time and fuglu does utilize only one CPU core.  
+by default, fuglu runs multi-threaded. This is usually a fine choice as many tasks are I/O-bound (waiting on sockets etc). However, for environments running CPU-bound tasks directly in fuglu plugins this can become a bottleneck. Due to the python global interpreter lock, only one operation can run at a time and fuglu does utilize only one CPU core.
 
 For these setups, fuglu can be switched to multiprocessing mode:
 
@@ -427,4 +428,3 @@ Most things will work similarly as in threaded mode, but there are a few differe
  * in threaded mode, there is only one instance per plugin. In multiprocessing there is one instance per worker. This means increased memory usage, as in-memory caches are built multiple times.
  * dynamic config reloading is not currently supported in multiprocessing mode. Restart fuglu for config changes to take effect.
  * the number of workers is not auto-adapted like in threading mode
-
