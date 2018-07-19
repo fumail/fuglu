@@ -123,7 +123,7 @@ def string_to_actioncode(actionstring, config=None):
 
 class _SuspectTemplate(Template):
     delimiter = '$'
-    idpattern = r'@?[a-z][_a-z0-9.]*'
+    idpattern = r'@?[a-z][_a-z0-9.:]*'
 
 class _SuspectDict(Mapping):
     """Dictionary-like object which fetches SuspectFilter values dynamically"""
@@ -1127,7 +1127,7 @@ class SuspectFilter(object):
         """return a list of mail header values or special values. If the value can not be found, an empty list is returned.
 
         headers:
-            just the headername for normal headers
+            just the headername or header:<headername> for standard message headers
             mime:headername for attached mime part headers
 
         envelope data:
@@ -1204,6 +1204,9 @@ class SuspectFilter(object):
             return force_uString(allvalues)
 
         # standard header
+        # the header:<headername> alias is used in apply_template to distinguish from builtin variables
+        if headername.startswith(u'header:'):
+            headername=headername[7:]
         return force_uString(self._get_headers(headername, messagerep))
 
     def _get_headers(self, headername, payload):
