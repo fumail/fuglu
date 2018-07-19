@@ -158,7 +158,7 @@ class _SuspectDict(Mapping):
         return ''
 
     def __iter__(self):
-        return iter(self.values)
+        return iter(self.values.copy())
 
     def __len__(self):
         return len(self.values)
