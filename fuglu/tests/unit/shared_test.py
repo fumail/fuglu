@@ -4,6 +4,7 @@ import string
 from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncode_to_string, apply_template, REJECT, FileList
 from fuglu.addrcheck import Addrcheck
 import os
+import datetime
 import shutil
 import tempfile
 from fuglu.stringencode import force_uString, force_bString
@@ -465,6 +466,39 @@ class TemplateTestcase(unittest.TestCase):
         expected = """Your message 'Hello world!' from sender@unittests.fuglu.org to recipient@unittests.fuglu.org could not be delivered because a three-headed monkey stole it"""
         self.assertEqual(
             result, expected), "Got unexpected template result: %s" % result
+
+
+    def test_tag_templates(self):
+        """Test Templates with suspect tag expansion"""
+
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+        suspect.tags['hello'] = ['World', "is it me you're looking for"]
+        suspect.tags['SAPlugin.spamscore']="13.37"
+
+        def valfunc(data):
+            if '@removeme' in data:
+                del data['@removeme']
+            if '@changeme' in data:
+                data['@changeme']='elephant'
+            return data
+
+        today=str(datetime.date.today())
+        suspect.tags['removeme']='disappearing rabbit'
+        suspect.tags['changeme']='an uninteresting value'
+        cases=[
+            ('${subject}','Hello world!'),
+            ('${@SAPlugin.spamscore}','13.37'),
+            ('${blubb}',''),
+            ('${@hello}','World'),
+            ('${date}',today), #builtin function with same name as header: builtin should win
+            ('${header:date}', 'Tue, 12 Nov 2013 01:12:11 +0200'),  # with explicit header: prefix the message header should be available
+            ('The quick brown ${from_address} received on ${date} jumps over the ${@removeme}. Uh ${@changeme}', 'The quick brown sender@unittests.fuglu.org received on %s jumps over the . Uh elephant'%today),
+        ]
+        for c in cases:
+            template,expected = c
+            result = apply_template(template, suspect, valuesfunction=valfunc)
+            self.assertEqual(result, expected), "Got unexpected template result: %s. Should be: %s" % (result,expected)
 
 
 class ClientInfoTestCase(unittest.TestCase):
