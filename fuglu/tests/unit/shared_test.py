@@ -474,7 +474,7 @@ class TemplateTestcase(unittest.TestCase):
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
         suspect.tags['hello'] = ['World', "is it me you're looking for"]
-        suspect.tags['SAPlugin.spamscore']=13.37
+        suspect.tags['SAPlugin.spamscore']="13.37"
 
         def valfunc(data):
             if '@removeme' in data:
@@ -483,6 +483,7 @@ class TemplateTestcase(unittest.TestCase):
                 data['@changeme']='elephant'
             return data
 
+        today=str(datetime.date.today())
         suspect.tags['removeme']='disappearing rabbit'
         suspect.tags['changeme']='an uninteresting value'
         cases=[
@@ -490,9 +491,9 @@ class TemplateTestcase(unittest.TestCase):
             ('${@SAPlugin.spamscore}','13.37'),
             ('${blubb}',''),
             ('${@hello}','World'),
-            ('${date}',str(datetime.date.today())), #builtin function with same name as header: builtin should win
+            ('${date}',today), #builtin function with same name as header: builtin should win
             ('${header:date}', 'Tue, 12 Nov 2013 01:12:11 +0200'),  # with explicit header: prefix the message header should be available
-            ('The quick brown ${from_address} received on ${date} jumps over the ${@removeme}. Uh ${@changeme}', 'The quick brown sender@unittests.fuglu.org received on 2018-06-06 jumps over the . Uh elephant'),
+            ('The quick brown ${from_address} received on ${date} jumps over the ${@removeme}. Uh ${@changeme}', 'The quick brown sender@unittests.fuglu.org received on %s jumps over the . Uh elephant'%today),
         ]
         for c in cases:
             template,expected = c
