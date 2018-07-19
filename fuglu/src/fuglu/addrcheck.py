@@ -79,7 +79,6 @@ class LazyLocalPart(Addrcheckint):
         super(LazyLocalPart, self).__init__()
     def __call__(self,mailAddress):
         leg = ( mailAddress !='' and  (      re.match(r"[^@]+@[^@]+$", mailAddress)
-                                          or re.match(r"^\"[\x00-\x7f]+\"@[^@]+$", mailAddress)
-                                          or re.match(r"^\'[\x00-\x7f]+\'@[^@]+$", mailAddress) ))
+                                          or re.match(r"^\"[\x00-\x7f]+\"@[^@]+$", mailAddress) ))
         return leg
 

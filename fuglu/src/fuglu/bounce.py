@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright 2009-2018 Oli Schacher
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +18,13 @@ import smtplib
 import logging
 import os
 import email
+import sys
 from email.utils import formatdate, make_msgid
 from email.header import Header
 import socket
 
 from fuglu.shared import apply_template
-from fuglu.stringencode import force_uString
+from fuglu.stringencode import force_bString
 
 
 class Bounce(object):
@@ -35,7 +37,18 @@ class Bounce(object):
 
     def _add_required_headers(self, recipient, messagecontent):
         """add headers required for sending automated mail"""
-        msgrep = email.message_from_string(messagecontent)
+
+        if sys.version_info > (3,):
+            # Python 3 and larger
+            # Use bytes so message_from_bytes will not screw around with
+            # the encoding
+            msgrep = email.message_from_bytes(force_bString(messagecontent))
+        else:
+            # Python 2.x
+            msgrep = email.message_from_string(force_bString(messagecontent)) # byte-encode otherwise older python (<= 2.6)
+                                                                              # will screw up the message because it assumes
+                                                                              # a non-encode bytes string as input.
+        msgrep.set_charset("utf-8") # define unicode because the messagecontent is unicode
 
         if not 'to' in msgrep:
             msgrep['To'] = Header("<%s>" % recipient).encode()
@@ -76,7 +89,7 @@ class Bounce(object):
         with open(templatefile) as fp:
             filecontent = fp.read()
 
-        self.send_template_string(recipient, force_uString(filecontent), suspect, values)
+        self.send_template_string(recipient, filecontent, suspect, values)
 
     def send_template_string(self, recipient, templatecontent, suspect, values):
         """Send a E-Mail Bounce Message

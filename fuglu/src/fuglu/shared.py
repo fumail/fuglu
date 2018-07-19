@@ -419,6 +419,11 @@ class Suspect(object):
         if you set immediate=True the message source will be replaced immediately. Only set this to true if a header must be
         visible to later plugins (eg. for spamassassin rules), otherwise, leave as False which is faster.
         """
+
+        # convert inputs if needed
+        key = force_uString(key)
+        value = force_uString(value)
+
         if immediate:
             # is ignore the right thing to do here?
             value = value.encode('UTF-8', 'ignore')
@@ -565,8 +570,15 @@ class Suspect(object):
         """old name for get_source"""
         return self.get_source(maxbytes)
 
-    def set_source(self, source):
-        self.source = source
+    def set_source(self, source, encoding='utf-8'):
+        """
+        Store message source. This might be modified by plugins later on...
+        Args:
+            source (bytes,str,unicode): new message source
+        Keyword Args:
+            encoding (str): encoding, default is utf-8
+        """
+        self.source = force_bString(source,encoding=encoding)
         self._msgrep = None
 
     def setSource(self, source):
@@ -592,10 +604,15 @@ class Suspect(object):
         return self.get_original_source(maxbytes)
 
     def get_headers(self):
-        """returns the message headers as string"""
+        """
+        Returns the message headers as string
+
+        Returns:
+            (unicode str) unicode for Py2, str for Py3
+        """
         headers = re.split(
             b'(?:\n\n)|(?:\r\n\r\n)', self.get_source(maxbytes=1048576), 1)[0]
-        return headers
+        return force_uString(headers)
 
     def get_client_info(self, config=None):
         """returns information about the client that submitted this message.
@@ -1028,16 +1045,19 @@ class SuspectFilter(object):
         self.patterns = newpatterns
 
     def strip_text(self, content, remove_tags=None, replace_nbsp=True, use_bfs=True):
-        """Strip HTML Tags from content, replace newline with space (like Spamassassin)"""
+        """Strip HTML Tags from content, replace newline with space (like Spamassassin)
+
+        Returns:
+            (unicode/str) Unicode string (Py3 'str' is unicode string)
+        """
 
         if remove_tags is None:
             remove_tags = ['script', 'style']
 
-        # content may land as a bytes object in py3, so we have to convert to a string so we can
-        # replace newline with space
-        # if it's unicode, we don't convert
-        if isinstance(content, bytes):  # in py2 bytes is an alias for str, no change
-            content = str(content)
+        # make sure inputs are unicode, convert if needed
+        content = force_uString(content)
+        remove_tags = [force_uString(rtag) for rtag in remove_tags]
+
         content = content.replace("\n", " ")
 
         if HAVE_BEAUTIFULSOUP and use_bfs:
@@ -1052,7 +1072,7 @@ class SuspectFilter(object):
                 stripped = soup.get_text()
                 if replace_nbsp:
                     stripped = stripped.replace(u'\xa0', u' ')
-                return stripped
+                return force_uString(stripped)
             else:
                 stripped = ''.join(
                     # Can retain unicode check since BS < 4 is Py2 only
@@ -1077,11 +1097,11 @@ class SuspectFilter(object):
         
         try:
             stripper.feed(content)
-            return stripper.get_stripped_data()
+            return force_uString(stripper.get_stripped_data())
         except Exception:  # ignore parsing/encoding errors
             pass
-        # use regex replace
-        return re.sub(self.stripre, '', content)
+        # use regex replace, make sure returned object is unicode string
+        return force_uString(re.sub(self.stripre, '', content))
 
     def get_decoded_textparts(self, messagerep):
         """Returns a list of all text contents"""
@@ -1097,6 +1117,9 @@ class SuspectFilter(object):
 
             # payload can be None even if it was returned from part.get_payload()
             if payload is not None:
+                # Try to decode using the given char set
+                charset = part.get_content_charset("utf-8")
+                payload = force_uString(payload,encodingGuess=charset)
                 textparts.append(payload)
         return textparts
 
@@ -1126,58 +1149,62 @@ class SuspectFilter(object):
 
 
         """
-        # builtins
-        if headername == 'envelope_from' or headername == 'from_address':
-            return [suspect.from_address, ]
-        if headername == 'envelope_to' or headername == 'to_address':
-            return suspect.recipients
-        if headername == 'from_domain':
-            return [suspect.from_domain, ]
-        if headername == 'to_domain':
-            return [suspect.to_domain, ]
-        if headername == 'body:full':
-            return [suspect.get_original_source()]
 
-        if headername in ['clientip', 'clienthostname', 'clienthelo']:
+        # convert inputs to unicode if needed
+        headername = force_uString(headername)
+
+        # builtins
+        if headername == u'envelope_from' or headername == u'from_address':
+            return force_uString([suspect.from_address, ])
+        if headername == u'envelope_to' or headername == u'to_address':
+            return force_uString(suspect.recipients)
+        if headername == u'from_domain':
+            return force_uString([suspect.from_domain, ])
+        if headername == u'to_domain':
+            return force_uString([suspect.to_domain, ])
+        if headername == u'body:full':
+            return force_uString([suspect.get_original_source()])
+
+        if headername in [u'clientip', u'clienthostname', u'clienthelo']:
             clinfo = suspect.get_client_info()
             if clinfo is None:
                 return []
-            if headername == 'clienthelo':
-                return [clinfo[0], ]
-            if headername == 'clientip':
-                return [clinfo[1], ]
-            if headername == 'clienthostname':
-                return [clinfo[2], ]
+            if headername == u'clienthelo':
+                return force_uString([clinfo[0], ])
+            if headername == u'clientip':
+                return force_uString([clinfo[1], ])
+            if headername == u'clienthostname':
+                return force_uString([clinfo[2], ])
 
         # if it starts with a @ we return a tag, not a header
-        if headername[0:1] == '@':
+        if headername[0:1] == u'@':
             tagname = headername[1:]
             tagval = suspect.get_tag(tagname)
             if tagval is None:
                 return []
             if isinstance(tagval, list):
-                return tagval
-            return [tagval]
+                return force_uString(tagval)
+            return force_uString([tagval])
 
         messagerep = suspect.get_message_rep()
 
         # body rules on decoded text parts
-        if headername == 'body:raw':
-            return self.get_decoded_textparts(messagerep)
+        if headername == u'body:raw':
+            return force_uString(self.get_decoded_textparts(messagerep))
 
-        if headername == 'body' or headername == 'body:stripped':
-            return list(map(self.strip_text, self.get_decoded_textparts(messagerep)))
+        if headername == u'body' or headername == u'body:stripped':
+            return force_uString(list(map(self.strip_text, self.get_decoded_textparts(messagerep))))
 
-        if headername.startswith('mime:'):
+        if headername.startswith(u'mime:'):
             allvalues = []
             realheadername = headername[5:]
             for part in messagerep.walk():
                 hdrslist = self._get_headers(realheadername, part)
                 allvalues.extend(hdrslist)
-            return allvalues
+            return force_uString(allvalues)
 
         # standard header
-        return self._get_headers(headername, messagerep)
+        return force_uString(self._get_headers(headername, messagerep))
 
     def _get_headers(self, headername, payload):
         valuelist = []

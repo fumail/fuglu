@@ -223,7 +223,10 @@ class Archive_rar(Archive_int):
 class Archive_tar(Archive_int):
     def __init__(self, filedescriptor):
         super(Archive_tar, self).__init__(filedescriptor)
-        self._handle = tarfile.open(fileobj=filedescriptor)
+        try:
+            self._handle = tarfile.open(fileobj=filedescriptor)
+        except AttributeError:
+            self._handle = tarfile.open(filedescriptor)
 
     def namelist(self):
         """ Get archive file list
@@ -262,12 +265,18 @@ class Archive_tar(Archive_int):
         Returns:
             (int) file size in bytes
         """
-        return self.arinfo.size
+        arinfo = self._handle.getmember(path)
+        return arinfo.size
 
 class Archive_7z(Archive_int):
     def __init__(self, filedescriptor):
         super(Archive_7z, self).__init__(filedescriptor)
-        self._handle = py7zlib.Archive7z(filedescriptor)
+        self._fdescriptor = None
+        try:
+            self._handle = py7zlib.Archive7z(filedescriptor)
+        except AttributeError:
+            self._fdescriptor = open(filedescriptor,'rb')
+            self._handle = py7zlib.Archive7z(self._fdescriptor)
 
     def namelist(self):
         """ Get archive file list
@@ -276,6 +285,7 @@ class Archive_7z(Archive_int):
             (list) Returns a list of file paths within the archive
         """
         return self._handle.getnames()
+
 
     def extract(self, path, archivecontentmaxsize):
         if self.filesize(path) > archivecontentmaxsize:
@@ -291,7 +301,20 @@ class Archive_7z(Archive_int):
         Returns:
             (int) file size in bytes
         """
-        return self.arinfo.size
+        arinfo = self._handle.getmember(path)
+        return arinfo.size
+
+    def close(self):
+        """
+        Close handle
+        """
+        super(Archive_7z, self).close()
+        if self._fdescriptor is not None:
+            try:
+                self._fdescriptor.close()
+            except Exception:
+                pass
+        self._fdescriptor = None
 
 #--                  --#
 #- use class property -#
@@ -543,6 +566,7 @@ class Archivehandle(object):
             # this list is already sorted
             sorted_ext_list = Archivehandle.avail_archive_extensions_list
 
+        archive_type = None
         for arext in sorted_ext_list:
             if att_name.lower().endswith('.%s' % arext):
                 archive_type = sorted_ext_dict[arext]

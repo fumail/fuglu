@@ -1,4 +1,4 @@
-image: localhost:5000/centos-7-fuglu-testenv
+image: danbla/fuglutestenv
 
 stages:
   - build
@@ -27,9 +27,7 @@ unittests_py3:
 integrationtests:
   stage: test
   script:
-    - sh /usr/local/bin/start-services.sh
-    - cat clamd.log
-    - cat spamd.log
+    - /usr/local/bin/start-services.sh
     - cd fuglu
     - nosetests --rednose tests/integration
   only:
@@ -39,9 +37,7 @@ integrationtests:
 integrationtests_py3:
   stage: test_py3
   script:
-    - sh /usr/local/bin/start-services.sh
-    - cat clamd.log
-    - cat spamd.log
+    - /usr/local/bin/start-services.sh
     - cd fuglu
     - nosetests-3.4 --rednose tests/integration
   only:
@@ -63,10 +59,11 @@ buildfuglu:
     - master
     - develop
 
+
 buildfuglu_py3:
   stage: build_py3
   script:
-    - cd fuglu 
+    - cd fuglu
     - python3 setup.py build_py -d /tmp/build install --force
     - rename '.dist' '' /etc/fuglu/*.dist
     - mkdir -p /var/log/fuglu
