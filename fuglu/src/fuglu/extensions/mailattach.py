@@ -23,13 +23,15 @@ class MailAttachment(threading.local):
     """
     Mail attachment object or a file contained in the attachment.
     """
-    def __init__(self,buffer,filename,filesize=None,inObj=None,contenttype_mime=None):
+    objectCounter = 0
+    def __init__(self,buffer,filename,mgr,filesize=None,inObj=None,contenttype_mime=None):
         """
         Constructor
         Args:
             buffer (bytes): buffer containing attachment source
             filename (str): filename of current attachment object
             filesize (size): file size in bytes
+            mgr (MailAttachMgr): Mail attachment manager
             inObj (MailAttachment): "Father" MailAttachment object (if existing), the archive containing the current object
             contenttype_mime (str): The contenttype as defined in the mail attachment, only available for direct mail attachments
         """
@@ -39,6 +41,11 @@ class MailAttachment(threading.local):
         self._buffer_archObj = {}
         self.inObj = inObj
         self.contenttype_mime = contenttype_mime
+        self._mgr = mgr
+
+        # increment object counter in manager for each object created.
+        # this helps debugging and testing caching...
+        self._mgr._incrementMAobjects()
 
     @smart_cached_property(inputs=['buffer'])
     def contenttype(self):
@@ -186,6 +193,9 @@ class MailAttachment(threading.local):
         the inverse of it.
         Note: This will extract objects withing the limit if not already extracted!
 
+        Here caching is allowed. Even if the attachment Object is destroyed, the filename
+        remains valid (unlike the object reference returned by get_archiveObjList for uncached objects)
+
         Keyword Args:
             maxsize_extract (int): Maximum size that will be extracted
             inverse (bool): invert list
@@ -204,17 +214,23 @@ class MailAttachment(threading.local):
                     inverselist.append(fname)
         return inverselist if inverse else matchlist
 
-    @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle','isArchive'])
+    #@smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle','isArchive'])
     def get_archiveObjList(self,maxsize_extract=None):
         """
         Get list of all object in archive (extracts the archive) if within size limits.
         If the file is already extracted the file will be returned even if the size is
         larger than 'maxsize_extract'.
 
+        No caching of the lists here because get_archiveObj might return an
+        uncached object. The list returned here contains only references and therefore
+        the caching of the list would make the uncached object permanent because the
+        garbage collector can not remove it because of the reference count.
+
         Args:
             maxsize_extract (int): Maximum size that will be extracted
 
         Returns:
+            list containing objects contained in archive
 
         """
         newlist = []
@@ -245,8 +261,12 @@ class MailAttachment(threading.local):
             except KeyError:
                 filesize = self.archive_handle.filesize(fname)
                 buffer = self.archive_handle.extract(fname,maxsize_extract)
-                obj = MailAttachment(buffer,fname,inObj=self,filesize=filesize)
-                self._buffer_archObj[fname] = obj
+                obj = MailAttachment(buffer,fname,self._mgr,inObj=self,filesize=filesize)
+
+                # This object caching is outside the caching decorator used in other parts of this
+                # file (not for this function anyway...).
+                if self._mgr.useCaching(filesize):
+                    self._buffer_archObj[fname] = obj
             return obj
 
     @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle'])
@@ -361,7 +381,7 @@ Content type : %s""" % (self.filename,u'(unknown)' if self.filesize is None else
 class MailAttachMgr(object):
     """Mail attachment manager"""
 
-    def __init__(self,msgrep,section=None):
+    def __init__(self,msgrep,section=None,cachelimit=None):
         """
         Constructor, initialised by message.
 
@@ -385,9 +405,35 @@ class MailAttachMgr(object):
             # Python 3
             maxinteger = sys.maxsize
 
-        self._maxsize_extract = maxinteger
+        # to limit the size of the attachment cache
+        self._current_attCache = 0
+        self._new_attCache = 0
+        self._cacheLimit = cachelimit
+        self._mailatt_obj_counter = 0
 
-        self._logger.info("Default maximum archive file extract limit (bytes):: extract(%u)"%self._maxsize_extract)
+    def _incrementMAobjects(self):
+        """
+        For caching testing and debugging purposes count the number
+        of MailAttachment objects created
+        """
+        self._mailatt_obj_counter += 1
+
+
+    def useCaching(self,used_size):
+        """
+        Used to decide if new attachment objects inside other attachments should be cached or noe
+
+        Returns:
+            bool : True to cache the object
+
+        """
+        self._new_attCache = self._current_attCache+(used_size if used_size else 0)
+
+        if  True if self._cacheLimit is None else self._cacheLimit >= self._new_attCache:
+            self._current_attCache += (used_size if used_size else 0)
+            return True
+        else:
+            return False
 
 
     def walk_all_parts(self, message):
@@ -420,6 +466,7 @@ class MailAttachMgr(object):
             except Exception as e:
                 self.logger.info("hidden part extraction failed: %s"%str(e))
 
+
     @smart_cached_property(inputs=["_msgrep"])
     def attFileDict(self):
         """
@@ -434,11 +481,20 @@ class MailAttachMgr(object):
         Returns:
             (dict): Dictionary storing attachments in list
         """
-        attFileDict = dict()
+        newattFileDict = dict()
 
+        # reset caching
+        self._current_attCache = 0
+        self._new_attCache = 0
+
+        counter = 0
         for part in self.walk_all_parts(self._msgrep):
             if part.is_multipart():
                 continue
+
+            # use a linear counter
+            counter += 1
+
             contenttype_mime = part.get_content_type()
             att_name = part.get_filename(None)
 
@@ -472,24 +528,92 @@ class MailAttachMgr(object):
             #print(att_name)
             #att_name = self.asciionly(att_name)
 
-            # dict: filename: list
-
-            fileList = attFileDict.get(att_name)
-            if fileList is None:
-                fileList = list()
-                attFileDict[att_name] = fileList
-
             buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
             # try to get size from buffer length
             try:
                 attsize = len(buffer)
             except Exception:
                 attsize = None
-            att = MailAttachment(buffer,att_name,contenttype_mime=contenttype_mime,filesize=attsize)
-            fileList.append(att)
-        return attFileDict
 
-    @smart_cached_memberfunc(inputs=['attFileDict','_maxsize_extract'])
+            if self.useCaching(attsize):
+                # cache the object if a cachelimit is defined
+                # and if size could be extracted and is within the limit
+                newattFileDict[counter] = MailAttachment(buffer,att_name,self,contenttype_mime=contenttype_mime,filesize=attsize)
+            else:
+                # No caching of the object
+                newattFileDict[counter] = None
+        return newattFileDict
+
+    def get_attFileGenerator(self):
+        """
+        Dictionary storing attachments in mail. Key is filename, value is list of
+        MailAttachment objects for given name.
+
+        Internal member dependencies:
+            - _msgrep (email.message.Message): Email message
+
+        Returns:
+            (dict): Dictionary storing attachments in list
+        """
+
+        counter = 0
+        for part in self.walk_all_parts(self._msgrep):
+            if part.is_multipart():
+                continue
+            counter += 1
+
+            # use cached object if available
+            cachedObj = self.attFileDict.get(counter)
+            if cachedObj is not None:
+                #---------------#
+                # Cached object #
+                #---------------#
+                yield cachedObj
+            else:
+                #-----------------#
+                # UNCached object #
+                #-----------------#
+                contenttype_mime = part.get_content_type()
+                att_name = part.get_filename(None)
+
+                if att_name:
+                    # some filenames are encoded, try to decode
+                    try:
+                        att_name = ''.join([x[0] for x in decode_header(att_name)])
+                    except Exception:
+                        pass
+                else:
+                    ct = part.get_content_type()
+                    if ct in MIMETYPE_EXT_OVERRIDES:
+                        ext = MIMETYPE_EXT_OVERRIDES[ct]
+                    else:
+                        exts = mimetypes.guess_all_extensions(ct)
+                        # reply is randomly sorted list, get consistent result
+                        if len(exts)>0:
+                            exts.sort()
+                            ext = exts[0]
+                        else:
+                            ext = None
+
+                    if ext is None:
+                        ext = ''
+
+                    if ext.strip() == '':
+                        att_name = "unnamed"
+                    else:
+                        att_name = 'unnamed.%s' % ext
+
+                buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
+                # try to get size from buffer length
+                try:
+                    attsize = len(buffer)
+                except Exception:
+                    attsize = None
+                att = MailAttachment(buffer,att_name,self,contenttype_mime=contenttype_mime,filesize=attsize)
+                yield att
+
+
+    @smart_cached_memberfunc(inputs=['attFileDict'])
     def get_fileslist(self,level=0,maxsize_extract=None):
         """
         (Cached Member Function)
@@ -499,7 +623,6 @@ class MailAttachMgr(object):
 
         Internal member dependencies:
             - attFileDict (dict): The internal dictionary storing attached files as MailAttachment objects.
-            - _maxsize_extract (int): default maximum file size to extract if asked for the file object
 
         Keyword Args:
             level (in): Level up to which archives are opened to get file list (default: 0 -> only filenames directly attached)
@@ -509,21 +632,16 @@ class MailAttachMgr(object):
             list[str]: list containing attached files with archives extracted to given level
         """
         fileList = []
-        for fname,attObjList in iter(self.attFileDict.items()):
-            for attObj in attObjList:
-                fileList.extend(attObj.get_fileslist(0,level,maxsize_extract))
+        for attObj in self.get_attFileGenerator():
+            fileList.extend(attObj.get_fileslist(0,level,maxsize_extract))
         return fileList
 
-    @smart_cached_memberfunc(inputs=['attFileDict'])
     def get_objectlist(self,level=0, maxsize_extract=None):
         """
-        (Cached Member Function)
-
         Get list of all MailAttachment objects attached to message. For given recursion level attached
         archives are extracted.
 
-        Internal member dependencies:
-            - attFileDict (dict): The internal dictionary storing attached files as MailAttachment objects.
+        No caching allowed since objects might not be cached...
 
         Keyword Args:
             level (in): Level up to which archives are opened to get file list (default: 0 -> direct mail attachments)
@@ -532,8 +650,7 @@ class MailAttachMgr(object):
             list[MailAttachment]: list containing attached files with archives extracted to given level
         """
         objList = []
-        for fname,attObjList in iter(self.attFileDict.items()):
-            for attObj in attObjList:
-                objList.extend(attObj.get_objectlist(0,level,maxsize_extract))
+        for attObj in self.get_attFileGenerator():
+            objList.extend(attObj.get_objectlist(0,level,maxsize_extract))
         return objList
 

@@ -217,7 +217,7 @@ class Suspect(object):
     with a suspect and may modify the tags or even the message content itself.
     """
 
-    def __init__(self, from_address, recipients, tempfile):
+    def __init__(self, from_address, recipients, tempfile, att_cachelimit=None):
         self.source = None
         """holds the message source if set directly"""
 
@@ -270,12 +270,16 @@ class Suspect(object):
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
 
+        self._attCachelimit= att_cachelimit
+        """Size limit for attachment manager cache"""
+
         self._attMgr = None
         """Attachment manager"""
+
     @property
     def attMgr(self):
         if self._attMgr is None:
-            self._attMgr = MailAttachMgr(self.get_message_rep())
+            self._attMgr = MailAttachMgr(self.get_message_rep(),cachelimit=self._attCachelimit)
         return self._attMgr
 
     @property

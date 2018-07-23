@@ -3,9 +3,11 @@ import unittest
 import sys
 import email
 from os.path import join
-from fuglu.extensions.mailattach import MailAttachMgr
+from fuglu.extensions.mailattach import MailAttachMgr, MailAttachment
 from fuglu.shared import Suspect
 from unittestsetup import TESTDATADIR, CONFDIR
+import tempfile
+import shutil
 
 class FileArchiveBase(unittest.TestCase):
     def testMailAttachment(self):
@@ -95,3 +97,39 @@ class SuspectTest(unittest.TestCase):
         for att,afname in zip(fullAttList,fnames_all_levels):
             print(att)
             self.assertEqual(afname,att.filename)
+
+    def testCaching(self):
+        testfile = '6mbzipattachment.eml'
+        try:
+            # copy file rules
+            tmpfile = tempfile.NamedTemporaryFile(
+                suffix='virus', prefix='fuglu-unittest', dir='/tmp')
+            shutil.copy(join(TESTDATADIR, testfile), tmpfile.name)
+
+            user = 'recipient-archivenametest@unittests.fuglu.org'
+
+            suspect = Suspect(
+                'sender@unittests.fuglu.org', user, tmpfile.name,att_cachelimit=100)
+            print("=================")
+            print("= Get file list =")
+            print("=================")
+            print(",".join(suspect.attMgr.get_fileslist()))
+            self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"Two object should have been created")
+            print("=======================")
+            print("= Get file list again =")
+            print("=======================")
+            print(",".join(suspect.attMgr.get_fileslist()))
+            self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"List is cached, no new object need to be created")
+            print("=======================")
+            print("= Now get object list =")
+            print("=======================")
+            print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist()))
+            self.assertEqual(3,suspect.attMgr._mailatt_obj_counter,"Since second object is too big it should not be cached")
+            print("=========================")
+            print("= Get object list again =")
+            print("=========================")
+            print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist()))
+            self.assertEqual(4,suspect.attMgr._mailatt_obj_counter,"Second test for creation of second object only")
+
+        finally:
+            tmpfile.close()
