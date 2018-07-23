@@ -31,7 +31,12 @@ def smart_cached_property(inputs=[]):
             cstats,ucstats = get_statscounter(self)
 
             # get dict with caching limits
-            climits = get_cachinglimits(self,f.func_name)
+            try:
+                # Py 2
+                climits = get_cachinglimits(self,f.func_name)
+            except AttributeError:
+                # Py 3
+                climits = get_cachinglimits(self,f.__name__)
 
             try:
                 x = self._property_cache[f]
@@ -91,7 +96,12 @@ def smart_cached_memberfunc(inputs=[]):
             cstats,ucstats = get_statscounter(self)
 
             # get dict with caching limits
-            climits = get_cachinglimits(self,f.func_name)
+            try:
+                # Python 2
+                climits = get_cachinglimits(self,f.func_name)
+            except AttributeError:
+                # Python 3
+                climits = get_cachinglimits(self,f.__name__)
 
             try:
                 (cachedArgs,cachedTimestamps) = self._function_cache[f]
@@ -267,6 +277,11 @@ class CacheStats(object):
         for k,vCached in iter(self._smart_cached_stats.items()):
             try:
                 fname = k.func_name
+            except AttributeError:
+                try:
+                    fname = k.__name__
+                except Exception as e:
+                    raise e
             except Exception as e:
                 fname = k
             statsList.append((fname, self._smart_cached_stats[k], self._smart_uncached_stats[k]))
@@ -285,6 +300,11 @@ class CacheStats(object):
         for k,vCached in iter(self._smart_cached_stats.items()):
             try:
                 fname = k.func_name
+            except AttributeError:
+                try:
+                    fname = k.__name__
+                except Exception as e:
+                    raise e
             except Exception as e:
                 fname = k
             string += "Calls for \"%s\": (cached/uncached) = (%u/%u)\n"%(fname,
