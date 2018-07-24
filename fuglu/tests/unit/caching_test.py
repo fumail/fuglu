@@ -1,3 +1,4 @@
+import unittestsetup
 import unittest
 from fuglu.caching import smart_cached_memberfunc, smart_cached_property, CacheLimits, CacheStats
 
