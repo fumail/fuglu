@@ -24,7 +24,7 @@ import sys
 import logging
 from fuglu.extensions.filearchives import Archivehandle
 from fuglu.extensions.filetype import filetype_handler
-from fuglu.extensions.caching import smart_cached_property, smart_cached_memberfunc
+from fuglu.caching import smart_cached_property, smart_cached_memberfunc
 from io import BytesIO
 
 # workarounds for mimetypes
