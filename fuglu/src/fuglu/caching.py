@@ -1,3 +1,20 @@
+# -*- coding: utf-8 -*-
+#   Copyright 2009-2018 Fumail Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+#
 import functools
 import time
 import operator
@@ -39,13 +56,22 @@ def smart_cached_property(inputs=[]):
                 climits = get_cachinglimits(self,f.__name__)
 
             try:
-                x = self._property_cache[f]
-                if input_values == self._property_input_cache[f]:
+                __property_cache = self._property_cache
+            except AttributeError:
+                __property_cache = {}
+                self._property_cache = __property_cache
+
+            try:
+                __property_input_cache = self._property_input_cache
+            except AttributeError:
+                __property_input_cache = {}
+                self._property_input_cache = __property_input_cache
+
+            try:
+                x = __property_cache[f]
+                if input_values == __property_input_cache[f]:
                     stats_increment(cstats,f)
                     return x
-            except AttributeError:
-                self._property_cache ={}
-                self._property_input_cache = {}
             except KeyError:
                 pass
 
@@ -60,8 +86,8 @@ def smart_cached_property(inputs=[]):
             #- cache -#
             #---   ---#
             if not climits.get('nocache') and funcAllowCache:
-                self._property_cache[f] = x
-                self._property_input_cache[f] = input_values
+                __property_cache[f] = x
+                __property_input_cache[f] = input_values
 
             stats_increment(ucstats,f)
 
@@ -104,22 +130,26 @@ def smart_cached_memberfunc(inputs=[]):
                 climits = get_cachinglimits(self,f.__name__)
 
             try:
-                (cachedArgs,cachedTimestamps) = self._function_cache[f]
-                if input_values == self._property_input_cache[f]:
-                    try:
-                        x = cachedArgs[fun_input]
-
-                        stats_increment(cstats,f)
-                        cachedTimestamps[fun_input] = time.time()
-                        return x
-                    except AttributeError:
-                        pass
-                    except KeyError:
-                        pass
+                __function_cache = self._function_cache
             except AttributeError:
-                self._property_input_cache = {}
-                self._function_cache = {}
-            except KeyError:
+                __function_cache = {}
+                self._function_cache = __function_cache
+
+            try:
+                __property_input_cache = self._property_input_cache
+            except AttributeError:
+                __property_input_cache = {}
+                self._property_input_cache = __property_input_cache
+
+            try:
+                (cachedArgs,cachedTimestamps) = __function_cache[f]
+                if input_values == __property_input_cache[f]:
+                    x = cachedArgs[fun_input]
+
+                    stats_increment(cstats,f)
+                    cachedTimestamps[fun_input] = time.time()
+                    return x
+            except KeyError as e:
                 pass
 
             try:
@@ -127,11 +157,11 @@ def smart_cached_memberfunc(inputs=[]):
                 # "tdict" stores the last call time of the function for given function input
                 #
                 # with function input beying a list storing args + keyword args
-                fdict,tdict = self._function_cache[f]
+                fdict,tdict = __function_cache[f]
             except KeyError:
                 fdict = {}
                 tdict = {}
-                self._function_cache[f] = (fdict,tdict)
+                __function_cache[f] = (fdict,tdict)
 
             x = f(self,*args,**kwargs)
 
@@ -150,7 +180,7 @@ def smart_cached_memberfunc(inputs=[]):
                 fdict[fun_input] = x
                 tdict[fun_input] = time.time()
 
-                self._property_input_cache[f] = input_values
+                __property_input_cache[f] = input_values
 
                 numCache = climits.get('maxNCached')
                 if numCache is not None:
@@ -203,7 +233,7 @@ def get_statscounter(obj):
         (dict,dict) : Tuple containing counter dicts if available or None otherwise
 
     """
-    # statistics for chached returns
+    # statistics for cached returns
     try:
         cstats = obj._smart_cached_stats
     except AttributeError:
