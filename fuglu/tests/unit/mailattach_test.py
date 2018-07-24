@@ -3,9 +3,9 @@ import unittest
 import sys
 import email
 from os.path import join
-from fuglu.extensions.mailattach import MailAttachMgr, MailAttachment
+from fuglu.mailattach import MailAttachMgr
 from fuglu.shared import Suspect
-from unittestsetup import TESTDATADIR, CONFDIR
+from unittestsetup import TESTDATADIR
 import tempfile
 import shutil
 

@@ -30,7 +30,7 @@ except ImportError:
 
 from fuglu.addrcheck import Addrcheck
 from fuglu.stringencode import force_uString, force_bString
-from fuglu.extensions.mailattach import MailAttachMgr
+from fuglu.mailattach import MailAttachMgr
 try:
     from html.parser import HTMLParser
 except ImportError:
