@@ -25,6 +25,7 @@ import logging
 from fuglu.extensions.filearchives import Archivehandle
 from fuglu.extensions.filetype import filetype_handler
 from fuglu.caching import smart_cached_property, smart_cached_memberfunc
+from fuglu.stringencode import force_uString
 from io import BytesIO
 
 # workarounds for mimetypes
@@ -148,6 +149,34 @@ class MailAttachment(threading.local):
             return False
 
         return True
+
+    @smart_cached_property(inputs=['buffer','inObj','content_charset_mime'])
+    def decoded_buffer_text(self):
+        """
+        (Cached Member Function)
+
+        Try to decode the buffer.
+
+        Internal member dependencies:
+            - buffer (bytes): The buffer with the raw attachment content
+            - inObj (MailAttachment): Reference to parent if this object was extracted from an archive
+            - content_charset_mime (string): charset if available or None
+
+        Returns:
+            unicode : the unicode string representing the buffer or an empty string on any error
+
+        """
+
+        # only for first level attachments
+        if self.inObj is not None:
+            try:
+                # if charset is None or empty string use utf-8 as guess
+                charset = self.content_charset_mime if self.content_charset_mime  else "utf-8"
+                return force_uString(self.buffer,encodingGuess=charset)
+            except Exception:
+                pass
+
+        return force_uString("")
 
     @smart_cached_property(inputs=['buffer'])
     def contenttype(self):
