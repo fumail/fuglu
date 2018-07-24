@@ -1,5 +1,6 @@
+import unittestsetup # has to be here because this is the first test and it modifys the pythonpath
 import unittest
-from fuglu.extensions.caching import smart_cached_memberfunc, smart_cached_property, CacheLimits, CacheStats
+from fuglu.caching import smart_cached_memberfunc, smart_cached_property, CacheLimits, CacheStats
 
 class CachingTests(unittest.TestCase):
     def test_cachedProperty(self):
