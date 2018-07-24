@@ -3,7 +3,7 @@ import unittest
 import sys
 import email
 from os.path import join
-from fuglu.mailattach import MailAttachMgr
+from fuglu.mailattach import MailAttachMgr, MailAttachment
 from fuglu.shared import Suspect
 from unittestsetup import TESTDATADIR
 import tempfile
@@ -68,6 +68,101 @@ class FileArchiveBase(unittest.TestCase):
         for att,afname in zip(fullAttList,fnames_all_levels):
             print(att)
             self.assertEqual(afname,att.filename)
+
+
+class MailAttachmentTest(unittest.TestCase):
+    def setUp(self):
+        buffer                 = None
+        filename               = None
+        mgr                    = None
+        filesize               = None
+        inObj                  = None
+        contenttype_mime       = None
+        maintype_mime          = None
+        subtype_mime           = None
+        ismultipart_mime       = None
+        content_charset_mime   = None
+
+        self.mAtt = MailAttachment(buffer,filename,mgr,filesize=filesize,inObj=inObj,contenttype_mime=contenttype_mime,
+                              maintype_mime=maintype_mime, subtype_mime=subtype_mime,ismultipart_mime=ismultipart_mime,
+                              content_charset_mime=content_charset_mime)
+
+    def test_fname_contains_check(self):
+        """Test all the options to check filename"""
+        mAtt = self.mAtt
+        mAtt.filename = "I_like_burgers.txt"
+
+        self.assertTrue(mAtt.content_fname_check(name_contains="burger"))
+        self.assertFalse(mAtt.content_fname_check(name_contains="cheese"))
+        self.assertFalse(mAtt.content_fname_check(name_contains="meat"))
+        self.assertTrue(mAtt.content_fname_check(name_contains=["meat","burger"]))
+        self.assertTrue(mAtt.content_fname_check(name_contains=("meat","burger")))
+        self.assertFalse(mAtt.content_fname_check(name_contains=("meat","cheese")))
+
+    def test_fname_end_check(self):
+        """Test all the options to check end of filename"""
+        mAtt = self.mAtt
+        mAtt.filename = "I_like_burgers.txt"
+        self.assertTrue(mAtt.content_fname_check(name_end=".txt"))
+        self.assertTrue(mAtt.content_fname_check(name_end=[".bla",".txt"]))
+        self.assertTrue(mAtt.content_fname_check(name_end=(".bla",".txt")))
+        self.assertFalse(mAtt.content_fname_check(name_end=(".bla",".tat")))
+
+    def test_multipart_check(self):
+        """Test all the options to check multipart"""
+        mAtt = self.mAtt
+        mAtt.ismultipart_mime = True
+        self.assertTrue(mAtt.content_fname_check(ismultipart=True))
+        self.assertFalse(mAtt.content_fname_check(ismultipart=False))
+        mAtt.ismultipart_mime = False
+        self.assertFalse(mAtt.content_fname_check(ismultipart=True))
+        self.assertTrue(mAtt.content_fname_check(ismultipart=False))
+
+    def test_subtype_check(self):
+        """Test all the options to check subtype"""
+        mAtt = self.mAtt
+        mAtt.subtype_mime = "mixed"
+        self.assertTrue(mAtt.content_fname_check(subtype="mixed"))
+        self.assertFalse(mAtt.content_fname_check(subtype="mix"))
+        self.assertFalse(mAtt.content_fname_check(subtype="mixed1"))
+        self.assertTrue(mAtt.content_fname_check(subtype=["mix","mixed"]))
+        self.assertTrue(mAtt.content_fname_check(subtype=("mix","mixed")))
+        self.assertFalse(mAtt.content_fname_check(subtype=("mix","mixed1")))
+
+    def test_contenttype_check(self):
+        """Test all the options to check contenttype"""
+        mAtt = self.mAtt
+        mAtt.contenttype_mime = "multipart/alternative"
+        self.assertTrue(mAtt.content_fname_check(contenttype="multipart/alternative"))
+        self.assertFalse(mAtt.content_fname_check(contenttype="multipart"))
+        self.assertFalse(mAtt.content_fname_check(contenttype="multipart/alternative/"))
+        self.assertTrue(mAtt.content_fname_check(contenttype=["multipart","multipart/alternative"]))
+        self.assertTrue(mAtt.content_fname_check(contenttype=("multipart","multipart/alternative")))
+        self.assertFalse(mAtt.content_fname_check(contenttype=("multipart","multipart/alternative/")))
+
+    def test_contenttype_start_check(self):
+        """Test all the options to check the beginning of contenttype"""
+        mAtt = self.mAtt
+        mAtt.contenttype_mime = "multipart/alternative"
+        self.assertTrue(mAtt.content_fname_check(contenttype_start="multipart"))
+        self.assertFalse(mAtt.content_fname_check(contenttype_start="alternative"))
+        self.assertFalse(mAtt.content_fname_check(contenttype_start="multipart/alternativePlus"))
+        self.assertTrue(mAtt.content_fname_check(contenttype_start=["alternative","multipart"]))
+        self.assertTrue(mAtt.content_fname_check(contenttype_start=("alternative","multipart")))
+        self.assertFalse(mAtt.content_fname_check(contenttype_start=("alternative","multipart/alternativePlus")))
+
+    def test_contenttype_contains_check(self):
+        """Test all the options to check contenttype a string"""
+        mAtt = self.mAtt
+        mAtt.contenttype_mime = "multipart/alternative"
+        self.assertTrue(mAtt.content_fname_check(contenttype_contains="multipart/alternative"))
+        self.assertTrue(mAtt.content_fname_check(contenttype_contains="multipart"))
+        self.assertFalse(mAtt.content_fname_check(contenttype_contains="multi-part"))
+        self.assertFalse(mAtt.content_fname_check(contenttype_contains="multipart-alternative"))
+        self.assertTrue(mAtt.content_fname_check(contenttype_contains=["multi-part","multipart"]))
+        self.assertTrue(mAtt.content_fname_check(contenttype_contains=("multi-part","multipart")))
+        self.assertFalse(mAtt.content_fname_check(contenttype_contains=("multi-part","multipart-alternative")))
+
 
 class SuspectTest(unittest.TestCase):
     def testSuspectintegration(self):

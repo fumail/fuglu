@@ -42,7 +42,8 @@ class MailAttachment(threading.local):
     Mail attachment object or a file contained in the attachment.
     """
     objectCounter = 0
-    def __init__(self,buffer,filename,mgr,filesize=None,inObj=None,contenttype_mime=None):
+    def __init__(self,buffer,filename,mgr,filesize=None,inObj=None,contenttype_mime=None,
+                 maintype_mime=None, subtype_mime=None,ismultipart_mime=None, content_charset_mime=None):
         """
         Constructor
         Args:
@@ -52,18 +53,101 @@ class MailAttachment(threading.local):
             mgr (MailAttachMgr): Mail attachment manager
             inObj (MailAttachment): "Father" MailAttachment object (if existing), the archive containing the current object
             contenttype_mime (str): The contenttype as defined in the mail attachment, only available for direct mail attachments
+            maintype_mime (str): The main contenttype as defined in the mail attachment, only available for direct mail attachments
+            subtype_mime (str): The sub-contenttype as defined in the mail attachment, only available for direct mail attachments
+            ismultipart_mime (str): multipart as defined in the mail attachment, only available for direct mail attachments
+            content_charset_mime (str): The characterset as defined in the mail attachment, only available for direct mail attachments
         """
         self.filename = filename
         self.filesize = filesize
         self.buffer = buffer
         self._buffer_archObj = {}
         self.inObj = inObj
-        self.contenttype_mime = contenttype_mime
+        self.contenttype_mime     = contenttype_mime
+        self.maintype_mime        = maintype_mime
+        self.subtype_mime         = subtype_mime
+        self.ismultipart_mime     = ismultipart_mime
+        self.content_charset_mime = content_charset_mime
         self._mgr = mgr
 
-        # increment object counter in manager for each object created.
+        # try to increment object counter in manager for each object created.
         # this helps debugging and testing caching...
-        self._mgr._incrementMAobjects()
+        try:
+            self._mgr._incrementMAobjects()
+        except AttributeError:
+            pass
+
+    def content_fname_check(self,maintype=None,ismultipart=None,subtype=None,contenttype=None,contenttype_start=None,
+                            name_end=None,contenttype_contains=None,name_contains=None):
+        """
+        Test content or filename for options or a set of options. All inputs except 'ismultipart' allow
+        simple strings, a list of strings or a tuple of strings as input.
+        """
+        try:
+            if maintype is not None:
+                if isinstance(maintype,(list,tuple)):
+                    if not self.maintype_mime in maintype:
+                        return False
+                else:
+                    if not self.maintype_mime == maintype:
+                        return False
+
+            if ismultipart is not None:
+                if not self.ismultipart_mime == ismultipart:
+                    return False
+
+            if subtype is not None:
+                if isinstance(subtype,(list,tuple)):
+                    if not self.subtype_mime in subtype:
+                        return False
+                else:
+                    if not self.subtype_mime == subtype:
+                        return False
+
+            if contenttype is not None:
+                if isinstance(contenttype,(list,tuple)):
+                    if not self.contenttype_mime in contenttype:
+                        return False
+                else:
+                    if not self.contenttype_mime == contenttype:
+                        return False
+
+            if contenttype_start is not None:
+                if isinstance(contenttype_start,list):
+                    if not self.contenttype_mime.startswith(tuple(contenttype_start)):
+                        return False
+                else:
+                    if not self.contenttype_mime.startswith(contenttype_start):
+                        return False
+
+            if name_end is not None:
+                if isinstance(name_end,list):
+                    if not self.filename.endswith(tuple(name_end)):
+                        return False
+                else:
+                    if not self.filename.endswith(name_end):
+                        return False
+
+            if contenttype_contains is not None:
+                if isinstance(contenttype_contains,(list,tuple)):
+                    if not any((a in self.contenttype_mime for a in contenttype_contains)):
+                        return False
+                else:
+                    if not contenttype_contains in self.contenttype_mime:
+                        return False
+
+            if name_contains is not None:
+                if isinstance(name_contains,(list,tuple)):
+                    if not any((a in self.filename for a in name_contains)):
+                        return False
+                else:
+                    if not name_contains in self.filename:
+                        return False
+        except Exception:
+            # for any exception happening return False
+            return False
+
+        return True
 
     @smart_cached_property(inputs=['buffer'])
     def contenttype(self):
@@ -513,50 +597,18 @@ class MailAttachMgr(object):
             # use a linear counter
             counter += 1
 
-            contenttype_mime = part.get_content_type()
-            att_name = part.get_filename(None)
-
-            if att_name:
-                # some filenames are encoded, try to decode
-                try:
-                    att_name = ''.join([x[0] for x in decode_header(att_name)])
-                except Exception:
-                    pass
-            else:
-                ct = part.get_content_type()
-                if ct in MIMETYPE_EXT_OVERRIDES:
-                    ext = MIMETYPE_EXT_OVERRIDES[ct]
-                else:
-                    exts = mimetypes.guess_all_extensions(ct)
-                    # reply is randomly sorted list, get consistent result
-                    if len(exts)>0:
-                        exts.sort()
-                        ext = exts[0]
-                    else:
-                        ext = None
-
-                if ext is None:
-                    ext = ''
-
-                if ext.strip() == '':
-                    att_name = "unnamed"
-                else:
-                    att_name = 'unnamed.%s' % ext
-
-            #print(att_name)
-            #att_name = self.asciionly(att_name)
-
-            buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
-            # try to get size from buffer length
-            try:
-                attsize = len(buffer)
-            except Exception:
-                attsize = None
+            # process part, extract information needed to create MailAttachment
+            (att_name, buffer, attsize,
+             contenttype_mime, maintype_mime, subtype_mime,
+             ismultipart_mime, content_charset_mime) = MailAttachMgr.process_msg_part(part)
 
             if self.useCaching(attsize):
                 # cache the object if a cachelimit is defined
                 # and if size could be extracted and is within the limit
-                newattFileDict[counter] = MailAttachment(buffer,att_name,self,contenttype_mime=contenttype_mime,filesize=attsize)
+                newattFileDict[counter] = MailAttachment(buffer,att_name,self,contenttype_mime=contenttype_mime,
+                                                         filesize=attsize,maintype_mime=maintype_mime,
+                                                         subtype_mime=subtype_mime,ismultipart_mime=ismultipart_mime,
+                                                         content_charset_mime=content_charset_mime)
             else:
                 # No caching of the object
                 newattFileDict[counter] = None
@@ -591,45 +643,79 @@ class MailAttachMgr(object):
                 #-----------------#
                 # UNCached object #
                 #-----------------#
-                contenttype_mime = part.get_content_type()
-                att_name = part.get_filename(None)
 
-                if att_name:
-                    # some filenames are encoded, try to decode
-                    try:
-                        att_name = ''.join([x[0] for x in decode_header(att_name)])
-                    except Exception:
-                        pass
-                else:
-                    ct = part.get_content_type()
-                    if ct in MIMETYPE_EXT_OVERRIDES:
-                        ext = MIMETYPE_EXT_OVERRIDES[ct]
-                    else:
-                        exts = mimetypes.guess_all_extensions(ct)
-                        # reply is randomly sorted list, get consistent result
-                        if len(exts)>0:
-                            exts.sort()
-                            ext = exts[0]
-                        else:
-                            ext = None
-
-                    if ext is None:
-                        ext = ''
-
-                    if ext.strip() == '':
-                        att_name = "unnamed"
-                    else:
-                        att_name = 'unnamed.%s' % ext
-
-                buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
-                # try to get size from buffer length
-                try:
-                    attsize = len(buffer)
-                except Exception:
-                    attsize = None
-                att = MailAttachment(buffer,att_name,self,contenttype_mime=contenttype_mime,filesize=attsize)
+                # process part, extract information needed to create MailAttachment
+                (att_name, buffer, attsize, contenttype_mime, maintype_mime, subtype_mime,
+                 ismultipart_mime, content_charset_mime) = MailAttachMgr.process_msg_part(part)
+                att = MailAttachment(buffer,att_name,self,contenttype_mime=contenttype_mime,
+                                                          filesize=attsize,maintype_mime=maintype_mime,
+                                                          subtype_mime=subtype_mime,ismultipart_mime=ismultipart_mime,
+                                                          content_charset_mime=content_charset_mime)
                 yield att
 
+    @staticmethod
+    def process_msg_part(part):
+        """
+        Process message part, return tuple containing all information to create MailAttachment object
+
+        Args:
+            part (message part):
+
+        Returns:
+            tuple : tuple containing
+
+        -   att_name             (string) : attachment filename
+        -   buffer               (bytes)  : attachment buffer as bytes
+        -   attsize              (int)    : attachment size in bytes
+        -   contenttype_mime     (string) : content type
+        -   maintype_mime        (string) : main content type
+        -   subtype_mime         (string) : content subtype
+        -   ismultipart_mime     (bool)   : multipart
+        -   content_charset_mime (string) : charset for content
+
+        """
+        contenttype_mime     = part.get_content_type()
+        maintype_mime        = part.get_content_maintype()
+        subtype_mime         = part.get_content_subtype()
+        ismultipart_mime     = part.is_multipart()
+        content_charset_mime = part.get_content_charset()
+        att_name             = part.get_filename(None)
+
+        if att_name:
+            # some filenames are encoded, try to decode
+            try:
+                att_name = ''.join([x[0] for x in decode_header(att_name)])
+            except Exception:
+                pass
+        else:
+            ct = part.get_content_type()
+            if ct in MIMETYPE_EXT_OVERRIDES:
+                ext = MIMETYPE_EXT_OVERRIDES[ct]
+            else:
+                exts = mimetypes.guess_all_extensions(ct)
+                # reply is randomly sorted list, get consistent result
+                if len(exts)>0:
+                    exts.sort()
+                    ext = exts[0]
+                else:
+                    ext = None
+
+            if ext is None:
+                ext = ''
+
+            if ext.strip() == '':
+                att_name = "unnamed"
+            else:
+                att_name = 'unnamed.%s' % ext
+
+        buffer = part.get_payload(decode=True) # Py2: string, Py3: bytes
+        # try to get size from buffer length
+        try:
+            attsize = len(buffer)
+        except Exception:
+            attsize = None
+        return (att_name, buffer, attsize,
+                contenttype_mime, maintype_mime, subtype_mime, ismultipart_mime, content_charset_mime)
 
     @smart_cached_memberfunc(inputs=['attFileDict'])
     def get_fileslist(self,level=0,maxsize_extract=None):
