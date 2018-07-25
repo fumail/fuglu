@@ -1116,7 +1116,20 @@ class SuspectFilter(object):
         # use regex replace, make sure returned object is unicode string
         return force_uString(re.sub(self.stripre, '', content))
 
-    def get_decoded_textparts(self, messagerep):
+    def get_decoded_textparts(self, suspect):
+        if not isinstance(suspect,Suspect):
+            self.logger.warning("\"get_decoded_textparts\" called with object other than Suspect which is deprecated "
+                                "and will be removed in near future...")
+            return self.get_decoded_textparts_deprecated(suspect)
+
+        textparts = []
+        for attObj in suspect.attMgr.get_objectlist():
+            if attObj.content_fname_check(maintype="text",ismultipart=False) \
+                    or attObj.content_fname_check(maintype='multipart',subtype='mixed'):
+                textparts.append(attObj.decoded_buffer_text)
+        return textparts
+
+    def get_decoded_textparts_deprecated(self, messagerep):
         """Returns a list of all text contents"""
         textparts = []
         for part in messagerep.walk():
@@ -1203,10 +1216,10 @@ class SuspectFilter(object):
 
         # body rules on decoded text parts
         if headername == u'body:raw':
-            return force_uString(self.get_decoded_textparts(messagerep))
+            return force_uString(self.get_decoded_textparts(suspect))
 
         if headername == u'body' or headername == u'body:stripped':
-            return force_uString(list(map(self.strip_text, self.get_decoded_textparts(messagerep))))
+            return force_uString(list(map(self.strip_text, self.get_decoded_textparts(suspect))))
 
         if headername.startswith(u'mime:'):
             allvalues = []
