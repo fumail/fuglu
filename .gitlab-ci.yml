@@ -10,7 +10,7 @@ unittests:
   stage: test
   script:
     - cd fuglu
-    - nosetests --rednose tests/unit
+    - nosetests --rednose tests/unit --with-isolation
   only:
     - master
     - develop
@@ -19,7 +19,7 @@ unittests_py3:
   stage: test_py3
   script:
     - cd fuglu
-    - nosetests-3.4 --rednose tests/unit
+    - nosetests-3.4 --rednose tests/unit --with-isolation
   only:
     - master
     - develop

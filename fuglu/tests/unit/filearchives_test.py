@@ -23,9 +23,9 @@ In Pycharm it is needed to run the nosetests with the isolation flag "--with-iso
 The basic testing for gitlab using the docker image doesn't seem to have this issue, the isolation
 flag is not needed.
 
-So far only Pycharm and the gitlab runner has been tested and the flag seems to be needed only
-for Pycharm. If the testing fails displaying this message, try to rerun the nosetests with
-the isolation flag.
+So far only Pycharm and the gitlab runner has been tested. Recently (2018) the flag had to be enabled
+for the gitlab testing. If the testing fails displaying this message, try to rerun the nosetests
+with the isolation flag.
 """
 
 class FileArchiveBase(unittest.TestCase):
