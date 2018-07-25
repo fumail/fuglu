@@ -390,6 +390,9 @@ class CacheLimits(object):
             fDict = self._smart_cached_limits[function]
         except AttributeError:
             self._smart_cached_limits = {}
+        except KeyError:
+            pass
+
         if fDict is None:
             fDict = {}
             self._smart_cached_limits[function] = fDict
