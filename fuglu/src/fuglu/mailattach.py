@@ -168,7 +168,7 @@ class MailAttachment(threading.local):
         """
 
         # only for first level attachments
-        if self.inObj is not None:
+        if self.inObj is None:
             try:
                 # if charset is None or empty string use utf-8 as guess
                 charset = self.content_charset_mime if self.content_charset_mime  else "utf-8"
