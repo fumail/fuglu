@@ -24,7 +24,7 @@ import sys
 import logging
 from fuglu.extensions.filearchives import Archivehandle
 from fuglu.extensions.filetype import filetype_handler
-from fuglu.caching import smart_cached_property, smart_cached_memberfunc
+from fuglu.caching import smart_cached_property, smart_cached_memberfunc, CacheLimits
 from fuglu.stringencode import force_uString
 from io import BytesIO
 
@@ -38,7 +38,7 @@ MIMETYPE_EXT_OVERRIDES = {
 }
 
 
-class MailAttachment(threading.local):
+class MailAttachment(threading.local,CacheLimits):
     """
     Mail attachment object or a file contained in the attachment.
     """
@@ -59,6 +59,7 @@ class MailAttachment(threading.local):
             ismultipart_mime (str): multipart as defined in the mail attachment, only available for direct mail attachments
             content_charset_mime (str): The characterset as defined in the mail attachment, only available for direct mail attachments
         """
+        super(MailAttachment,self).__init__()
         self.filename = filename
         self.filesize = filesize
         self.buffer = buffer
