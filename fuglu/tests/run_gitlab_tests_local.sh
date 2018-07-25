@@ -31,7 +31,7 @@ maindir=$(cd "$(dirname "$0")/../../"; pwd)
 echo "maindir: $maindir"
 cd $maindir
 
-alljobs=(buildfuglu_py3 buildfuglu unittests_py3 unittests integrationtests_py3 integrationtests)
+alljobs=(buildfuglu_py3 buildfuglu isolated_py3 isolated unittests_py3 unittests integrationtests_py3 integrationtests)
 
 for job in "${alljobs[@]}"
 do

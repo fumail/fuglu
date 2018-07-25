@@ -2,15 +2,27 @@ image: danbla/fuglutestenv
 
 stages:
   - build
+  - test_isolated
   - test
   - build_py3
+  - test_py3_isolated
   - test_py3
 
 unittests:
   stage: test
   script:
     - cd fuglu
-    - nosetests --rednose tests/unit --with-isolation
+    - nosetests --rednose tests/unit
+  only:
+    - master
+    - develop
+    - suspectatt
+
+isolated:
+  stage: test_isolated
+  script:
+    - cd fuglu
+    - nosetests --rednose tests/isolated --with-isolation
   only:
     - master
     - develop
@@ -20,7 +32,17 @@ unittests_py3:
   stage: test_py3
   script:
     - cd fuglu
-    - nosetests-3.4 --rednose tests/unit --with-isolation
+    - nosetests-3.4 --rednose tests/unit
+  only:
+    - master
+    - develop
+    - suspectatt
+
+isolated_py3:
+  stage: test_py3_isolated
+  script:
+    - cd fuglu
+    - nosetests-3.4 --rednose tests/isolated  --with-isolation
   only:
     - master
     - develop
