@@ -1,4 +1,4 @@
-#copy this to /usr/lib/systemd/system/fuglu.service
+#copy this to /lib/systemd/system/fuglu.service
 #systemctl enable fuglu
 #systemctl start fuglu
 
