@@ -77,8 +77,9 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
         else:
             logger.warning("module chardet not available -> skip autodetect")
             raise UnicodeDecodeError
-    except AttributeError:
+    except AttributeError as e:
         logger.debug("could not decode value, not of string type: %s: %s" % (type(b_inputstring), b_inputstring))
+        logger.exception(e)
         u_outputstring = b_inputstring
     except Exception as e:
         logger.error("decoding failed!")
