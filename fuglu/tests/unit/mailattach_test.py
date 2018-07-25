@@ -9,10 +9,10 @@ from unittestsetup import TESTDATADIR
 import tempfile
 import shutil
 
-class FileArchiveBase(unittest.TestCase):
-    def testMailAttachment(self):
+class MailAttachMgrTest(unittest.TestCase):
+    def test_manager(self):
+        """Full manager test for what files are extracted based on different inputs"""
 
-        #tempfile = join(TESTDATADIR,"6mbrarattachment.eml")
         tempfile = join(TESTDATADIR,"nestedarchive.eml")
 
         if sys.version_info > (3,):
@@ -166,6 +166,7 @@ class MailAttachmentTest(unittest.TestCase):
 
 class SuspectTest(unittest.TestCase):
     def testSuspectintegration(self):
+        """Test the integration of the manager with Suspect"""
 
         tempfile = join(TESTDATADIR,"nestedarchive.eml")
 
