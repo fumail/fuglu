@@ -419,7 +419,8 @@ class Suspect(object):
         if oldsubj != newsubj:
             del msgrep["subject"]
             msgrep["subject"] = newsubj
-            self.set_message_rep(msgrep)
+            # no need to reset attachment manager because of a header change
+            self.set_message_rep(msgrep,reset_attMgr=False)
             if self.get_tag('origsubj') is None:
                 self.set_tag('origsubj', oldsubj)
             return True
@@ -442,7 +443,9 @@ class Suspect(object):
             hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
             src = force_bString(hdrline) + force_bString(self.get_source())
-            self.set_source(src)
+
+            # no need to reset the attachment manager when just adding a header
+            self.set_source(src,reset_attMgr=False)
         else:
             self.addheaders[key] = value
 
@@ -545,20 +548,29 @@ class Suspect(object):
         """old name for get_message_rep"""
         return self.get_message_rep()
 
-    def set_message_rep(self, msgrep):
+    def set_message_rep(self, msgrep,reset_attMgr=True):
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
+
+        The attachment manager is build based on the python mail representation. If no message
+        attachments or content is modified there is no need to recreate the attachment manager.
+
+        Args:
+            msgrep (email): standard python email representation
+
+        Keyword Args:
+            reset_attMgr (bool): Reset the attachment manager
         """
         if sys.version_info > (3,):
             # Python 3 and larger
             # stick to bytes...
             try:
-                self.set_source(msgrep.as_bytes())
+                self.set_source(msgrep.as_bytes(),reset_attMgr=reset_attMgr)
             except AttributeError:
-                self.set_source(force_bString(msgrep.as_string()))
+                self.set_source(force_bString(msgrep.as_string()),reset_attMgr=reset_attMgr)
         else:
             # Python 2.x
-            self.set_source(msgrep.as_string())
+            self.set_source(msgrep.as_string(),reset_attMgr=reset_attMgr)
     
         # order is important, set_source sets source to None
         self._msgrep = msgrep
@@ -582,17 +594,19 @@ class Suspect(object):
         """old name for get_source"""
         return self.get_source(maxbytes)
 
-    def set_source(self, source, encoding='utf-8'):
+    def set_source(self, source, encoding='utf-8', reset_attMgr=True):
         """
         Store message source. This might be modified by plugins later on...
         Args:
             source (bytes,str,unicode): new message source
         Keyword Args:
             encoding (str): encoding, default is utf-8
+            reset_attMgr (bool): Reset the attachment manager
         """
         self.source = force_bString(source,encoding=encoding)
         self._msgrep = None
-        self._attMgr = None
+        if reset_attMgr:
+            self._attMgr = None
 
     def setSource(self, source):
         """old name for set_source"""

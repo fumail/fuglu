@@ -485,7 +485,10 @@ Tags:
             else:
                 # Python 2.x
                 newmsgrep = email.message_from_string(content)
-            suspect.set_source(content)
+
+            # if original content is forwarded there's no need to reset the attachmant
+            # manager. Only header have been changed.
+            suspect.set_source(content,reset_attMgr=(not forwardoriginal))
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore, report = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
             suspect.tags['SAPlugin.report'] = report
