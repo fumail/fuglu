@@ -155,7 +155,7 @@ class Statskeeper(object):
         """add new entry to the list of scantimes"""
         try:
             f = float(scantime)
-        except:
+        except Exception:
             return
         while len(self.scantimes) > 100:
             del self.scantimes[0]

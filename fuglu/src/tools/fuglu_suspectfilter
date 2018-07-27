@@ -75,13 +75,13 @@ if __name__ == '__main__':
     try:
         sender = extract_email(
             mailmessage.get('return-path', mailmessage.get('from', 'sender@example.com')))
-    except:
+    except Exception:
         sender = 'sender@example.com'
 
     try:
         recipient = extract_email(
             mailmessage.get('delivered-to', mailmessage.get('to', 'recipient@example.com')))
-    except:
+    except Exception:
         recipient = 'recipient@example.com'
 
     suspect = Suspect(

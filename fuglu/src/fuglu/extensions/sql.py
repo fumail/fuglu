@@ -148,7 +148,7 @@ class DBConfig(RawConfigParser):
         try:
             #self.logger.debug("Executing query '%s' with vars %s"%(query,sqlvalues))
             result = session.execute(query, sqlvalues).first()
-        except:
+        except Exception:
             trb = traceback.format_exc()
             self.logger.error(
                 "Error getting database config override: %s" % trb)

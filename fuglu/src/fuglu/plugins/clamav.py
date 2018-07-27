@@ -243,7 +243,7 @@ Tags:
                 ans_id, filename, virusinfo = result.split(':', 2)
                 filename = force_uString(filename.strip())  # use unicode for filename
                 virusinfo = force_uString(virusinfo.strip())  # lets use unicode for the info
-            except:
+            except Exception:
                 raise Exception("%s: Protocol error, could not parse result: %s" % (suspectid, result))
 
             threadLocal.expectedID += 1

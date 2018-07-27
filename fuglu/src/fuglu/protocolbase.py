@@ -101,7 +101,7 @@ class BasicTCPServer(object):
         try:
             self._socket.shutdown(1)
             self._socket.close()
-        except:
+        except Exception:
             pass
 
     def serve(self):

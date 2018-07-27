@@ -242,7 +242,7 @@ if not lint and not console and not opts.foreground:
 try:
     running_user = config.get('main', 'user')
     running_group = config.get('main', 'group')
-except:
+except Exception:
     running_user = 'nobody'
     running_group = 'nobody'
 
@@ -250,7 +250,7 @@ priv_drop_ok = False
 try:
     daemon.drop_privs(running_user, running_group)
     priv_drop_ok = True
-except:
+except Exception:
     err = sys.exc_info()[1]
     print("Could not drop privileges to %s/%s : %s" %
           (running_user, running_group, str(err)))
