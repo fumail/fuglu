@@ -13,7 +13,6 @@ unittests:
   only:
     - master
     - develop
-    - suspectatt
 
 isolated:
   stage: test_isolated
@@ -23,7 +22,6 @@ isolated:
   only:
     - master
     - develop
-    - suspectatt
 
 unittests_py3:
   stage: test
@@ -33,7 +31,6 @@ unittests_py3:
   only:
     - master
     - develop
-    - suspectatt
 
 isolated_py3:
   stage: test_isolated
@@ -43,7 +40,6 @@ isolated_py3:
   only:
     - master
     - develop
-    - suspectatt
 
 integrationtests:
   stage: test
@@ -54,7 +50,6 @@ integrationtests:
   only:
     - master
     - develop
-    - suspectatt
 
 integrationtests_py3:
   stage: test
@@ -65,7 +60,6 @@ integrationtests_py3:
   only:
     - master
     - develop
-    - suspectatt
 
 
 # define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
@@ -81,7 +75,6 @@ buildfuglu:
   only:
     - master
     - develop
-    - suspectatt
 
 
 buildfuglu_py3:
@@ -95,4 +88,3 @@ buildfuglu_py3:
   only:
     - master
     - develop
-    - suspectatt
