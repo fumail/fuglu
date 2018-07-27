@@ -1455,15 +1455,16 @@ class FileList(object):
         now = time.time()
         # check if reloadinterval has passed
         if now - self._lastreload < self.minium_time_between_reloads:
-            return
+            return False
         if not self.file_changed():
-            return
+            return False
         if not self.lock.acquire():
-            return
+            return False
         try:
             self._reload()
         finally:
             self.lock.release()
+        return True
 
     def _reload(self):
         """Reload the file and build the list"""

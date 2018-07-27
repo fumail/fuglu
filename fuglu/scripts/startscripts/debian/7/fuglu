@@ -16,7 +16,7 @@ set -e
 FUGLU="/usr/local/bin/fuglu"
 PIDFILE="/var/run/fuglu.pid"
 
-OPTIONS=""
+OPTIONS="--pidfile=/var/run/fuglud.pid"
 MODULES=""
 
 # Get lsb functions

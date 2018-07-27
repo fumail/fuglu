@@ -821,7 +821,7 @@ class MainController(object):
         try:
             import sqlalchemy
             print(fc.strcolor('sqlalchemy: Version %s installed' % sqlalchemy.__version__, 'green'))
-        except:
+        except ImportError:
             print(fc.strcolor('sqlalchemy: not installed', 'yellow') +
                   " Optional dependency, required if you want to enable any database lookups")
 
@@ -844,7 +844,7 @@ class MainController(object):
             else:
                 print(fc.strcolor('magic: unsupported version', 'yellow') +
                       " File type detection requires either the python bindings from http://www.darwinsys.com/file/ or python magic from https://github.com/ahupp/python-magic")
-        except:
+        except ImportError:
             print(fc.strcolor('magic: not installed', 'yellow') +
                   " Optional dependency, without python-file or python-magic the attachment plugin's automatic file type detection will easily be fooled")
 

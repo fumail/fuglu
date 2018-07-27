@@ -51,7 +51,7 @@ localport = options.port
 iport = None
 try:
     iport = int(localport)
-except:
+except (TypeError, ValueError):
     pass
 
 cmd = " ".join(pargs)
