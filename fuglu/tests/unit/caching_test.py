@@ -1,13 +1,13 @@
 import unittestsetup # has to be here because this is the first test and it modifys the pythonpath
 import unittest
-from fuglu.caching import smart_cached_memberfunc, smart_cached_property, CacheLimits, CacheStats
+from fuglu.caching import smart_cached_memberfunc, smart_cached_property, Cachelimits, Cachestats
 
 class CachingTests(unittest.TestCase):
     def test_cachedProperty(self):
         """
         Test caching of class property calculation
         """
-        class CachedTest(CacheStats):
+        class CachedTest(Cachestats):
             """Dummy test class with property caching"""
             def __init__(self,a,b):
                 super(CachedTest,self).__init__()
@@ -60,13 +60,13 @@ class CachingTests(unittest.TestCase):
         self.assertEqual(2,c.depVar2_count,"Setting same value should not trigger rebuilt")
 
         # print cache stats on screen
-        print(c.string_CacheStats())
+        print(c.string_cachestats())
 
     def test_cachedMemberfunc(self):
         """
         Test caching of member function return value.
         """
-        class CachedTest(CacheStats):
+        class CachedTest(Cachestats):
             """Text class using caching for member function"""
             def __init__(self,a,b):
                 super(CachedTest,self).__init__()
@@ -112,13 +112,13 @@ class CachingTests(unittest.TestCase):
         self.assertEqual(4,c.aPlus10bPlusX_count,"Changing member by decorator should trigger recalculation")
 
         # print cache stats on screen
-        print(c.string_CacheStats())
+        print(c.string_cachestats())
 
     def test_nocach(self):
         """
         Test caching of class property calculation
         """
-        class CachedTest(CacheStats,CacheLimits):
+        class CachedTest(Cachestats, Cachelimits):
             """Dummy test class with property caching"""
             def __init__(self,a,b):
                 super(CachedTest,self).__init__()
@@ -144,21 +144,21 @@ class CachingTests(unittest.TestCase):
         self.assertEqual(2,c.depVar_count,"Now value should be taken from cache")
 
         # print cache stats on screen
-        print(c.string_CacheStats())
+        print(c.string_cachestats())
 
 
     def test_cachedMemberfunc_limits(self):
         """
         Test caching of member function return value.
         """
-        class CachedTest(CacheStats,CacheLimits):
+        class CachedTest(Cachestats, Cachelimits):
             """Text class using caching for member function"""
             def __init__(self,a,b):
                 super(CachedTest,self).__init__()
                 self.a = a
                 self._b = b
                 self.aPlus10bPlusX_count = 0
-                self.set_cachelimit("aPlus10bPlusX","maxNCached",2)
+                self.set_cachelimit("aPlus10bPlusX","max_ncached",2)
             @property
             def b(self):
                 return self._b
@@ -195,14 +195,14 @@ class CachingTests(unittest.TestCase):
         self.assertEqual(4,c.aPlus10bPlusX_count,'Second time called but should not be in cache anymore')
 
         # print cache stats on screen
-        print(c.string_CacheStats())
+        print(c.string_cachestats())
 
     def test_nocachfunc(self):
         """
         Test caching of class property calculation, using a member function
         defining if cache value should be used or not
         """
-        class CachedTest(CacheStats,CacheLimits):
+        class CachedTest(Cachestats, Cachelimits):
             """Dummy test class with property caching"""
             def __init__(self,a,b):
                 super(CachedTest,self).__init__()
@@ -239,13 +239,13 @@ class CachingTests(unittest.TestCase):
         self.assertEqual(3,c.depVar_count,"Use cache")
 
         # print cache stats on screen
-        print(c.string_CacheStats())
+        print(c.string_cachestats())
 
     def test_nocachfunc_size(self):
         """
         Tests cached member func with the example of a object size limitation
         """
-        class CachedTest(CacheStats,CacheLimits):
+        class CachedTest(Cachestats, Cachelimits):
             """Dummy test class with property caching and size limitation"""
             def __init__(self,a,b):
                 super(CachedTest,self).__init__()
@@ -297,4 +297,4 @@ class CachingTests(unittest.TestCase):
         self.assertEqual(4,c.getCounter,"c.zip should be taken from cache")
 
         # print cache stats on screen
-        print(c.string_CacheStats())
+        print(c.string_cachestats())

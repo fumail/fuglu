@@ -3,13 +3,13 @@ import unittest
 import sys
 import email
 from os.path import join
-from fuglu.mailattach import MailAttachMgr, MailAttachment
+from fuglu.mailattach import Mailattachment_mgr, Mailattachment
 from fuglu.shared import Suspect
 from unittestsetup import TESTDATADIR
 import tempfile
 import shutil
 
-class MailAttachMgrTest(unittest.TestCase):
+class Mailattachment_mgr_test(unittest.TestCase):
     def test_manager(self):
         """Full manager test for what files are extracted based on different inputs"""
 
@@ -28,7 +28,7 @@ class MailAttachMgrTest(unittest.TestCase):
             # Python 2.x
             with open(tempfile, 'r') as fh:
                 msgrep = email.message_from_file(fh)
-        mAttachMgr = MailAttachMgr(msgrep)
+        mAttachMgr = Mailattachment_mgr(msgrep)
         #self.assertEqual([])Filenames, base   Level : [nestedarchive.tar.gz, unnamed.txt]
         fnames_base_level   = sorted(["nestedarchive.tar.gz", "unnamed.txt"])
         fnames_first_level  = sorted(["level1.tar.gz", "level0.txt", "unnamed.txt"])
@@ -83,9 +83,10 @@ class MailAttachmentTest(unittest.TestCase):
         ismultipart_mime       = None
         content_charset_mime   = None
 
-        self.mAtt = MailAttachment(buffer,filename,mgr,filesize=filesize,inObj=inObj,contenttype_mime=contenttype_mime,
-                              maintype_mime=maintype_mime, subtype_mime=subtype_mime,ismultipart_mime=ismultipart_mime,
-                              content_charset_mime=content_charset_mime)
+        self.mAtt = Mailattachment(buffer, filename, mgr, filesize=filesize, in_obj=inObj,
+                                   contenttype_mime=contenttype_mime, maintype_mime=maintype_mime,
+                                   subtype_mime=subtype_mime, ismultipart_mime=ismultipart_mime,
+                                   content_charset_mime=content_charset_mime)
 
     def test_fname_contains_check(self):
         """Test all the options to check filename"""
@@ -173,7 +174,7 @@ class SuspectTest(unittest.TestCase):
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', tempfile)
 
-        mAttachMgr = suspect.attMgr
+        mAttachMgr = suspect.att_mgr
         fnames_all_levels   = sorted(["level6.txt", "level5.txt", "level4.txt", "level3.txt", "level2.txt", "level1.txt", "level0.txt", "unnamed.txt"])
 
         print("Filenames, Level  [0:0] : [%s]"%", ".join(mAttachMgr.get_fileslist()))
@@ -210,38 +211,38 @@ class SuspectTest(unittest.TestCase):
         print("\n-----------------")
         print("- Get file list -")
         print("-----------------")
-        print(",".join(suspect.attMgr.get_fileslist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"Two objects should have been created")
+        print(",".join(suspect.att_mgr.get_fileslist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"Two objects should have been created")
 
         print("\n-----------------------")
         print("- Get file list again -")
         print("-----------------------")
-        print(",".join(suspect.attMgr.get_fileslist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"List is cached, no new object need to be created")
+        print(",".join(suspect.att_mgr.get_fileslist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"List is cached, no new object need to be created")
 
         print("\n-----------------------")
         print("- Now get object list -")
         print("-----------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist()))
-        self.assertEqual(3,suspect.attMgr._mailatt_obj_counter,"Since second object is too big it should not be cached")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist()))
+        self.assertEqual(3,suspect.att_mgr._mailatt_obj_counter,"Since second object is too big it should not be cached")
 
         print("\n-------------------------")
         print("- Get object list again -")
         print("-------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist()))
-        self.assertEqual(4,suspect.attMgr._mailatt_obj_counter,"Second test for creation of second object only")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist()))
+        self.assertEqual(4,suspect.att_mgr._mailatt_obj_counter,"Second test for creation of second object only")
 
         print("\n-----------------------------------------------")
         print(  "- Now get object list extracting all archives -")
         print(  "-----------------------------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist(level=None)))
-        self.assertEqual(6,suspect.attMgr._mailatt_obj_counter,"Creates two extra objects, one for the attachment with the archive and the other for the largefile content")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist(level=None)))
+        self.assertEqual(6,suspect.att_mgr._mailatt_obj_counter,"Creates two extra objects, one for the attachment with the archive and the other for the largefile content")
 
         print("\n--------------------------------------------------")
         print(  "- Again, get object list extracting all archives -")
         print(  "--------------------------------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist(level=None)))
-        self.assertEqual(8,suspect.attMgr._mailatt_obj_counter,"Recreates the two previous objects (attachment with archive, archive content)")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist(level=None)))
+        self.assertEqual(8,suspect.att_mgr._mailatt_obj_counter,"Recreates the two previous objects (attachment with archive, archive content)")
 
     def test_cachingLimitAbove(self):
         """Caching limit just above attachment size, but below attachment content size"""
@@ -259,32 +260,32 @@ class SuspectTest(unittest.TestCase):
         print("\n-----------------")
         print(  "- Get file list -")
         print(  "-----------------")
-        print(",".join(suspect.attMgr.get_fileslist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"Two objects should have been created")
+        print(",".join(suspect.att_mgr.get_fileslist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"Two objects should have been created")
 
         print("\n-----------------------")
         print(  "- Get file list again -")
         print(  "-----------------------")
-        print(",".join(suspect.attMgr.get_fileslist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"List is cached, no new object need to be created")
+        print(",".join(suspect.att_mgr.get_fileslist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"List is cached, no new object need to be created")
 
         print("\n-----------------------")
         print(  "- Now get object list -")
         print(  "-----------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"Second object should be cached")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"Second object should be cached")
 
         print("\n-----------------------------------------------")
         print(  "- Now get object list extracting all archives -")
         print(  "-----------------------------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist(level=None)))
-        self.assertEqual(3,suspect.attMgr._mailatt_obj_counter,"New object with content created, not cached")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist(level=None)))
+        self.assertEqual(3,suspect.att_mgr._mailatt_obj_counter,"New object with content created, not cached")
 
         print("\n--------------------------------------------------")
         print(  "- Again, get object list extracting all archives -")
         print(  "--------------------------------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist(level=None)))
-        self.assertEqual(4,suspect.attMgr._mailatt_obj_counter,"Object was not cached, it should be created again")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist(level=None)))
+        self.assertEqual(4,suspect.att_mgr._mailatt_obj_counter,"Object was not cached, it should be created again")
 
     def test_cachingLimit_none(self):
         """No caching limit"""
@@ -301,29 +302,29 @@ class SuspectTest(unittest.TestCase):
         print("\n-----------------")
         print(  "- Get file list -")
         print(  "-----------------")
-        print(",".join(suspect.attMgr.get_fileslist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"Two objects should have been created")
+        print(",".join(suspect.att_mgr.get_fileslist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"Two objects should have been created")
 
         print("\n-----------------------")
         print(  "- Get file list again -")
         print(  "-----------------------")
-        print(",".join(suspect.attMgr.get_fileslist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"List is cached, no new object need to be created")
+        print(",".join(suspect.att_mgr.get_fileslist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"List is cached, no new object need to be created")
 
         print("\n-----------------------")
         print(  "- Now get object list -")
         print(  "-----------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist()))
-        self.assertEqual(2,suspect.attMgr._mailatt_obj_counter,"Second object should be cached")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist()))
+        self.assertEqual(2,suspect.att_mgr._mailatt_obj_counter,"Second object should be cached")
 
         print("\n-----------------------------------------------")
         print(  "- Now get object list extracting all archives -")
         print(  "-----------------------------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist(level=None)))
-        self.assertEqual(3,suspect.attMgr._mailatt_obj_counter,"New object with content created, not cached")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist(level=None)))
+        self.assertEqual(3,suspect.att_mgr._mailatt_obj_counter,"New object with content created, not cached")
 
         print("\n--------------------------------------------------")
         print(  "- Again, get object list extracting all archives -")
         print(  "--------------------------------------------------")
-        print(",".join(obj.filename for obj in suspect.attMgr.get_objectlist(level=None)))
-        self.assertEqual(3,suspect.attMgr._mailatt_obj_counter,"Object was cached, it should not be created again")
+        print(",".join(obj.filename for obj in suspect.att_mgr.get_objectlist(level=None)))
+        self.assertEqual(3,suspect.att_mgr._mailatt_obj_counter,"Object was cached, it should not be created again")

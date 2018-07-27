@@ -775,7 +775,7 @@ class SenderRewriteScheme(ScannerPlugin):
         
         msgrep['To'] = new_hdr
         # no need to reset attachment manager because of a header change
-        suspect.set_message_rep(msgrep,reset_attMgr=False)
+        suspect.set_message_rep(msgrep,att_mgr_reset=False)
     
     
     

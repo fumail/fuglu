@@ -488,7 +488,7 @@ Tags:
 
             # if original content is forwarded there's no need to reset the attachmant
             # manager. Only header have been changed.
-            suspect.set_source(content,reset_attMgr=(not forwardoriginal))
+            suspect.set_source(content,att_mgr_reset=(not forwardoriginal))
             spamheadername = self.config.get(self.section, 'spamheader')
             isspam, spamscore, report = self._extract_spamstatus(newmsgrep, spamheadername, suspect)
             suspect.tags['SAPlugin.report'] = report

@@ -594,7 +594,7 @@ The other common template variables are available as well.
             FUATT_DEFAULT)
 
         # get mail attachment objects (only directly attached objects)
-        for attObj in suspect.attMgr.get_objectlist():
+        for attObj in suspect.att_mgr.get_objectlist():
             contenttype_mime = attObj.contenttype_mime
             att_name = attObj.filename
 
@@ -643,7 +643,7 @@ The other common template variables are available as well.
             if self.checkarchivenames or self.checkarchivecontent:
 
                 #if archive_type is not None:
-                if attObj.isArchive:
+                if attObj.is_archive:
 
                     # check if extension was used to determine archive type and
                     # if yes, check if extension is enabled is enabled. This code
@@ -686,11 +686,11 @@ The other common template variables are available as well.
                             archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
 
                             # list of files that will not be extracted (or returned for now to be backward compatible)
-                            tooLarge = attObj.get_archiveFList(maxsize_extract=archivecontentmaxsize, inverse=True)
+                            tooLarge = attObj.get_archive_flist(maxsize_extract=archivecontentmaxsize, inverse=True)
                             self._debuginfo( suspect, 'Files not extracted - too large : [%s]' %
                                              (", ".join([self.asciionly(fname) for fname in tooLarge ])))
 
-                            for archObj in attObj.get_archiveObjList(maxsize_extract=archivecontentmaxsize):
+                            for archObj in attObj.get_archive_objlist(maxsize_extract=archivecontentmaxsize):
                                 safename = self.asciionly(archObj.filename)
                                 contenttype_magic = archObj.contenttype
 

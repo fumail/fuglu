@@ -6,7 +6,7 @@ from fuglu.addrcheck import Addrcheck
 import os
 import datetime
 from fuglu.stringencode import force_uString, force_bString
-from fuglu.mailattach import MailAttachment
+from fuglu.mailattach import Mailattachment
 
 try:
     from configparser import ConfigParser
@@ -439,7 +439,7 @@ class=3DMsoNormal><o:p> </o:p></p></div></body></html>"""
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
 
         # disable caching for "decoded_buffer_text" property
-        for obj in suspect.attMgr.get_objectlist():
+        for obj in suspect.att_mgr.get_objectlist():
             obj.set_cachelimit("decoded_buffer_text","nocache",True)
 
         textpartslist  = self.candidate.get_decoded_textparts(suspect)

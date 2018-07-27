@@ -30,7 +30,7 @@ except ImportError:
 
 from fuglu.addrcheck import Addrcheck
 from fuglu.stringencode import force_uString, force_bString
-from fuglu.mailattach import MailAttachMgr
+from fuglu.mailattach import Mailattachment_mgr
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -270,17 +270,17 @@ class Suspect(object):
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
 
-        self._attCachelimit= att_cachelimit
+        self._att_cachelimit= att_cachelimit
         """Size limit for attachment manager cache"""
 
-        self._attMgr = None
+        self._att_mgr = None
         """Attachment manager"""
 
     @property
-    def attMgr(self):
-        if self._attMgr is None:
-            self._attMgr = MailAttachMgr(self.get_message_rep(),cachelimit=self._attCachelimit)
-        return self._attMgr
+    def att_mgr(self):
+        if self._att_mgr is None:
+            self._att_mgr = Mailattachment_mgr(self.get_message_rep(), cachelimit=self._att_cachelimit)
+        return self._att_mgr
 
     @property
     def to_address(self):
@@ -420,7 +420,7 @@ class Suspect(object):
             del msgrep["subject"]
             msgrep["subject"] = newsubj
             # no need to reset attachment manager because of a header change
-            self.set_message_rep(msgrep,reset_attMgr=False)
+            self.set_message_rep(msgrep,att_mgr_reset=False)
             if self.get_tag('origsubj') is None:
                 self.set_tag('origsubj', oldsubj)
             return True
@@ -445,7 +445,7 @@ class Suspect(object):
             src = force_bString(hdrline) + force_bString(self.get_source())
 
             # no need to reset the attachment manager when just adding a header
-            self.set_source(src,reset_attMgr=False)
+            self.set_source(src,att_mgr_reset=False)
         else:
             self.addheaders[key] = value
 
@@ -548,7 +548,7 @@ class Suspect(object):
         """old name for get_message_rep"""
         return self.get_message_rep()
 
-    def set_message_rep(self, msgrep,reset_attMgr=True):
+    def set_message_rep(self, msgrep,att_mgr_reset=True):
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
 
@@ -559,18 +559,18 @@ class Suspect(object):
             msgrep (email): standard python email representation
 
         Keyword Args:
-            reset_attMgr (bool): Reset the attachment manager
+            att_mgr_reset (bool): Reset the attachment manager
         """
         if sys.version_info > (3,):
             # Python 3 and larger
             # stick to bytes...
             try:
-                self.set_source(msgrep.as_bytes(),reset_attMgr=reset_attMgr)
+                self.set_source(msgrep.as_bytes(),att_mgr_reset=att_mgr_reset)
             except AttributeError:
-                self.set_source(force_bString(msgrep.as_string()),reset_attMgr=reset_attMgr)
+                self.set_source(force_bString(msgrep.as_string()),att_mgr_reset=att_mgr_reset)
         else:
             # Python 2.x
-            self.set_source(msgrep.as_string(),reset_attMgr=reset_attMgr)
+            self.set_source(msgrep.as_string(),att_mgr_reset=att_mgr_reset)
     
         # order is important, set_source sets source to None
         self._msgrep = msgrep
@@ -594,19 +594,19 @@ class Suspect(object):
         """old name for get_source"""
         return self.get_source(maxbytes)
 
-    def set_source(self, source, encoding='utf-8', reset_attMgr=True):
+    def set_source(self, source, encoding='utf-8', att_mgr_reset=True):
         """
         Store message source. This might be modified by plugins later on...
         Args:
             source (bytes,str,unicode): new message source
         Keyword Args:
             encoding (str): encoding, default is utf-8
-            reset_attMgr (bool): Reset the attachment manager
+            att_mgr_reset (bool): Reset the attachment manager
         """
         self.source = force_bString(source,encoding=encoding)
         self._msgrep = None
-        if reset_attMgr:
-            self._attMgr = None
+        if att_mgr_reset:
+            self._att_mgr = None
 
     def setSource(self, source):
         """old name for set_source"""
@@ -1137,7 +1137,7 @@ class SuspectFilter(object):
             return self.get_decoded_textparts_deprecated(suspect)
 
         textparts = []
-        for attObj in suspect.attMgr.get_objectlist():
+        for attObj in suspect.att_mgr.get_objectlist():
             if attObj.content_fname_check(maintype="text",ismultipart=False) \
                     or attObj.content_fname_check(maintype='multipart',subtype='mixed'):
                 textparts.append(attObj.decoded_buffer_text)
