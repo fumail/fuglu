@@ -1,0 +1,65 @@
+Return-Path: <address@example.net>
+Delivered-To: <address@example.net>
+Received: from AAAAAAAAA.AAAAAA.AAA ([DDD.DDD.DD.DDD])
+	by AAAAAA-AAAAA.AAAAAA.AAA (Dovecot) with LMTP id ge5/EbfGKFuTJwAAS/B1uw
+	for <address@example.net>; Tue, 19 Jun 2018 11:06:42 +0200
+Received: from AAAAAAAAA.AAAAAA.AAA ([127.0.0.1])
+	by localhost (AAAAAA-AAAAA.AAAAAA.AAA [127.0.0.1]) (AAAAAAA-AAA, port 10024)
+	with LMTP id XXXXXXXXXXXX for <address@example.net>;
+	Tue, 19 Jun 2018 11:06:45 +0200 (CEST)
+Received: from [DDD.DDD.D.DDD] (DDD.DDD.D.DD.AAAAAAA.AAAAA.AAA.AAAA.AAAAAAAA.AA [DD.D.DDD.DDD])
+	(Authenticated sender: address@example.net)
+	by AAAAAAAAA.AAAAAA.AAA (Postfix) with ESMTPSA id XXXXXXXXXXXXXX
+	for <address@example.net>; Tue, 19 Jun 2018 11:06:44 +0200 (CEST)
+To: address@example.net
+From: Unknown <address@example.net>
+Subject:  nestedarchivetest
+Message-ID: <e947c677-5ed8-122e-8d87-0c3c4996bc40@AAAAAAAAA.AA>
+Date: Tue, 19 Jun 2018 11:06:43 +0200
+ Thunderbird/52.8.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------E1C51543A67A3CAB4FA31952"
+Content-Language: en-US
+
+This is a multi-part message in MIME format.
+--------------E1C51543A67A3CAB4FA31952
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+testing nested archive
+
+--------------E1C51543A67A3CAB4FA31952
+Content-Type: application/gzip;
+ name="nestedarchive.tar.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="nestedarchive.tar.gz"
+
+H4sIADvHKFsAA8tJLUvNMdQrSSzSS69ioA0wAAIzMxMQbWhuaoBMg4CRoYkZg6GxsSGQYWxi
+bsxgYGhsam7IoGBAI/eggNJioN8VFBiSE8syU6tSc3CpIyQ/RIF8NweD9XGNaAbmt1dqfSa7
+y7B/YOLjdL65SLiRZ9fJNNaV5529Xz+5qvNJ7kJqlChry8amKdNvfuLT1U9ycJmQd+DQbNlN
+eUpOly0c1/BfyDSPc+HaKuL21PVW55TpSq1BHyTfrM89+egbu7H3u8neetN3P6mbvvv3pUPC
+hzL5Ko7NLK7I4kpLdsj2UHlUxT9ZdqH9t9cJQj7HDrAwvWEQ5nQxYmQ+yOJuJNjcarZinn3n
+8vVzZbuPtsz17ODx51z+9+6u8LP//SOfSyfOcdnh0OO4fPvefPM/N85Vr7+xXfHLKzGOxf4K
+OdXaVkrPctriy9jap3OmF1fYnBP1k9NfL2lm8Se5/vp09ttGNsv4X129V+7+pmDC2XeTPuT3
+X9Vys/v4JenZq+zkbVJ28ttfmL58tOsId5VO0y/Tv2f9WddNrOKtYsuRW3/R9pjyi4gyhtgb
+/w44rzixUeWx9iypl4le9QsfOfapPlWcKCZspfridZWWpF1eWqiJ0aml/EGvl27Kib/brp3f
+vsZIQ3xKc/wXWS21NVdY5d+q8X9WD5VNzjm59tKmjUaR9YbVs5+e6V4p7CSk9bj2ftyh/fb2
+tq3eSX+qsp6FTIlRk/NeptGz7uKePTmLHzeZ9HKvrJvO9e7IcV35FVIvVunkbPyV12q4cPUf
+mf6g+f2f3t795K3aYTZ3y4prLN9Yn965cjJZ1nLWmRyvD5OfTfr07dzHFeYzZ6WFpx9ziVrl
+EnM4afXT/U94Wz4+d1k05+h3363NZpsKSlxi7ZY/2KbLr1zGlGab+bpvnoj41brA4uyfTf2m
+t96+X3bZMOXZm3IxwbAHj9b9uLGmkPPT1XesLwMYjqxOnqfjO8tPZ+78xUHLQ79PY4pblKb/
++UrXyQz/0IO+54VYTR0ULmzx9dhSvPrzCo236ebdu8+EPn0zJa9Di2sD/yIdFdmJ33iOX59Y
+0c9/dsGLEpf3L6c5nfqUm/cvoFls5U7rlWucL6qbuKzz/BLvECFXYlIof0vJwro3p+iiL1tQ
+03ej2W3i82vN4iamxNk+SdvVpCC+mllUtiuvRVvyVuOKrX8eXI1a4nzaaVlTLP+bnYodGSel
+Qz6lv3m68dKv7k/VubteT2ePTcl6XRR1vc5VNDHPrLLsysKAlKnBO54qHr91s0T+VYm1X91z
+5beLkqU2c3nmR0mFbgo5qmEuGy96zH6PyYTQLSu/71l57+ShXVdzjE/IB/69MnPNocKj4fsM
+/XcmZEz8NK+mf6Zvj/EanlT1zsfrdqudjzlczHTy/ay1B1I4rL5zvPX867gqaYm86Lz1ShX3
+Db69/vOLJfpVRJCmLpdlbKPo99z+jLkeGodi771REam/4HzH00Tlpc+kbp6ci03idtvsBK+c
+nZn12oh9svvcNf0vD8WVbhW9lib+f0dc3mvj79vurFh9mCW53+zOOfMsp23xp6yY/k5u3BfB
+n5wiX87dXM37f/62ef8N5k08cmOHbdzE/wJPGP6a/r+ex/3kf/3Dyx0eVmVr//7j27Dh4+t1
+7NhLlob69+bvAvp3MGjQt0QbBaSAHFD9b6BXUlFCOzsI1P/AFoABev1vaGY+Wv/TA4RkZBYr
+ABE4HSgYcA20e0bBKBgFo2AUjIJRMApGwSgYBaNgFIyCUTAKRsEoGAWjYBSMglEwCkbBKBgF
+o2AUkAcAwyf5eQAoAAA=
+--------------E1C51543A67A3CAB4FA31952--

@@ -37,6 +37,10 @@ class MilterHandler(ProtocolHandler):
     def __init__(self, socket, config):
         ProtocolHandler.__init__(self, socket, config)
         self.sess = MilterSession(socket, config)
+        try:
+            self._att_mgr_cachesize = config.getint('performance','att_mgr_cachesize')
+        except Exception:
+            self._att_mgr_cachesize = None
 
     def get_suspect(self):
         succ = self.sess.getincomingmail()
@@ -47,7 +51,7 @@ class MilterHandler(ProtocolHandler):
         sess = self.sess
         fromaddr = sess.from_address
         tempfilename = sess.tempfilename
-        suspect = Suspect(fromaddr, sess.recipients, tempfilename)
+        suspect = Suspect(fromaddr, sess.recipients, tempfilename, att_cachelimit=self._att_mgr_cachesize)
 
         if sess.helo is not None and sess.addr is not None and sess.rdns is not None:
             suspect.clientinfo = sess.helo, sess.addr, sess.rdns

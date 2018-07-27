@@ -78,14 +78,14 @@ def smart_cached_property(inputs=[]):
             x = f(self)
 
             try:
-                funcAllowCache = climits.get('function')()
+                func_allow_cache = climits.get('function')()
             except Exception:
-                funcAllowCache = True
+                func_allow_cache = True
 
             #---   ---#
             #- cache -#
             #---   ---#
-            if not climits.get('nocache') and funcAllowCache:
+            if not climits.get('nocache') and func_allow_cache:
                 __property_cache[f] = x
                 __property_input_cache[f] = input_values
 
@@ -100,7 +100,7 @@ def smart_cached_memberfunc(inputs=[]):
     Decorate a class member function to cache its return values. A list of class members
     can be given. If one of the members in this list changes the return value will
     be recalculated even if previously cached. For each set of inputs (for the decorated function) a cached
-    value will be created. This can be limited by using the CacheLimits and define "maxNCached".
+    value will be created. This can be limited by using the Cachelimits and define "max_ncached".
 
     Args:
         inputs (list of strings): list of string with member names this function depends on
@@ -142,12 +142,12 @@ def smart_cached_memberfunc(inputs=[]):
                 self._property_input_cache = __property_input_cache
 
             try:
-                (cachedArgs,cachedTimestamps) = __function_cache[f]
+                (cached_args,cached_timestamps) = __function_cache[f]
                 if input_values == __property_input_cache[f]:
-                    x = cachedArgs[fun_input]
+                    x = cached_args[fun_input]
 
                     stats_increment(cstats,f)
-                    cachedTimestamps[fun_input] = time.time()
+                    cached_timestamps[fun_input] = time.time()
                     return x
             except KeyError as e:
                 pass
@@ -166,14 +166,14 @@ def smart_cached_memberfunc(inputs=[]):
             x = f(self,*args,**kwargs)
 
             try:
-                funcAllowCache = climits.get('function')()
+                func_allow_cache = climits.get('function')()
             except Exception:
-                funcAllowCache = True
+                func_allow_cache = True
 
             #---   ---#
             #- cache -#
             #---   ---#
-            if not climits.get('nocache') and funcAllowCache:
+            if not climits.get('nocache') and func_allow_cache:
                 #----
                 #-- cache function call, result and call time
                 #----
@@ -182,17 +182,17 @@ def smart_cached_memberfunc(inputs=[]):
 
                 __property_input_cache[f] = input_values
 
-                numCache = climits.get('maxNCached')
-                if numCache is not None:
+                num_cache = climits.get('max_ncached')
+                if num_cache is not None:
                     #----
                     #-- Limit number of cached results
                     #----
-                    if len(fdict) > numCache:
-                        timeSorted = sorted(tdict.items(), key=operator.itemgetter(1))
+                    if len(fdict) > num_cache:
+                        time_sorted = sorted(tdict.items(), key=operator.itemgetter(1))
                         # for debugging
-                        # print(timeSorted)
-                        for k,v in timeSorted:
-                            if len(fdict) > numCache:
+                        # print(time_sorted)
+                        for k,v in time_sorted:
+                            if len(fdict) > num_cache:
                                 # for debugging
                                 # print("new result %s"%x)
                                 # print("Delete %s"%k)
@@ -224,7 +224,7 @@ def stats_increment(stats,f):
 def get_statscounter(obj):
     """
     Returns statistic counters if available in class (which is the case if class
-    has been derived from CacheStats)
+    has been derived from Cachestats)
 
     Args:
         obj (instance): object instance
@@ -266,7 +266,7 @@ def get_cachinglimits(obj,fname):
     except Exception as e:
         return {}
 
-class CacheStats(object):
+class Cachestats(object):
     """
     Class storing dicts and routines for caching statistics. Derive your
     class from this class to be able to extract and print statistics of
@@ -276,7 +276,7 @@ class CacheStats(object):
         self._smart_cached_stats={}
         self._smart_uncached_stats={}
 
-    def matchDicts(self):
+    def match_dicts(self):
         """
         Match dictionary keys making sure they exist in the cached and uncached statistics dicts
         which makes it easy to print a summary
@@ -294,7 +294,7 @@ class CacheStats(object):
             if v2 is None:
                 self._smart_cached_stats[k] = 0
 
-    def getCacheStats(self):
+    def get_cachestats(self):
         """
         Get list of tuples storing caching use.
 
@@ -302,9 +302,9 @@ class CacheStats(object):
             list: List of tuples (func name, cached calls, uncached calls)
 
         """
-        self.matchDicts()
+        self.match_dicts()
         statsList = []
-        for k,vCached in iter(self._smart_cached_stats.items()):
+        for k,vcached in iter(self._smart_cached_stats.items()):
             try:
                 fname = k.func_name
             except AttributeError:
@@ -317,11 +317,11 @@ class CacheStats(object):
             statsList.append((fname, self._smart_cached_stats[k], self._smart_uncached_stats[k]))
         return statsList
 
-    def string_CacheStats(self):
+    def string_cachestats(self):
         """Get string containing caching statistics"""
 
         # make sure dicts are consistent
-        self.matchDicts()
+        self.match_dicts()
 
         string =  "---------------------\n"\
                  +"- Cache statistics: -\n"\
@@ -342,36 +342,36 @@ class CacheStats(object):
                                                                 self._smart_uncached_stats[k])
         return string
 
-class CacheLimits(object):
+class Cachelimits(object):
     """
     This class allows to define class-specific caching limitations. Derive your class
     from this class and use the "set_cachelimit" function to define caching limitations.
 
     Current valid options are:
     nocache:    True/False to enable/disable creating new cached values
-    maxNCached: Integer to limit the number of cached values for different function arguments
+    max_ncached: Integer to limit the number of cached values for different function arguments
     function:   A callable object (function,instancemethod) returning True/False
                 The function is called AFTER calculating a result. So once a result is in the cache
                 it will remain. The function decides if a newly calculated value will be put in cache
                 or not.
     """
-    validKeyValues = {"nocache":bool,
-                      "maxNCached": int,
+    valid_keyvalues = {"nocache":bool,
+                      "max_ncached": int,
                       "function": None
-                      }
+                       }
 
     def __init__(self):
         self._smart_cached_limits = {}
 
-    def __isValid(self,key,value):
+    def __is_valid(self, key, value):
         """Check validity of limit"""
-        if key not in CacheLimits.validKeyValues:
+        if key not in Cachelimits.valid_keyvalues:
             raise ValueError("Cachelimit \"%s\" not supported!"%key)
 
         if key == "function":
             if not callable(value):
                 raise TypeError("Function object for \"%s\" is not callable!"%key)
-        elif not type(value) == CacheLimits.validKeyValues[key]:
+        elif not type(value) == Cachelimits.valid_keyvalues[key]:
             raise TypeError("Wrong type for key \"%s\""%key)
 
     def set_cachelimit(self,function,key,value):
@@ -384,13 +384,16 @@ class CacheLimits(object):
             value (string,int,callable object): the value to apply, see options in class description
 
         """
-        self.__isValid(key,value)
-        fDict = None
+        self.__is_valid(key, value)
+        f_dict = None
         try:
-            fDict = self._smart_cached_limits[function]
+            f_dict = self._smart_cached_limits[function]
         except AttributeError:
             self._smart_cached_limits = {}
-        if fDict is None:
-            fDict = {}
-            self._smart_cached_limits[function] = fDict
-        fDict [key] = value
+        except KeyError:
+            pass
+
+        if f_dict is None:
+            f_dict = {}
+            self._smart_cached_limits[function] = f_dict
+        f_dict[key] = value

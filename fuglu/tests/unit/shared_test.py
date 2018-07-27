@@ -5,14 +5,20 @@ from fuglu.shared import Suspect, SuspectFilter, string_to_actioncode, actioncod
 from fuglu.addrcheck import Addrcheck
 import os
 import datetime
-import shutil
-import tempfile
 from fuglu.stringencode import force_uString, force_bString
+from fuglu.mailattach import Mailattachment
 
 try:
     from configparser import ConfigParser
 except ImportError:
     from ConfigParser import ConfigParser
+
+try:
+    from unittest.mock import patch
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import patch
+    from mock import MagicMock
 
 # expected return types
 #
@@ -412,12 +418,33 @@ class=3DMsoNormal><o:p> </o:p></p></div></body></html>"""
         """Test return type for Python 2/3 consistency (list of unicode strings)"""
         suspect = Suspect('sender@unittests.fuglu.org',
                           'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
-        msg = suspect.get_message_rep()
 
-        textpartslist = self.candidate.get_decoded_textparts(msg)
+        textpartslist = self.candidate.get_decoded_textparts(suspect)
         self.assertEqual(list,type(textpartslist),"return type has to be list of unicode strings, but it's not a list")
         self.assertEqual(1,len(textpartslist),"for given example there is one text part, therefore list size has to be 1")
         self.assertEqual(stringtype,type(textpartslist[0]),"return type has to be list of unicode strings, but list doesn't contain a unicode string")
+
+    def test_sf_get_decoded_textparts_cache(self):
+        """Test enabled (default) cache for the decoded text buffers"""
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+
+        textpartslist  = self.candidate.get_decoded_textparts(suspect)
+        textpartslist2 = self.candidate.get_decoded_textparts(suspect)
+        self.assertEqual(id(textpartslist[0]),id(textpartslist2[0]),"with caching the same object should be returned")
+
+    def test_sf_get_decoded_textparts_nocache(self):
+        """Test disabled cache for the decoded text buffers"""
+        suspect = Suspect('sender@unittests.fuglu.org',
+                          'recipient@unittests.fuglu.org', TESTDATADIR + '/helloworld.eml')
+
+        # disable caching for "decoded_buffer_text" property
+        for obj in suspect.att_mgr.get_objectlist():
+            obj.set_cachelimit("decoded_buffer_text","nocache",True)
+
+        textpartslist  = self.candidate.get_decoded_textparts(suspect)
+        textpartslist2 = self.candidate.get_decoded_textparts(suspect)
+        self.assertNotEqual(id(textpartslist[0]),id(textpartslist2[0]),"with no caching there should be different objects returned")
 
 class ActionCodeTestCase(unittest.TestCase):
 

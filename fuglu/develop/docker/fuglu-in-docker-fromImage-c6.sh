@@ -114,7 +114,30 @@ function yesno()
 # run current fuglu source in a docker environment
 srcdir=$(cd "$(dirname "$0")/../../"; pwd)
 
-alljobs=(py2) 
+if [ "$1" == "py2" ]; then
+   alljobs=(py2) 
+elif [ "$1" == "all" ]; then
+   alljobs=(py2) 
+elif [ "$1" == "none" ]; then
+   alljobs=() 
+else
+   echo "Usage: fuglu-in-docker-build-fromImage-c6.sh OPTION"
+   echo "       where OPTION is (py2/all/none)"
+   exit 0
+fi
+
+echo ""
+echo "****************************************"
+echo "* Running docker instance for CentOS-6 *"
+echo "****************************************"
+image="danbla/fuglutestenv:c6"
+did=$(docker create -w /fuglu-src -v $srcdir:/fuglu-src -t -i $image /bin/bash)
+echo "Starting docker instance ID: $did"
+docker start $did
+echo "Starting services (clamav, SA)..."
+docker exec -i $did chmod u=rwx /usr/local/bin/start-services.sh
+docker exec -i $did /bin/bash -c "/usr/local/bin/start-services.sh"
+docker exec -i $did /bin/bash -c "clamscan -V"
 
 for job in "${alljobs[@]}"
 do
@@ -122,15 +145,6 @@ do
    echo "***************************************************************"
    echo "* Running fuglu in docker instance for CentOS-6 for Python $job"
    echo "***************************************************************"
-   image="danbla/fuglutestenv:c6"
-
-   did=$(docker create -w /fuglu-src -v $srcdir:/fuglu-src -t -i $image /bin/bash)
-   echo "Starting docker instance ID: $did"
-   docker start $did
-   echo "Starting services (clamav, SA)..."
-   docker exec -i $did chmod u=rwx /usr/local/bin/start-services.sh
-   docker exec -i $did /bin/bash -c "/usr/local/bin/start-services.sh"
-   docker exec -i $did /bin/bash -c "clamscan -V"
 
    echo ""
    echo "-----------------------------------"
@@ -156,20 +170,20 @@ do
    docker exec -i $did /bin/bash -c "mkdir -p /dev/log"
    docker exec -i $did /bin/bash -c "chmod -R u=rwx,g=rwx,o=rwx /dev/log"
    docker exec -i $did fuglu --lint
-
-   docker exec -ti $did /bin/bash
-
-   if yesno --timeout 3 --default yes "Do you want to remove the container? (default: yes, timeout: 3s)"; then
-      echo ""
-      echo "timeout..."
-      echo ""
-      docker kill $did
-      docker rm -v $did
-   else
-      echo ""
-      echo "For cleanup run:"
-      echo "docker kill $did "
-      echo "docker rm -v $did "
-      echo ""
-   fi
 done
+
+docker exec -ti $did /bin/bash
+
+if yesno --timeout 3 --default yes "Do you want to remove the container? (default: yes, timeout: 3s)"; then
+   echo ""
+   echo "timeout..."
+   echo ""
+   docker kill $did
+   docker rm -v $did
+else
+   echo ""
+   echo "For cleanup run:"
+   echo "docker kill $did "
+   echo "docker rm -v $did "
+   echo ""
+fi

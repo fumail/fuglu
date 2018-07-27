@@ -30,7 +30,7 @@ except ImportError:
 
 from fuglu.addrcheck import Addrcheck
 from fuglu.stringencode import force_uString, force_bString
-
+from fuglu.mailattach import Mailattachment_mgr
 try:
     from html.parser import HTMLParser
 except ImportError:
@@ -217,7 +217,7 @@ class Suspect(object):
     with a suspect and may modify the tags or even the message content itself.
     """
 
-    def __init__(self, from_address, recipients, tempfile):
+    def __init__(self, from_address, recipients, tempfile, att_cachelimit=None):
         self.source = None
         """holds the message source if set directly"""
 
@@ -269,6 +269,18 @@ class Suspect(object):
 
         self.clientinfo = None
         """holds client info tuple: helo, ip, reversedns"""
+
+        self._att_cachelimit= att_cachelimit
+        """Size limit for attachment manager cache"""
+
+        self._att_mgr = None
+        """Attachment manager"""
+
+    @property
+    def att_mgr(self):
+        if self._att_mgr is None:
+            self._att_mgr = Mailattachment_mgr(self.get_message_rep(), cachelimit=self._att_cachelimit)
+        return self._att_mgr
 
     @property
     def to_address(self):
@@ -407,7 +419,8 @@ class Suspect(object):
         if oldsubj != newsubj:
             del msgrep["subject"]
             msgrep["subject"] = newsubj
-            self.set_message_rep(msgrep)
+            # no need to reset attachment manager because of a header change
+            self.set_message_rep(msgrep,att_mgr_reset=False)
             if self.get_tag('origsubj') is None:
                 self.set_tag('origsubj', oldsubj)
             return True
@@ -430,7 +443,9 @@ class Suspect(object):
             hdr = Header(value, header_name=key, continuation_ws=' ')
             hdrline = "%s: %s\n" % (key, hdr.encode())
             src = force_bString(hdrline) + force_bString(self.get_source())
-            self.set_source(src)
+
+            # no need to reset the attachment manager when just adding a header
+            self.set_source(src,att_mgr_reset=False)
         else:
             self.addheaders[key] = value
 
@@ -533,20 +548,29 @@ class Suspect(object):
         """old name for get_message_rep"""
         return self.get_message_rep()
 
-    def set_message_rep(self, msgrep):
+    def set_message_rep(self, msgrep,att_mgr_reset=True):
         """replace the message content. this must be a standard python email representation
         Warning: setting the source via python email representation seems to break dkim signatures!
+
+        The attachment manager is build based on the python mail representation. If no message
+        attachments or content is modified there is no need to recreate the attachment manager.
+
+        Args:
+            msgrep (email): standard python email representation
+
+        Keyword Args:
+            att_mgr_reset (bool): Reset the attachment manager
         """
         if sys.version_info > (3,):
             # Python 3 and larger
             # stick to bytes...
             try:
-                self.set_source(msgrep.as_bytes())
+                self.set_source(msgrep.as_bytes(),att_mgr_reset=att_mgr_reset)
             except AttributeError:
-                self.set_source(force_bString(msgrep.as_string()))
+                self.set_source(force_bString(msgrep.as_string()),att_mgr_reset=att_mgr_reset)
         else:
             # Python 2.x
-            self.set_source(msgrep.as_string())
+            self.set_source(msgrep.as_string(),att_mgr_reset=att_mgr_reset)
     
         # order is important, set_source sets source to None
         self._msgrep = msgrep
@@ -570,16 +594,19 @@ class Suspect(object):
         """old name for get_source"""
         return self.get_source(maxbytes)
 
-    def set_source(self, source, encoding='utf-8'):
+    def set_source(self, source, encoding='utf-8', att_mgr_reset=True):
         """
         Store message source. This might be modified by plugins later on...
         Args:
             source (bytes,str,unicode): new message source
         Keyword Args:
             encoding (str): encoding, default is utf-8
+            att_mgr_reset (bool): Reset the attachment manager
         """
         self.source = force_bString(source,encoding=encoding)
         self._msgrep = None
+        if att_mgr_reset:
+            self._att_mgr = None
 
     def setSource(self, source):
         """old name for set_source"""
@@ -1103,7 +1130,20 @@ class SuspectFilter(object):
         # use regex replace, make sure returned object is unicode string
         return force_uString(re.sub(self.stripre, '', content))
 
-    def get_decoded_textparts(self, messagerep):
+    def get_decoded_textparts(self, suspect):
+        if not isinstance(suspect,Suspect):
+            self.logger.warning("\"get_decoded_textparts\" called with object other than Suspect which is deprecated "
+                                "and will be removed in near future...")
+            return self.get_decoded_textparts_deprecated(suspect)
+
+        textparts = []
+        for attObj in suspect.att_mgr.get_objectlist():
+            if attObj.content_fname_check(maintype="text",ismultipart=False) \
+                    or attObj.content_fname_check(maintype='multipart',subtype='mixed'):
+                textparts.append(attObj.decoded_buffer_text)
+        return textparts
+
+    def get_decoded_textparts_deprecated(self, messagerep):
         """Returns a list of all text contents"""
         textparts = []
         for part in messagerep.walk():
@@ -1190,10 +1230,10 @@ class SuspectFilter(object):
 
         # body rules on decoded text parts
         if headername == u'body:raw':
-            return force_uString(self.get_decoded_textparts(messagerep))
+            return force_uString(self.get_decoded_textparts(suspect))
 
         if headername == u'body' or headername == u'body:stripped':
-            return force_uString(list(map(self.strip_text, self.get_decoded_textparts(messagerep))))
+            return force_uString(list(map(self.strip_text, self.get_decoded_textparts(suspect))))
 
         if headername.startswith(u'mime:'):
             allvalues = []

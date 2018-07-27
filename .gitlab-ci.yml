@@ -2,9 +2,8 @@ image: danbla/fuglutestenv
 
 stages:
   - build
+  - test_isolated
   - test
-  - build_py3
-  - test_py3
 
 unittests:
   stage: test
@@ -15,11 +14,29 @@ unittests:
     - master
     - develop
 
+isolated:
+  stage: test_isolated
+  script:
+    - cd fuglu
+    - nosetests --rednose tests/isolated --with-isolation
+  only:
+    - master
+    - develop
+
 unittests_py3:
-  stage: test_py3
+  stage: test
   script:
     - cd fuglu
     - nosetests-3.4 --rednose tests/unit
+  only:
+    - master
+    - develop
+
+isolated_py3:
+  stage: test_isolated
+  script:
+    - cd fuglu
+    - nosetests-3.4 --rednose tests/isolated  --with-isolation
   only:
     - master
     - develop
@@ -35,7 +52,7 @@ integrationtests:
     - develop
 
 integrationtests_py3:
-  stage: test_py3
+  stage: test
   script:
     - /usr/local/bin/start-services.sh
     - cd fuglu
@@ -61,7 +78,7 @@ buildfuglu:
 
 
 buildfuglu_py3:
-  stage: build_py3
+  stage: build
   script:
     - cd fuglu
     - python3 setup.py build_py -d /tmp/build install --force

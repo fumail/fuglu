@@ -38,7 +38,7 @@ def try_encoding(u_inputstring,encoding="utf-8"):
     if u_inputstring is None:
         return None
 
-    logger = logging.getLogger("fuglu.encoding.try_encoding")
+    logger = logging.getLogger("fuglu.stringencode.try_encoding")
     try:
         return u_inputstring.encode(encoding,"strict")
     except UnicodeEncodeError as e:
@@ -62,7 +62,7 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
     if b_inputstring is None:
         return None
     
-    logger = logging.getLogger("fuglu.encoding.try_decoding")
+    logger = logging.getLogger("fuglu.stringencode.try_decoding")
     try:
         u_outputstring = b_inputstring.decode(encodingGuess,"strict")
     except (UnicodeDecodeError, LookupError):
@@ -77,8 +77,10 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
         else:
             logger.warning("module chardet not available -> skip autodetect")
             raise UnicodeDecodeError
-    except AttributeError:
+    except AttributeError as e:
         logger.debug("could not decode value, not of string type: %s: %s" % (type(b_inputstring), b_inputstring))
+        logger.exception(e)
+        raise e
         u_outputstring = b_inputstring
     except Exception as e:
         logger.error("decoding failed!")

@@ -65,7 +65,8 @@ class DatabaseConfigTestCase(unittest.TestCase):
         config.set('main', 'disablebounces', '1')
         config.set('FiletypePlugin', 'checkarchivenames', 'False')
         config.set('FiletypePlugin', 'checkarchivecontent', 'False')
-        config.set('FiletypePlugin', 'archivecontentmaxsize', '500000')
+        config.set('FiletypePlugin', 'archivecontentmaxsize', 500000)
+        config.set('FiletypePlugin', 'archiveextractlevel', -1)
         config.set('FiletypePlugin', 'enabledarchivetypes', '')
         self.candidate = FiletypePlugin(config)
 
@@ -121,7 +122,8 @@ class AttachmentPluginTestCase(unittest.TestCase):
         config.set('FiletypePlugin', 'sendbounce', 'True')
         config.set('FiletypePlugin', 'checkarchivenames', 'True')
         config.set('FiletypePlugin', 'checkarchivecontent', 'True')
-        config.set('FiletypePlugin', 'archivecontentmaxsize', '5000000')
+        config.set('FiletypePlugin', 'archivecontentmaxsize', '7000000')
+        config.set('FiletypePlugin', 'archiveextractlevel', -1)
         config.set('FiletypePlugin', 'enabledarchivetypes', '')
 
         config.add_section('main')
@@ -184,11 +186,23 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 suspect = Suspect(
                     'sender@unittests.fuglu.org', user, tmpfile.name)
 
-                # test with high limit first
-                oldlimit = self.candidate.config.get(
-                    'FiletypePlugin', 'archivecontentmaxsize')
+                # backup old limits from config file
+                oldlimit         = self.candidate.config.getint( 'FiletypePlugin', 'archivecontentmaxsize')
+                oldlimit_aelevel = self.candidate.config.getint( 'FiletypePlugin', 'archiveextractlevel')
+
+                # now set the limit to 4 mb, the file should be skipped now
+                #
+                # check log
+                # reason of skipping should be the size is to large, file largefile/6mbfile is not extracted
                 self.candidate.config.set(
-                    'FiletypePlugin', 'archivecontentmaxsize', '7000000')
+                    'FiletypePlugin', 'archivecontentmaxsize', 4000000)
+                result = self.candidate.examine(suspect)
+                if type(result) is tuple:
+                    result, message = result
+                self.assertEqual(result, DUNNO, 'large file should be skipped (not extracted)')
+
+                self.candidate.config.set(
+                    'FiletypePlugin', 'archivecontentmaxsize', 7000000)
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
@@ -196,16 +210,27 @@ class AttachmentPluginTestCase(unittest.TestCase):
                     result, DELETE, 'extracted large file should be blocked')
 
                 # now set the limit to 5 mb, the file should be skipped now
+                # check log
+                # reason of skipping should be the size is to large for check, file largefile/6mbfile is already extracted
                 self.candidate.config.set(
-                    'FiletypePlugin', 'archivecontentmaxsize', '5000000')
+                    'FiletypePlugin', 'archivecontentmaxsize', 5000000)
+                result = self.candidate.examine(suspect)
+                if type(result) is tuple:
+                    result, message = result
+                self.assertEqual(result, DUNNO, 'large file should be skipped')
+
+                # now set the limit to 7 mb, the file should be skipped now
+                self.candidate.config.set( 'FiletypePlugin', 'archivecontentmaxsize', 7000000)
+                self.candidate.config.set( 'FiletypePlugin', 'archiveextractlevel', 0)
+
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
                     result, message = result
                 self.assertEqual(result, DUNNO, 'large file should be skipped')
 
                 # reset config
-                self.candidate.config.set(
-                    'FiletypePlugin', 'archivecontentmaxsize', oldlimit)
+                self.candidate.config.set( 'FiletypePlugin', 'archivecontentmaxsize', oldlimit)
+                self.candidate.config.set( 'FiletypePlugin', 'archiveextractlevel', oldlimit_aelevel)
             finally:
                 tmpfile.close()
                 os.remove(conffile)
@@ -225,8 +250,7 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 open(conffile, 'w').write(
                     "deny largefile user does not like the largefile within a zip\ndeny 6mbfile user does not like the largefile within a zip")
                 self.rulescache._loadrules()
-                suspect = Suspect(
-                    'sender@unittests.fuglu.org', user, tmpfile.name)
+                suspect = Suspect( 'sender@unittests.fuglu.org', user, tmpfile.name)
 
                 result = self.candidate.examine(suspect)
                 if type(result) is tuple:
@@ -237,6 +261,58 @@ class AttachmentPluginTestCase(unittest.TestCase):
                 tmpfile.close()
                 os.remove(conffile)
 
+    def test_archivename_nestedarchive(self):
+        """Test check archive names in nested archive"""
+
+        #---
+        # Note:
+        #---
+        # mail testedarchive.eml contains the attachment "nestedarchive.tar.gz"
+        # which has the following nested structure:
+        #---
+        # Level : (extracted from archive  ) -> Files
+        #---
+        # 0     : nestedarchive.tar.gz
+        # 1     : (extracting level1.tar.gz) -> level0.txt   level1.tar.gz
+        # 2     : (extracting level1.tar.gz) -> level1.txt   level2.tar.gz
+        # 3     : (extracting level2.tar.gz) -> level2.txt   level3.tar.gz
+        # 4     : (extracting level3.tar.gz) -> level3.txt   level4.tar.gz
+        # 5     : (extracting level4.tar.gz) -> level4.txt   level5.tar.gz
+        # 6     : (extracting level5.tar.gz) -> level5.txt   level6.tar.gz
+        # 7     : (extracting level6.tar.gz) -> level6.txt
+
+        testfile = os.path.join(TESTDATADIR,"nestedarchive.eml")
+        try:
+            # copy file rules
+            user = 'recipient-archivenametest@unittests.fuglu.org'
+            conffile = self.tempdir + "/%s-archivenames.conf" % user
+            open(conffile, 'w').write(
+                "deny level6.txt user does not like the files in nested archives \ndeny 6mbfile user does not like the largefile within a zip")
+            self.rulescache._loadrules()
+
+            suspect = Suspect('sender@unittests.fuglu.org', user, testfile)
+
+            oldlimit_aelevel = self.candidate.config.getint( 'FiletypePlugin', 'archiveextractlevel')
+
+            #----
+            self.candidate.config.set( 'FiletypePlugin', 'archiveextractlevel', 6)
+
+            result = self.candidate.examine(suspect)
+            if type(result) is tuple:
+                result, message = result
+            self.assertEqual( result, DUNNO, 'archive containing blocked filename should not be extracted')
+
+            #----
+            self.candidate.config.set( 'FiletypePlugin', 'archiveextractlevel', 7)
+
+            result = self.candidate.examine(suspect)
+            if type(result) is tuple:
+                result, message = result
+            self.assertEqual( result, DELETE, 'archive containing blocked filename was not blocked')
+
+            self.candidate.config.set( 'FiletypePlugin', 'archiveextractlevel', oldlimit_aelevel)
+        finally:
+            os.remove(conffile)
 
     def test_hiddenpart(self):
         """Test for hidden part in message epilogue"""

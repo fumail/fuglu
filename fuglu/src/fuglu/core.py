@@ -322,6 +322,12 @@ class MainController(object):
                 'description': "Initial number of processes when backend='process'. If 0 (the default), automatically selects twice the number of available virtual cores. Despite its 'initial'-name, this number currently is not adapted automatically.",
             },
 
+            'att_mgr_cachesize': {
+                'default': "50000000",
+                'section': 'performance',
+                'description': "Maximum cache size to keep attachemnts (archives extracted) per suspect during mail analysis (in bytes)"
+            },
+
             # spam section
             'defaultlowspamaction': {
                 'default': "DUNNO",
@@ -885,7 +891,8 @@ class MainController(object):
                 from fuglu.extensions.sql import get_session
                 sess = get_session(sqlconfigdbconnectstring)
                 tempsuspect = Suspect(
-                    'sender@example.com', 'recipient@example.com', '/dev/null')
+                    'sender@example.com', 'recipient@example.com', '/dev/null',
+                    att_cachelimit=self.config.getint('performance','att_mgr_cachesize'))
                 sqlvars = dict(
                     section='testsection', option='testoption', scope='$GLOBAL')
                 default_template_values(tempsuspect, sqlvars)

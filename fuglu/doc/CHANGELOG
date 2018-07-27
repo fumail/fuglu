@@ -6,10 +6,15 @@
  * Fix for CentOS-6 system script to correctly stop all processes
  * Configurable check for mail address validity, fail action and message
  * Configuration option to remove (default) or keep temporary message files on internal errors (receive,address,unknown)
+ * new input "att_mgr_cachesize" to define attachment manager cache size
+ * new input "archiveextractlevel" in FiletypePlugin to define attachment archive extract level
 
 Developers:
  * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin
  * tighter integration of dnsquery extension
+ * Mail attachment manager - "Suspect.att_mgr" - storing all message attachments and message parts
+ * Attachment objects are created as needed, cached as long as withing the cache limit
+ * caching framework for member variables and methods
 
 
 -- Fuglu 0.8.0, 2018-04-23
