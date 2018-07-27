@@ -267,7 +267,7 @@ class Mailattachment(threading.local, Cachelimits):
             maxsize_extract (int): Maximum size that will be extracted to further go into archive
 
         Returns:
-            (list[str]): List with filenames contained in this object of this object filename itself
+            (list[str]): List with filenames contained in this object or this object filename itself
 
         """
         if levelmax is None or levelin < levelmax:
@@ -279,7 +279,7 @@ class Mailattachment(threading.local, Cachelimits):
 
         return [self.filename]
 
-    def get_objectlist(self,levelin, levelmax, maxsize_extract):
+    def get_objectlist(self,levelin, levelmax, maxsize_extract, noextractinfo=None):
         """
         Get a list of file objects contained in this archive (recursively extracting archives)
         or the current object if this is not an archive.
@@ -307,14 +307,20 @@ class Mailattachment(threading.local, Cachelimits):
                 newlist = []
                 if levelmax is None or levelin + 1 < levelmax:
                     for fname in self.fileslist_archive:
-                        attachObj = self.get_archive_obj(fname, maxsize_extract)
-                        newlist.extend(attachObj.get_objectlist(levelin+1,levelmax,maxsize_extract))
+                        attachObj = self.get_archive_obj(fname, maxsize_extract, noextractinfo)
+                        if attachObj is not None:
+                            newlist.extend(attachObj.get_objectlist(levelin+1,levelmax,maxsize_extract, noextractinfo))
                 else:
                     for fname in self.fileslist_archive:
-                        attachObj = self.get_archive_obj(fname, maxsize_extract)
-                        newlist.append(attachObj)
+                        attachObj = self.get_archive_obj(fname, maxsize_extract,noextractinfo)
+                        if attachObj is not None:
+                            newlist.append(attachObj)
                 return newlist
-
+            else:
+                return [self]
+        elif self.is_archive and noextractinfo is not None:
+            for fname in self.fileslist_archive:
+                noextractinfo.append((fname,"level","level (current/max) %u/%u"%(levelin,levelmax)))
         return [self]
 
     @smart_cached_memberfunc(inputs=['fileslist_archive','archive_handle','is_archive'])
@@ -346,7 +352,7 @@ class Mailattachment(threading.local, Cachelimits):
                     inverselist.append(fname)
         return inverselist if inverse else matchlist
 
-    def get_archive_objlist(self, maxsize_extract=None):
+    def get_archive_objlist(self, maxsize_extract=None, noextractinfo=None):
         """
         Get list of all object in archive (extracts the archive) if within size limits.
         If the file is already extracted the file will be returned even if the size is
@@ -360,6 +366,9 @@ class Mailattachment(threading.local, Cachelimits):
         Args:
             maxsize_extract (int): Maximum size that will be extracted
 
+        Keyword Args:
+            noextractinfo (list): list with info why object was not extracted
+
         Returns:
             list containing objects contained in archive
 
@@ -367,18 +376,21 @@ class Mailattachment(threading.local, Cachelimits):
         newlist = []
         if self.is_archive:
             for fname in self.fileslist_archive:
-                attach_obj = self.get_archive_obj(fname, maxsize_extract)
+                attach_obj = self.get_archive_obj(fname, maxsize_extract, noextractinfo)
                 if attach_obj is not None:
                     newlist.append(attach_obj)
         return newlist
 
-    def get_archive_obj(self, fname, maxsize_extract):
+    def get_archive_obj(self, fname, maxsize_extract, noextractinfo=None):
         """
         Get cached archive object or create a new one.
 
         Args:
             fname (str): filename of file object
             maxsize_extract (int): Maximum size that will be extracted
+
+        Keyword Args:
+            noextractinfo (list): list with info why object was not extracted
 
         Returns:
             (Mailattachment): Requested object from archive
@@ -392,6 +404,13 @@ class Mailattachment(threading.local, Cachelimits):
             except KeyError:
                 filesize = self.archive_handle.filesize(fname)
                 buffer = self.archive_handle.extract(fname,maxsize_extract)
+                if buffer is None:
+                    if noextractinfo is not None:
+                        if filesize > maxsize_extract:
+                            noextractinfo.append((fname,"size","not extracted: %u > %u"%(filesize,maxsize_extract)))
+                        else:
+                            noextractinfo.append((fname,"archivehandle","(no info)"))
+                    return None
                 obj = Mailattachment(buffer, fname, self._mgr, filesize=filesize, in_obj=self)
 
                 # This object caching is outside the caching decorator used in other parts of this
@@ -422,7 +441,8 @@ class Mailattachment(threading.local, Cachelimits):
         if self.fileslist_archive is not None:
             for fname in self.fileslist_archive:
                 attach_obj = self.get_archive_obj(fname, maxsize_extract)
-                newlist.extend(attach_obj.get_fileslist(levelin+1,levelmax,maxsize_extract))
+                if attach_obj is not None:
+                    newlist.extend(attach_obj.get_fileslist(levelin+1,levelmax,maxsize_extract))
         return newlist
 
     @smart_cached_property(inputs=['archive_type','buffer'])

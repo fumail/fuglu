@@ -387,6 +387,11 @@ The other common template variables are available as well.
                 'description': 'only extract and examine files up to this amount of (uncompressed) bytes',
             },
 
+            'archiveextractlevel': {
+                'default': '1',
+                'description': 'recursive extraction level for archives. Undefined or negative value means extract until it\'s not an archive anymore'
+            },
+
             'enabledarchivetypes': {
                 'default': '',
                 'description': 'comma separated list of archive extensions. do only process archives of given types.',
@@ -646,20 +651,34 @@ The other common template variables are available as well.
                 if attObj.is_archive:
 
                     # check if extension was used to determine archive type and
-                    # if yes, check if extension is enabled is enabled. This code
-                    # is here to remain backward compatible in the bahavior. It
+                    # if yes, check if extension is enabled. This code
+                    # is here to remain backward compatible in the behavior. It
                     # is recommended to define inactive archive-types and -extensions
                     # differently
                     if attObj.atype_fromext() is not None:
-                        if not attObj.atype_fromext()[1] in self.active_archive_extensions.keys():
+                        if not attObj.atype_fromext() in self.active_archive_extensions.keys():
                             # skip if extension is not in active list
                             continue
 
 
                     self.logger.debug("Extracting %s as %s" % (att_name,attObj.archive_type))
+                    archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
                     try:
-                        namelist = attObj.fileslist_archive
+                        archiveextractlevel = self.config.getint(self.section, 'archiveextractlevel')
+                        if archiveextractlevel < 0:
+                            archiveextractlevel = None
+                    except:
+                        archiveextractlevel = None
+                        
+                    try:
+
+
                         if self.checkarchivenames:
+                            if self.checkarchivecontent:
+                                namelist = attObj.get_fileslist(0, archiveextractlevel, archivecontentmaxsize)
+                            else:
+                                namelist = attObj.fileslist_archive
+                                
                             for name in namelist:
                                 # rarfile returns unicode objects which mess up
                                 # generated bounces
@@ -680,24 +699,15 @@ The other common template variables are available as well.
 
                         if filetype_handler.available() and self.checkarchivecontent:
 
-
-                            # limit maximum content size according to previous implementation
-                            # This will not return files larger than limit even if it has already been extracted
-                            archivecontentmaxsize = self.config.getint(self.section, 'archivecontentmaxsize')
-
-                            # list of files that will not be extracted (or returned for now to be backward compatible)
-                            tooLarge = attObj.get_archive_flist(maxsize_extract=archivecontentmaxsize, inverse=True)
-                            self._debuginfo( suspect, 'Files not extracted - too large : [%s]' %
-                                             (", ".join([self.asciionly(fname) for fname in tooLarge ])))
-
-                            for archObj in attObj.get_archive_objlist(maxsize_extract=archivecontentmaxsize):
+                            nocheckinfo = []
+                            for archObj in attObj.get_objectlist(0, archiveextractlevel, archivecontentmaxsize, noextractinfo=nocheckinfo):
                                 safename = self.asciionly(archObj.filename)
                                 contenttype_magic = archObj.contenttype
 
                                 # Keeping this check for backward compatibility
                                 # This could easily be removed since memory is used anyway
                                 if archObj.filesize > archivecontentmaxsize:
-                                    self._debuginfo( suspect, 'File not checked (but already extracted) - too large : [%s]' % safename)
+                                    nocheckinfo.append((archObj.filename,"toolarge","already extracted but too large for check: %u > %u"%(archObj.filesize,archivecontentmaxsize)))
                                     continue
 
                                 res = self.matchMultipleSets(
@@ -711,6 +721,12 @@ The other common template variables are available as well.
                                         suspect, "Extracted file %s from archive %s content-type=%s : blocked by mime content type (magic)" % (safename, att_name, contenttype_magic))
                                     message = suspect.tags['FiletypePlugin.errormessage']
                                     return blockactioncode, message
+
+                            for item in nocheckinfo:
+                                try:
+                                    self._debuginfo( suspect, 'Archive File not checked: \"%s\" reason: %s -> %s'%(item[0],item[1],item[2]))
+                                except Exception:
+                                    self._debuginfo( suspect, 'Archive File not checked: unknown reason')
 
                     except Exception:
                         self.logger.warning(

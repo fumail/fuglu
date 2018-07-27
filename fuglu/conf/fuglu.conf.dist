@@ -253,7 +253,13 @@ checkarchivenames=0
 #extract compressed archives(zip,rar) and check file content type with libmagics
 #note that the files will be extracted into memory - tune archivecontentmaxsize  accordingly.
 #fuglu does not extract archives within the archive(recursion)
+#fuglu can recursively extract archives up to the level defined by "archiveextractlevel"
 checkarchivecontent=0
+
+#recursive extraction level for archives. Undefined or negative value means extract
+#until it's not an archive anymore. To block something in the content of a direct attachment
+#the level has to be 1.
+archiveextractlevel=1
 
 #only extract and examine files up to this amount of (uncompressed) bytes
 archivecontentmaxsize=5000000
