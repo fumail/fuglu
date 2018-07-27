@@ -260,7 +260,7 @@ class SessionHandler(object):
         if not os.path.isdir(trashdir):
             try:
                 os.makedirs(trashdir)
-            except:
+            except OSError:
                 self.logger.error(
                     "Trashdir %s does not exist and could not be created" % trashdir)
                 return

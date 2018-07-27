@@ -46,7 +46,7 @@ readconfig = newconfig.read([fugluconfigfile])
 
 try:
     localport = newconfig.getint('debug', 'debugport')
-except:
+except Exception:
     localport = 10888
 
 # connect to debug port

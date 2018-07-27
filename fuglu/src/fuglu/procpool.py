@@ -158,7 +158,7 @@ class MessageListener(threading.Thread):
                 try:
                     delta = StatDelta(**message)
                     self.statskeeper.increase_counter_values(delta)
-                except:
+                except Exception:
                     print(traceback.format_exc())
 
 
@@ -215,7 +215,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
                     # it might be possible it does not work to properly set the workerstate
                     # since this is a shared variable -> prevent exceptions
                     workerstate.workerstate = 'ended'
-                except Exception as e:
+                except Exception:
                     pass
                 finally:
                     return
@@ -228,7 +228,7 @@ def fuglu_process_worker(queue, config, shared_state,child_to_server_messages, l
             handler.handlesession(workerstate)
     except KeyboardInterrupt:
         workerstate.workerstate = 'ended'
-    except:
+    except Exception:
         trb = traceback.format_exc()
         logger.error("Exception in child process: %s"%trb)
         print(trb)
