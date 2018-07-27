@@ -1282,20 +1282,22 @@ class SuspectFilter(object):
             for val in vals:
                 if val is None:
                     continue
-
-                strval = str(val)
-                if pattern.search(strval):
-                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
-                        fieldname, arg, pattern.pattern, val))
-                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s" % (
-                        self.filename, fieldname, arg, pattern.pattern, val))
-                    if extended:
-                        return True, (fieldname, strval, arg, pattern.pattern)
+                try:
+                    strval = str(val)
+                    if pattern.search(strval):
+                        self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
+                            fieldname, arg, pattern.pattern, val))
+                        suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s" % (
+                            self.filename, fieldname, arg, pattern.pattern, val))
+                        if extended:
+                            return True, (fieldname, strval, arg, pattern.pattern)
+                        else:
+                            return True, arg
                     else:
-                        return True, arg
-                else:
-                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
-                        fieldname, arg, pattern.pattern, val))
+                        self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
+                            fieldname, arg, pattern.pattern, val))
+                except UnicodeEncodeError:
+                    pass
 
         self.logger.debug('No match found')
         suspect.debug("message does not match any rule in %s" % self.filename)
@@ -1317,19 +1319,22 @@ class SuspectFilter(object):
             for val in vals:
                 if val is None:
                     continue
-                strval = str(val)
-                if pattern.search(strval) is not None:
-                    self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
-                        fieldname, arg, pattern.pattern, val))
-                    suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s" % (
-                        self.filename, fieldname, arg, pattern.pattern, val))
-                    if extended:
-                        ret.append((fieldname, strval, arg, pattern.pattern))
+                try:
+                    strval = str(val)
+                    if pattern.search(strval) is not None:
+                        self.logger.debug("""MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
+                            fieldname, arg, pattern.pattern, val))
+                        suspect.debug("message matches rule in %s: field=%s arg=%s regex=%s content=%s" % (
+                            self.filename, fieldname, arg, pattern.pattern, val))
+                        if extended:
+                            ret.append((fieldname, strval, arg, pattern.pattern))
+                        else:
+                            ret.append(arg)
                     else:
-                        ret.append(arg)
-                else:
-                    self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
-                        fieldname, arg, pattern.pattern, val))
+                        self.logger.debug("""NO MATCH field %s (arg '%s') regex '%s' against value '%s'""" % (
+                            fieldname, arg, pattern.pattern, val))
+                except UnicodeEncodeError:
+                    pass
 
         return ret
 
