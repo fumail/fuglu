@@ -55,6 +55,10 @@ class SMTPHandler(ProtocolHandler):
     def __init__(self, socket, config):
         ProtocolHandler.__init__(self, socket, config)
         self.sess = SMTPSession(socket, config)
+        try:
+            self._att_mgr_cachesize = config.getint('performance','att_mgr_cachesize')
+        except Exception:
+            self._att_mgr_cachesize = None
 
     def re_inject(self, suspect):
         """Send message back to postfix"""
@@ -102,7 +106,7 @@ class SMTPHandler(ProtocolHandler):
         tempfilename = sess.tempfilename
 
         try:
-            suspect = Suspect(fromaddr, sess.recipients, tempfilename)
+            suspect = Suspect(fromaddr, sess.recipients, tempfilename, att_cachelimit=self._att_mgr_cachesize)
         except ValueError as e:
             if len(sess.recipients) > 0:
                 toaddr = sess.recipients[0]

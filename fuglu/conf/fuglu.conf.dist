@@ -147,6 +147,9 @@ backend=thread
 #Initial number of processes when backend='process'. If 0 (the default), automatically selects twice the number of available virtual cores. Despite its 'initial'-name, this number currently is not adapted automatically.
 initialprocs=0
 
+# Maximum cache size to keep attachemnts (archives extracted) per suspect during mail analysis (in bytes)
+att_mgr_cachesize = 50000000
+
 [spam]
 
 #what to do with messages that plugins think are spam but  not so sure  ("low spam")

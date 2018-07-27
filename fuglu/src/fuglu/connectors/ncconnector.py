@@ -28,6 +28,10 @@ class NCHandler(ProtocolHandler):
     def __init__(self, socket, config):
         ProtocolHandler.__init__(self, socket, config)
         self.sess = NCSession(socket, config)
+        try:
+            self._att_mgr_cachesize = config.getint('performance','att_mgr_cachesize')
+        except Exception:
+            self._att_mgr_cachesize = None
 
     def get_suspect(self):
         success = self.sess.getincomingmail()
@@ -41,7 +45,7 @@ class NCHandler(ProtocolHandler):
 
         tempfilename = sess.tempfilename
 
-        suspect = Suspect(fromaddr, [toaddr, ], tempfilename)
+        suspect = Suspect(fromaddr, [toaddr, ], tempfilename, att_cachelimit=self._att_mgr_cachesize)
         return suspect
 
     def commitback(self, suspect):
