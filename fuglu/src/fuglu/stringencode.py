@@ -50,6 +50,10 @@ def try_encoding(u_inputstring,encoding="utf-8"):
 def try_decoding(b_inputstring,encodingGuess="utf-8"):
     """ Try to decode an encoded string
 
+    This will raise exceptions if object can not be decoded. The calling
+    routine has to handle the exception. For example, "force_uString" has
+    to handle exceptions for sending non-encoded strings.
+
     Args:
         b_inputstring (str/bytes): input byte string
     Keyword Args:
@@ -77,10 +81,6 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
         else:
             logger.warning("module chardet not available -> skip autodetect")
             raise UnicodeDecodeError
-    except Exception as e:
-        logger.error("decoding failed!")
-        logger.exception(e)
-        raise e
 
     return u_outputstring
 
@@ -117,7 +117,7 @@ def force_uString(inputstring,encodingGuess="utf-8"):
                 return inputstring
             else:
                 return try_decoding(inputstring,encodingGuess)
-    except AttributeError:
+    except (AttributeError,TypeError):
         # Input might not be bytes but a number which is then
         # expected to be converted to unicode
         try:

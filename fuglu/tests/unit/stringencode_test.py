@@ -59,3 +59,6 @@ class ConversionTest(unittest.TestCase):
 
         self.assertEqual(ustringtype,type(force_uString(WithUnicode())),"Class has __unicode__ and __str__ (Py2: __unicode__ / Py3: __str__")
         self.assertEqual(ustringtype,type(force_uString(WithStr())),"Class has __str__ (Py2/3: __str__")
+
+        for item in force_uString([int(1), "bla", 1.3e-2]):
+            self.assertEqual(ustringtype,type(item),"After conversion, type has to be unicode")
