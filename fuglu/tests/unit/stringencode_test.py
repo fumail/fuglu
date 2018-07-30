@@ -39,3 +39,23 @@ class ConversionTest(unittest.TestCase):
         for item in force_bString(mixedlist):
             self.assertEqual(bytestype,type(item),"After byte conversion, type has to be bytes")
             self.assertEqual(b"bla",item,"String has to match the test string b\"bla\"")
+
+    def test_nonstringinput(self):
+        self.assertEqual(ustringtype,type(force_uString(1)),"After conversion, type has to be unicode")
+        self.assertEqual(ustringtype,type(force_uString(1.3e-2)),"After conversion, type has to be unicode")
+
+        class WithUnicode(object):
+            def __unicode__(self):
+                return u"I have unicode"
+            def __str__(self):
+                return "I also have str"
+
+        class WithStr(object):
+            def __str__(self):
+                return "I have str"
+
+        print(force_uString(WithUnicode()))
+        print(force_uString(WithStr()))
+
+        self.assertEqual(ustringtype,type(force_uString(WithUnicode())),"Class has __unicode__ and __str__ (Py2: __unicode__ / Py3: __str__")
+        self.assertEqual(ustringtype,type(force_uString(WithStr())),"Class has __str__ (Py2/3: __str__")
