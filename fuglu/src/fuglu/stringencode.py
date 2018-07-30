@@ -77,11 +77,6 @@ def try_decoding(b_inputstring,encodingGuess="utf-8"):
         else:
             logger.warning("module chardet not available -> skip autodetect")
             raise UnicodeDecodeError
-    except AttributeError as e:
-        logger.debug("could not decode value, not of string type: %s: %s" % (type(b_inputstring), b_inputstring))
-        logger.exception(e)
-        raise e
-        u_outputstring = b_inputstring
     except Exception as e:
         logger.error("decoding failed!")
         logger.exception(e)
@@ -106,22 +101,31 @@ def force_uString(inputstring,encodingGuess="utf-8"):
     elif isinstance(inputstring,list):
         return [force_uString(item) for item in inputstring]
 
-    if sys.version_info > (3,):
-        # Python 3 and larger
-        # the basic "str" type is unicode
-        if isinstance(inputstring,str):
-            return inputstring
+    try:
+        if sys.version_info > (3,):
+            # Python 3 and larger
+            # the basic "str" type is unicode
+            if isinstance(inputstring,str):
+                return inputstring
+            else:
+                return try_decoding(inputstring,encodingGuess)
         else:
-            return try_decoding(inputstring,encodingGuess)
-    else:
-        # Python 2.x
-        # the basic "str" type is bytes, unicode
-        # has its own type "unicode"
-        if isinstance(inputstring,unicode):
-            return inputstring
-        else:
-            return try_decoding(inputstring,encodingGuess)
-
+            # Python 2.x
+            # the basic "str" type is bytes, unicode
+            # has its own type "unicode"
+            if isinstance(inputstring,unicode):
+                return inputstring
+            else:
+                return try_decoding(inputstring,encodingGuess)
+    except AttributeError:
+        # Input might not be bytes but a number which is then
+        # expected to be converted to unicode
+        try:
+            return unicode(inputstring)
+        except NameError:
+            return str(inputstring)
+        except Exception as e:
+            raise e
 
 def force_bString(inputstring,encoding="utf-8",checkEncoding=False):
     """Try to enforce a string of bytes
