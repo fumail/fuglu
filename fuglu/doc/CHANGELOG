@@ -8,6 +8,7 @@
  * Configuration option to remove (default) or keep temporary message files on internal errors (receive,address,unknown)
  * new input "att_mgr_cachesize" to define attachment manager cache size
  * new input "archiveextractlevel" in FiletypePlugin to define attachment archive extract level
+ * allow binding incoming ports to different addresses
 
 Developers:
  * extended signature of scan_stream function in AV plugins / new subclass shared.AVScannerPlugin

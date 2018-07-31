@@ -510,37 +510,48 @@ class MainController(object):
     def start_connector(self, portspec):
         port = portspec.strip()
         protocol = 'smtp'
+        bindaddress = self.config.get('main', 'bindaddress')
 
-        if port.find(':') > 0:
+        portformat = port.count(':')
+        # 0: "port" -> example: 10028
+        # 1: "protocol:port" -> example: milter:10028
+        # 2: "protocol:bindaddress:port" -> example: milter:127.0.0.1:10028
+        if portformat == 0:
+            pass
+        elif portformat == 1:
             protocol, port = port.split(':')
+        elif portformat == 2:
+            protocol, bindaddress, port = port.split(':')
+        else:
+            raise ValueError("Error in bind definition: %s"%portspec)
 
-        self.logger.info("starting connector %s/%s" % (protocol, port))
+        self.logger.info("starting connector %s/%s/%s" % (protocol, bindaddress, port))
         try:
             port = int(port)
             if protocol == 'smtp':
                 smtpserver = SMTPServer(
-                    self, port=port, address=self.config.get('main', 'bindaddress'))
+                    self, port=port, address=bindaddress)
                 tr = threading.Thread(target=smtpserver.serve, args=())
                 tr.daemon = True
                 tr.start()
                 self.servers.append(smtpserver)
             elif protocol == 'esmtp':
                 esmtpserver = ESMTPServer(
-                    self, port=port, address=self.config.get('main', 'bindaddress'))
+                    self, port=port, address=bindaddress)
                 tr = threading.Thread(target=esmtpserver.serve, args=())
                 tr.daemon = True
                 tr.start()
                 self.servers.append(esmtpserver)
             elif protocol == 'milter':
                 milterserver = MilterServer(
-                    self, port=port, address=self.config.get('main', 'bindaddress'))
+                    self, port=port, address=bindaddress)
                 tr = threading.Thread(target=milterserver.serve, args=())
                 tr.daemon = True
                 tr.start()
                 self.servers.append(milterserver)
             elif protocol == 'netcat':
                 ncserver = NCServer(
-                    self, port=port, address=self.config.get('main', 'bindaddress'))
+                    self, port=port, address=bindaddress)
                 tr = threading.Thread(target=ncserver.serve, args=())
                 tr.daemon = True
                 tr.start()
