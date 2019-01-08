@@ -1,7 +1,0 @@
-BeautifulSoup4
-python-magic
-#SQL Alchemy pinned to 1.1 as long as we officially support python 2.6. As of SQLAlchemy 1.2 the min python version is 2.7
-SQLAlchemy==1.1
-pyspf
-rarfile
-lxml

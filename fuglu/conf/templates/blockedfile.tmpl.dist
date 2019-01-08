@@ -1,7 +1,0 @@
-To: ${from_address}
-Subject: Blocked attachment
-
-Your message to ${to_address} contains a blocked attachment and has not been delivered.
-
-${blockinfo}
-

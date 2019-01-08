@@ -1,7 +1,0 @@
-dist
-MANIFEST
-*.pyc
-build
-dist
-*~
-fuglu-docker-build/

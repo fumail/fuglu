@@ -1,1 +1,0 @@
-V	370727134656Z		01	unknown	/C=CH/ST=ZH/O=Fuglu/CN=sender@unittests.fuglu.org/emailAddress=sender@unittests.fuglu.org

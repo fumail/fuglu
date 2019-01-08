@@ -1,9 +1,0 @@
-##########
-#Headername		Regex	Plugins to skip, comma separated, only classname
-#see http://fumail.github.io/fuglu/plugins-index.html?highlight=suspectfilter#suspect-filters
-
-#skip Spamassassin and DKIM Verification for outgoing mails
-@incomingport	^10099$	SAPlugin,DKIMVerifyPlugin
-
-#skip DKIM Signing for incoming mails
-@incomingport	^10025$ DKIMSignPlugin
